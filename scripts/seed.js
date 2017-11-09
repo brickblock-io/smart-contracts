@@ -10,13 +10,13 @@
 /* eslint-disable no-console */
 // console output is ok in yarn task
 
-require('../config/env')
+// require('../config/env')
 
 const Web3 = require('web3')
 const contract = require('truffle-contract')
 
 const web3 = new Web3()
-web3.setProvider(new Web3.providers.HttpProvider('http://localhost:8545'))
+web3.setProvider(new Web3.providers.HttpProvider('http://localhost:9545'))
 
 const Brickblock = contract(require('contracts/Brickblock.json'))
 Brickblock.setProvider(web3.currentProvider)

@@ -3,7 +3,16 @@
   "abi": [
     {
       "constant": true,
-      "inputs": [],
+      "inputs": [
+        {
+          "name": "_spender",
+          "type": "address"
+        },
+        {
+          "name": "_value",
+          "type": "uint256"
+        }
+      ],
       "name": "beneficiary",
       "outputs": [
         {
@@ -19,23 +28,51 @@
       "constant": false,
       "inputs": [],
       "name": "claim",
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
       "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
       "constant": false,
-      "inputs": [],
+      "inputs": [
+        {
+          "name": "_from",
+          "type": "address"
+        },
+        {
+          "name": "_to",
+          "type": "address"
+        },
+        {
+          "name": "_value",
+          "type": "uint256"
+        }
+      ],
       "name": "release",
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
       "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
       "constant": true,
-      "inputs": [],
+      "inputs": [
+        {
+          "name": "_value",
+          "type": "uint256"
+        }
+      ],
       "name": "releaseTime",
       "outputs": [
         {
@@ -45,6 +82,131 @@
       ],
       "payable": false,
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "_spender",
+          "type": "address"
+        },
+        {
+          "name": "_subtractedValue",
+          "type": "uint256"
+        }
+      ],
+      "name": "test",
+      "outputs": [
+        {
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "_owner",
+          "type": "address"
+        }
+      ],
+      "name": "token",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "_test",
+          "type": "string"
+        },
+        {
+          "name": "_value",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "constructor",
+      "constant": false,
+      "name": "transfer",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_spender",
+          "type": "address"
+        },
+        {
+          "name": "_addedValue",
+          "type": "uint256"
+        }
+      ],
+      "name": "increaseApproval",
+      "outputs": [
+        {
+          "name": "success",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "_owner",
+          "type": "address"
+        },
+        {
+          "name": "_spender",
+          "type": "address"
+        }
+      ],
+      "name": "allowance",
+      "outputs": [
+        {
+          "name": "remaining",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_test",
+          "type": "string"
+        }
+      ],
+      "name": "BurnableToken",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -62,29 +224,65 @@
       "type": "function"
     },
     {
-      "constant": true,
-      "inputs": [],
-      "name": "token",
-      "outputs": [
-        {
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
+      "anonymous": false,
       "inputs": [
         {
-          "name": "_test",
-          "type": "string"
+          "indexed": true,
+          "name": "burner",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "value",
+          "type": "uint256"
         }
       ],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "constructor"
+      "name": "Burn",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "name": "spender",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "Approval",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "Transfer",
+      "type": "event"
     }
   ],
   "bytecode": "0x",
@@ -98,7 +296,7 @@
       "absolutePath": "/Users/tovarishfin/dev/research/fountain/contracts/BrickBlockFountain.sol",
       "exportedSymbols": {
         "BrickBlockFountain": [
-          35
+          17
         ]
       }
     },
@@ -112,39 +310,47 @@
             ".4"
           ]
         },
-        "id": 19,
+        "id": 1,
         "name": "PragmaDirective",
-        "src": "0:23:1"
+        "src": "0:23:0"
       },
       {
         "attributes": {
-          "SourceUnit": 1978,
+          "SourceUnit": 238,
           "absolutePath": "zeppelin-solidity/contracts/token/TokenTimelock.sol",
           "file": "zeppelin-solidity/contracts/token/TokenTimelock.sol",
-          "scope": 36,
+          "scope": 18,
           "symbolAliases": [
             null
           ],
           "unitAlias": ""
         },
-        "id": 20,
+        "id": 2,
         "name": "ImportDirective",
-        "src": "25:61:1"
+        "src": "25:61:0"
       },
       {
         "attributes": {
           "contractDependencies": [
-            1977
+            237,
+            241,
+            284,
+            313,
+            544
           ],
           "contractKind": "contract",
           "documentation": null,
           "fullyImplemented": false,
           "linearizedBaseContracts": [
-            35,
-            1977
+            17,
+            237,
+            544,
+            189,
+            284,
+            313
           ],
           "name": "BrickBlockFountain",
-          "scope": 36
+          "scope": 18
         },
         "children": [
           {
@@ -158,23 +364,23 @@
                 "attributes": {
                   "contractScope": null,
                   "name": "TokenTimelock",
-                  "referencedDeclaration": 1977,
+                  "referencedDeclaration": 237,
                   "type": "contract TokenTimelock"
                 },
-                "id": 21,
+                "id": 3,
                 "name": "UserDefinedTypeName",
-                "src": "119:13:1"
+                "src": "119:13:0"
               }
             ],
-            "id": 22,
+            "id": 4,
             "name": "InheritanceSpecifier",
-            "src": "119:13:1"
+            "src": "119:13:0"
           },
           {
             "attributes": {
               "constant": false,
               "name": "test",
-              "scope": 35,
+              "scope": 17,
               "stateVariable": true,
               "storageLocation": "default",
               "type": "string storage ref",
@@ -187,14 +393,14 @@
                   "name": "string",
                   "type": "string storage pointer"
                 },
-                "id": 23,
+                "id": 5,
                 "name": "ElementaryTypeName",
-                "src": "137:6:1"
+                "src": "137:6:0"
               }
             ],
-            "id": 24,
+            "id": 6,
             "name": "VariableDeclaration",
-            "src": "137:18:1"
+            "src": "137:18:0"
           },
           {
             "attributes": {
@@ -206,7 +412,7 @@
               ],
               "name": "BrickBlockFountain",
               "payable": false,
-              "scope": 35,
+              "scope": 17,
               "stateMutability": "nonpayable",
               "superFunction": null,
               "visibility": "public"
@@ -218,7 +424,7 @@
                     "attributes": {
                       "constant": false,
                       "name": "_test",
-                      "scope": 34,
+                      "scope": 16,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "string memory",
@@ -231,19 +437,19 @@
                           "name": "string",
                           "type": "string storage pointer"
                         },
-                        "id": 25,
+                        "id": 7,
                         "name": "ElementaryTypeName",
-                        "src": "187:6:1"
+                        "src": "187:6:0"
                       }
                     ],
-                    "id": 26,
+                    "id": 8,
                     "name": "VariableDeclaration",
-                    "src": "187:12:1"
+                    "src": "187:12:0"
                   }
                 ],
-                "id": 27,
+                "id": 9,
                 "name": "ParameterList",
-                "src": "186:14:1"
+                "src": "186:14:0"
               },
               {
                 "attributes": {
@@ -252,9 +458,9 @@
                   ]
                 },
                 "children": [],
-                "id": 28,
+                "id": 10,
                 "name": "ParameterList",
-                "src": "201:0:1"
+                "src": "201:0:0"
               },
               {
                 "children": [
@@ -277,13 +483,13 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 24,
+                              "referencedDeclaration": 6,
                               "type": "string storage ref",
                               "value": "test"
                             },
-                            "id": 29,
+                            "id": 11,
                             "name": "Identifier",
-                            "src": "207:4:1"
+                            "src": "207:4:0"
                           },
                           {
                             "attributes": {
@@ -291,43 +497,43 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 26,
+                              "referencedDeclaration": 8,
                               "type": "string memory",
                               "value": "_test"
                             },
-                            "id": 30,
+                            "id": 12,
                             "name": "Identifier",
-                            "src": "214:5:1"
+                            "src": "214:5:0"
                           }
                         ],
-                        "id": 31,
+                        "id": 13,
                         "name": "Assignment",
-                        "src": "207:12:1"
+                        "src": "207:12:0"
                       }
                     ],
-                    "id": 32,
+                    "id": 14,
                     "name": "ExpressionStatement",
-                    "src": "207:12:1"
+                    "src": "207:12:0"
                   }
                 ],
-                "id": 33,
+                "id": 15,
                 "name": "Block",
-                "src": "201:23:1"
+                "src": "201:23:0"
               }
             ],
-            "id": 34,
+            "id": 16,
             "name": "FunctionDefinition",
-            "src": "159:65:1"
+            "src": "159:65:0"
           }
         ],
-        "id": 35,
+        "id": 17,
         "name": "ContractDefinition",
-        "src": "88:138:1"
+        "src": "88:138:0"
       }
     ],
-    "id": 36,
+    "id": 18,
     "name": "SourceUnit",
-    "src": "0:227:1"
+    "src": "0:227:0"
   },
   "compiler": {
     "name": "solc",
@@ -335,5 +541,5 @@
   },
   "networks": {},
   "schemaVersion": "1.0.1",
-  "updatedAt": "2017-11-09T10:42:10.580Z"
+  "updatedAt": "2017-11-09T12:08:40.402Z"
 }
