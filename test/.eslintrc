@@ -1,0 +1,8 @@
+{
+  globals: {
+    assert: true,
+    contract: true,
+    setTimeout: true,
+    web3: true
+  }
+}
