@@ -76,7 +76,7 @@ contract('BrickBlockToken', accounts => {
     // setup and get pre values
     const bbt = await BrickBlockToken.deployed()
     const owner = accounts[0]
-    const claimer = accounts[1]
+    const claimer = accounts[9]
     const preOwnerBalance = await bbt.balanceOf(accounts[0])
     const preRecipientBalance = await bbt.balanceOf(claimer)
 
@@ -95,7 +95,7 @@ contract('BrickBlockToken', accounts => {
     })
 
     const postOwnerBalance = await bbt.balanceOf(accounts[0])
-    const postRecipientBalance = await bbt.balanceOf(accounts[1])
+    const postRecipientBalance = await bbt.balanceOf(accounts[9])
     assert.equal(preOwnerBalance.minus(postOwnerBalance).toString(), claimableAmount.toString(), 'the owner balance should be deducted by the claimable amount')
     assert.equal(postRecipientBalance.minus(preRecipientBalance).toString(), claimableAmount.toString(), 'the recipient balance should be incremented by the claimable amount')
   })

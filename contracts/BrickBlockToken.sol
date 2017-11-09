@@ -11,11 +11,12 @@ contract BrickBlockToken is PausableToken, BurnableToken {
   string public constant symbol = "BBT";
   uint8 public constant decimals = 18;
 
-  uint256 public constant INITIAL_SUPPLY = 50 * (10 ** 6) * (10 ** uint256(decimals));
+  uint256 public constant initalSupply = 50 * (10 ** 6) * (10 ** uint256(decimals));
 
   function BrickBlockToken() {
-    totalSupply = INITIAL_SUPPLY;
-    balances[msg.sender] = INITIAL_SUPPLY;
+    totalSupply = initalSupply;
+    // TODO: need a way to deal with the fact that the owner will be changed repeatedly... need to hold the balance elsewhere
+    balances[msg.sender] = initalSupply;
   }
 
   function recover(bytes32 hash, bytes sig) public constant returns (address) {
@@ -47,7 +48,7 @@ contract BrickBlockToken is PausableToken, BurnableToken {
       return ecrecover(hash, v, r, s);
     }
   }
-
+  // TODO: need a way to deal with the fact that the owner will be changed repeatedly... need to hold the balance elsewhere
   // claim tokens based on signed message containing token amount and address
   // will not work if sent from non-matching address
   // will not work if incorrect amount is sent
@@ -57,13 +58,9 @@ contract BrickBlockToken is PausableToken, BurnableToken {
     bytes32 prefixedHash = keccak256(prefix, createdHash);
     address sigaddr = recover(prefixedHash, _signature);
     require(sigaddr == owner);
+    require(balances[msg.sender] == 0);
     balances[owner] = balances[owner].sub(_amount);
     balances[msg.sender] = balances[msg.sender].add(_amount);
     TokensClaimed(_amount, msg.sender);
-  }
-
-  // burn remaining tokens after ico
-  function postICOBurn() public onlyOwner {
-    
   }
 }
