@@ -1,6 +1,7 @@
 pragma solidity ^0.4.4;
 
 import 'zeppelin-solidity/contracts/token/BurnableToken.sol';
+//probably dont need this with this new layout? burning can be done on own
 import 'zeppelin-solidity/contracts/token/PausableToken.sol';
 
 contract BrickBlockToken is PausableToken, BurnableToken {
@@ -10,16 +11,23 @@ contract BrickBlockToken is PausableToken, BurnableToken {
   string public constant name = "BrickBlockToken";
   string public constant symbol = "BBT";
   uint8 public constant decimals = 18;
-
   uint256 public constant initalSupply = 50 * (10 ** 6) * (10 ** uint256(decimals));
-
+  uint256 public constant founderShare = 51;
+  uint256 public constant investorShare = 49;
+  bool public tokenSaleActive;
+  
   function BrickBlockToken() {
     totalSupply = initalSupply;
     // TODO: need a way to deal with the fact that the owner will be changed repeatedly... need to hold the balance elsewhere
-    balances[msg.sender] = initalSupply;
+    balances[this] = initalSupply;
+    // might not need this if we just use pause... though naming convention isn't great
+    tokenSaleActive = true;
+    // need to start paused to make sure that there can be no transfers
+    // this ensures that 1. tokenClaims will only work once 2. keep in line with management's wishes
+    paused = true;
   }
-
-  function recover(bytes32 hash, bytes sig) public constant returns (address) {
+  
+  function recover(bytes32 hash, bytes sig) private constant returns (address) {
     bytes32 r;
     bytes32 s;
     uint8 v;
@@ -48,18 +56,48 @@ contract BrickBlockToken is PausableToken, BurnableToken {
       return ecrecover(hash, v, r, s);
     }
   }
+  
+  // function for owner to claim previously agreed upon amount
+  function claimTokensOwner() private {
+    // owner should own 51% of tokens
+    uint256 claimedTokens = initalSupply - balances[this];
+    uint256 newTotalSupply = claimedTokens.mul(100).div(investorShare);
+    uint256 ownerClaimedTokens = newTotalSupply.mul(100).div(founderShare);
+    balances[this] = balances[this].sub(ownerClaimedTokens);
+    balances[owner] = balances[owner].add(ownerClaimedTokens);
+  }
+  
+  // function to burn previously agreed upon amount of tokens
+  function burnExcessTokens() private {
+    // nuke the remaining balance...
+    balances[this] = balances[this].sub(balanceOf(this))
+  }
+  
+  // need to burn excess tokens here
+  // need to put brickblock funds into owner address
+  function finalizeTokenSale() public onlyOwner {
+    require(tokenSaleActive)
+    claimTokensOwner()
+    burnExcessTokens()
+    tokenSaleActive = false;
+    paused = false;
+    
+  }
+
   // TODO: need a way to deal with the fact that the owner will be changed repeatedly... need to hold the balance elsewhere
   // claim tokens based on signed message containing token amount and address
   // will not work if sent from non-matching address
   // will not work if incorrect amount is sent
   function claimTokens(bytes _signature, uint _amount) public {
+    require(tokenSaleActive);
+    require(msg.sender != owner);
     bytes32 createdHash = keccak256(uint(_amount), msg.sender);
     bytes memory prefix = "\x19Ethereum Signed Message:\n32";
     bytes32 prefixedHash = keccak256(prefix, createdHash);
     address sigaddr = recover(prefixedHash, _signature);
     require(sigaddr == owner);
     require(balances[msg.sender] == 0);
-    balances[owner] = balances[owner].sub(_amount);
+    balances[this] = balances[this].sub(_amount);
     balances[msg.sender] = balances[msg.sender].add(_amount);
     TokensClaimed(_amount, msg.sender);
   }
