@@ -18,21 +18,20 @@ contract BrickBlockToken is PausableToken, BurnableToken {
   
   function BrickBlockToken() {
     totalSupply = initalSupply;
-    // TODO: need a way to deal with the fact that the owner will be changed repeatedly... need to hold the balance elsewhere
     balances[this] = initalSupply;
-    // might not need this if we just use pause... though naming convention isn't great
     tokenSaleActive = true;
     // need to start paused to make sure that there can be no transfers
     // this ensures that 1. tokenClaims will only work once 2. keep in line with management's wishes
     paused = true;
   }
   
+  // openZeppelin function to recover public key from signed message
   function recover(bytes32 hash, bytes sig) private constant returns (address) {
     bytes32 r;
     bytes32 s;
     uint8 v;
 
-    //Check the signature length
+    // Check the signature length
     if (sig.length != 65) {
       return (address(0));
     }
@@ -77,10 +76,11 @@ contract BrickBlockToken is PausableToken, BurnableToken {
     
   }
 
-  // TODO: need a way to deal with the fact that the owner will be changed repeatedly... need to hold the balance elsewhere
   // claim tokens based on signed message containing token amount and address
   // will not work if sent from non-matching address
   // will not work if incorrect amount is sent
+  // cannot claim after token sale
+  // transfers etc. paused during token sale (cannot set balance to 0 to replay)
   function claimTokens(bytes _signature, uint _amount) public {
     require(tokenSaleActive);
     require(msg.sender != owner);
