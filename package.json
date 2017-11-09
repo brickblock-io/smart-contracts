@@ -18,8 +18,8 @@
     "start": "concurrently --prefix '[{name}: {time}]' -n 'yarn start:dev, seed' -c 'bgBlue.bold.white,bgGreen.bold.white' 'yarn start:dev' 'yarn migrate:dev && yarn seed'",
     "start:dev": "truffle develop",
     "---SECTION:BUILD---": "-------------------- HOW TO BUILD THE SMART CONTRACTS --------------------",
-    "build:contracts:comment": "Compile smart contracts and copy output into src/ and build/ folders",
-    "build:contracts": "truffle compile",
+    "build:comment": "Compile smart contracts and copy output into src/ and build/ folders",
+    "build": "truffle compile",
     "---SECTION:CLEAN---": "-------------------- HOW TO CLEAN OLD BUILD OUTPUT --------------------",
     "clean:comment": "Clean up old contracts and build files",
     "clean:contracts": "rimraf build/contracts",
@@ -35,13 +35,14 @@
     "seed": "cross-env NODE_PATH=build NODE_ENV=development node scripts/seed.js",
     "seed:ropsten": "cross-env NODE_PATH=build NODE_ENV=development node scripts/seed.ropsten.js",
     "---SECTION:TEST---": "-------------------- HOW TO THE SMART CONTRACTS --------------------",
-    "test": "yarn start:test:testrpc > /dev/null & sleep 1 && truffle test"
+    "test": "truffle test"
   },
   "devDependencies": {
     "chai": "^4.1.1",
     "concurrently": "^3.5.0",
-    "ethereumjs-testrpc": "^4.0.1",
-    "solium": "^0.5.5",
+    "ethereumjs-testrpc": "^6.0.1",
+    "rimraf": "^2.6.2",
+    "solium": "^1.0.4",
     "truffle": "^4.0.1",
     "truffle-hdwallet-provider": "^0.0.3"
   }
