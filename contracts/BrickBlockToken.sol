@@ -57,30 +57,23 @@ contract BrickBlockToken is PausableToken, BurnableToken {
     }
   }
   
-  // function for owner to claim previously agreed upon amount
-  function claimTokensOwner() private {
+  // need to put brickblock funds into owner address
+  function finalizeTokenSale() public onlyOwner {
+    require(tokenSaleActive);
     // owner should own 51% of tokens
     uint256 claimedTokens = initalSupply - balances[this];
     uint256 newTotalSupply = claimedTokens.mul(100).div(investorShare);
     uint256 ownerClaimedTokens = newTotalSupply.mul(100).div(founderShare);
+    
     balances[this] = balances[this].sub(ownerClaimedTokens);
     balances[owner] = balances[owner].add(ownerClaimedTokens);
-  }
-  
-  // function to burn previously agreed upon amount of tokens
-  function burnExcessTokens() private {
+    
     // nuke the remaining balance...
-    balances[this] = balances[this].sub(balanceOf(this))
-  }
-  
-  // need to burn excess tokens here
-  // need to put brickblock funds into owner address
-  function finalizeTokenSale() public onlyOwner {
-    require(tokenSaleActive)
-    claimTokensOwner()
-    burnExcessTokens()
+    balances[this] = balances[this].sub(balanceOf(this));
+    
+    //set new state
+    totalSupply = newTotalSupply;
     tokenSaleActive = false;
-    paused = false;
     
   }
 
