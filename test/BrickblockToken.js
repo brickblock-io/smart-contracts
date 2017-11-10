@@ -12,11 +12,112 @@ async function createSignedMessage(signer, claimer, amount) {
   return signature = await web3.eth.sign(signer, hash)
 }
 
-// post ico 
-contract('BrickblockToken', accounts => {
-  describe('after the the ico', async () => {
+describe('before the ico', () => {
+  contract('BrickblockToken', accounts => {
+    it('should put 5e25 BBT in the contract address', async () => {
+      const bbt = await BrickblockToken.deployed()
+      const balance = await bbt.balanceOf.call(bbt.address)
+      assert.equal(balance.valueOf(), 5e25, '5e25 should be in the first account')
+    })
+
+    it('should have "BrickblockToken" set as the name', async () => {
+      const bbt = await BrickblockToken.deployed()
+      const name = await bbt.name.call()
+      assert.equal(name, 'BrickblockToken', 'The name isn\'t "BrickblockToken"')
+    })
+
+    it('should have BBT set as the symbol', async () => {
+      const bbt = await BrickblockToken.deployed()
+      const symbol = await bbt.symbol.call()
+      assert.equal(symbol, 'BBT', 'BBT was not set as the symbol')
+    })
+
+    it('should have 18 decimals set', async () => {
+      const bbt = await BrickblockToken.deployed()
+      const decimals = await bbt.decimals.call()
+      assert.equal(decimals, 18, '18 decimals was not sets')
+    })
+
+    it('should set correct balance for previously agreed amount and address with owner signed message', async () => {
+      // setup and get pre values
+      const bbt = await BrickblockToken.deployed()
+      const owner = accounts[0]
+      const tokenDepot = bbt.address
+      const claimer = accounts[9]
+      const preTokenDepotBalance = await bbt.balanceOf(tokenDepot)
+      const preRecipientBalance = await bbt.balanceOf(claimer)
+
+      // setup signed message from contract owner
+      const claimableAmount = new BigNumber(web3.toWei(1000))
+
+      const signature = await createSignedMessage(owner, claimer, claimableAmount)
+
+      // submit signature with correct amount
+      await bbt.claimTokens.sendTransaction(signature, claimableAmount, {
+        from: claimer
+      })
+
+      const postTokenDepotBalance = await bbt.balanceOf(tokenDepot)
+      const postRecipientBalance = await bbt.balanceOf(accounts[9])
+      console.log(preTokenDepotBalance.toString(), postRecipientBalance.toString())
+      console.log(preRecipientBalance.toString(), postRecipientBalance.toString())
+      assert.equal(preTokenDepotBalance.minus(postTokenDepotBalance).toString(), claimableAmount.toString(), 'the owner balance should be deducted by the claimable amount')
+      assert.equal(postRecipientBalance.minus(preRecipientBalance).toString(), claimableAmount.toString(), 'the recipient balance should be incremented by the claimable amount')
+    })
+
+    it('should not set correct balance with signed message if value is incorrect', async () => {
+      // setup and get pre values
+      const bbt = await BrickblockToken.deployed()
+      const owner = accounts[0]
+      const tokenDepot = bbt.address
+      const claimer = accounts[1]
+
+      // setup signed message from contract owner
+      const claimableAmount = new BigNumber(web3.toWei(1000))
+
+      const signature = await createSignedMessage(owner, claimer, claimableAmount)
+
+      try {
+        // submit signature with incorrect amount
+        await bbt.claimTokens.sendTransaction(signature, claimableAmount.add(1e21), {
+          from: claimer
+        })
+        assert(false, 'the claimer shouldn\'t be able to change the value claimed')
+      } catch (error) {
+        assert.equal(true, /invalid opcode/.test(error), 'invalid opcode should be the error')
+      }
+    })
+
+    it('should not set correct balance for with signed message if the wrong address tries to claim', async () => {
+      // setup and get pre values
+      const bbt = await BrickblockToken.deployed()
+      const owner = accounts[0]
+      const tokenDepot = bbt.address
+      const claimer = accounts[1]
+      const notClaimer = accounts[2]
+
+      // setup signed message from contract owner
+      const claimableAmount = new BigNumber(web3.toWei(1000))
+
+      const signature = await createSignedMessage(owner, claimer, claimableAmount)
+
+      try {
+        // submit signature with incorrect amount
+        await bbt.claimTokens.sendTransaction(signature, claimableAmount, {
+          from: notClaimer
+        })
+        assert(false, 'only the claimer should be able to claim with this message')
+      } catch (error) {
+        assert.equal(true, /invalid opcode/.test(error), 'invalid opcode should be the error')
+      }
+    })
+  })
+})
+
+describe('after the the ico', async () => {
+  contract('BrickblockToken', accounts => {
     before('setup post ico state', async () => {
-      const bbt = await BrickBlockToken.deployed()
+      const bbt = await BrickblockToken.deployed()
       const paused = await bbt.paused.call()
       const preTokenSaleActive = await bbt.tokenSaleActive()
       const acc1ClaimAmount = new BigNumber(1000e18)
@@ -38,7 +139,7 @@ contract('BrickblockToken', accounts => {
     })
     
     it('should transfer tokens when not paused', async () => {
-      const bbt = await BrickBlockToken.deployed()
+      const bbt = await BrickblockToken.deployed()
       await bbt.unpause()
       const originalBalance = await bbt.balanceOf.call(accounts[1])
       await bbt.transfer(accounts[1], 1000)
@@ -48,118 +149,4 @@ contract('BrickblockToken', accounts => {
     
   })
   
-})
-
-contract('BrickblockToken', accounts => {
-  it('should put 5e25 BBT in the contract address', async () => {
-    const bbt = await BrickblockToken.deployed()
-    const balance = await bbt.balanceOf.call(bbt.address)
-    assert.equal(balance.valueOf(), 5e25, '5e25 should be in the first account')
-  })
-
-  it('should have "BrickblockToken" set as the name', async () => {
-    const bbt = await BrickblockToken.deployed()
-    const name = await bbt.name.call()
-    assert.equal(name, 'BrickblockToken', 'The name isn\'t "BrickblockToken"')
-  })
-
-  it('should have BBT set as the symbol', async () => {
-    const bbt = await BrickblockToken.deployed()
-    const symbol = await bbt.symbol.call()
-    assert.equal(symbol, 'BBT', 'BBT was not set as the symbol')
-  })
-
-  it('should have 18 decimals set', async () => {
-    const bbt = await BrickblockToken.deployed()
-    const decimals = await bbt.decimals.call()
-    assert.equal(decimals, 18, '18 decimals was not sets')
-  })
-
-  it('should transfer tokens when not paused', async () => {
-    const bbt = await BrickblockToken.deployed()
-    const originalBalance = await bbt.balanceOf.call(accounts[1])
-    await bbt.transfer(accounts[1], 1000)
-    const newBalance = await bbt.balanceOf.call(accounts[1])
-    assert.equal(newBalance.minus(originalBalance), 1000, 'The new balance should be 1000 after the transfer')
-  })
-
-  it('should set correct balance for previously agreed amount and address with owner signed message', async () => {
-    // setup and get pre values
-    const bbt = await BrickblockToken.deployed()
-    const owner = accounts[0]
-    const claimer = accounts[9]
-    const preOwnerBalance = await bbt.balanceOf(accounts[0])
-    const preRecipientBalance = await bbt.balanceOf(claimer)
-
-    // setup signed message from contract owner
-    const claimableAmount = new BigNumber(web3.toWei(1000))
-    const claimableAddress = claimer
-
-    const signature = createSignedMessage(owner, claimer, claimableAmount)
-
-    // submit signature with correct amount
-    await bbt.claimTokens.sendTransaction(signature, claimableAmount, {
-      from: claimer
-    })
-
-    const postOwnerBalance = await bbt.balanceOf(accounts[0])
-    const postRecipientBalance = await bbt.balanceOf(accounts[9])
-    assert.equal(preOwnerBalance.minus(postOwnerBalance).toString(), claimableAmount.toString(), 'the owner balance should be deducted by the claimable amount')
-    assert.equal(postRecipientBalance.minus(preRecipientBalance).toString(), claimableAmount.toString(), 'the recipient balance should be incremented by the claimable amount')
-  })
-
-  it('should not set correct balance with signed message if value is incorrect', async () => {
-    // setup and get pre values
-    const bbt = await BrickblockToken.deployed()
-    const owner = accounts[0]
-    const claimer = accounts[1]
-    const preOwnerBalance = await bbt.balanceOf(accounts[0])
-    const preRecipientBalance = await bbt.balanceOf(claimer)
-
-    // setup signed message from contract owner
-    const claimableAmount = new BigNumber(web3.toWei(1000))
-    const claimableAddress = claimer
-
-    // need to pad the number to make uint256(uint) and use toHex when dealing with BigNumbers
-    const hash = web3.sha3(leftPad(web3.toHex(claimableAmount).slice(2).toString(16), 64, 0) + claimableAddress.slice(2).toString(16), { encoding: 'hex' })
-
-    const signature = createSignedMessage(owner, claimer, claimableAmount)
-
-    try {
-      // submit signature with incorrect amount
-      await bbt.claimTokens.sendTransaction(signature, claimableAmount.add(1e21), {
-        from: claimer
-      })
-      assert(false, 'the claimer shouldn\'t be able to change the value claimed')
-    } catch (error) {
-      assert.equal(true, /invalid opcode/.test(error), 'invalid opcode should be the error')
-    }
-  })
-
-  it('should not set correct balance for with signed message if the wrong address tries to claim', async () => {
-    // setup and get pre values
-    const bbt = await BrickblockToken.deployed()
-    const owner = accounts[0]
-    const claimer = accounts[1]
-    const notClaimer = accounts[2]
-    const preOwnerBalance = await bbt.balanceOf(accounts[0])
-    const preRecipientBalance = await bbt.balanceOf(claimer)
-
-    // setup signed message from contract owner
-    const claimableAmount = new BigNumber(web3.toWei(1000))
-    const claimableAddress = claimer
-
-    const signature = createSignedMessage(owner, claimer, claimableAmount)
-
-    try {
-      // submit signature with incorrect amount
-      await bbt.claimTokens.sendTransaction(signature, claimableAmount, {
-        from: notClaimer
-      })
-      assert(false, 'only the claimer should be able to claim with this message')
-    } catch (error) {
-      assert.equal(true, /invalid opcode/.test(error), 'invalid opcode should be the error')
-    }
-  })
-
 })

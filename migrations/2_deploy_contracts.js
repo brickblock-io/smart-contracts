@@ -1,6 +1,6 @@
 const BrickblockToken = artifacts.require("./BrickblockToken.sol")
 const Brickblock = artifacts.require("./Brickblock.sol")
-// const BrickBlockFountain = artifacts.require("./BrickBlockFountain.sol");
+// const BrickblockFountain = artifacts.require("./BrickblockFountain.sol");
 
 module.exports = deployer => {
   deployer.deploy(BrickblockToken)

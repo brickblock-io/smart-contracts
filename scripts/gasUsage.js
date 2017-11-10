@@ -69,7 +69,7 @@ async function createBB() {
     })
     return awaitReceipt(contract.transactionHash)
   } catch (err) {
-    console.error(`Creating BrickBlock umbrella Contract failed : ${err}`)
+    console.error(`Creating Brickblock umbrella Contract failed : ${err}`)
     throw err
   }
 }
@@ -319,8 +319,8 @@ async function collectGasUsage() {
   // missing : ERC20 functions
 
   try {
-    const BrickBlockDeployment = await createBB()
-    results.BrickBlockDeployment = { gasUsage: BrickBlockDeployment.gasUsed }
+    const BrickblockDeployment = await createBB()
+    results.BrickblockDeployment = { gasUsage: BrickblockDeployment.gasUsed }
     // prepare failed contract now, will be failed at the end of script due to timeout
 
     const createFailedResponse = await createToken(failedToken)
