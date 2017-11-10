@@ -2,11 +2,11 @@ pragma solidity ^0.4.4;
 
 import 'zeppelin-solidity/contracts/token/PausableToken.sol';
 
-contract BrickBlockToken is PausableToken {
+contract BrickblockToken is PausableToken {
   // Event emitted when tokens have been claimed from ICO
   event TokensClaimed(uint256 amount, address to);
 
-  string public constant name = "BrickBlockToken";
+  string public constant name = "BrickblockToken";
   string public constant symbol = "BBT";
   uint8 public constant decimals = 18;
   uint256 public constant initalSupply = 50 * (10 ** 6) * (10 ** uint256(decimals));
@@ -14,7 +14,7 @@ contract BrickBlockToken is PausableToken {
   uint8 public constant investorShare = 51;
   bool public tokenSaleActive;
   
-  function BrickBlockToken() {
+  function BrickblockToken() {
     totalSupply = initalSupply;
     balances[this] = initalSupply;
     tokenSaleActive = true;
