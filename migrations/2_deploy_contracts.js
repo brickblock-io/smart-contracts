@@ -1,9 +1,9 @@
-const BrickBlockToken = artifacts.require("../contracts/BrickBlockToken.sol")
-const BrickBlock = artifacts.require("../contracts/BrickBlock.sol")
+const BrickblockToken = artifacts.require("./BrickblockToken.sol")
+const Brickblock = artifacts.require("./Brickblock.sol")
 // const BrickBlockFountain = artifacts.require("./BrickBlockFountain.sol");
 
 module.exports = deployer => {
-  deployer.deploy(BrickBlockToken)
-  deployer.deploy(BrickBlock)
-  // deployer.deploy(BrickBlockFountain);
+  deployer.deploy(BrickblockToken)
+  deployer.deploy(Brickblock)
+  // deployer.deploy(BrickblockFountain);
 };
