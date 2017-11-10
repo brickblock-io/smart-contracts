@@ -59,8 +59,6 @@ describe('before the ico', () => {
 
       const postTokenDepotBalance = await bbt.balanceOf(tokenDepot)
       const postRecipientBalance = await bbt.balanceOf(accounts[9])
-      console.log(preTokenDepotBalance.toString(), postRecipientBalance.toString())
-      console.log(preRecipientBalance.toString(), postRecipientBalance.toString())
       assert.equal(preTokenDepotBalance.minus(postTokenDepotBalance).toString(), claimableAmount.toString(), 'the owner balance should be deducted by the claimable amount')
       assert.equal(postRecipientBalance.minus(preRecipientBalance).toString(), claimableAmount.toString(), 'the recipient balance should be incremented by the claimable amount')
     })
