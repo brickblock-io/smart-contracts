@@ -12,6 +12,8 @@ async function createSignedMessage(signer, claimer, amount) {
   return signature = await web3.eth.sign(signer, hash)
 }
 
+//end temp function
+
 describe('before the ico', () => {
   contract('BrickblockToken', accounts => {
     it('should put 5e25 BBT in the contract address', async () => {
@@ -112,7 +114,54 @@ describe('before the ico', () => {
   })
 })
 
-describe('after the the ico', async () => {
+describe('at the end of the ico', () => {
+  contract('BrickblockToken', accounts => {
+    it('should set the correct values when running finalizeTokenSale', async () => {
+      const bbt = await BrickblockToken.deployed()
+      const owner = accounts[0]
+      const tokenDepot = bbt.address
+      const claimer1 = accounts[1]
+      const claimableAmount1 = new BigNumber(web3.toWei(5e6))
+      const claimer2 = accounts[2]
+      const claimableAmount2 = new BigNumber(web3.toWei(1e6))
+      
+      // claim tokens for one claimer
+      const signature1 = await createSignedMessage(owner, claimer1, claimableAmount1)
+      const signature2 = await createSignedMessage(owner, claimer2, claimableAmount2)
+      await bbt.claimTokens.sendTransaction(signature1, claimableAmount1, {
+        from: claimer1
+      })
+      await bbt.claimTokens.sendTransaction(signature2, claimableAmount2, {
+        from: claimer2
+      })
+      const preTotalClaimers = claimableAmount1.add(claimableAmount2)
+      const preOwnerBalance = await bbt.balanceOf(owner)
+      // finish the ico...
+      await bbt.finalizeTokenSale()
+      
+      const postOwnerBalance = await bbt.balanceOf(owner)
+      const tokenDepotBalance = await bbt.balanceOf(bbt.address)
+      const totalSupply = await bbt.totalSupply.call()
+      const tokenSaleActive = await bbt.tokenSaleActive.call()
+      const paused = await bbt.paused.call()
+      assert(true, postOwnerBalance === totalSupply.times(51).div(100), 'the owner balance should be 51% of the total')
+      assert(true, tokenDepotBalance === 0)
+      assert(true, paused, 'the token contract should still be paused')
+      assert(true, !tokenSaleActive, 'the token sale should be over')
+    })
+    
+    it('should not be able to call finalizeTokenSale again', async () => {
+      try {
+        bbt.finalizeTokenSale()
+        assert(false, 'this should throw an error')
+      } catch (error) {
+        assert(true, /invalid opcode/.test(error), 'the error message should contain invalid opcode')
+      }
+    })
+  })
+})
+
+describe('after the the ico', () => {
   contract('BrickblockToken', accounts => {
     before('setup post ico state', async () => {
       const bbt = await BrickblockToken.deployed()
