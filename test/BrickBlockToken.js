@@ -2,35 +2,48 @@ var BrickBlockToken = artifacts.require("./BrickBlockToken.sol")
 var BigNumber = require('bignumber.js')
 var leftPad = require('left-pad')
 
-function createSignature(amount, recipient, owner) {
-  amount = web3.toAscii(web3.toHex(eb3.toWei(amount)))
-  while (amount.length < 32) amount = '\x00' + amount
-  const hash = web3.sha3(web3.toHex(amount + recipient), { encoding: 'hex' })
-  const signature = web3.eth.sign(owner, hash)
-  const r = signature.slice(0, 66)
-  const s = '0x' + signature.slice(66, 130)
-  let v = '0x' + signature.slice(130, 132)
-  v = web3.toDecimal(v) + 27
-  return [v, r, s]
+async function createSignedMessage(signer, claimer, amount) {
+  const hash = web3.sha3(
+    leftPad(
+      web3.toHex(amount).slice(2).toString(16), 64, 0
+    ) + claimer.slice(2).toString(16), { encoding: 'hex' }
+  )
+
+  return signature = await web3.eth.sign(signer, hash)
 }
 
-function createSignature(symbol, amount, custodian) {
-  amount = web3.toAscii(web3.toHex(web3.toWei(amount)))
-  while (amount.length < 32) amount = '\x00' + amount
-  const hash = web3.sha3(web3.toHex(symbol + amount), { encoding: 'hex' })
-  const signature = web3.eth.sign(custodian, hash)
-  const r = signature.slice(0, 66)
-  const s = '0x' + signature.slice(66, 130)
-  let v = '0x' + signature.slice(130, 132)
-  v = web3.toDecimal(v) + 27
-  return [r, s, v]
-}
-
+// post ico 
+contract('BrickBlockToken', accounts => {
+  describe('after the the ico', async () => {
+    before('setup post ico state', async () => {
+      const bbt = await BrickBlockToken.deployed()
+      const paused = await bbt.paused.call()
+      const preTokenSaleActive = await bbt.tokenSaleActive()
+      const acc1ClaimAmount = new BigNumber(1000e18)
+      const acc2ClaimAmount = new BigNumber(2000e18)
+      assert(paused, 'the token should start paused')
+      assert(preTokenSaleActive, 'token should start with tokenSaleActive')
+      const owner = accounts[0]
+      const acc1Claim = await createSignedMessage(owner, accounts[1], acc1ClaimAmount)
+      const acc2Claim = await createSignedMessage(owner, accounts[2], acc2ClaimAmount)
+      await bbt.claimTokens.sendTransaction(acc1Claim, acc1ClaimAmount, {from: accounts[1]})
+      await bbt.claimTokens.sendTransaction(acc2Claim, acc2ClaimAmount, {from: accounts[2]})
+      const acc1Balance = await bbt.balanceOf(accounts[1])
+      const acc2Balance = await bbt.balanceOf(accounts[2])
+      assert(true, acc1Balance === acc1ClaimAmount, 'acc1 should have the claimed amount')
+      assert(true, acc2Balance === acc2ClaimAmount, 'acc2 should have the claimed amount')
+      await bbt.finalizeTokenSale()
+      const postTokenSaleActive = await bbt.tokenSaleActive()
+      assert(!postTokenSaleActive, 'the token sale should no longer be active')
+    })
+  })
+  
+})
 
 contract('BrickBlockToken', accounts => {
-  it('should put 5e25 BBT in the first account (owner)', async () => {
+  it('should put 5e25 BBT in the contract address', async () => {
     const bbt = await BrickBlockToken.deployed()
-    const balance = await bbt.balanceOf.call(accounts[0])
+    const balance = await bbt.balanceOf.call(bbt.address)
     assert.equal(balance.valueOf(), 5e25, '5e25 should be in the first account')
   })
 
@@ -58,18 +71,6 @@ contract('BrickBlockToken', accounts => {
     await bbt.transfer(accounts[1], 1000)
     const newBalance = await bbt.balanceOf.call(accounts[1])
     assert.equal(newBalance.minus(originalBalance), 1000, 'The new balance should be 1000 after the transfer')
-  })
-
-  it('should burn the set amount of tokens', async () => {
-    const bbt = await BrickBlockToken.deployed()
-    const preTotalSupply = await bbt.totalSupply.call()
-    const preBalanceAccount1 = await bbt.balanceOf(accounts[0])
-    const burnAmount = preBalanceAccount1.div(2)
-    await bbt.burn(burnAmount)
-    const postTotalSupply = await bbt.totalSupply.call()
-    const postBalanceAccount1 = await bbt.balanceOf.call(accounts[0])
-    assert.equal(preBalanceAccount1.minus(postBalanceAccount1).toString(), burnAmount.toString(), 'the balance of the account should be decremented by the burn amount')
-    assert.equal(preTotalSupply.minus(postTotalSupply).toString(), burnAmount.toString(), 'the totalSupply should be decremented by the burn amount')
   })
 
   it('should set correct balance for previously agreed amount and address with owner signed message', async () => {

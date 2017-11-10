@@ -1,10 +1,8 @@
 pragma solidity ^0.4.4;
 
-import 'zeppelin-solidity/contracts/token/BurnableToken.sol';
-//probably dont need this with this new layout? burning can be done on own
 import 'zeppelin-solidity/contracts/token/PausableToken.sol';
 
-contract BrickBlockToken is PausableToken, BurnableToken {
+contract BrickBlockToken is PausableToken {
   // Event emitted when tokens have been claimed from ICO
   event TokensClaimed(uint256 amount, address to);
 
@@ -12,8 +10,8 @@ contract BrickBlockToken is PausableToken, BurnableToken {
   string public constant symbol = "BBT";
   uint8 public constant decimals = 18;
   uint256 public constant initalSupply = 50 * (10 ** 6) * (10 ** uint256(decimals));
-  uint256 public constant founderShare = 51;
-  uint256 public constant investorShare = 49;
+  uint8 public constant founderShare = 49;
+  uint8 public constant investorShare = 51;
   bool public tokenSaleActive;
   
   function BrickBlockToken() {
@@ -62,7 +60,7 @@ contract BrickBlockToken is PausableToken, BurnableToken {
     // owner should own 51% of tokens
     uint256 claimedTokens = initalSupply - balances[this];
     uint256 newTotalSupply = claimedTokens.mul(100).div(investorShare);
-    uint256 ownerClaimedTokens = newTotalSupply.mul(100).div(founderShare);
+    uint256 ownerClaimedTokens = newTotalSupply.mul(founderShare).div(100);
     
     balances[this] = balances[this].sub(ownerClaimedTokens);
     balances[owner] = balances[owner].add(ownerClaimedTokens);
@@ -83,6 +81,10 @@ contract BrickBlockToken is PausableToken, BurnableToken {
   // transfers etc. paused during token sale (cannot set balance to 0 to replay)
   function claimTokens(bytes _signature, uint _amount) public {
     require(tokenSaleActive);
+    // just in case owner accidentally unpauses before the end of the token sale
+    require(paused);
+    // make sure that the owner can't take more than previously agreed
+    // kind of pointless because owner could sign other addresses... meh
     require(msg.sender != owner);
     bytes32 createdHash = keccak256(uint(_amount), msg.sender);
     bytes memory prefix = "\x19Ethereum Signed Message:\n32";
