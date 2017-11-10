@@ -1,10 +1,10 @@
-var BrickBlockToken = artifacts.require("./BrickBlockToken.sol")
+var BrickblockToken = artifacts.require("./BrickblockToken.sol")
 var BigNumber = require('bignumber.js')
 
-contract('BrickBlockToken', accounts => {
+contract('BrickblockToken', accounts => {
 
   it('should not pause when non-owner calls pause', async () => {
-    const bbt = await BrickBlockToken.deployed()
+    const bbt = await BrickblockToken.deployed()
     try {
       await bbt.pause.sendTransaction({
         from: accounts[1]
@@ -15,14 +15,14 @@ contract('BrickBlockToken', accounts => {
   })
 
   it('should pause when the owner calls pause', async () => {
-    const bbt = await BrickBlockToken.deployed()
+    const bbt = await BrickblockToken.deployed()
     await bbt.pause()
     const postPausedState = await bbt.paused.call()
     assert.equal(postPausedState, true, 'The contract should be paused')
   })
 
   it('should not unpause when non-owner calls pause', async () => {
-    const bbt = await BrickBlockToken.deployed()
+    const bbt = await BrickblockToken.deployed()
     try {
       await bbt.unpause.sendTransaction({
         from: accounts[1]
@@ -33,7 +33,7 @@ contract('BrickBlockToken', accounts => {
   })
 
   it('should unpause when the owner calls unpause', async () => {
-    const bbt = await BrickBlockToken.deployed()
+    const bbt = await BrickblockToken.deployed()
     const prePausedState = await bbt.paused.call()
     assert.equal(prePausedState, true, 'The contract should already be paused')
     await bbt.unpause()
@@ -42,7 +42,7 @@ contract('BrickBlockToken', accounts => {
   })
 
   it('should not transfer tokens when paused', async () => {
-    const bbt = await BrickBlockToken.deployed()
+    const bbt = await BrickblockToken.deployed()
     await bbt.pause()
     try {
       await bbt.transfer(accounts[1], web3.toWei(1000))
@@ -54,7 +54,7 @@ contract('BrickBlockToken', accounts => {
   })
 
   it('should transfer tokens when not paused', async () => {
-    const bbt = await BrickBlockToken.deployed()
+    const bbt = await BrickblockToken.deployed()
     const originalBalance = await bbt.balanceOf.call(accounts[1])
     await bbt.transfer(accounts[1], web3.toWei(1000))
     const newBalance = await bbt.balanceOf.call(accounts[1])
@@ -62,7 +62,7 @@ contract('BrickBlockToken', accounts => {
   })
 
   it('should not set allowances for other addresses when paused', async () => {
-    const bbt = await BrickBlockToken.deployed()
+    const bbt = await BrickblockToken.deployed()
     await bbt.transfer(accounts[1], web3.toWei(1000))
     const balanceAccount1 = await bbt.balanceOf.call(accounts[1])
     const approvalAmount = balanceAccount1.div(2)
@@ -80,7 +80,7 @@ contract('BrickBlockToken', accounts => {
   })
 
   it('should set allowances for other addresses', async () => {
-    const bbt = await BrickBlockToken.deployed()
+    const bbt = await BrickblockToken.deployed()
     await bbt.transfer(accounts[1], web3.toWei(1000))
     const balanceAccount1 = await bbt.balanceOf.call(accounts[1])
     const approvalAmount = balanceAccount1.div(2)
@@ -94,7 +94,7 @@ contract('BrickBlockToken', accounts => {
   })
 
   it('should not increase approval when paused', async () => {
-    const bbt = await BrickBlockToken.deployed()
+    const bbt = await BrickblockToken.deployed()
     await bbt.transfer(accounts[1], web3.toWei(1000))
     const balanceAccount1 = await bbt.balanceOf.call(accounts[1])
     const approvalAmount = balanceAccount1.div(2)
@@ -112,7 +112,7 @@ contract('BrickBlockToken', accounts => {
   })
 
   it('should increase approval when paused', async () => {
-    const bbt = await BrickBlockToken.deployed()
+    const bbt = await BrickblockToken.deployed()
     await bbt.transfer(accounts[1], web3.toWei(1000))
     const balanceAccount1 = await bbt.balanceOf.call(accounts[1])
     const approvalAmount = balanceAccount1.div(2)
@@ -123,7 +123,7 @@ contract('BrickBlockToken', accounts => {
   })
 
   it('should not decrease approval when paused', async () => {
-    const bbt = await BrickBlockToken.deployed()
+    const bbt = await BrickblockToken.deployed()
     await bbt.transfer(accounts[1], web3.toWei(1000))
     const balanceAccount1 = await bbt.balanceOf.call(accounts[1])
     const approvalAmount = balanceAccount1.div(2)
@@ -141,7 +141,7 @@ contract('BrickBlockToken', accounts => {
   })
 
   it('should increase approval when paused', async () => {
-    const bbt = await BrickBlockToken.deployed()
+    const bbt = await BrickblockToken.deployed()
     await bbt.transfer(accounts[1], web3.toWei(1000))
     const balanceAccount1 = await bbt.balanceOf.call(accounts[1])
     const approvalAmount = balanceAccount1.div(2)
@@ -152,7 +152,7 @@ contract('BrickBlockToken', accounts => {
   })
 
   it('should allow transferFrom not paused', async () => {
-    const bbt = await BrickBlockToken.deployed()
+    const bbt = await BrickblockToken.deployed()
     await bbt.transfer(accounts[1], web3.toWei(1000))
     const preApproval = await bbt.allowance(accounts[1], accounts[2])
     const preBalanceAccount1 = await bbt.balanceOf(accounts[1])
