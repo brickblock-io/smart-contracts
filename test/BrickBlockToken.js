@@ -36,6 +36,16 @@ contract('BrickBlockToken', accounts => {
       const postTokenSaleActive = await bbt.tokenSaleActive()
       assert(!postTokenSaleActive, 'the token sale should no longer be active')
     })
+    
+    it('should transfer tokens when not paused', async () => {
+      const bbt = await BrickBlockToken.deployed()
+      await bbt.unpause()
+      const originalBalance = await bbt.balanceOf.call(accounts[1])
+      await bbt.transfer(accounts[1], 1000)
+      const newBalance = await bbt.balanceOf.call(accounts[1])
+      assert.equal(newBalance.minus(originalBalance), 1000, 'The new balance should be 1000 after the transfer')
+    })
+    
   })
   
 })
@@ -65,14 +75,6 @@ contract('BrickBlockToken', accounts => {
     assert.equal(decimals, 18, '18 decimals was not sets')
   })
 
-  it('should transfer tokens when not paused', async () => {
-    const bbt = await BrickBlockToken.deployed()
-    const originalBalance = await bbt.balanceOf.call(accounts[1])
-    await bbt.transfer(accounts[1], 1000)
-    const newBalance = await bbt.balanceOf.call(accounts[1])
-    assert.equal(newBalance.minus(originalBalance), 1000, 'The new balance should be 1000 after the transfer')
-  })
-
   it('should set correct balance for previously agreed amount and address with owner signed message', async () => {
     // setup and get pre values
     const bbt = await BrickBlockToken.deployed()
@@ -85,10 +87,7 @@ contract('BrickBlockToken', accounts => {
     const claimableAmount = new BigNumber(web3.toWei(1000))
     const claimableAddress = claimer
 
-    // need to pad the number to make uint256(uint) and use toHex when dealing with BigNumbers
-    const hash = web3.sha3(leftPad(web3.toHex(claimableAmount).slice(2).toString(16), 64, 0) + claimableAddress.slice(2).toString(16), { encoding: 'hex' })
-
-    const signature = web3.eth.sign(owner, hash)
+    const signature = createSignedMessage(owner, claimer, claimableAmount)
 
     // submit signature with correct amount
     await bbt.claimTokens.sendTransaction(signature, claimableAmount, {
@@ -101,7 +100,7 @@ contract('BrickBlockToken', accounts => {
     assert.equal(postRecipientBalance.minus(preRecipientBalance).toString(), claimableAmount.toString(), 'the recipient balance should be incremented by the claimable amount')
   })
 
-  it('should not set correct balance for with signed message if value is incorrect', async () => {
+  it('should not set correct balance with signed message if value is incorrect', async () => {
     // setup and get pre values
     const bbt = await BrickBlockToken.deployed()
     const owner = accounts[0]
@@ -116,7 +115,7 @@ contract('BrickBlockToken', accounts => {
     // need to pad the number to make uint256(uint) and use toHex when dealing with BigNumbers
     const hash = web3.sha3(leftPad(web3.toHex(claimableAmount).slice(2).toString(16), 64, 0) + claimableAddress.slice(2).toString(16), { encoding: 'hex' })
 
-    const signature = web3.eth.sign(owner, hash)
+    const signature = createSignedMessage(owner, claimer, claimableAmount)
 
     try {
       // submit signature with incorrect amount
@@ -142,10 +141,7 @@ contract('BrickBlockToken', accounts => {
     const claimableAmount = new BigNumber(web3.toWei(1000))
     const claimableAddress = claimer
 
-    // need to pad the number to make uint256(uint) and use toHex when dealing with BigNumbers
-    const hash = web3.sha3(leftPad(web3.toHex(claimableAmount).slice(2).toString(16), 64, 0) + claimableAddress.slice(2).toString(16), { encoding: 'hex' })
-
-    const signature = web3.eth.sign(owner, hash)
+    const signature = createSignedMessage(owner, claimer, claimableAmount)
 
     try {
       // submit signature with incorrect amount
