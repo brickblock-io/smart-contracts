@@ -8,10 +8,10 @@ contract BrickblockToken is PausableToken {
 
   string public constant name = "BrickblockToken";
   string public constant symbol = "BBT";
-  uint8 public constant decimals = 18;
   uint256 public constant initalSupply = 50 * (10 ** 6) * (10 ** uint256(decimals));
   uint8 public constant founderShare = 49;
   uint8 public constant investorShare = 51;
+  uint8 public constant decimals = 18;
   bool public tokenSaleActive;
   
   function BrickblockToken() {
