@@ -27,7 +27,7 @@ function mint(accounts, ammount) {
 
 contract('BrickblockFountain', accounts => {
   const owner = accounts[0]
-        
+
   before(async () => {
     bbt = await BBT.deployed()
     bbf = await BBF.deployed()
@@ -46,7 +46,7 @@ contract('BrickblockFountain', accounts => {
         assert(balance == 1000e18, `${accounts[i]} did not get tokens`)
       }
     })
-    
+
     it('should activate BBT', async () => {
       assert(!await bbt.tokenSaleActive(), 'BBT is not finalized')
       assert(!await bbt.paused(), 'BBT is paused')
@@ -95,5 +95,5 @@ contract('BrickblockFountain', accounts => {
     })
 
   })
-  
+
 })
