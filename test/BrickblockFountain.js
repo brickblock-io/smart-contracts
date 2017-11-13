@@ -14,7 +14,8 @@ async function createSignedMessage(signer, claimer, amount) {
   return signature
 }
 
-function mint(accounts, ammount) {
+async function mint(accounts, ammount) {
+  const bbt = await BBT.deployed()
   const owner = web3.eth.accounts[0]
 
   return Promise.all(accounts.map( async (account) => {
@@ -27,7 +28,10 @@ function mint(accounts, ammount) {
 
 contract('BrickblockFountain', accounts => {
   const owner = accounts[0]
-
+  let bbt
+  let bbf
+  let act
+  
   before(async () => {
     bbt = await BBT.deployed()
     bbf = await BBF.deployed()
