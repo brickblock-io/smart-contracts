@@ -2,98 +2,111 @@ pragma solidity ^0.4.4;
 
 import 'zeppelin-solidity/contracts/token/PausableToken.sol';
 
+
 contract BrickblockToken is PausableToken {
-  // Event emitted when tokens have been claimed from ICO
-  event TokensClaimed(uint256 amount, address to);
 
   string public constant name = "BrickblockToken";
   string public constant symbol = "BBT";
   uint256 public constant initalSupply = 50 * (10 ** 6) * (10 ** uint256(decimals));
-  uint8 public constant founderShare = 49;
-  uint8 public constant investorShare = 51;
+  // block approximating Nov 30, 2020
+  uint256 public constant companyShareReleaseBlock = 10953675;
+  uint8 public constant contributorsShare = 51;
+  uint8 public constant companyShare = 35;
+  uint8 public constant bonusShare = 14;
   uint8 public constant decimals = 18;
+  address public bonusDistributionAddress;
+  address public fountainContractAddress;
   bool public tokenSaleActive;
-  
+
+  event ContributionDistributed(address _contributor, uint256 _amount);
+  event CompanyTokensReleased(address _owner, uint256 _amount);
+  event TokenSaleFinished(address _totalSupply, uint256 _distributedTokens,  uint256 _bonusTokens, uint256 _companyTokens);
+
   function BrickblockToken() {
     totalSupply = initalSupply;
     balances[this] = initalSupply;
-    tokenSaleActive = true;
-    // need to start paused to make sure that there can be no transfers
-    // this ensures that 1. tokenClaims will only work once 2. keep in line with management's wishes
+    // need to start paused to make sure that there can be no transfers until dictated by company
     paused = true;
   }
-  
-  // openZeppelin function to recover public key from signed message
-  function recover(bytes32 hash, bytes sig) private constant returns (address) {
-    bytes32 r;
-    bytes32 s;
-    uint8 v;
 
-    // Check the signature length
-    if (sig.length != 65) {
-      return (address(0));
-    }
-
-    // Divide the signature in r, s and v variables
-    assembly {
-      r := mload(add(sig, 32))
-      s := mload(add(sig, 64))
-      v := byte(0, mload(add(sig, 96)))
-    }
-
-    // Version of signature should be 27 or 28, but 0 and 1 are also possible versions
-    if (v < 27) {
-      v += 27;
-    }
-
-    // If the version is correct return the signer address
-    if (v != 27 && v != 28) {
-      return (address(0));
-    } else {
-      return ecrecover(hash, v, r, s);
-    }
+  function isContract(address addr) private returns (bool) {
+    uint size;
+    assembly { size := extcodesize(addr) }
+    return size > 0;
   }
-  
+
+  // decide which wallet to use to distribute bonuses at a later date
+  function changeBonusDistributionAddress(address _newAddress) public onlyOwner returns (bool) {
+    bonusDistributionAddress = _newAddress;
+  }
+
+  // fountain contract might change over time... need to be able to change it
+  function changeFoutainContractAddress(address _newAddress) public onlyOwner returns (bool) {
+    require(isContract(_newAddress));
+    fountainContractAddress = _newAddress;
+  }
+
+  // custom transfer function that can be used while paused. Cannot be used after end of token sale
+  function distributeTokensToInvestor(address _contributor, uint256 _value) public onlyOwner returns (bool) {
+    require(tokenSaleActive);
+    require(_contributor != address(0));
+    balances[this] = balances[this].sub(_value);
+    balances[_contributor].add(_value);
+    ContributionDistributed(_contributor, _value);
+    return true;
+  }
+
   // need to put brickblock funds into owner address
-  function finalizeTokenSale() public onlyOwner {
+  function finalizeTokenSale() public onlyOwner returns (bool) {
+    // ensure that sale is active. is set to false at the end. can only be performed once.
     require(tokenSaleActive);
+    // ensure that bonus address has been set
+    require(bonusDistributionAddress != address(0));
     // owner should own 51% of tokens
-    uint256 claimedTokens = initalSupply - balances[this];
-    uint256 newTotalSupply = claimedTokens.mul(100).div(investorShare);
-    uint256 ownerClaimedTokens = newTotalSupply.mul(founderShare).div(100);
-    
-    balances[this] = balances[this].sub(ownerClaimedTokens);
-    balances[owner] = balances[owner].add(ownerClaimedTokens);
-    
-    // nuke the remaining balance...
-    balances[this] = balances[this].sub(balanceOf(this));
-    
-    //set new state
-    totalSupply = newTotalSupply;
+    uint256 _distributedTokens = initalSupply.sub(balances[this]);
+    // new total supply based off of amount of token sale investment
+    uint256 _newTotalSupply = _distributedTokens.mul(100).div(contributorsShare);
+    // new token amount for internal bonuses based on new totalSupply
+    uint256 _bonusTokens = _newTotalSupply.mul(bonusShare).div(100);
+    // new token amount for company based on new totalSupply
+    uint256 _companyTokens = _newTotalSupply.mul(companyShare).div(100);
+    // unused amount of tokens which were not purchased
+    uint256 _burnAmount = totalSupply.sub(_newTotalSupply);
+    // distribute bonusTokens to distribution address
+    balances[this] = balances[this].sub(_bonusTokens);
+    balances[bonusDistributionAddress] = balances[bonusDistributionAddress].add(_bonusTokens);
+    // leave remaining balance for company to be claimed at a later date.
+    balances[this] = balances[this].sub(_burnAmount);
+    // double check that math is correct
+    require(balances[this] == _companyTokens);
+    //set new totalSupply
+    totalSupply = _newTotalSupply;
+    // lock out this function from running ever again
     tokenSaleActive = false;
-    
+    // event showing sale is finished
+    TokenSaleFinished(
+      totalSupply,
+      _distributedTokens,
+      _bonusTokens,
+      _companyTokens
+    );
+    // everything went well return true
+    return true;
   }
 
-  // claim tokens based on signed message containing token amount and address
-  // will not work if sent from non-matching address
-  // will not work if incorrect amount is sent
-  // cannot claim after token sale
-  // transfers etc. paused during token sale (cannot set balance to 0 to replay)
-  function claimTokens(bytes _signature, uint _amount) public {
-    require(tokenSaleActive);
-    // just in case owner accidentally unpauses before the end of the token sale
-    require(paused);
-    // make sure that the owner can't take more than previously agreed
-    // kind of pointless because owner could sign other addresses... meh
-    require(msg.sender != owner);
-    bytes32 createdHash = keccak256(uint(_amount), msg.sender);
-    bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-    bytes32 prefixedHash = keccak256(prefix, createdHash);
-    address sigaddr = recover(prefixedHash, _signature);
-    require(sigaddr == owner);
-    require(balances[msg.sender] == 0);
-    balances[this] = balances[this].sub(_amount);
-    balances[msg.sender] = balances[msg.sender].add(_amount);
-    TokensClaimed(_amount, msg.sender);
+  // set allowed for this contract token balance for fountain.
+  function approveCompanyTokensForFountain() public onlyOwner returns (bool) {
+    require(fountainContractAddress != address(0));
+    uint26 companyTokens = balances[this];
+    allowed[owner][fountainContractAddress] = allowed[owner][fountainContractAddress].add(companyTokens);
+  }
+
+  function claimCompanyTokens() public onlyOwner returns (bool) {
+    require(block.number >= companyShareReleaseBlock);
+    require(!tokenSaleActive);
+    uint256 _companyTokens = balances[this];
+    balances[this] = balances[this].sub(_companyTokens);
+    balances[owner] = balances[owner].add(_companyTokens);
+    CompanyTokensReleased(owner, _companyTokens);
   }
 }

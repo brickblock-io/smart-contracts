@@ -1,4 +1,7 @@
 {
   "extends": "solium:all",
-  "rules": {}
+  "rules": {
+    "indentation": ["warning", 2],
+    "uppercase": 0
+  }
 }
