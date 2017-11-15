@@ -20,7 +20,7 @@ contract BrickblockToken is PausableToken {
 
   event ContributionDistributed(address _contributor, uint256 _amount);
   event CompanyTokensReleased(address _owner, uint256 _amount);
-  event TokenSaleFinished(address _totalSupply, uint256 _distributedTokens,  uint256 _bonusTokens, uint256 _companyTokens);
+  event TokenSaleFinished(uint256 _totalSupply, uint256 _distributedTokens,  uint256 _bonusTokens, uint256 _companyTokens);
 
   function BrickblockToken() {
     totalSupply = initalSupply;
@@ -97,7 +97,7 @@ contract BrickblockToken is PausableToken {
   // set allowed for this contract token balance for fountain.
   function approveCompanyTokensForFountain() public onlyOwner returns (bool) {
     require(fountainContractAddress != address(0));
-    uint26 companyTokens = balances[this];
+    uint256 companyTokens = balances[this];
     allowed[owner][fountainContractAddress] = allowed[owner][fountainContractAddress].add(companyTokens);
   }
 
