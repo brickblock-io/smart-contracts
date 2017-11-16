@@ -3,9 +3,13 @@ const BrickblockFountain = artifacts.require('./BrickblockFountain.sol');
 const BrickblockAccessToken = artifacts.require('./BrickblockAccessToken.sol');
 const Brickblock = artifacts.require('./Brickblock.sol')
 
-module.exports = deployer => {
+module.exports = (deployer, network) => {
   deployer.deploy(Brickblock)
-  deployer.deploy(BrickblockToken)
+  if(network === 'test') {
+    deployer.deploy(BrickblockToken, 50)
+  } else {
+    deployer.deploy(BrickblockToken, 10953675)
+  }
   deployer.deploy(BrickblockFountain)
   deployer.deploy(BrickblockAccessToken)
   deployer.then(async () => {
