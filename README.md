@@ -18,6 +18,7 @@ BrickblockToken is an ERC20 Token with added features enabling the Brickblock te
 * change the stored address for the fountain contract
 * be tradable amongst users
 * be tradable on exchanges
+
 ## BrickblockAccessToken (Work in Progress)
 BrickblockAccessToken is the token that will be burned in order to perform a variety of functions in the Brickblock ecosystem. It will be an ERC20 token and will have some minting and pausing features.
 
@@ -105,6 +106,7 @@ yarn migrate:dev
 * **Adrian Kizlauskas** - *Initial work* -
 [dissaranged](https://github.com/dissaranged)
 * **Cody Lamson** - *Initial work* - [TovarishFin](https://github.com/TovarishFin)
+* **Matt Stevens** - *Initial work* - [mattgstevents](https://github.com/mattgstevens)
 
 ## License
 
