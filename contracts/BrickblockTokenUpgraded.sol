@@ -3,10 +3,16 @@ pragma solidity ^0.4.4;
 import 'zeppelin-solidity/contracts/token/PausableToken.sol';
 
 
-contract BrickblockToken is PausableToken {
+// this is just a simulated upgrade contract to the original contract
+// there are new public constants and a new function
+contract BrickblockTokenUpgraded is PausableToken {
 
-  string public constant name = "BrickblockToken";
-  string public constant symbol = "BBT";
+  // change the name of the 'new' contract
+  string public constant name = "BrickblockTokenNew";
+  // change the symbol of the 'new' contract
+  string public constant symbol = "BBT-NEW";
+  // add a new constant to test
+  string public newThing;
   uint256 public constant initialSupply = 50 * (10 ** 6) * (10 ** uint256(decimals));
   // block approximating Nov 30, 2020
   uint256 public companyShareReleaseBlock;
@@ -19,7 +25,7 @@ contract BrickblockToken is PausableToken {
   address public successor = 0x0;
   bool public tokenSaleActive;
   bool public dead;
-  BrickblockToken public predecessor = BrickblockToken(0x0);
+  BrickblockTokenUpgraded public predecessor = BrickblockTokenUpgraded(0x0);
 
   event TokensDistributed(address _contributor, uint256 _amount);
   event CompanyTokensReleased(address _owner, uint256 _amount);
@@ -27,7 +33,6 @@ contract BrickblockToken is PausableToken {
   event Upgrade(address _successor);
   event Evacuated(address user);
   event Rescued(address user, uint256 rescuedBalance, uint256 newBalance);
-  event Debug(string comment);
 
   modifier only(address caller) {
     // [TODO] do we need this check
@@ -36,7 +41,7 @@ contract BrickblockToken is PausableToken {
     _;
   }
 
-  function BrickblockToken(uint256 _companyShareReleaseBlock, address _predecessorAddress) {
+  function BrickblockTokenUpgraded(uint _companyShareReleaseBlock, address _predecessorAddress) {
     companyShareReleaseBlock = _companyShareReleaseBlock;
     totalSupply = initialSupply;
     balances[this] = initialSupply;
@@ -45,11 +50,9 @@ contract BrickblockToken is PausableToken {
     tokenSaleActive = true;
     // if there is a predecessor take the initialization variables from its current state
     if (_predecessorAddress != address(0)) {
-      predecessor = BrickblockToken(_predecessorAddress);
-      companyShareReleaseBlock = predecessor.companyShareReleaseBlock();
+      predecessor = BrickblockTokenUpgraded(_predecessorAddress);
+      totalSupply = predecessor.totalSupply();
       balances[this] = predecessor.balanceOf(_predecessorAddress);
-      // the total supply starts with the balance of the contract itself and rescued funds will be added to this
-      totalSupply = predecessor.balanceOf(_predecessorAddress);
       tokenSaleActive = predecessor.tokenSaleActive();
     }
   }
@@ -58,6 +61,11 @@ contract BrickblockToken is PausableToken {
     uint size;
     assembly { size := extcodesize(addr) }
     return size > 0;
+  }
+
+  function changeNew(string _new) returns (bool) {
+    newThing = _new;
+    return true;
   }
 
   // decide which wallet to use to distribute bonuses at a later date
@@ -152,44 +160,41 @@ contract BrickblockToken is PausableToken {
   // [TODO] if we want to evacuate the allowed mapping, we would need to change it's data layout,
   // so it includes a list of approvals per token holder,
   // but approvals should not live longer than a couple of blocks anyway
-  function evacuate(address _user)  public returns (uint256) {
+  function evacuate(address _user) only(successor) public returns ( uint256 balance) {
     require(dead);
-    uint256 balance = balances[_user];
+    balance = balances[_user];
     balances[_user] = 0;
-    totalSupply = totalSupply.sub(balance);
+    totalSupply.sub(balance);
     Evacuated(_user);
-    return balance;
   }
 
   // to upgrade our contract
   // we set the successor, who is allowed to empty out the data
   // it then will be dead
   // it will be paused to dissallow transfer of tokens
-  function upgrade(address _successor) onlyOwner public returns (bool) {
+  function upgrade(address _successor) onlyOwner public {
     require(_successor != 0x0);
     successor = _successor;
     dead = true;
     paused = true;
     Upgrade(_successor);
-    return true;
   }
+
 
   // each user should call rescue once after an upgrade to evacuate his balance from the predecessor
   // the allowed mapping will be lost
   // if this is called multiple times it won't throw, but the balance will not change
   // this enables us to call it befor each method changeing the balances
   // (this might be a bad idea due to gas-cost and overhead)
-  function rescue() public returns (uint256) {
+  function rescue() public {
     address user = msg.sender;
     uint256 oldBalance = predecessor.evacuate(user);
-    Debug('hitting here...');
+
     if(oldBalance > 0 ) {
       balances[user] = oldBalance.add(balances[user]);
-      totalSupply = totalSupply.add(oldBalance);
+      totalSupply.add(oldBalance);
       Rescued(user, oldBalance, balances[user]);
-      return oldBalance;
     }
-    return oldBalance;
   }
 
   // fallback function - do not allow any eth transfers to this contract

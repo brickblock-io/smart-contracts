@@ -1,7 +1,8 @@
-var BrickblockToken = artifacts.require("./BrickblockToken.sol")
-var BrickblockAccessToken = artifacts.require("./BrickBlockAccessToken.sol")
-var BigNumber = require('bignumber.js')
-var leftPad = require('left-pad')
+const BrickblockToken = artifacts.require("./BrickblockToken.sol")
+const BrickblockTokenUpgraded = artifacts.require("./BrickblockTokenUpgraded.sol")
+const BrickblockAccessToken = artifacts.require("./BrickBlockAccessToken.sol")
+const BigNumber = require('bignumber.js')
+const leftPad = require('left-pad')
 
 function distributeTokensToMany(contract, accounts) {
   const distributeAmount = new BigNumber(1e24)
@@ -11,7 +12,7 @@ function distributeTokensToMany(contract, accounts) {
     await contract.distributeTokens(address, distributeAmount)
     processed++
     if (processed === addresses.length) {
-      console.log('done')
+      console.log(`sent tokens to ${processed} accounts`)
     }
   })
 }
@@ -82,7 +83,7 @@ describe('during the ico', () => {
     it('should set the companyShareReleaseBlock to 50 for development network', async () => {
       const releaseBlock = await bbt.companyShareReleaseBlock()
       const neededBlock = new BigNumber(50)
-      assert.equal(neededBlock.toString(), releaseBlock.toString())
+      assert.equal(releaseBlock.toString(), neededBlock.toString())
     })
 
     it('should put 5e25 BBT in the contract address', async () => {
@@ -309,7 +310,6 @@ describe('at the end of the ico', () => {
       const totalCheck = postBonusBalance.add(postContractBalance.add(preContributorTotalDistributed))
       const postTokenSaleActive = await bbt.tokenSaleActive()
       const postPaused = await bbt.paused()
-      console.log(postContractBalance.toString(), postBonusBalance.toString(), postContributorTotalDistributed.toString(), postTotalSupply.toString())
       // due to solidity integer division this is going to be slightly off... but contributors balance should remain exactly the same.
       const bonusDiff = postBonusBalance.minus(preBonusBalance).minus(postTotalSupply.times(bonusShare).div(100))
       const contributorsDiff = preContributorTotalDistributed.minus(postTotalSupply.times(contributorShare).div(100))
@@ -558,7 +558,7 @@ describe('after the the ico', () => {
         }
       })
 
-      it('should not let a non owner claim company tokens if the block count is past 50 and the token sale is over', async () => {
+      it('should NOT let a non owner claim company tokens if the block count is past 50 and the token sale is over', async () => {
         await blockTimeWarp(bbt, 50)
         try {
           await bbt.claimCompanyTokens.sendTransaction({from: accounts[4]})
@@ -578,6 +578,62 @@ describe('after the the ico', () => {
         assert.equal(preContractBalance.toString(), postOwnerBalance.minus(preOwnerBalance).toString(), 'the owner\'s balance should be incremented by the contract amount')
         assert.equal(zeroBigNumber.toString(), postContractBalance.toString(), 'the contract\'s balance should be 0')
       })
+    })
+  })
+})
+
+describe('in case of emergency...', () => {
+  contract('BrickblockToken', accounts => {
+    let bbt
+    let bbtU
+    let owner = accounts[0]
+    let bonusAddress = accounts[1]
+
+    before('setup bbt BrickblockToken and bbtU BrickblockTokenUpgraded', async () => {
+      bbt = await BrickblockToken.deployed()
+      bbtU = await BrickblockTokenUpgraded.deployed()
+      distributeTokensToMany(bbt, accounts)
+      await bbt.changeBonusDistributionAddress(bonusAddress)
+      await bbt.finalizeTokenSale()
+    })
+
+    it('sets the contract to dead and paused when upgrade is called by owner', async () => {
+      await bbt.upgrade(bbtU.address)
+      const dead = await bbt.dead()
+      const paused = await bbt.paused()
+      assert(dead, 'the contract should have dead set when being upgraded')
+      assert(paused, 'the contract should be paused when dead')
+    })
+
+    it('should NOT be able to be unpaused once upgrade has been called', async () => {
+      try {
+        await bbt.unpause()
+        assert(false, 'the contract should NOT be able to be unpaused if dead')
+      } catch (error) {
+        assert.equal(true, /invalid opcode/.test(error), 'the error should contain invalid opcode')
+      }
+    })
+
+    it('should allow users to call rescue from the new contract to get their balances moved', async () => {
+      for (let address of accounts.slice(4)) {
+        console.log(address, accounts[4])
+        const preBBTTotalSupply = await bbt.totalSupply()
+        const preBBTUTotalSupply = await bbtU.totalSupply()
+        const preBBTBalance = await bbt.balanceOf(address)
+        const preBBTUBalance = await bbtU.balanceOf(address)
+        await bbtU.rescue.sendTransaction({from: address})
+        const postBBTTotalSupply = await bbt.totalSupply()
+        const postBBTUTotalSupply = await bbtU.totalSupply()
+        const postBBTBalance = await bbt.balanceOf(address)
+        const postBBTUBalance = await bbtU.balanceOf(address)
+        // total supply should be decremented by the amount rescued from account
+        console.log(preBBTUTotalSupply.toString(), postBBTUTotalSupply.toString())
+        assert.equal(preBBTTotalSupply.minus(postBBTTotalSupply).toString(), preBBTBalance.toString(), 'the total supply should be decremented from BBT contract by the account value')
+        assert.equal(postBBTUTotalSupply.minus(preBBTUTotalSupply).toString(), preBBTBalance.toString(), 'the total supply should be incremented from BBTU contract by the account value')
+        assert.equal(postBBTBalance.toString(), new BigNumber(0).toString(), 'the balance of the BBT contract should be 0')
+        assert.equal(postBBTUBalance.toString(), preBBTBalance.toString(), 'the new BBTU balance should be the same as the balance on old BBT balance')
+        // might need to write a test for contract balances
+      }
     })
   })
 })
