@@ -7,7 +7,9 @@ module.exports = (deployer, network) => {
   deployer.deploy(Brickblock)
   if(network === 'test') {
     deployer.deploy(BrickblockToken, 50)
+    console.log('deploying on test network')
   } else {
+    console.log('deploying on NON test network!')
     deployer.deploy(BrickblockToken, 10953675)
   }
   deployer.deploy(BrickblockFountain)

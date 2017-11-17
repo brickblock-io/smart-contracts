@@ -4,17 +4,15 @@ var BigNumber = require('bignumber.js')
 var leftPad = require('left-pad')
 
 function distributeTokensToMany(contract, accounts) {
-  return new Promise(function(resolve) {
-    const distributeAmount = new BigNumber(1e24)
-    const addresses = accounts.slice(4)
-    let processed
-    addresses.forEach((address) => {
-      contract.distributeTokens(address, distributeAmount)
-      processed++
-      if (processed === addresses.length) {
-        resolve()
-      }
-    })
+  const distributeAmount = new BigNumber(1e24)
+  const addresses = accounts.slice(4)
+  let processed
+  addresses.forEach(async (address) => {
+    await contract.distributeTokens(address, distributeAmount)
+    processed++
+    if (processed === addresses.length) {
+      console.log('done')
+    }
   })
 }
 
@@ -24,9 +22,7 @@ function unpauseIfPaused(contract) {
     .then(paused => {
       if (paused) {
         contract.unpause()
-        .then(() => {
-          resolve()
-        })
+        .then(resolve)
       } else {
         resolve()
       }
@@ -40,9 +36,7 @@ function pauseIfPaused(contract) {
     .then(paused => {
       if (!paused) {
         contract.pause()
-        .then(() => {
-          resolve()
-        })
+        .then(resolve)
       } else {
         resolve()
       }
@@ -72,7 +66,7 @@ async function blockTimeWarp(contract, blocks) {
   }
 }
 
-describe('before the ico', () => {
+describe('during the ico', () => {
   contract('BrickblockToken', accounts => {
     let owner = accounts[0]
     let contributor1 = accounts[2]
@@ -269,15 +263,13 @@ describe('at the end of the ico', () => {
   contract('BrickblockToken', accounts => {
     let owner = accounts[0]
     let bonusAddress = accounts[1]
-    let contributor1 = accounts[2]
-    let contributor2 = accounts[3]
     let bbt
     let bbtAddress
-
     before('setup contract and relevant accounts', async () => {
       bbt = await BrickblockToken.deployed()
       bbtAddress = bbt.address
       distributeTokensToMany(bbt, accounts)
+      await bbt.changeBonusDistributionAddress(bonusAddress)
     })
 
     it('should set the correct values when running finalizeTokenSale', async () => {
@@ -292,7 +284,6 @@ describe('at the end of the ico', () => {
       const preContributorBalances = await Promise.all(
         contributors.map(async contributor => {
           const contributorBalance = await bbt.balanceOf(contributor)
-          //assert.equal(contributorBalance.toString(), tokenAmount.toString(), 'the amount distributed to this address should be 1e24')
           return contributorBalance
         })
 
@@ -300,14 +291,10 @@ describe('at the end of the ico', () => {
       const preContributorTotalDistributed = preContributorBalances.reduce((total, balance) => {
         return total.add(balance)
       })
-
-      await bbt.changeBonusDistributionAddress(bonusAddress)
       await bbt.finalizeTokenSale()
-
       const postContributorBalances = await Promise.all(
         contributors.map(async contributor => {
           const contributorBalance = await bbt.balanceOf(contributor)
-          //assert.equal(contributorBalance.toString(), tokenAmount.toString(), 'the amount distributed to this address should be 1e24')
           return contributorBalance
         })
 
@@ -322,6 +309,7 @@ describe('at the end of the ico', () => {
       const totalCheck = postBonusBalance.add(postContractBalance.add(preContributorTotalDistributed))
       const postTokenSaleActive = await bbt.tokenSaleActive()
       const postPaused = await bbt.paused()
+      console.log(postContractBalance.toString(), postBonusBalance.toString(), postContributorTotalDistributed.toString(), postTotalSupply.toString())
       // due to solidity integer division this is going to be slightly off... but contributors balance should remain exactly the same.
       const bonusDiff = postBonusBalance.minus(preBonusBalance).minus(postTotalSupply.times(bonusShare).div(100))
       const contributorsDiff = preContributorTotalDistributed.minus(postTotalSupply.times(contributorShare).div(100))

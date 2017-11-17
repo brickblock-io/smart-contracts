@@ -9,7 +9,7 @@ These are the smart contracts which will power the Ethereum side of our platform
 1. POAToken
 
 ## BrickblockToken
-BrickblockToken is an ERC20 Token with added features to enabling the Brickblock team to:
+BrickblockToken is an ERC20 Token with added features enabling the Brickblock team to:
 
 * send out tokens from the token sale
 * finalise the token sale according to previously agreed up terms
@@ -29,7 +29,7 @@ BrickblockAccessToken will be able to:
 * be tradable on exchanges
 
 
-##BrickblockFountain (Work in Progress)
+## BrickblockFountain (Work in Progress)
 BrickblockFountain will be the contract that locks in BrickblockTokens in order to mint new BrickblockAccessTokens. It will be able to:
 
 * lock in BrickblockTokens
@@ -38,21 +38,21 @@ BrickblockFountain will be the contract that locks in BrickblockTokens in order 
 * change the stored address for the BrickBlockAccessToken contract
 * change the stored address for the BrickblockToken contract
 
-##Brickblock (Work in Progress)
+## Brickblock (Work in Progress)
 The Brickblock contract will allow brokers to be added and removed. It is also responsible for deploying new POATokens on behalf of the brokers. It will be able to:
 
 * add a broker
-* add remove a broker
+* remove a broker
 * list brokers
 * create new tokens
 
-##POAToken (Proof of Asset Token) (Work in Progress)
+## POAToken (Proof of Asset Token) (Work in Progress)
 
 The POAToken is the token that represents an asset in the real world. The primary example at the moment is real estate. A broker will go through a vetting process and provide legal proof that they hold the asset in question.
 
 Once when this process is complete they will be able to have a token added by the owner.
 
-The toke will go through different phases:
+The token will go through different phases:
 1. funding
 1. pending
 1. failed
