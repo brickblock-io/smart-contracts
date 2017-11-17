@@ -58,9 +58,9 @@ contract BrickblockToken is PausableToken {
   }
 
   function isContract(address addr) private returns (bool) {
-    uint size;
-    assembly { size := extcodesize(addr) }
-    return size > 0;
+    uint _size;
+    assembly { _size := extcodesize(addr) }
+    return _size > 0;
   }
 
   // decide which wallet to use to distribute bonuses at a later date
@@ -165,13 +165,13 @@ contract BrickblockToken is PausableToken {
   // (this might be a bad idea due to gas-cost and overhead)
   function rescue() public returns (bool) {
     require(predecessorAddress != address(0));
-    address user = msg.sender;
+    address _user = msg.sender;
     BrickblockToken predecessor = BrickblockToken(predecessorAddress);
-    uint256 oldBalance = predecessor.evacuate(user);
-    if(oldBalance > 0 ) {
-      balances[user] = balances[user].add(oldBalance);
-      totalSupply = totalSupply.add(oldBalance);
-      Rescued(user, oldBalance, balances[user]);
+    uint256 _oldBalance = predecessor.evacuate(_user);
+    if(_oldBalance > 0 ) {
+      balances[_user] = balances[_user].add(_oldBalance);
+      totalSupply = totalSupply.add(_oldBalance);
+      Rescued(_user, _oldBalance, balances[_user]);
       return true;
     }
     return false;
