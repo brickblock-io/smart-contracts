@@ -163,12 +163,10 @@ yarn migrate:dev
 * [zeppelin-solidity v1.3.0](https://github.com/OpenZeppelin/zeppelin-solidity/releases)
 
 ## Authors
-* **Marius Hanne** - *Initial work* -
-[mhanne](https://github.com/mhanne)
-* **Adrian Kizlauskas** - *Initial work* -
-[dissaranged](https://github.com/dissaranged)
+* **Marius Hanne** - *Initial work* - [mhanne](https://github.com/mhanne)
+* **Adrian Kizlauskas** - *Initial work* - [dissaranged](https://github.com/dissaranged)
 * **Cody Lamson** - *Initial work* - [TovarishFin](https://github.com/TovarishFin)
-* **Matt Stevens** - *Initial work* - [mattgstevents](https://github.com/mattgstevens)
+* **Matt Stevens** - *Initial work* - [mattgstevens](https://github.com/mattgstevens)
 
 ## License
 

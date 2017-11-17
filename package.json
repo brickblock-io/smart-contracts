@@ -1,15 +1,7 @@
 {
-  "dependencies": {
-    "bignumber.js": "^4.1.0",
-    "cross-env": "^5.1.1",
-    "left-pad": "^1.1.3",
-    "truffle-contract": "^3.0.1",
-    "web3": "^0.18.4",
-    "zeppelin-solidity": "^1.3.0"
-  },
-  "name": "fountain",
+  "name": "smart-contracts",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "Smart contracts for the Brickblock platform",
   "license": "MIT",
   "private": true,
   "scripts": {
@@ -18,15 +10,15 @@
     "start": "concurrently --prefix '[{name}: {time}]' -n 'yarn start:dev, seed' -c 'bgBlue.bold.white,bgGreen.bold.white' 'yarn start:dev' 'yarn migrate:dev && yarn seed'",
     "start:dev": "truffle develop",
     "---SECTION:BUILD---": "-------------------- HOW TO BUILD THE SMART CONTRACTS --------------------",
-    "build:comment": "Compile smart contracts and copy output into src/ and build/ folders",
+    "build:comment": "Compile smart contracts and output into the build/ dir",
     "build": "truffle compile",
     "---SECTION:CLEAN---": "-------------------- HOW TO CLEAN OLD BUILD OUTPUT --------------------",
     "clean:comment": "Clean up old contracts and build files",
     "clean:contracts": "rimraf build/contracts",
     "clean:install:comment": "In case there are some dependency issues, a clean install often helps",
     "clean:install": "rimraf node_modules && yarn install",
-    "---SECTION:CONTRACTS---": "-------------------- HOW TO MIGRATE AND SYNC THE SMART CONTRACTS --------------------",
-    "migrate:comment": "Deploys ours smart contracts to the local testrpc and copies the compiled output into the src/ and build/ folders",
+    "---SECTION:MIGRATE---": "-------------------- HOW TO MIGRATE AND SYNC THE SMART CONTRACTS --------------------",
+    "migrate:comment": "Compile smart contracts and output into the build/ dir then deploys our smart contracts to the some network",
     "migrate:dev": "truffle migrate --network dev --reset",
     "migrate:prod:local": "truffle migrate --network prod",
     "migrate:ropsten": "cross-env NODE_ENV=production truffle migrate --network ropsten",
@@ -34,16 +26,23 @@
     "migrate:ropsten:reset": "cross-env NODE_ENV=production truffle migrate --reset --network ropsten",
     "seed": "cross-env NODE_PATH=build NODE_ENV=development node scripts/seed.js",
     "seed:ropsten": "cross-env NODE_PATH=build NODE_ENV=development node scripts/seed.ropsten.js",
-    "---SECTION:TEST---": "-------------------- HOW TO THE SMART CONTRACTS --------------------",
+    "---SECTION:TEST---": "-------------------- HOW TO TEST THE SMART CONTRACTS --------------------",
     "test": "truffle test"
   },
   "devDependencies": {
+    "bignumber.js": "^4.1.0",
     "chai": "^4.1.1",
     "concurrently": "^3.5.0",
+    "cross-env": "^5.1.1",
     "ethereumjs-testrpc": "^6.0.1",
+    "left-pad": "^1.1.3",
+    "prettier": "^1.8.2",
     "rimraf": "^2.6.2",
     "solium": "^1.0.4",
     "truffle": "^4.0.1",
-    "truffle-hdwallet-provider": "^0.0.3"
+    "truffle-contract": "^3.0.1",
+    "truffle-hdwallet-provider": "^0.0.3",
+    "web3": "^0.18.4",
+    "zeppelin-solidity": "^1.3.0"
   }
 }
