@@ -8,8 +8,6 @@ contract BrickblockToken is PausableToken {
   string public constant name = "BrickblockToken";
   string public constant symbol = "BBT";
   uint256 public constant initialSupply = 50 * (10 ** 6) * (10 ** uint256(decimals));
-  // block approximating Nov 30, 2020
-  uint256 public companyShareReleaseBlock;
   uint8 public constant contributorsShare = 51;
   uint8 public constant companyShare = 35;
   uint8 public constant bonusShare = 14;
@@ -19,7 +17,7 @@ contract BrickblockToken is PausableToken {
   address public successor = 0x0;
   bool public tokenSaleActive;
   bool public dead;
-  BrickblockToken public predecessor = BrickblockToken(0x0);
+  address public predecessorAddress;
 
   event TokensDistributed(address _contributor, uint256 _amount);
   event CompanyTokensReleased(address _owner, uint256 _amount);
@@ -27,7 +25,6 @@ contract BrickblockToken is PausableToken {
   event Upgrade(address _successor);
   event Evacuated(address user);
   event Rescued(address user, uint256 rescuedBalance, uint256 newBalance);
-  event Debug(string comment);
 
   modifier only(address caller) {
     // [TODO] do we need this check
@@ -36,8 +33,7 @@ contract BrickblockToken is PausableToken {
     _;
   }
 
-  function BrickblockToken(uint256 _companyShareReleaseBlock, address _predecessorAddress) {
-    companyShareReleaseBlock = _companyShareReleaseBlock;
+  function BrickblockToken(address _predecessorAddress) {
     totalSupply = initialSupply;
     balances[this] = initialSupply;
     // need to start paused to make sure that there can be no transfers until dictated by company
@@ -45,13 +41,20 @@ contract BrickblockToken is PausableToken {
     tokenSaleActive = true;
     // if there is a predecessor take the initialization variables from its current state
     if (_predecessorAddress != address(0)) {
-      predecessor = BrickblockToken(_predecessorAddress);
-      companyShareReleaseBlock = predecessor.companyShareReleaseBlock();
+      predecessorAddress = _predecessorAddress;
+      BrickblockToken predecessor = BrickblockToken(_predecessorAddress);
       balances[this] = predecessor.balanceOf(_predecessorAddress);
       // the total supply starts with the balance of the contract itself and rescued funds will be added to this
       totalSupply = predecessor.balanceOf(_predecessorAddress);
       tokenSaleActive = predecessor.tokenSaleActive();
+      bonusDistributionAddress = predecessor.bonusDistributionAddress();
+      fountainContractAddress = predecessor.fountainContractAddress();
     }
+  }
+
+  function unpause() onlyOwner whenPaused public {
+    require(dead == false);
+    super.unpause();
   }
 
   function isContract(address addr) private returns (bool) {
@@ -108,6 +111,10 @@ contract BrickblockToken is PausableToken {
     balances[bonusDistributionAddress] = balances[bonusDistributionAddress].add(_bonusTokens);
     // leave remaining balance for company to be claimed at later date .
     balances[this] = balances[this].sub(_burnAmount);
+    // immediately set the remaining contract balance to be allowed by fountain addresse
+    uint256 companyTokens = balances[this];
+    allowed[this][fountainContractAddress] = uint256(0);
+    allowed[this][fountainContractAddress] = allowed[this][fountainContractAddress].add(companyTokens);
     //set new totalSupply
     totalSupply = _newTotalSupply;
     // lock out this function from running ever again
@@ -123,36 +130,13 @@ contract BrickblockToken is PausableToken {
     return true;
   }
 
-  // set allowed for this contract token balance for fountain.
-  function approveCompanyTokensForFountain() public onlyOwner returns (bool) {
-    require(fountainContractAddress != address(0));
-    require(tokenSaleActive == false);
-    uint256 companyTokens = balances[this];
-    allowed[this][fountainContractAddress] = uint256(0);
-    allowed[this][fountainContractAddress] = allowed[this][fountainContractAddress].add(companyTokens);
-  }
-
-  function claimCompanyTokens() public onlyOwner returns (bool) {
-    require(block.number > companyShareReleaseBlock);
-    require(tokenSaleActive == false);
-    uint256 _companyTokens = balances[this];
-    balances[this] = balances[this].sub(_companyTokens);
-    balances[owner] = balances[owner].add(_companyTokens);
-    CompanyTokensReleased(owner, _companyTokens);
-  }
-
-  function unpause() onlyOwner whenPaused public {
-    require(dead == false);
-    super.unpause();
-  }
-
   // this method will be called by the successor, it can be used to query the token balance,
   // but the main goal is to remove the data in the now dead contract,
   // to disable anyone to get rescued more that once
   // [TODO] if we want to evacuate the allowed mapping, we would need to change it's data layout,
   // so it includes a list of approvals per token holder,
   // but approvals should not live longer than a couple of blocks anyway
-  function evacuate(address _user)  public returns (uint256) {
+  function evacuate(address _user) only(successor) public returns (uint256) {
     require(dead);
     uint256 balance = balances[_user];
     balances[_user] = 0;
@@ -179,17 +163,18 @@ contract BrickblockToken is PausableToken {
   // if this is called multiple times it won't throw, but the balance will not change
   // this enables us to call it befor each method changeing the balances
   // (this might be a bad idea due to gas-cost and overhead)
-  function rescue() public returns (uint256) {
+  function rescue() public returns (bool) {
+    require(predecessorAddress != address(0));
     address user = msg.sender;
+    BrickblockToken predecessor = BrickblockToken(predecessorAddress);
     uint256 oldBalance = predecessor.evacuate(user);
-    Debug('hitting here...');
     if(oldBalance > 0 ) {
-      balances[user] = oldBalance.add(balances[user]);
+      balances[user] = balances[user].add(oldBalance);
       totalSupply = totalSupply.add(oldBalance);
       Rescued(user, oldBalance, balances[user]);
-      return oldBalance;
+      return true;
     }
-    return oldBalance;
+    return false;
   }
 
   // fallback function - do not allow any eth transfers to this contract
