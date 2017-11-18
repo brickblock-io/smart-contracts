@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.18;
 
 import "zeppelin-solidity/contracts/token/StandardToken.sol";
 
@@ -31,7 +31,7 @@ contract POAToken is StandardToken {
     // this would be better as a constant, but linter won't let me
     uint8 public decimals = 18;
 
-    
+
     // The broker managing this contract
     address public broker;
 
@@ -141,9 +141,9 @@ contract POAToken is StandardToken {
     function activate(uint8 _v, bytes32 _r, bytes32 _s)
         checkTimeout atStage(Stages.Pending)
     {
-        bytes32 hash = sha3(symbol, bytes32(totalSupply));
+        bytes32 hash = keccak256(symbol, bytes32(totalSupply));
         bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-        bytes32 prefixedHash = sha3(prefix, hash);
+        bytes32 prefixedHash = keccak256(prefix, hash);
 
         address sigaddr = ecrecover(
             prefixedHash,
