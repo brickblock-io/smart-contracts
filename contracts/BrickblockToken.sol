@@ -27,8 +27,6 @@ contract BrickblockToken is PausableToken {
   event Rescued(address user, uint256 rescuedBalance, uint256 newBalance);
 
   modifier only(address caller) {
-    // [TODO] do we need this check
-    require(caller != 0x0);
     require(msg.sender == caller);
     _;
   }
