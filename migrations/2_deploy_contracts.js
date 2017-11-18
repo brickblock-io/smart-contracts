@@ -6,10 +6,6 @@ const Brickblock = artifacts.require('./Brickblock.sol')
 
 module.exports = async (deployer, network) => {
   deployer.then(async () => {
-    console.log(`migrating to ${network}`)
-    if (network === 'test' || network || 'dev' || network === 'develop') {
-      
-    }
     await deployer.deploy(Brickblock)
     await deployer.deploy(BrickblockToken)
     await deployer.deploy(BrickblockFountain)
