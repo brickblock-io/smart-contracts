@@ -21,9 +21,7 @@ BrickblockToken is an ERC20 Token with added features enabling the Brickblock co
 * be tradable on exchanges
 * be upgradeable
 
-Company tokens are locked in by assigning the value to the contract itself. The owner never starts with any token balance:
-
-This way there is no way to move the tokens without predetermined functions. The tokens are approved to be locked into the fountain contract when `finalizeTokenSale` is called.
+Company tokens are locked in by assigning the value to the contract itself. The owner never starts with any token balance. This way there is no way to move the tokens without predetermined functions. The tokens are approved to be locked into the fountain contract when `finalizeTokenSale` is called. Once when the tokens are locked into the fountain, there will be no way to move them until November 30, 2020.
 
 The fountain contract will later be called to lock the company funds into the fountain. See below for more details.
 
@@ -37,59 +35,20 @@ BrickblockFountain will be the contract that locks in BrickblockTokens in order 
 * change the stored address for the BrickBlockAccessToken contract
 * change the stored address for the BrickblockToken contract
 
-A sneak peak at the fountain code regarding the release of company tokens can be seen here:
-
+The code to release the company tokens will look something like this:
 ```
-// THIS IS EXAMPLE CODE ONLY AND THE FUNCTIONS MOST LIKELY WILL
-pragma solidity ^0.4.18;
-
-import './BrickblockToken.sol';
-import 'zeppelin-solidity/contracts/math/SafeMath.sol';
-import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
-
-
-contract BrickblockFountain {
-  using SafeMath for uint256;
-
-  uint256 public constant companyShareReleaseBlock = 1234567;
-  address public brickBlockTokenAddress;
-
-  function BrickblockFountain(address _brickBlockTokenAddress) {
-    require(_brickBlockTokenAddress != address(0));
-    brickBlockTokenAddress = _brickBlockTokenAddress;
-    BrickblockToken bbt = BrickblockToken(_brickBlockTokenAddress);
-    _value = bbt.allowance(user, this);
-    require(_value > 0);
-    bbt.transferFrom(_brickBlockTokenAddress, this, _value);
-    updateAccount(user, balances[user].tokens.add(_value));
-    BBTlocked(user, _value);
-  }
-
-  function lockBBT() public returns (uint256 _value)
-  {
-    address user = msg.sender;
-    _value = bbt.allowance(user, this);
-    require(_value > 0);
-    bbt.transferFrom(user, this, _value);
-    updateAccount(user, balances[user].tokens.add(_value));
-    BBTlocked(user, _value);
-  }
-
-  function claimCompanyTokens() public onlyOwner returns (bool) {
-    require(block.number > companyShareReleaseBlock);
-    BrickblockToken _bbt = BrickblockToken(brickBlockTokenAddress);
-    uint256 _companyTokens = balanceOf(_bbt);
-    balances[this] = balances[this].sub(_companyTokens);
-    balances[owner] = balances[owner].add(_companyTokens);
-    updateAccount(user, 0);
-    CompanyTokensReleased(owner, _companyTokens);
-  }
-
-  // much more functionality is already built and undergoing development and refinement!
-
+function claimCompanyTokens() public onlyOwner returns (bool) {
+  require(block.number > companyShareReleaseBlock);
+  BrickblockToken _bbt = BrickblockToken(brickBlockTokenAddress);
+  uint256 _companyTokens = balanceOf(_bbt);
+  balances[this].tokens = balances[this].tokens.sub(_companyTokens);
+  balances[owner].tokens = balances[owner].tokens.add(_companyTokens);
+  updateAccount(brickBlockTokenAddress, 0);
+  CompanyTokensReleased(owner, _companyTokens);
 }
-
 ```
+
+The code included in this repository for BrickblockFountain is mostly placeholder code for tests and will likely undergo major changes.
 
 ## BrickblockAccessToken (Work in Progress)
 BrickblockAccessToken is the token that will be burned in order to perform a variety of functions in the Brickblock ecosystem. It will be an ERC20 token and will have some minting and pausing features.

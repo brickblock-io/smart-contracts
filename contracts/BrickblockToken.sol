@@ -6,7 +6,7 @@ import 'zeppelin-solidity/contracts/token/PausableToken.sol';
 contract BrickblockToken is PausableToken {
 
   string public constant name = "BrickblockToken";
-  string public constant symbol = "BBT";
+  string public constant symbol = "BRK";
   uint256 public constant initialSupply = 50 * (10 ** 6) * (10 ** uint256(decimals));
   uint8 public constant contributorsShare = 51;
   uint8 public constant companyShare = 35;
@@ -14,13 +14,12 @@ contract BrickblockToken is PausableToken {
   uint8 public constant decimals = 18;
   address public bonusDistributionAddress;
   address public fountainContractAddress;
-  address public successor = 0x0;
+  address public successor;
   bool public tokenSaleActive;
   bool public dead;
   address public predecessorAddress;
 
   event TokensDistributed(address _contributor, uint256 _amount);
-  event CompanyTokensReleased(address _owner, uint256 _amount);
   event TokenSaleFinished(uint256 _totalSupply, uint256 _distributedTokens,  uint256 _bonusTokens, uint256 _companyTokens);
   event Upgrade(address _successor);
   event Evacuated(address user);
@@ -32,13 +31,11 @@ contract BrickblockToken is PausableToken {
   }
 
   function BrickblockToken(address _predecessorAddress) {
-    totalSupply = initialSupply;
-    balances[this] = initialSupply;
     // need to start paused to make sure that there can be no transfers until dictated by company
     paused = true;
-    tokenSaleActive = true;
-    // if there is a predecessor take the initialization variables from its current state
+
     if (_predecessorAddress != address(0)) {
+      // take the initialization variables from predecessor state
       predecessorAddress = _predecessorAddress;
       BrickblockToken predecessor = BrickblockToken(_predecessorAddress);
       balances[this] = predecessor.balanceOf(_predecessorAddress);
@@ -47,6 +44,11 @@ contract BrickblockToken is PausableToken {
       tokenSaleActive = predecessor.tokenSaleActive();
       bonusDistributionAddress = predecessor.bonusDistributionAddress();
       fountainContractAddress = predecessor.fountainContractAddress();
+    } else {
+      // first contract, easy setup
+      totalSupply = initialSupply;
+      balances[this] = initialSupply;
+      tokenSaleActive = true;
     }
   }
 
@@ -63,7 +65,6 @@ contract BrickblockToken is PausableToken {
 
   // decide which wallet to use to distribute bonuses at a later date
   function changeBonusDistributionAddress(address _newAddress) public onlyOwner returns (bool) {
-    // can perhaps put in an ecrecover function in order to verify that someone controls the address
     require(_newAddress != address(this));
     bonusDistributionAddress = _newAddress;
     return true;
@@ -81,7 +82,7 @@ contract BrickblockToken is PausableToken {
   // custom transfer function that can be used while paused. Cannot be used after end of token sale
   function distributeTokens(address _contributor, uint256 _value) public onlyOwner returns (bool) {
     require(tokenSaleActive == true);
-    require(_contributor != address(0)); // todo verify this is required
+    require(_contributor != address(0));
     require(_contributor != owner);
     balances[this] = balances[this].sub(_value);
     balances[_contributor] = balances[_contributor].add(_value);
@@ -96,7 +97,7 @@ contract BrickblockToken is PausableToken {
     // ensure that bonus address has been set
     require(bonusDistributionAddress != address(0));
     uint256 _distributedTokens = initialSupply.sub(balances[this]);
-    // owner should own 49% of total tokens
+    // company amount for company (35%)
     uint256 _companyTokens = initialSupply.mul(companyShare).div(100);
     // token amount for internal bonuses based on totalSupply (14%)
     uint256 _bonusTokens = initialSupply.mul(bonusShare).div(100);
@@ -107,13 +108,11 @@ contract BrickblockToken is PausableToken {
     // distribute bonusTokens to distribution address
     balances[this] = balances[this].sub(_bonusTokens);
     balances[bonusDistributionAddress] = balances[bonusDistributionAddress].add(_bonusTokens);
-    // leave remaining balance for company to be claimed at later date .
+    // leave remaining balance for company to be claimed at later date
     balances[this] = balances[this].sub(_burnAmount);
-    // immediately set the remaining contract balance to be allowed by fountain addresse
-    uint256 companyTokens = balances[this];
-    allowed[this][fountainContractAddress] = uint256(0);
-    allowed[this][fountainContractAddress] = allowed[this][fountainContractAddress].add(companyTokens);
-    //set new totalSupply
+    // set the company tokens to be allowed by fountain addresse
+    allowed[this][fountainContractAddress] = _companyTokens;
+    // set new totalSupply
     totalSupply = _newTotalSupply;
     // lock out this function from running ever again
     tokenSaleActive = false;
@@ -131,9 +130,7 @@ contract BrickblockToken is PausableToken {
   // this method will be called by the successor, it can be used to query the token balance,
   // but the main goal is to remove the data in the now dead contract,
   // to disable anyone to get rescued more that once
-  // [TODO] if we want to evacuate the allowed mapping, we would need to change it's data layout,
-  // so it includes a list of approvals per token holder,
-  // but approvals should not live longer than a couple of blocks anyway
+  // approvals are not included due to data structure
   function evacuate(address _user) only(successor) public returns (uint256) {
     require(dead);
     uint256 balance = balances[_user];
@@ -148,7 +145,7 @@ contract BrickblockToken is PausableToken {
   // it then will be dead
   // it will be paused to dissallow transfer of tokens
   function upgrade(address _successor) onlyOwner public returns (bool) {
-    require(_successor != 0x0);
+    require(_successor != address(0));
     successor = _successor;
     dead = true;
     paused = true;
@@ -166,7 +163,7 @@ contract BrickblockToken is PausableToken {
     address _user = msg.sender;
     BrickblockToken predecessor = BrickblockToken(predecessorAddress);
     uint256 _oldBalance = predecessor.evacuate(_user);
-    if(_oldBalance > 0 ) {
+    if (_oldBalance > 0) {
       balances[_user] = balances[_user].add(_oldBalance);
       totalSupply = totalSupply.add(_oldBalance);
       Rescued(_user, _oldBalance, balances[_user]);

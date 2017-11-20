@@ -1,7 +1,22 @@
 {
   "extends": "solium:all",
   "rules": {
+    "array-declarations": "warning",
+    "blank-lines": "warning",
+    "camelcase": "warning",
+    "deprecated-suicide": "warning",
+    "double-quotes": "warning",
+    "imports-on-top": "warning",
     "indentation": ["warning", 2],
-    "uppercase": 0
+    "lbrace": "warning",
+    "mixedcase": "off",
+    "no-empty-blocks": "warning",
+    "no-unused-vars": "warning",
+    "no-with": "warning",
+    "operator-whitespace": "warning",
+    "pragma-on-top": "warning",
+    "uppercase": "off",
+    "variable-declarations": "warning",
+    "whitespace": "warning"
   }
 }

@@ -1,4 +1,4 @@
-// THIS IS EXAMPLE CODE ONLY AND THE FUNCTIONS MOST LIKELY WILL
+// THIS IS EXAMPLE CODE ONLY AND THE FUNCTIONS MOST LIKELY WILL CHANGE
 pragma solidity ^0.4.18;
 
 import './BrickblockToken.sol';
@@ -17,6 +17,7 @@ contract BrickblockFountainExample is Ownable {
 
   mapping (address => Account) balances;
 
+  // this will be set to the estimated block that will occur on November 30th 2020
   uint256 public constant companyShareReleaseBlock = 1234567;
   address public brickBlockTokenAddress;
 
@@ -29,14 +30,17 @@ contract BrickblockFountainExample is Ownable {
     brickBlockTokenAddress = _brickBlockTokenAddress;
   }
 
-  function balanceOf(address _user) public view returns( uint256 balance ) {
+  // basic implementation of balance return
+  function balanceOf(address _user) public view returns(uint256 balance) {
     return balances[_user].tokens;
   }
 
+  // placeholder function there is much more currently under development
   function updateAccount(address _locker, uint256 _value) private returns (uint256) {
     Placeholder(_locker, _value);
   }
 
+  // this will be called to owner to lock in company tokens. they cannot be claimed until 2020
   function lockCompanyFunds() public onlyOwner returns (bool) {
     BrickblockToken _bbt = BrickblockToken(brickBlockTokenAddress);
     uint256 _value = _bbt.allowance(brickBlockTokenAddress, this);
@@ -46,8 +50,8 @@ contract BrickblockFountainExample is Ownable {
     BBTLocked(brickBlockTokenAddress, _value);
   }
 
-  function lockBBT() public returns (uint256 _value)
-  {
+  // this is a basic representation of how locking tokens will look for contributors
+  function lockBBT() public returns (uint256 _value) {
     address user = msg.sender;
     BrickblockToken _bbt = BrickblockToken(brickBlockTokenAddress);
     _value = _bbt.allowance(user, this);
@@ -57,6 +61,7 @@ contract BrickblockFountainExample is Ownable {
     BBTLocked(user, _value);
   }
 
+  // the company will only be able to claim tokens through this function
   function claimCompanyTokens() public onlyOwner returns (bool) {
     require(block.number > companyShareReleaseBlock);
     BrickblockToken _bbt = BrickblockToken(brickBlockTokenAddress);
@@ -64,6 +69,7 @@ contract BrickblockFountainExample is Ownable {
     balances[this].tokens = balances[this].tokens.sub(_companyTokens);
     balances[owner].tokens = balances[owner].tokens.add(_companyTokens);
     updateAccount(brickBlockTokenAddress, 0);
+    _bbt.transfer(owner, _companyTokens);
     CompanyTokensReleased(owner, _companyTokens);
   }
 
