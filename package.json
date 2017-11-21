@@ -1,9 +1,7 @@
 {
-  "name": "smart-contracts",
+  "name": "@brickblock/smart-contracts",
   "version": "1.0.0",
   "description": "Smart contracts for the Brickblock platform",
-  "license": "MIT",
-  "private": true,
   "scripts": {
     "---SECTION:BLOCKCHAIN---": "-------------------- HOW TO START A LOCAL BLOCKCHAIN --------------------",
     "start:dev:testrpc:comment": "no need for '--deterministic' see update: https://github.com/trufflesuite/truffle/releases",
@@ -27,7 +25,9 @@
     "seed": "cross-env NODE_PATH=build NODE_ENV=development node scripts/seed.js",
     "seed:ropsten": "cross-env NODE_PATH=build NODE_ENV=development node scripts/seed.ropsten.js",
     "---SECTION:TEST---": "-------------------- HOW TO TEST THE SMART CONTRACTS --------------------",
-    "test": "truffle test"
+    "test": "truffle test",
+    "---SECTION:VERSION---": "-------------------- HOW TO MAKE A NEW VERSION --------------------",
+    "preversion": "yarn build"
   },
   "devDependencies": {
     "bignumber.js": "^4.1.0",
