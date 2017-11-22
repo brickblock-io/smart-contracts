@@ -1,0 +1,3 @@
+# all we want is build/
+.*
+!build/
