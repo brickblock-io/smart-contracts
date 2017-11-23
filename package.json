@@ -1,6 +1,6 @@
 {
   "name": "@brickblock/smart-contracts",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Smart contracts for the Brickblock platform",
   "scripts": {
     "---SECTION:BLOCKCHAIN---": "-------------------- HOW TO START A LOCAL BLOCKCHAIN --------------------",
