@@ -1,3 +1,3 @@
 # all we want to publish the built contracts
-!build/contracts/*.json
 *
+!build/contracts/*.json
