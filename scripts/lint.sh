@@ -12,7 +12,3 @@ printf "✅  solium done\n\n\n"
 printf "2️⃣  Running eslint…\n"
 yarn lint:js
 printf "✅  eslint done\n\n\n"
-
-printf "3️⃣  Running stylelint…\n"
-yarn lint:css
-printf "✅  stylelint done\n\n\n"

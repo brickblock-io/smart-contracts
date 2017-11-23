@@ -22,17 +22,17 @@ module.exports = {
       network_id: 4447
     },
     ropsten: {
-      host: "localhost",
+      host: 'localhost',
       port: 8545,
       provider: hdwallet,
       network_id: 3,
       gas: 3712388
     },
     kovan: {
-      host: "localhost",
+      host: 'localhost',
       port: 8545,
       network_id: 42,
       gas: 4500000
     }
   }
-};
+}

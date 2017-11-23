@@ -27,7 +27,11 @@
     "---SECTION:TEST---": "-------------------- HOW TO TEST THE SMART CONTRACTS --------------------",
     "test": "truffle test",
     "---SECTION:VERSION---": "-------------------- HOW TO MAKE A NEW VERSION --------------------",
-    "preversion": "yarn build"
+    "preversion": "yarn lint && yarn build",
+    "---SECTION:LINT---": "-------------------- HOW TO LINT --------------------",
+    "lint": "yarn lint:sol && yarn lint:js",
+    "lint:sol": "solium --dir ./contracts",
+    "lint:js": "prettier migrations/* scripts/*.js tests/* --write"
   },
   "devDependencies": {
     "bignumber.js": "^4.1.0",

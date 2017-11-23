@@ -1,10 +1,6 @@
 const POAToken = artifacts.require('POAToken')
 require('chai').should()
 
-// log = console.log
-// dbg = (...args) =>
-//   log(new Error().stack.split('\n')[2].match(/:(\d+):\d+/)[1], ...args)
-
 const toDecimalFromWei = bn => {
   return web3.toDecimal(web3.fromWei(bn, 'ether'))
 }
