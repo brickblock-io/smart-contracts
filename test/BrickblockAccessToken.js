@@ -1,6 +1,9 @@
 const BrickblockAccessToken = artifacts.require('BrickblockAccessToken.sol')
-const BrickblockFountainStub = artifacts.require('BrickblockFountainStub.sol')
 const BrickblockFountain = artifacts.require('BrickblockFountain.sol')
+const BrickblockUmbrella = artifacts.require('BrickblockUmbrella.sol')
+const BrickblockFountainStub = artifacts.require('BrickblockFountainStub.sol')
+const BrickblockUmbrellaStub = artifacts.require('BrickblockUmbrellaStub.sol')
+const POATokenStub = artifacts.require('POATokenStub.sol')
 const BigNumber = require('bignumber.js')
 
 describe('after the contract is created', () => {
@@ -197,6 +200,126 @@ describe('when minting', () => {
           /invalid opcode/.test(error),
           'invalid opcode should be in the error'
         )
+      }
+    })
+  })
+})
+
+describe('when burning', () => {
+  contract('BrickblockAccessToken', accounts => {
+    const owner = accounts[0]
+    const activeBroker = accounts[1]
+    const inactiveBroker = accounts[2]
+    const brokeBroker = accounts[3]
+    const zeroApprovalBroker = accounts[4]
+    const amount = new BigNumber(1e24)
+    const burnAmount = amount.div(5)
+    let activePOAToken;
+    let inactivePOAToken;
+    let act
+    let umbrellaStub
+
+    before('setup BrickblockAccessToken and related contracts state', async () => {
+      act = await BrickblockAccessToken.deployed()
+      umbrellaStub = await BrickblockUmbrellaStub.new()
+      activePOAToken = await POATokenStub.new()
+      inactivePOAToken = await POATokenStub.new()
+      await activePOAToken.changeAccessTokenAddress(act.address)
+      await inactivePOAToken.changeAccessTokenAddress(act.address)
+      await act.changeUmbrellaAddress(umbrellaStub.address)
+      await umbrellaStub.changeAccessTokenAddress(act.address)
+      await act.mint(activeBroker, amount)
+      await act.mint(inactiveBroker, amount)
+      await umbrellaStub.addBroker(activeBroker)
+      await umbrellaStub.addBroker(inactiveBroker)
+      await umbrellaStub.addBroker(brokeBroker)
+      await umbrellaStub.addBroker(zeroApprovalBroker)
+      await umbrellaStub.deactivateBroker(inactiveBroker)
+      await umbrellaStub.addFakeToken(activePOAToken.address)
+      await umbrellaStub.addFakeToken(inactivePOAToken.address)
+      await umbrellaStub.deactivateToken(inactivePOAToken.address)
+      await act.approve.sendTransaction(umbrellaStub.address, amount, {
+        from: activeBroker
+      })
+      await act.approve.sendTransaction(umbrellaStub.address, amount, {
+        from: inactiveBroker
+      })
+      await act.approve.sendTransaction(umbrellaStub.address, amount, {
+        from: brokeBroker
+      })
+      await act.approve.sendTransaction(activePOAToken.address, amount, {
+        from: activeBroker
+      })
+      await act.approve.sendTransaction(activePOAToken.address, amount, {
+        from: inactiveBroker
+      })
+      await act.approve.sendTransaction(activePOAToken.address, amount, {
+        from: brokeBroker
+      })
+      await act.approve.sendTransaction(inactivePOAToken.address, amount, {
+        from: activeBroker
+      })
+      await act.approve.sendTransaction(inactivePOAToken.address, amount, {
+        from: inactiveBroker
+      })
+      await act.approve.sendTransaction(inactivePOAToken.address, amount, {
+        from: brokeBroker
+      })
+    })
+
+    it('should should burn when sent from umbrella contract', async () => {
+      const preTotalSupply = await act.totalSupply()
+      const preActiveBrokerBalance = await act.balanceOf(activeBroker)
+      await umbrellaStub.simulateBurnFrom(burnAmount, activeBroker)
+      const postActiveBrokerBalance = await act.balanceOf(activeBroker)
+      const postTotalSupply = await act.totalSupply()
+      assert.equal(preTotalSupply.minus(postTotalSupply).toString(), burnAmount.toString(), 'the total supply should be decremented by the total amount')
+      assert.equal(preActiveBrokerBalance.minus(postActiveBrokerBalance).toString(), burnAmount.toString(), 'the activeBroker balance should be decremented by the burnAmount')
+    })
+
+    it('should burn when from activePOAToken contract', async () => {
+      const preTotalSupply = await act.totalSupply()
+      const preActiveBrokerBalance = await act.balanceOf(activeBroker)
+      await activePOAToken.simulateBurnFrom(burnAmount, activeBroker)
+      const postActiveBrokerBalance = await act.balanceOf(activeBroker)
+      const postTotalSupply = await act.totalSupply()
+      assert.equal(preTotalSupply.minus(postTotalSupply).toString(), burnAmount.toString(), 'the total supply should be decremented by the total amount')
+      assert.equal(preActiveBrokerBalance.minus(postActiveBrokerBalance).toString(), burnAmount.toString(), 'the activeBroker balance should be decremented by the burnAmount')
+    })
+
+    it('should NOT burn when not from activePOAToken or umbrella contract', async () => {
+      try {
+        await act.burnFrom(burnAmount, activeBroker)
+        assert(false, 'the contract should throw here')
+      } catch(error) {
+        assert(/invalid opcode/.test(error), 'the error should contain invalid opcode')
+      }
+    })
+
+    it('should NOT burn if there is NO approval for the user', async () => {
+      try {
+        await umbrellaStub.simulateBurnFrom(burnAmount, zeroApprovalBroker)
+        assert(false, 'the contract should throw here')
+      } catch(error) {
+        assert(/invalid opcode/.test(error), 'the error should contain invalid opcode')
+      }
+    })
+
+    it('should NOT burn if there is insufficient balance', async () => {
+      try {
+        await umbrellaStub.simulateBurnFrom(burnAmount, brokeBroker)
+        assert(false, 'the contract should throw here')
+      } catch(error) {
+        assert(/invalid opcode/.test(error), 'the error should contain invalid opcode')
+      }
+    })
+
+    it('should NOT burn if the token is inactive', async () => {
+      try {
+        await inactivePOAToken.simulateBurnFrom(burnAmount, activeBroker)
+        assert(false, 'the contract should throw here')
+      } catch(error) {
+        assert(/invalid opcode/.test(error), 'the error should contain invalid opcode')
       }
     })
   })

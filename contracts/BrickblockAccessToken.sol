@@ -1,16 +1,17 @@
 pragma solidity ^0.4.18;
 
-import 'zeppelin-solidity/contracts/token/BurnableToken.sol';
 import 'zeppelin-solidity/contracts/token/MintableToken.sol';
+import './BrickblockUmbrella.sol';
 
 
-// this will definitely change... but for now it is a good placeholder to see how to work with the fountain contract
-contract BrickblockAccessToken is MintableToken, BurnableToken {
-
+contract BrickblockAccessToken is MintableToken {
   string public constant name = "BrickblockAccessToken";
   string public constant symbol = "ACT";
   uint8 public constant decimals = 18;
   address public fountainAddress;
+  address public umbrellaAddress;
+
+  event Burn(address indexed burner, uint256 value);
 
   function BrickblockAccessToken()
     public
@@ -23,8 +24,10 @@ contract BrickblockAccessToken is MintableToken, BurnableToken {
     _;
   }
 
-  modifier onlyFountain {
-    require(msg.sender == fountainAddress);
+  modifier onlyBurnAuthorized {
+    require(umbrellaAddress != address(0));
+    BrickblockUmbrella bbu = BrickblockUmbrella(umbrellaAddress);
+    require(msg.sender == umbrellaAddress || bbu.tokenStatus(msg.sender));
     _;
   }
 
@@ -50,6 +53,21 @@ contract BrickblockAccessToken is MintableToken, BurnableToken {
     return true;
   }
 
+  // fountain contract might change over time... need to be able to change it
+  function changeUmbrellaAddress(address _newAddress)
+    public
+    onlyOwner
+    isContract(_newAddress)
+    returns (bool)
+  {
+    require(_newAddress != address(0));
+    require(_newAddress != umbrellaAddress);
+    require(_newAddress != address(this));
+    require(_newAddress != owner);
+    umbrellaAddress = _newAddress;
+    return true;
+  }
+
   // TODO: I think this should be fine and will overwrite the old function??? NEED TO CHECK
   function mint
   (
@@ -68,6 +86,7 @@ contract BrickblockAccessToken is MintableToken, BurnableToken {
   }
 
   function burnFrom(uint256 _value, address _from)
+    onlyBurnAuthorized
     public
     onlyFountain
     returns (bool)
@@ -75,8 +94,9 @@ contract BrickblockAccessToken is MintableToken, BurnableToken {
     require(_value > 0);
 
     balances[_from] = balances[_from].sub(_value);
-    allowed[_from][fountainAddress] = allowed[_from][fountainAddress].sub(_value);
+    allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
     totalSupply = totalSupply.sub(_value);
     Burn(_from, _value);
+    return true;
   }
 }

@@ -5,6 +5,7 @@ const BrickblockTokenUpgraded = artifacts.require(
 const BrickblockFountain = artifacts.require('./BrickblockFountain.sol')
 const BrickblockAccessToken = artifacts.require('./BrickblockAccessToken.sol')
 const BrickblockUmbrella = artifacts.require('./BrickblockUmbrella.sol')
+const BrickblockWhitelist = artifacts.require('./BrickblockWhitelist.sol')
 
 module.exports = async (deployer, network) => {
   deployer.then(async () => {
@@ -12,6 +13,7 @@ module.exports = async (deployer, network) => {
     await deployer.deploy(BrickblockToken)
     await deployer.deploy(BrickblockFountain)
     await deployer.deploy(BrickblockAccessToken)
+    await deployer.deploy(BrickblockWhitelist)
     const bbf = await BrickblockFountain.deployed()
     const act = await BrickblockAccessToken.deployed()
     const bbt = await BrickblockToken.deployed()
