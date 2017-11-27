@@ -4,7 +4,7 @@ import 'zeppelin-solidity/contracts/lifecycle/Pausable.sol';
 
 
 contract Upgradeable is Pausable {
-  address public predecessorAddress;
+  address public predecessor;
   address public successor;
   bool public dead;
 
@@ -15,12 +15,18 @@ contract Upgradeable is Pausable {
     _;
   }
 
-  function unpause() onlyOwner whenPaused public {
+  function unpause()
+    public
+    onlyOwner
+    whenPaused
+  {
     require(dead == false);
     super.unpause();
   }
 
-  function Upgradeable(address _predecessorAddress) {
+  function Upgradeable(address _predecessor)
+    public
+  {
     // set initial state here...
   }
 
@@ -39,7 +45,11 @@ contract Upgradeable is Pausable {
     return balance;
   }
   */
-  function evacuate(address _user) only(successor) public returns (uint256);
+  function evacuate(address _user)
+    public
+    only(successor)
+    returns (uint256)
+  {}
 
   // to upgrade our contract
   // we set the successor, who is allowed to empty out the data
@@ -56,7 +66,11 @@ contract Upgradeable is Pausable {
     return true;
   }
   */
-  function upgrade(address _successor) onlyOwner public returns (bool);
+  function upgrade(address _successor)
+    public
+    onlyOwner
+    returns (bool)
+  {}
 
   // each user should call rescue once after an upgrade to evacuate his balance from the predecessor
   // the allowed mapping will be lost
@@ -66,9 +80,9 @@ contract Upgradeable is Pausable {
   // example implementation:
   /*
   function rescue() public returns (bool) {
-    require(predecessorAddress != address(0));
+    require(predecessor != address(0));
     address _user = msg.sender;
-    BrickblockToken predecessor = BrickblockToken(predecessorAddress);
+    BrickblockToken predecessor = BrickblockToken(predecessor);
     uint256 _oldBalance = predecessor.evacuate(_user);
     if (_oldBalance > 0) {
       balances[_user] = balances[_user].add(_oldBalance);
@@ -79,5 +93,8 @@ contract Upgradeable is Pausable {
     return false;
   }
   */
-  function rescue() public returns (bool);
+  function rescue()
+    public
+    returns (bool)
+  {}
 }

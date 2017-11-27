@@ -6,12 +6,15 @@ import 'zeppelin-solidity/contracts/token/MintableToken.sol';
 
 // this will definitely change... but for now it is a good placeholder to see how to work with the fountain contract
 contract BrickblockAccessToken is MintableToken, BurnableToken {
+
   string public constant name = "BrickblockAccessToken";
   string public constant symbol = "ACT";
   uint8 public constant decimals = 18;
   address public fountainAddress;
 
-  function BrickblockAccessToken() {
+  function BrickblockAccessToken()
+    public
+  {
     totalSupply = 0;
   }
 
@@ -53,8 +56,8 @@ contract BrickblockAccessToken is MintableToken, BurnableToken {
     address _to,
     uint256 _amount
   )
-    onlyAllowed
     public
+    onlyAllowed
     returns (bool)
   {
     totalSupply = totalSupply.add(_amount);
@@ -65,8 +68,8 @@ contract BrickblockAccessToken is MintableToken, BurnableToken {
   }
 
   function burnFrom(uint256 _value, address _from)
-    onlyFountain
     public
+    onlyFountain
     returns (bool)
   {
     require(_value > 0);

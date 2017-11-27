@@ -25,23 +25,36 @@ contract BrickblockFountainExample is Ownable {
   event CompanyTokensReleased(address _owner, uint256 _tokenAmount);
   event Placeholder(address _address, uint256 _value);
 
-  function BrickblockFountainExample(address _brickBlockTokenAddress) {
+  function BrickblockFountainExample(address _brickBlockTokenAddress)
+    public
+  {
     require(_brickBlockTokenAddress != address(0));
     brickBlockTokenAddress = _brickBlockTokenAddress;
   }
 
   // basic implementation of balance return
-  function balanceOf(address _user) public view returns(uint256 balance) {
+  function balanceOf(address _user)
+    public
+    view
+    returns(uint256 balance)
+  {
     return balances[_user].tokens;
   }
 
   // placeholder function there is much more currently under development
-  function updateAccount(address _locker, uint256 _value) private returns (uint256) {
+  function updateAccount(address _locker, uint256 _value)
+    private
+    returns (uint256)
+  {
     Placeholder(_locker, _value);
   }
 
   // this will be called to owner to lock in company tokens. they cannot be claimed until 2020
-  function lockCompanyFunds() public onlyOwner returns (bool) {
+  function lockCompanyFunds()
+    public
+    onlyOwner
+    returns (bool)
+  {
     BrickblockToken _bbt = BrickblockToken(brickBlockTokenAddress);
     uint256 _value = _bbt.allowance(brickBlockTokenAddress, this);
     require(_value > 0);
@@ -51,7 +64,10 @@ contract BrickblockFountainExample is Ownable {
   }
 
   // this is a basic representation of how locking tokens will look for contributors
-  function lockBBT() public returns (uint256 _value) {
+  function lockBBT()
+    public
+    returns (uint256 _value)
+  {
     address user = msg.sender;
     BrickblockToken _bbt = BrickblockToken(brickBlockTokenAddress);
     _value = _bbt.allowance(user, this);
@@ -62,7 +78,11 @@ contract BrickblockFountainExample is Ownable {
   }
 
   // the company will only be able to claim tokens through this function
-  function claimCompanyTokens() public onlyOwner returns (bool) {
+  function claimCompanyTokens()
+    public
+    onlyOwner
+    returns (bool)
+  {
     require(block.number > companyShareReleaseBlock);
     BrickblockToken _bbt = BrickblockToken(brickBlockTokenAddress);
     uint256 _companyTokens = balanceOf(_bbt);

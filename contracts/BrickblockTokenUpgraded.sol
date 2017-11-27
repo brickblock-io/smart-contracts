@@ -14,11 +14,14 @@ contract BrickblockTokenUpgraded is BrickblockToken {
   // add a new constant to test
   string public newThing;
 
-  function BrickblockTokenUpgraded(address _predecessor) BrickblockToken(_predecessor) {
+  function BrickblockTokenUpgraded(address _predecessor) BrickblockToken(_predecessor)
+    public
+  {}
 
-  }
-
-  function changeNew(string _new) returns (bool) {
+  function changeNew(string _new)
+    public
+    returns (bool)
+  {
     newThing = _new;
     return true;
   }

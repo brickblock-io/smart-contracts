@@ -6,35 +6,20 @@ import "zeppelin-solidity/contracts/token/StandardToken.sol";
 // Proof-of-Asset contract representing a token backed by a foreign asset.
 contract POAToken is StandardToken {
 
-  // Event emitted when a state change occurs.
   event Stage(Stages stage);
-
-  // Event emitted when tokens are bought
   event Buy(address buyer, uint256 amount);
-
-  // Event emitted when tokens are sold
   event Sell(address seller, uint256 amount);
-
-  // Event emitted when dividends are paid out
   event Payout(uint256 amount);
 
-  // The owner of this contract
-  address public owner;
-
-  // The name of this PoA Token
   string public name;
-
-  // The symbol of this PoA Token
   string public symbol;
 
-  // amount of decimals used for this Token
-  // this would be better as a constant, but linter won't let me
-  uint8 public decimals = 18;
+  uint256 totalPayout = 0;
 
-  // The broker managing this contract
+  uint8 public constant decimals = 18;
+
+  address public owner;
   address public broker;
-
-  // The custodian holding the assets for this contract
   address public custodian;
 
   // The time when the contract was created
@@ -43,18 +28,14 @@ contract POAToken is StandardToken {
   // The time available to fund the contract
   uint public timeout;
 
-  // An account carrying a +balance+ and +claimedPayout+ value.
   struct Account {
     uint256 balance;
     uint256 claimedPayout;
   }
 
-  // Mapping of Account per address
   mapping(address => Account) accounts;
   mapping(address => uint256) claimedPayouts;
   mapping(address => uint256) unliquidated;
-
-  uint256 totalPayout = 0;
 
   enum Stages {
     Funding,
@@ -65,7 +46,6 @@ contract POAToken is StandardToken {
 
   Stages public stage = Stages.Funding;
 
-  // Ensure current stage is +_stage+
   modifier atStage(Stages _stage) {
     require(stage == _stage);
     _;
@@ -81,8 +61,9 @@ contract POAToken is StandardToken {
     _;
   }
 
-  // Enter given stage +_stage+
-  function enterStage(Stages _stage) private {
+  function enterStage(Stages _stage)
+    private
+  {
     stage = _stage;
     Stage(_stage);
   }
@@ -95,7 +76,6 @@ contract POAToken is StandardToken {
     _;
   }
 
-  // Create a new POAToken contract.
   function POAToken
   (
     string _name,
@@ -119,16 +99,16 @@ contract POAToken is StandardToken {
   }
 
   // Buy PoA tokens from the contract.
-  // Called by any investor during the +Funding+ stage.
+  // Called by any investor during the `Funding` stage.
   function buy()
-    public
     payable
+    public
     checkTimeout
     atStage(Stages.Funding)
   {
     // SafeMath will do these checks for us
     // require(accounts[owner].balance >= msg.value);
-    // require(accounts[msg.sender].balance + msg.value > accounts[msg.sender].balance);
+    // require(accounts[msg.sender].balance ` msg.value > accounts[msg.sender].balance);
     balances[owner] = balances[owner].sub(msg.value);
     balances[msg.sender] = balances[msg.sender].add(msg.value);
     Buy(msg.sender, msg.value);
@@ -149,6 +129,7 @@ contract POAToken is StandardToken {
     bytes32 _r,
     bytes32 _s
   )
+    public
     checkTimeout
     atStage(Stages.Pending)
   {
@@ -172,6 +153,7 @@ contract POAToken is StandardToken {
   // Reclaim funds after failed funding run.
   // Called by any investor during the `Failed` stage.
   function reclaim()
+    public
     checkTimeout
     atStage(Stages.Failed)
   {
@@ -182,10 +164,10 @@ contract POAToken is StandardToken {
 
   // Sell PoA tokens back to the contract.
   // Called by any investor during the `Active` stage.
-  // This will subtract the given +amount+ from the users
+  // This will subtract the given `amount` from the users
   // token balance and saves it as unliquidated balance.
-
   function sell(uint256 _amount)
+    public
     atStage(Stages.Active)
   {
     // SafeMath will do this check for us
@@ -199,14 +181,12 @@ contract POAToken is StandardToken {
    // Called by the broker after liquidating assets.
    // This checks if the user has unliquidated balances
    // and transfers the value to the user.
-
   function liquidated(address _account)
     payable
+    public
     atStage(Stages.Active)
     onlyBroker
   {
-    // SafeMath will do this check for us
-    // require(unliquidated[account] >= msg.value);
     unliquidated[_account] = unliquidated[_account].sub(msg.value);
     totalSupply = totalSupply.sub(msg.value);
     _account.transfer(msg.value);
@@ -217,6 +197,7 @@ contract POAToken is StandardToken {
   // This will simply add the received value to the stored `payout`.
   function payout()
     payable
+    public
     atStage(Stages.Active)
     onlyBroker
   {
@@ -227,7 +208,7 @@ contract POAToken is StandardToken {
 
   // TODO: verify internal is the correct one to use here...
   function currentPayout(uint256 _balance, uint256 _claimedPayout)
-    public
+    internal
     returns (uint256)
   {
     uint256 totalUnclaimed = totalPayout.sub(_claimedPayout);
@@ -238,8 +219,8 @@ contract POAToken is StandardToken {
   // Called by any investor after dividends have been received.
   // This will calculate the payout, subtract any already claimed payouts,
   // update the claimed payouts for the given account, and send the payout.
-
   function claim()
+    public
     atStage(Stages.Active)
   {
     uint256 payoutAmount = currentPayout(
@@ -252,8 +233,9 @@ contract POAToken is StandardToken {
   }
 
   // TODO: need to see about making this a standard ERC20 function... super???
-  // Transfer +_value+ from sender to account +_to+.
+  // Transfer `_value` from sender to account `_to`.
   function transfer(address _to, uint256 _value)
+    public
     returns (bool)
   {
     // send any remaining unclaimed ETHER payouts to msg.sender
@@ -277,7 +259,7 @@ contract POAToken is StandardToken {
     return true;
   }
 
-  /*// Get balance of given address +_account+.
+  /*// Get balance of given address `_account`.
   function balanceOf(address _account)
     public
     constant

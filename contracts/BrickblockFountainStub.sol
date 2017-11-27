@@ -14,7 +14,9 @@ contract BrickblockFountainStub is Ownable {
     brickblockAccessToken = BrickblockAccessToken(_newAddress);
   }
 
-  function simulateFountainMint(address _to, uint256 _amount) public {
+  function simulateFountainMint(address _to, uint256 _amount)
+    public
+  {
     brickblockAccessToken.mint(_to, _amount);
   }
 

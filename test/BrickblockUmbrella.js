@@ -265,7 +265,7 @@ describe('when adjusting tokens', () => {
       )
     })
 
-    it.only('should add a token when sending as a valid broker and get a token', async () => {
+    it('should add a token when sending as a valid broker and get a token', async () => {
       const watcher = bbu.TokenAdded()
       await bbu.addToken.sendTransaction('test', 'TST', custodian, 1000, 1e18, {
         from: activeBroker

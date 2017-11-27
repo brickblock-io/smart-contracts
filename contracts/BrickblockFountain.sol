@@ -9,8 +9,8 @@ import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 contract BrickblockFountain is Ownable {
   using SafeMath for uint256;
 
-  event BBTlocked(address user, uint256 ammount);
-  event BBTfreed(address user, uint256 ammount);
+  event BBTLocked(address user, uint256 ammount);
+  event BBTFreed(address user, uint256 ammount);
 
   struct Account {
     uint256 tokens;
@@ -22,22 +22,25 @@ contract BrickblockFountain is Ownable {
 
   BrickblockToken public bbt;
   BrickblockAccessToken public act;
-  uint256 tokenHoursTotal = 1;
+  uint256 public tokenHoursTotal;
 
-  function BrickblockFountain() {
-
+  function BrickblockFountain()
+    public
+  {
+    // TODO: what does this time value represent?
+    tokenHoursTotal = 1;
   }
 
   function changeBrickblockTokenLocation(address _newAddress)
-    onlyOwner
     public
+    onlyOwner
   {
     bbt = BrickblockToken(_newAddress);
   }
 
   function changeAccessTokenLocation(address _newAddress)
-    onlyOwner
     public
+    onlyOwner
   {
     act = BrickblockAccessToken(_newAddress);
   }
@@ -81,7 +84,7 @@ contract BrickblockFountain is Ownable {
       account.tokens = tokens;
       balances[user] = account;
     }
-    
+
   }
 
   function updateTokenHours(address user)
@@ -110,17 +113,17 @@ contract BrickblockFountain is Ownable {
     require(_value > 0);
     bbt.transferFrom(user, this, _value);
     updateAccount(user, balances[user].tokens.add(_value)); // [TODO] maybe we should increaseTokenBalance like functions
-    BBTlocked(user, _value);
+    BBTLocked(user, _value);
   }
 
   function freeBBT()
-  public
+    public
   {
     address user = msg.sender;
     uint256 _value = balanceOf(user);
     bbt.transfer(user, _value);
     updateAccount(user, 0);
-    BBTfreed(user, _value);
+    BBTFreed(user, _value);
   }
 
   function claimACT()
@@ -135,4 +138,5 @@ contract BrickblockFountain is Ownable {
     tokenHoursTotal = tokenHoursTotal.sub(_tokenHours);
     act.mint(user, _usersAct);
   }
+
 }

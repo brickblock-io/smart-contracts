@@ -58,7 +58,9 @@ contract BrickblockUmbrella is Ownable {
   }
 
   // Instantiate the BrickblockUmbrella contract.
-  function BrickblockUmbrella() {
+  function BrickblockUmbrella()
+    public
+  {
     // ensure that 1st element of tokens is not active
     tokens.push(Token(address(0), false));
     brokers.push(Broker(address(0), false));
@@ -73,7 +75,7 @@ contract BrickblockUmbrella is Ownable {
     address[] memory addresses = new address[](brokers.length);
     bool[] memory activeStatuses = new bool[](brokers.length);
     for (uint256 i = 0; i < brokers.length; i++) {
-      Broker broker = brokers[i];
+      Broker memory broker = brokers[i];
       addresses[i] = broker._address;
       activeStatuses[i] = broker._active;
     }
@@ -138,7 +140,7 @@ contract BrickblockUmbrella is Ownable {
     address[] memory addresses = new address[](tokens.length);
     bool[] memory activeStatuses = new bool[](tokens.length);
     for (uint256 i = 0; i < tokens.length; i++) {
-      Token token = tokens[i];
+      Token memory token = tokens[i];
       addresses[i] = token._address;
       activeStatuses[i] = token._active;
     }
@@ -158,9 +160,10 @@ contract BrickblockUmbrella is Ownable {
   need to check if contract has appropriate ACT allowance
   need to transfer and burn ACT
   */
-  function doThing() private returns (bool) {
-
-  }
+  function doThing()
+    private
+    returns (bool)
+  { }
 
   // Create a new POAToken contract with given parameters and add it to the list.
   function addToken
@@ -219,7 +222,9 @@ contract BrickblockUmbrella is Ownable {
   }
 
   // Fallback function
-  function() {
+  function()
+    public
+  {
     revert();
   }
 
