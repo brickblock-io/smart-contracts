@@ -1,14 +1,14 @@
 /* eslint-disable no-console */
 // console output is ok in yarn task
 
+require('dotenv').config()
 const fs = require('fs')
+const path = require('path')
 const utils = require('ethereumjs-util')
-
-require('../config/env.js')
 
 const chainId = process.env.CHAINID
 const contractAddress = process.env.BRICKBLOCK_CONTRACT_ADDRESS
-const fileName = 'contracts/Brickblock.json'
+const fileName = path.resolve('./build/contracts/Brickblock.json')
 
 if (!contractAddress) {
   console.error(
