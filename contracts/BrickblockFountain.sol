@@ -1,9 +1,9 @@
 pragma solidity ^0.4.18;
 
-import './BrickblockToken.sol';
-import './BrickblockAccessToken.sol';
-import 'zeppelin-solidity/contracts/math/SafeMath.sol';
-import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
+import "./BrickblockToken.sol";
+import "./BrickblockAccessToken.sol";
+import "zeppelin-solidity/contracts/math/SafeMath.sol";
+import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
 contract BrickblockFountain is Ownable {

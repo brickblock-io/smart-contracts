@@ -1,6 +1,6 @@
 pragma solidity ^0.4.18;
 
-import 'zeppelin-solidity/contracts/lifecycle/Pausable.sol';
+import "zeppelin-solidity/contracts/lifecycle/Pausable.sol";
 
 
 contract Upgradeable is Pausable {

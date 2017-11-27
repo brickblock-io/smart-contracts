@@ -1,7 +1,7 @@
 pragma solidity ^0.4.18;
 
-import 'zeppelin-solidity/contracts/token/BurnableToken.sol';
-import 'zeppelin-solidity/contracts/token/MintableToken.sol';
+import "zeppelin-solidity/contracts/token/BurnableToken.sol";
+import "zeppelin-solidity/contracts/token/MintableToken.sol";
 
 
 // this will definitely change... but for now it is a good placeholder to see how to work with the fountain contract
