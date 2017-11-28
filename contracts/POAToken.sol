@@ -1,10 +1,16 @@
 pragma solidity ^0.4.18;
 
 import "zeppelin-solidity/contracts/token/StandardToken.sol";
+import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./BrickblockAccessToken.sol";
+import "./BrickblockWhitelist.sol";
 
 
 // Proof-of-Asset contract representing a token backed by a foreign asset.
-contract POAToken is StandardToken {
+contract POAToken is StandardToken, Ownable {
+
+  BrickblockWhitelist brickblockWhitelist;
+  BrickblockAccessToken brickblockAccessToken;
 
   event Stage(Stages stage);
   event Buy(address buyer, uint256 amount);
@@ -14,8 +20,6 @@ contract POAToken is StandardToken {
   string public name;
   string public symbol;
 
-  uint256 totalPayout = 0;
-
   uint8 public constant decimals = 18;
 
   address public owner;
@@ -23,10 +27,12 @@ contract POAToken is StandardToken {
   address public custodian;
 
   // The time when the contract was created
-  uint public creationTime;
+  uint256 public creationBlock;
 
   // The time available to fund the contract
-  uint public timeout;
+  uint256 public timeoutBlock;
+
+  uint256 public constant feePercentage = 5;
 
   struct Account {
     uint256 balance;
@@ -35,13 +41,15 @@ contract POAToken is StandardToken {
 
   mapping(address => Account) accounts;
   mapping(address => uint256) claimedPayouts;
-  mapping(address => uint256) unliquidated;
+
+  uint256 public totalPayout = 0;
 
   enum Stages {
     Funding,
     Pending,
     Failed,
-    Active
+    Active,
+    Terminated
   }
 
   Stages public stage = Stages.Funding;
@@ -56,8 +64,18 @@ contract POAToken is StandardToken {
     _;
   }
 
+  modifier onlyCustodian() {
+    require(msg.sender == custodian);
+    _;
+  }
+
   modifier onlyOwner() {
     require(msg.sender == owner);
+    _;
+  }
+
+  modifier isWhitelisted() {
+    require(brickblockWhitelist.whitelisted(msg.sender));
     _;
   }
 
@@ -68,21 +86,24 @@ contract POAToken is StandardToken {
     Stage(_stage);
   }
 
-  // Ensure funding timeout hasn't expired
+  // Ensure funding timeoutBlock hasn't expired
   modifier checkTimeout() {
-    if (stage == Stages.Funding && now >= creationTime.add(timeout)) {
+    if (stage == Stages.Funding && block.number >= creationBlock.add(timeoutBlock)) {
       enterStage(Stages.Failed);
     }
     _;
   }
 
+  // TODO: do we really want the user to hold the balance? lots of room for
+  // fishy stuff to happen... better to have contract hold the balance i think
+  // Create a new POAToken contract.
   function POAToken
   (
     string _name,
     string _symbol,
     address _broker,
     address _custodian,
-    uint _timeout,
+    uint _timeoutBlock,
     uint256 _supply
   )
     public
@@ -92,10 +113,47 @@ contract POAToken is StandardToken {
     symbol = _symbol;
     broker = _broker;
     custodian = _custodian;
-    timeout = _timeout;
-    creationTime = now;
+    timeoutBlock = _timeoutBlock;
+    creationBlock = block.number;
     totalSupply = _supply;
     balances[owner] = _supply;
+  }
+
+  // TODO: this function is temporary until registry contract is created... remove later!
+  function changeWhitelist(address _address)
+    public
+    onlyOwner
+    returns (bool)
+  {
+    brickblockWhitelist = BrickblockWhitelist(_address);
+    return true;
+  }
+
+  // TODO: this function is temporary until registry contract is created... remove later!
+  function changeAccessToken(address _address)
+    public
+    onlyOwner
+    returns (bool)
+  {
+    brickblockAccessToken = BrickblockAccessToken(_address);
+    return true;
+  }
+
+  function calculateFee(uint256 _value)
+    public
+    view
+    returns (uint256)
+  {
+    return feePercentage.mul(_value).div(1000);
+  }
+
+  // Used to charge fees for broker transactions
+  function burnAccessTokens(uint256 _value, address _broker)
+    private
+    returns (bool)
+  {
+    require(address(brickblockAccessToken) != address(0));
+    return brickblockAccessToken.burnFrom(_value, _broker);
   }
 
   // Buy PoA tokens from the contract.
@@ -105,10 +163,9 @@ contract POAToken is StandardToken {
     public
     checkTimeout
     atStage(Stages.Funding)
+    isWhitelisted
+    returns (bool)
   {
-    // SafeMath will do these checks for us
-    // require(accounts[owner].balance >= msg.value);
-    // require(accounts[msg.sender].balance ` msg.value > accounts[msg.sender].balance);
     balances[owner] = balances[owner].sub(msg.value);
     balances[msg.sender] = balances[msg.sender].add(msg.value);
     Buy(msg.sender, msg.value);
@@ -116,6 +173,7 @@ contract POAToken is StandardToken {
     if (balances[owner] == 0) {
       enterStage(Stages.Pending);
     }
+    return true;
   }
 
   // Activate the PoA contract, providing a valid proof-of-assets.
@@ -123,31 +181,31 @@ contract POAToken is StandardToken {
   // This verifies that the provided signature matches the expected symbol/amount and
   // was made with the custodians private key.
   // TODO: don't need this here...
-  function activate
-  (
-    uint8 _v,
-    bytes32 _r,
-    bytes32 _s
-  )
+  function activate()
     public
+    onlyCustodian
     checkTimeout
     atStage(Stages.Pending)
+    returns (bool)
   {
-    bytes32 hash = keccak256(symbol, bytes32(totalSupply));
-    bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-    bytes32 prefixedHash = keccak256(prefix, hash);
+    broker.transfer(this.balance);
+    enterStage(Stages.Active);
+    return true;
+  }
 
-    address sigaddr = ecrecover(
-      prefixedHash,
-      _v,
-      _r,
-      _s
-    );
-
-    if (sigaddr == custodian) {
-      broker.transfer(this.balance);
-      enterStage(Stages.Active);
-    }
+  // end the token due to asset getting sold/lost/act of god
+  function terminate()
+    public
+    onlyBroker
+    atStage(Stages.Active)
+    payable
+    returns (bool)
+  {
+    require(stage == Stages.Pending || stage == Stages.Active);
+    require(msg.value == totalSupply);
+    uint256 _fee = calculateFee(msg.value);
+    require(burnAccessTokens(_fee, msg.sender));
+    enterStage(Stages.Terminated);
   }
 
   // Reclaim funds after failed funding run.
@@ -155,41 +213,14 @@ contract POAToken is StandardToken {
   function reclaim()
     public
     checkTimeout
-    atStage(Stages.Failed)
+    returns (bool)
   {
+    require(stage == Stages.Failed || stage == Stages.Terminated);
     uint256 balance = balances[msg.sender];
     balances[msg.sender] = 0;
+    totalSupply.sub(balance);
     msg.sender.transfer(balance);
-  }
-
-  // Sell PoA tokens back to the contract.
-  // Called by any investor during the `Active` stage.
-  // This will subtract the given `amount` from the users
-  // token balance and saves it as unliquidated balance.
-  function sell(uint256 _amount)
-    public
-    atStage(Stages.Active)
-  {
-    // SafeMath will do this check for us
-    // require(accounts[msg.sender].balance >= amount);
-    balances[msg.sender] = balances[msg.sender].sub(_amount);
-    unliquidated[msg.sender] = unliquidated[msg.sender].add(_amount);
-    Sell(msg.sender, _amount);
-  }
-
-   // Provide funds from liquidated assets.
-   // Called by the broker after liquidating assets.
-   // This checks if the user has unliquidated balances
-   // and transfers the value to the user.
-  function liquidated(address _account)
-    payable
-    public
-    atStage(Stages.Active)
-    onlyBroker
-  {
-    unliquidated[_account] = unliquidated[_account].sub(msg.value);
-    totalSupply = totalSupply.sub(msg.value);
-    _account.transfer(msg.value);
+    return true;
   }
 
   // Provide funds from a dividend payout.
@@ -200,19 +231,25 @@ contract POAToken is StandardToken {
     public
     atStage(Stages.Active)
     onlyBroker
+    returns (bool)
   {
     require(msg.value > 0);
+    uint256 _fee = calculateFee(msg.value);
+    require(burnAccessTokens(_fee, msg.sender));
     totalPayout = totalPayout.add(msg.value.mul(10e18).div(totalSupply));
     Payout(msg.value);
+    return true;
   }
 
-  // TODO: verify internal is the correct one to use here...
-  function currentPayout(uint256 _balance, uint256 _claimedPayout)
-    internal
+  function currentPayout(address _address)
+    public
+    view
     returns (uint256)
   {
-    uint256 totalUnclaimed = totalPayout.sub(_claimedPayout);
-    return _balance.mul(totalUnclaimed).div(10e18);
+    uint256 _balance = balances[_address];
+    uint256 _claimedPayout = claimedPayouts[_address];
+    uint256 _totalUnclaimed = totalPayout.sub(_claimedPayout);
+    return _balance.mul(_totalUnclaimed).div(10e18);
   }
 
   // Claim dividend payout.
@@ -222,58 +259,37 @@ contract POAToken is StandardToken {
   function claim()
     public
     atStage(Stages.Active)
+    returns (uint256)
   {
-    uint256 payoutAmount = currentPayout(
-      balances[msg.sender],
-      claimedPayouts[msg.sender]
-    );
-    require(payoutAmount > 0);
+    uint256 _payoutAmount = currentPayout(msg.sender);
+    require(_payoutAmount > 0);
     claimedPayouts[msg.sender] = totalPayout;
-    msg.sender.transfer(payoutAmount);
+    msg.sender.transfer(_payoutAmount);
+    return _payoutAmount;
   }
 
-  // TODO: need to see about making this a standard ERC20 function... super???
-  // Transfer `_value` from sender to account `_to`.
+  // TODO: needs to only work during Active stage i think...
+  // Transfer +_value+ from sender to account +_to+.
   function transfer(address _to, uint256 _value)
     public
     returns (bool)
   {
     // send any remaining unclaimed ETHER payouts to msg.sender
-    uint256 payoutAmount = currentPayout(
-      balances[msg.sender],
-      claimedPayouts[msg.sender]
-    );
+    uint256 payoutAmount = currentPayout(msg.sender);
     if (payoutAmount > 0) {
       msg.sender.transfer(payoutAmount);
+      // set claimed payouts to max for both accounts
+      claimedPayouts[msg.sender] = totalPayout;
+      claimedPayouts[_to] = totalPayout;
     }
-
-    // shift balances
-    balances[msg.sender] = balances[msg.sender].sub(_value);
-    balances[_to] = balances[_to].add(_value);
-
-    // set claimed payouts to max for both accounts
-    claimedPayouts[msg.sender] = totalPayout;
-    claimedPayouts[_to] = totalPayout;
-
-    Transfer(msg.sender, _to, _value);
-    return true;
+    super.transfer(_to, _value);
   }
 
-  /*// Get balance of given address `_account`.
-  function balanceOf(address _account)
+  function()
     public
-    constant
-    returns (uint256 balance)
+    payable
   {
-    return accounts[_account].balance;
-  }*/
-
-  // TODO: needed to test dividend payouts until we implement real changing supply
-  function debugSetSupply(uint256 _supply)
-    public
-    onlyOwner
-  {
-    totalSupply = _supply;
+    buy();
   }
 
 }

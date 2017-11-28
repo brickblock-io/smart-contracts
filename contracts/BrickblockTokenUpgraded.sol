@@ -1,6 +1,6 @@
 pragma solidity ^0.4.18;
 
-import './BrickblockToken.sol';
+import "./BrickblockToken.sol";
 
 
 // this is just a simulated upgrade contract to the original contract

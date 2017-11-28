@@ -25,7 +25,9 @@ contract BrickblockUmbrellaStub is Ownable {
 
   BrickblockAccessToken public brickblockAccessToken;
 
-  function BrickblockUmbrellaStub() {
+  function BrickblockUmbrellaStub()
+    public
+  {
     // ensure that 1st element of tokens is not active
     tokens.push(Token(address(0), false));
     brokers.push(Broker(address(0), false));
@@ -71,6 +73,7 @@ contract BrickblockUmbrellaStub is Ownable {
   }
 
   function deactivateToken(address _tokenAddress)
+    public
   {
     uint256 _tokenIndex = tokenIndexMap[_tokenAddress];
     tokens[_tokenIndex]._active = false;

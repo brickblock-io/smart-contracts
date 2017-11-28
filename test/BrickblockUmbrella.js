@@ -221,10 +221,16 @@ describe('when adjusting brokers', () => {
         'the broker before the operation should be inactive'
       )
       const preBrokerStatus = await bbu.brokerStatus(broker1)
-      assert(preBrokerStatus === preBrokerFormatted.active, 'the statuses should be the same for the same address')
+      assert(
+        preBrokerStatus === preBrokerFormatted.active,
+        'the statuses should be the same for the same address'
+      )
       await bbu.deactivateBroker(broker1)
       const postBrokerStatus = await bbu.brokerStatus(broker1)
-      assert(postBrokerStatus === false, 'the broker should show false after being deactivated')
+      assert(
+        postBrokerStatus === false,
+        'the broker should show false after being deactivated'
+      )
     })
 
     it('should NOT add brokers that have already been added', async () => {
@@ -304,13 +310,9 @@ describe('when adjusting tokens', () => {
       const watcher = bbu.TokenAdded()
       const fee = await bbu.calculateFee(1e18)
       const preBrokerBalance = await accessToken.balanceOf(activeBroker)
-      await bbu.addToken.sendTransaction(
-        'test',
-        'TST',
-        custodian,
-        1000,
-        1e18,
-        { from: activeBroker })
+      await bbu.addToken.sendTransaction('test', 'TST', custodian, 1000, 1e18, {
+        from: activeBroker
+      })
       const events = await watcher.get()
       assert(
         events.length > 0 && events[0].event === 'TokenAdded',
@@ -321,7 +323,11 @@ describe('when adjusting tokens', () => {
       const savedTokenAddress = await bbu.getToken(loggedAddress)
       const savedTokenIndex = await bbu.tokenIndexMap(loggedAddress)
       const formattedSavedTokenAddress = tupleToObject(savedTokenAddress)
-      assert.equal(preBrokerBalance.minus(postBrokerBalance).toString(), fee.toString(), 'the broker balance should be deducted by the fee amount')
+      assert.equal(
+        preBrokerBalance.minus(postBrokerBalance).toString(),
+        fee.toString(),
+        'the broker balance should be deducted by the fee amount'
+      )
       assert(
         savedTokenIndex != 0,
         'the token index should never be set to 0 unless it was never set'

@@ -1,7 +1,7 @@
 pragma solidity ^0.4.18;
 
-import 'zeppelin-solidity/contracts/token/MintableToken.sol';
-import './BrickblockUmbrella.sol';
+import "zeppelin-solidity/contracts/token/MintableToken.sol";
+import "./BrickblockUmbrella.sol";
 
 
 contract BrickblockAccessToken is MintableToken {
@@ -88,7 +88,6 @@ contract BrickblockAccessToken is MintableToken {
   function burnFrom(uint256 _value, address _from)
     onlyBurnAuthorized
     public
-    onlyFountain
     returns (bool)
   {
     require(_value > 0);

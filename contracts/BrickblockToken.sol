@@ -1,6 +1,6 @@
 pragma solidity ^0.4.18;
 
-import 'zeppelin-solidity/contracts/token/PausableToken.sol';
+import "zeppelin-solidity/contracts/token/PausableToken.sol";
 
 
 contract BrickblockToken is PausableToken {

@@ -1,6 +1,6 @@
 pragma solidity ^0.4.18;
 
-import './BrickblockAccessToken.sol';
+import "./BrickblockAccessToken.sol";
 
 
 contract BrickblockFountainStub is Ownable {
