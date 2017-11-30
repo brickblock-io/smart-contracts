@@ -8,7 +8,7 @@ const utils = require('ethereumjs-util')
 
 const chainId = process.env.CHAINID
 const contractAddress = process.env.BRICKBLOCK_CONTRACT_ADDRESS
-const fileName = path.resolve('./build/contracts/Brickblock.json')
+const fileName = path.resolve('./build/contracts/BrickblockUmbrella.json')
 
 if (!contractAddress) {
   console.error(

@@ -1,9 +1,9 @@
 {
   "name": "@brickblock/smart-contracts",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Smart contracts for the Brickblock platform",
   "engines": {
-    "node": ">=8.9.0",
+    "node": ">=8.7.0",
     "yarn": ">=1.3.2"
   },
   "scripts": {
@@ -32,12 +32,12 @@
     "seed:ropsten": "cross-env NODE_PATH=build NODE_ENV=development node scripts/seed.ropsten.js",
     "---SECTION:TEST---": "-------------------- HOW TO TEST THE SMART CONTRACTS --------------------",
     "test": "truffle test",
-    "---SECTION:VERSION---": "-------------------- HOW TO MAKE A NEW VERSION --------------------",
-    "preversion": "yarn lint && yarn build",
     "---SECTION:LINT---": "-------------------- HOW TO LINT --------------------",
     "lint": "yarn lint:sol && yarn lint:js",
     "lint:sol": "solium --dir ./contracts",
     "lint:js": "prettier migrations/* scripts/*.js tests/* --write",
+    "---SECTION:VERSION---": "-------------------- HOW TO MAKE A NEW VERSION --------------------",
+    "preversion": "yarn lint && yarn build",
     "---SECTION:HOUSEKEEPING---": "-------------------- GITHOOKS, HEALTHCHECK, OPEN TODOS, VULNERABILITY CHECK etc. --------------------",
     "precommit:comment": "Makes sure we don't commit bad code",
     "precommit": "lint-staged",
@@ -55,6 +55,7 @@
     ]
   },
   "devDependencies": {
+    "@brickblock/eslint-config": "^1.2.3",
     "bignumber.js": "^4.1.0",
     "chai": "^4.1.1",
     "concurrently": "^3.5.0",
