@@ -32,7 +32,13 @@ module.exports = {
       host: 'localhost',
       port: 8545,
       network_id: 42,
-      gas: 4500000
+      gas: 3712388
+    },
+    live: {
+      host: 'localhost',
+      port: 8545,
+      network_id: 0,
+      gas: 3712388
     }
   }
 }

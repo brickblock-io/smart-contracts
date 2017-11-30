@@ -8,17 +8,24 @@ const BrickblockUmbrella = artifacts.require('./BrickblockUmbrella.sol')
 const BrickblockWhitelist = artifacts.require('./BrickblockWhitelist.sol')
 
 module.exports = async (deployer, network) => {
-  deployer.then(async () => {
-    await deployer.deploy(BrickblockUmbrella)
-    await deployer.deploy(BrickblockToken)
-    await deployer.deploy(BrickblockFountain)
-    await deployer.deploy(BrickblockAccessToken)
-    await deployer.deploy(BrickblockWhitelist)
-    const bbf = await BrickblockFountain.deployed()
-    const act = await BrickblockAccessToken.deployed()
-    const bbt = await BrickblockToken.deployed()
-    await act.changeFountainAddress(bbf.address)
-    await bbf.changeAccessTokenLocation(act.address)
-    await bbf.changeBrickblockTokenLocation(bbt.address)
-  })
+  if(network === 'dev') {
+    deployer.then(async () => {
+      await deployer.deploy(BrickblockUmbrella)
+      await deployer.deploy(BrickblockToken)
+      await deployer.deploy(BrickblockFountain)
+      await deployer.deploy(BrickblockAccessToken)
+      await deployer.deploy(BrickblockWhitelist)
+      const bbf = await BrickblockFountain.deployed()
+      const act = await BrickblockAccessToken.deployed()
+      const bbk = await BrickblockToken.deployed()
+      await act.changeFountainAddress(bbf.address)
+      await bbf.changeAccessTokenLocation(act.address)
+      await bbf.changeBrickblockTokenLocation(bbk.address)
+    })
+  } else {
+    deployer.then(async () => {
+      await deployer.deploy(BrickblockToken)
+    })
+  }
+
 }
