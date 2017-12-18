@@ -8,7 +8,7 @@ const BrickblockUmbrella = artifacts.require('./BrickblockUmbrella.sol')
 const BrickblockWhitelist = artifacts.require('./BrickblockWhitelist.sol')
 
 module.exports = async (deployer, network) => {
-  if(network === 'dev') {
+  if(network === 'dev' || network === 'test') {
     deployer.then(async () => {
       await deployer.deploy(BrickblockUmbrella)
       await deployer.deploy(BrickblockToken)

@@ -190,10 +190,6 @@ describe('when in Funding stage', () => {
       }
     })
 
-    it('should NOT allow transfers???', async () => {
-      assert(false, 'figure out how this should work... talk to the others!')
-    })
-
     it('should enter Pending stage once all tokens have been bought', async () => {
       const preBuyerTokenBalance = await poa.balanceOf(whitelistedBuyerAddress)
       const preOwnerTokenBalance = await poa.balanceOf(ownerAddress)
@@ -307,10 +303,6 @@ describe('when in Pending stage', () => {
       } catch(error) {
         assert(/invalid opcode/.test(error), 'the error message should contain invalid opcode')
       }
-    })
-
-    it('should NOT allow transfers???', async () => {
-      assert(false, 'figure out how this should work... talk to the others!')
     })
 
     it('should enter Active stage if custodian', async () => {
@@ -471,7 +463,7 @@ describe('when a contract has problems after becoming Active (acts of god etc?)'
     let poa
 
     before('setup contract state', async () => {
-      poa = POAToken.new()
+      poa = await POAToken.new()
     })
 
     it('should derp', async () => {

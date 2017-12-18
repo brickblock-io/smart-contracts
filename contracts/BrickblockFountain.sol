@@ -73,12 +73,12 @@ contract BrickblockFountain is Ownable {
     account = balances[user];
 
     if (account.lastCheck > 0) {
-      uint256 thYield = account.tokens.mul(now.sub(account.lastCheck));
+      uint256 thYield = account.tokens.mul(block.number.sub(account.lastCheck));
       /* [TODO] this should be normalized to represent something meaningful */
       account.tokenHours = account.tokenHours.add(thYield);
       tokenHoursTotal = tokenHoursTotal.add(thYield);
     }
-    account.lastCheck = now;
+    account.lastCheck = block.number;
 
     if (tokens > 0) {
       account.tokens = tokens;
@@ -94,12 +94,12 @@ contract BrickblockFountain is Ownable {
     Account storage account = balances[user];
 
     if (account.lastCheck > 0) {
-      uint256 thYield = account.tokens.mul (now.sub(account.lastCheck));
+      uint256 thYield = account.tokens.mul (block.number.sub(account.lastCheck));
       /* [TODO] this should be normalized to represent something meaningful */
       account.tokenHours = account.tokenHours.add(thYield);
       tokenHoursTotal = tokenHoursTotal.add(thYield);
     }
-    account.lastCheck = now;
+    account.lastCheck = block.number;
     balances[user] = account;
     return account.tokenHours;
   }
