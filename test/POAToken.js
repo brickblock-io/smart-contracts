@@ -1,4 +1,4 @@
-// TODO: remove completely when no longer needed. This is to be used as a temporary reference for the new test file
+// // TODO: remove completely when no longer needed. This is to be used as a temporary reference for the new test file
 // const POAToken = artifacts.require('POAToken')
 // require('chai').should()
 //
