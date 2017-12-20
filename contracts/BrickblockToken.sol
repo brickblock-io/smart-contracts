@@ -7,7 +7,7 @@ contract BrickblockToken is PausableToken {
 
   string public constant name = "BrickblockToken";
   string public constant symbol = "BBK";
-  uint256 public constant initialSupply = 50 * (10 ** 6) * (10 ** uint256(decimals));
+  uint256 public constant initialSupply = 500 * (10 ** 6) * (10 ** uint256(decimals));
   uint8 public constant contributorsShare = 51;
   uint8 public constant companyShare = 35;
   uint8 public constant bonusShare = 14;
