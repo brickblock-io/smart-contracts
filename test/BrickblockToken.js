@@ -63,12 +63,12 @@ describe('during the ico', () => {
       bbkAddress = bbk.address
     })
 
-    it('should put 5e25 BBK in the contract address', async () => {
+    it('should put 5e26 BBK in the contract address', async () => {
       const balance = await bbk.balanceOf(bbk.address)
       assert.equal(
         balance.valueOf(),
-        5e25,
-        '5e25 should be in the first account'
+        5e26,
+        '5e26 should be in the first account'
       )
     })
 
@@ -153,7 +153,7 @@ describe('during the ico', () => {
           const preContributorBalance = await bbk.balanceOf(contributorAddress)
 
           try {
-            await bbk.distributeTokens(contributorAddress, 5e25)
+            await bbk.distributeTokens(contributorAddress, 5e26)
             assert(false, 'the contract should throw here')
           } catch (error) {
             assert(
