@@ -2,9 +2,6 @@ const BigNumber = require('bignumber.js')
 const leftPad = require('left-pad')
 
 const BrickblockToken = artifacts.require('./BrickblockToken.sol')
-const BrickblockTokenUpgraded = artifacts.require(
-  './BrickblockTokenUpgraded.sol'
-)
 const BrickblockFountainExample = artifacts.require(
   './BrickblockFountainExample.sol'
 )
@@ -50,6 +47,15 @@ function pauseIfUnpaused(contract) {
   })
 }
 
+// constants
+const bonusShare = 14
+const companyShare = 35
+const tokenTotal = new BigNumber(5e26)
+const bonusTokens = tokenTotal.mul(bonusShare).div(100)
+const companyTokens = tokenTotal.mul(companyShare).div(100)
+const initialContractBalance = tokenTotal.minus(bonusTokens)
+const distributableTokens = tokenTotal.minus(bonusTokens).minus(companyTokens)
+
 describe('during the ico', () => {
   contract('BrickblockToken', accounts => {
     let ownerAddress = accounts[0]
@@ -59,16 +65,43 @@ describe('during the ico', () => {
     let bbkAddress
 
     before('setup contract and relevant accounts', async () => {
-      bbk = await BrickblockToken.deployed()
+      bbk = await BrickblockToken.new(bonusAddress)
       bbkAddress = bbk.address
     })
 
-    it('should put 5e26 BBK in the contract address', async () => {
+    it('should put the correct amount BBK in the contract address', async () => {
       const balance = await bbk.balanceOf(bbk.address)
       assert.equal(
-        balance.valueOf(),
-        5e26,
-        '5e26 should be in the first account'
+        balance.toString(),
+        initialContractBalance.toString(),
+        `${initialContractBalance} should be in the contract account`
+      )
+    })
+
+    it('should put the correct amount of BBK in the bonusAddress', async () => {
+      const balance = await bbk.balanceOf(bonusAddress)
+      assert.equal(
+        balance.toString(),
+        bonusTokens.toString(),
+        `${bonusTokens} should be in the bonusAddress`
+      )
+    })
+
+    it('should have the correct bonusTokens set', async () => {
+      const actualBonusTokens = await bbk.bonusTokens()
+      assert.equal(
+        actualBonusTokens.toString(),
+        bonusTokens.toString(),
+        'the bonus tokens should match'
+      )
+    })
+
+    it('should have the correct companyTokens set', async () => {
+      const actualCompanyTokens = await bbk.companyTokens()
+      assert.equal(
+        actualCompanyTokens.toString(),
+        companyTokens.toString(),
+        'the company tokens should match'
       )
     })
 
@@ -101,75 +134,150 @@ describe('during the ico', () => {
       )
     })
 
-    describe('when calling distributeTokens and tokenSaleActive is true', () => {
-      describe('when sent from ownerAddress', () => {
-        it('should distribute tokens to contributorAddress', async () => {
-          const preContractBalance = await bbk.balanceOf(bbkAddress)
-          const preContributorBalance = await bbk.balanceOf(contributorAddress)
-          const distributeAmount = new BigNumber(1e24)
+    describe('when calling toggleDead and tokenSaleActive is true', () => {
+      it('should toggle dead when owner', async () => {
+        const preDead = await bbk.dead()
 
-          await bbk.distributeTokens(
-            contributorAddress,
-            distributeAmount
-          )
-
-          const postContractBalance = await bbk.balanceOf(bbkAddress)
-          const postContributorBalance = await bbk.balanceOf(contributorAddress)
-
-          assert.equal(
-            preContractBalance.minus(postContractBalance).toString(),
-            distributeAmount.toString(),
-            'bbkAddress balance should be decremented by the claimed amounts'
-          )
-          assert.equal(
-            postContributorBalance.minus(preContributorBalance).toString(),
-            distributeAmount.toString(),
-            'contributorAddress balance should be incremented by the claim amount'
-          )
+        await bbk.toggleDead.sendTransaction({
+          from: ownerAddress
         })
 
-        it('should NOT distribute tokens to ownerAddress', async () => {
-          const distributeAmount = new BigNumber(1e24)
+        const postDead = await bbk.dead()
+
+        assert(preDead != postDead, 'dead should be toggled')
+      })
+
+      it('should toggle back dead when owner', async () => {
+        const preDead = await bbk.dead()
+
+        await bbk.toggleDead.sendTransaction({
+          from: ownerAddress
+        })
+
+        const postDead = await bbk.dead()
+
+        assert(preDead != postDead, 'dead should be toggled')
+      })
+
+      it('should NOT toggle dead when not owner', async () => {
+        try {
+          await bbk.toggleDead.sendTransaction({
+            from: accounts[9]
+          })
+          assert(false, 'the contract should throw here')
+        } catch (error) {
+          assert(
+            /invalid opcode/.test(error),
+            'the error message should contain invalid opcode'
+          )
+        }
+      })
+    })
+
+    describe('when calling distributeBonusTokens and tokenSaleActive is true', () => {
+      describe('when NOT sent from ownerAddress', () => {
+        it('should NOT distribute tokens to bonusRecipientAddress', async () => {
+          const bonusRecipientAddress = accounts[9]
+          const preRecipientBalance = await bbk.balanceOf(bonusRecipientAddress)
+          const preBonusBalance = await bbk.balanceOf(bonusAddress)
+          const distributeAmount = new BigNumber(1e19)
+
           try {
-            await bbk.distributeTokens.sendTransaction(
+            await bbk.distributeBonusTokens.sendTransaction(
+              bonusRecipientAddress,
+              distributeAmount,
+              {
+                from: bonusAddress
+              }
+            )
+            assert(false, 'the contract should throw here')
+          } catch (error) {
+            assert(
+              /invalid opcode/.test(error),
+              'the error message should contain invalid opcode'
+            )
+          }
+        })
+      })
+
+      describe('when sent from ownerAddress', () => {
+        it('should NOT distribute tokens to owner', async () => {
+          const distributeAmount = new BigNumber(1e19)
+
+          try {
+            await bbk.distributeBonusTokens.sendTransaction(
               ownerAddress,
               distributeAmount,
               {
                 from: ownerAddress
               }
             )
-            assert(false, 'the contract should throw in this case')
-          } catch (error) {
-            assert.equal(
-              true,
-              /invalid opcode/.test(error),
-              'invalid opcode should be the error'
-            )
-          }
-        })
-
-        it('should NOT distribute more tokens than preallocated 51% of initialSupply', async () => {
-          const preContractBalance = await bbk.balanceOf(bbkAddress)
-          const preContributorBalance = await bbk.balanceOf(contributorAddress)
-
-          try {
-            await bbk.distributeTokens(contributorAddress, 5e26)
             assert(false, 'the contract should throw here')
           } catch (error) {
             assert(
               /invalid opcode/.test(error),
-              'the errror should contain invalid opcode'
+              'the error message should contain invalid opcode'
             )
           }
+        })
 
-          const postContractBalance = await bbk.balanceOf(bbkAddress)
-          const postContributorBalance = await bbk.balanceOf(contributorAddress)
+        it('should distribute tokens to bonusRecipientAddress', async () => {
+          const bonusRecipientAddress = accounts[9]
+          const preRecipientBalance = await bbk.balanceOf(bonusRecipientAddress)
+          const preBonusBalance = await bbk.balanceOf(bonusAddress)
+          const distributeAmount = bonusTokens
 
-          assert(preContractBalance.toString() === postContractBalance.toString(), 'the balances should not change')
-          assert(preContributorBalance.toString() === postContributorBalance.toString(), 'the balances should not change')
+          await bbk.distributeBonusTokens.sendTransaction(
+            bonusRecipientAddress,
+            distributeAmount,
+            {
+              from: ownerAddress
+            }
+          )
+
+          const postRecipientBalance = await bbk.balanceOf(
+            bonusRecipientAddress
+          )
+          const postBonusBalance = await bbk.balanceOf(bonusAddress)
+
+          assert.equal(
+            postRecipientBalance.minus(preRecipientBalance).toString(),
+            distributeAmount.toString(),
+            'the bonus recipient balance should be incremented by the distribute amount'
+          )
+
+          assert.equal(
+            preBonusBalance.minus(postBonusBalance).toString(),
+            distributeAmount.toString(),
+            'the bonus account balance should be decremented by the distribute amount'
+          )
+        })
+
+        it('should NOT distribute more tokens due to previous block distribution', async () => {
+          const bonusRecipientAddress = accounts[9]
+          const bonusBalance = await bbk.balanceOf(bonusAddress)
+          const overDistributeAmount = new BigNumber(1)
+
+          try {
+            await bbk.distributeBonusTokens.sendTransaction(
+              bonusRecipientAddress,
+              overDistributeAmount,
+              {
+                from: ownerAddress
+              }
+            )
+            assert(false, 'the contract should throw here')
+          } catch (error) {
+            assert(
+              /invalid opcode/.test(error),
+              'the error message should contain invalid opcode'
+            )
+          }
         })
       })
+    })
 
+    describe('when calling distributeTokens and tokenSaleActive is true', () => {
       describe('when NOT sent from ownerAddress', () => {
         it('should NOT distribute tokens to contributorAddress', async () => {
           const distributeAmount = new BigNumber(1e24)
@@ -189,31 +297,14 @@ describe('during the ico', () => {
           }
         })
       })
-    })
 
-    describe('when calling bonusDistributionAddress', () => {
       describe('when sent from ownerAddress', () => {
-        it('should change the bonusDistributionAddress', async () => {
-          const preAddress = await bbk.bonusDistributionAddress()
-          await bbk.changeBonusDistributionAddress.sendTransaction(
-            bonusAddress,
-            {
-              from: ownerAddress
-            }
-          )
-          const postAddress = await bbk.bonusDistributionAddress()
-          assert.equal(true, preAddress != postAddress)
-          assert.equal(
-            postAddress,
-            bonusAddress,
-            'the address should be set to the bonusAddress'
-          )
-        })
-
-        it('should NOT change the bonusDistributionAddress if target address is bbkAddress', async () => {
+        it('should NOT distribute tokens to ownerAddress', async () => {
+          const distributeAmount = new BigNumber(1e18)
           try {
-            await bbk.changeBonusDistributionAddress.sendTransaction(
-              bbkAddress,
+            await bbk.distributeTokens.sendTransaction(
+              ownerAddress,
+              distributeAmount,
               {
                 from: ownerAddress
               }
@@ -227,25 +318,56 @@ describe('during the ico', () => {
             )
           }
         })
-      })
 
-      describe('when NOT sent from ownerAddress', () => {
-        it('should NOT change the bonusDistributionAddress', async () => {
+        it('should distribute tokens to contributorAddress', async () => {
+          const preContractBalance = await bbk.balanceOf(bbkAddress)
+          const preContributorBalance = await bbk.balanceOf(contributorAddress)
+          const distributeAmount = distributableTokens
+
+          await bbk.distributeTokens(contributorAddress, distributeAmount)
+
+          const postContractBalance = await bbk.balanceOf(bbkAddress)
+          const postContributorBalance = await bbk.balanceOf(contributorAddress)
+
+          assert.equal(
+            preContractBalance.minus(postContractBalance).toString(),
+            distributeAmount.toString(),
+            'bbkAddress balance should be decremented by the claimed amounts'
+          )
+          assert.equal(
+            postContributorBalance.minus(preContributorBalance).toString(),
+            distributeAmount.toString(),
+            'contributorAddress balance should be incremented by the claim amount'
+          )
+        })
+
+        it('should NOT distribute more tokens than distributable tokens (all already distributed in previous block)', async () => {
+          const preContractBalance = await bbk.balanceOf(bbkAddress)
+          const preContributorBalance = await bbk.balanceOf(contributorAddress)
+          const distributeAmount = new BigNumber(1)
+
           try {
-            await bbk.changeBonusDistributionAddress.sendTransaction(
-              bonusAddress,
-              {
-                from: contributorAddress
-              }
-            )
-            assert(false, 'the contract should throw in this case')
+            await bbk.distributeTokens(contributorAddress, distributeAmount)
+            assert(false, 'the contract should throw here')
           } catch (error) {
-            assert.equal(
-              true,
+            assert(
               /invalid opcode/.test(error),
-              'invalid opcode should be the error'
+              'the errror should contain invalid opcode'
             )
           }
+
+          const postContractBalance = await bbk.balanceOf(bbkAddress)
+          const postContributorBalance = await bbk.balanceOf(contributorAddress)
+
+          assert(
+            preContractBalance.toString() === postContractBalance.toString(),
+            'the balances should not change'
+          )
+          assert(
+            preContributorBalance.toString() ===
+              postContributorBalance.toString(),
+            'the balances should not change'
+          )
         })
       })
     })
@@ -331,7 +453,7 @@ describe('during the ico', () => {
   })
 })
 
-describe('at the end of the ico when bonusAddress and fountainAddress have been set', () => {
+describe('at the end of the ico when fountainAddress has been set', () => {
   contract('BrickblockToken', accounts => {
     let owner = accounts[0]
     let bonusAddress = accounts[1]
@@ -340,12 +462,11 @@ describe('at the end of the ico when bonusAddress and fountainAddress have been 
     let fountainAddress
 
     before('setup contract and relevant accounts', async () => {
-      bbk = await BrickblockToken.deployed()
+      bbk = await BrickblockToken.new(bonusAddress)
       const bbf = await BrickblockFountainExample.new(bbk.address)
       fountainAddress = bbf.address
       bbkAddress = bbk.address
       await distributeTokensToMany(bbk, accounts)
-      await bbk.changeBonusDistributionAddress(bonusAddress)
       await bbk.changeFountainContractAddress(fountainAddress)
     })
 
@@ -359,8 +480,6 @@ describe('at the end of the ico when bonusAddress and fountainAddress have been 
       const contributors = accounts.slice(4)
       const tokenAmount = new BigNumber(1e24)
       const preTotalSupply = await bbk.totalSupply()
-      const companyShare = new BigNumber(35)
-      const bonusShare = new BigNumber(14)
       const contributorShare = new BigNumber(51)
 
       const preContributorTotalDistributed = await getContributorsBalanceSum(
@@ -395,9 +514,10 @@ describe('at the end of the ico when bonusAddress and fountainAddress have been 
       const companyDiff = postContractBalance.minus(
         postTotalSupply.times(companyShare).div(100)
       )
-      assert(
-        bonusDiff <= 1 || bonusDiff >= 1,
-        'the bonus share of total tokens should be 14%'
+      assert.equal(
+        preBonusBalance.minus(postBonusBalance).toString(),
+        '0',
+        'the bonus amount should not change'
       )
       assert(
         contributorsDiff <= 1 || contributorsDiff >= 1,
@@ -420,9 +540,7 @@ describe('at the end of the ico when bonusAddress and fountainAddress have been 
       assert(postPaused, 'the token contract should still be paused')
       assert(!postTokenSaleActive, 'the token sale should be over')
       assert.equal(
-        postContractFountainAllowance
-          .sub(preContractFountainAllowance)
-          .toString(),
+        postContractFountainAllowance.toString(),
         postContractBalance.toString(),
         'the remaining contract balance should be approved to be spent by the fountain contract address'
       )
@@ -453,12 +571,11 @@ describe('after the the ico', () => {
     let testAmount = new BigNumber(1e24)
 
     before('setup bbk BrickblockToken', async () => {
-      bbk = await BrickblockToken.deployed()
+      bbk = await BrickblockToken.new(bonusAddress)
       bbkAddress = bbk.address
       const bbf = await BrickblockFountainExample.new(bbk.address)
       fountainAddress = bbf.address
       await bbk.changeFountainContractAddress(fountainAddress)
-      await bbk.changeBonusDistributionAddress(bonusAddress)
       await distributeTokensToMany(bbk, accounts)
       await bbk.finalizeTokenSale()
     })
@@ -680,419 +797,147 @@ describe('after the the ico', () => {
         'the difference in allowance should be the same as the approveTransferAmount'
       )
     })
-  })
-})
 
-describe('in case of emergency or upgrade', () => {
-  let bbk
-  let bbkU
-  let owner
-  let bonusAddress
-  let fountainAddress
-  let originalTotalSupplyDuringSale
-  describe('at the start of the token sale', () => {
-    contract('BrickblockTokenUpgraded', accounts => {
-      before(
-        'setup bbk BrickblockToken and bbkU BrickblockTokenUpgraded',
-        async () => {
-          owner = accounts[0]
-          bonusAddress = accounts[1]
-          bbk = await BrickblockToken.deployed()
-          const bbf = await BrickblockFountainExample.new(bbk.address)
-          fountainAddress = bbf.address
-          bbkU = await BrickblockTokenUpgraded.new(bbk.address)
-        }
-      )
+    describe('when calling distributeBonusTokens and tokenSaleActive is false', () => {
+      describe('when NOT sent from ownerAddress', () => {
+        it('should NOT distribute tokens to bonusRecipientAddress', async () => {
+          const bonusRecipientAddress = accounts[9]
+          const preRecipientBalance = await bbk.balanceOf(bonusRecipientAddress)
+          const preBonusBalance = await bbk.balanceOf(bonusAddress)
+          const distributeAmount = new BigNumber(1e19)
 
-      it('should have the same properties as the original', async () => {
-        const bbkTotalSupply = await bbk.totalSupply()
-        const bbkUTotalSupply = await bbkU.totalSupply()
-        const bbkTokenSaleActive = await bbk.tokenSaleActive()
-        const bbkUTokenSaleActive = await bbkU.tokenSaleActive()
-        const bbkContractBalance = await bbk.balanceOf(bbk.address)
-        const bbkUContractBalance = await bbkU.balanceOf(bbkU.address)
-        const bbkBonusDistributionAddress = await bbk.bonusDistributionAddress()
-        const bbkUBonusDistributionAddress = await bbkU.bonusDistributionAddress()
-        const bbkFountainContractAddress = await bbk.fountainContractAddress()
-        const bbkUFountainContractAddress = await bbkU.fountainContractAddress()
-
-        assert.equal(
-          bbkTotalSupply.toString(),
-          bbkUTotalSupply.toString(),
-          'the totalSupply should be identical'
-        )
-        assert.equal(
-          bbkTokenSaleActive,
-          bbkUTokenSaleActive,
-          'the tokenSaleActive status should be identical'
-        )
-        assert.equal(
-          bbkContractBalance.toString(),
-          bbkUContractBalance.toString(),
-          'the balance of the contracts should be identical'
-        )
-        assert.equal(
-          bbkBonusDistributionAddress,
-          bbkUBonusDistributionAddress,
-          'the bonusDistributionAddress should be identical for both contracts'
-        )
-        assert.equal(
-          bbkFountainContractAddress,
-          bbkUFountainContractAddress,
-          'the fountainContractAddress should be identical for both contracts'
-        )
+          try {
+            await bbk.distributeBonusTokens.sendTransaction(
+              bonusRecipientAddress,
+              distributeAmount,
+              {
+                from: bonusAddress
+              }
+            )
+            assert(false, 'the contract should throw here')
+          } catch (error) {
+            assert(
+              /invalid opcode/.test(error),
+              'the error message should contain invalid opcode'
+            )
+          }
+        })
       })
 
-      it('should start paused in any starting state', async () => {
-        const bbkUPaused = await bbkU.paused()
-        assert(bbkUPaused, 'the new contract should always start paused')
-      })
+      describe('when sent from owner', () => {
+        it('should NOT distribute tokens to owner', async () => {
+          const distributeAmount = new BigNumber(1e19)
 
-      it('should always have a predecessorAddress', async () => {
-        const predecessorAddress = await bbkU.predecessorAddress()
-        assert.equal(predecessorAddress, bbk.address)
+          try {
+            await bbk.distributeBonusTokens.sendTransaction(
+              owner,
+              distributeAmount,
+              {
+                from: owner
+              }
+            )
+            assert(false, 'the contract should throw here')
+          } catch (error) {
+            assert(
+              /invalid opcode/.test(error),
+              'the error message should contain invalid opcode'
+            )
+          }
+        })
+
+        it('should distribute tokens to bonusRecipientAddress', async () => {
+          const bonusRecipientAddress = accounts[9]
+          const preRecipientBalance = await bbk.balanceOf(bonusRecipientAddress)
+          const preBonusBalance = await bbk.balanceOf(bonusAddress)
+          const distributeAmount = bonusTokens
+
+          await bbk.distributeBonusTokens.sendTransaction(
+            bonusRecipientAddress,
+            distributeAmount,
+            {
+              from: owner
+            }
+          )
+
+          const postRecipientBalance = await bbk.balanceOf(
+            bonusRecipientAddress
+          )
+          const postBonusBalance = await bbk.balanceOf(bonusAddress)
+
+          assert.equal(
+            postRecipientBalance.minus(preRecipientBalance).toString(),
+            distributeAmount.toString(),
+            'the bonus recipient balance should be incremented by the distribute amount'
+          )
+
+          assert.equal(
+            preBonusBalance.minus(postBonusBalance).toString(),
+            distributeAmount.toString(),
+            'the bonus account balance should be decremented by the distribute amount'
+          )
+        })
+
+        it('should NOT distribute any tokens due to previous block distributing all distributable tokens', async () => {
+          const bonusRecipientAddress = accounts[9]
+          const bonusBalance = await bbk.balanceOf(bonusAddress)
+          const overDistributeAmount = bonusBalance.add(1)
+
+          try {
+            await bbk.distributeBonusTokens.sendTransaction(
+              bonusRecipientAddress,
+              overDistributeAmount,
+              {
+                from: owner
+              }
+            )
+            assert(false, 'the contract should throw here')
+          } catch (error) {
+            assert(
+              /invalid opcode/.test(error),
+              'the error message should contain invalid opcode'
+            )
+          }
+        })
       })
     })
-  })
 
-  describe('during the token sale', () => {
-    contract('BrickblockTokenUpgraded', accounts => {
-      before(
-        'setup bbk BrickblockToken and bbkU BrickblockTokenUpgraded',
-        async () => {
-          bbk = await BrickblockToken.deployed()
-          const bbf = await BrickblockFountainExample.new(bbk.address)
-          fountainAddress = bbf.address
-          await bbk.changeFountainContractAddress(fountainAddress)
-          await bbk.changeBonusDistributionAddress(bonusAddress)
-          await distributeTokensToMany(bbk, accounts)
-          bbkU = await BrickblockTokenUpgraded.new(bbk.address)
-        }
-      )
+    describe('when calling toggleDead and tokenSaleActive is true', () => {
+      it('should toggle dead when owner', async () => {
+        const preDead = await bbk.dead()
 
-      it('should have the same properties as the original', async () => {
-        originalTotalSupplyDuringSale = await bbk.totalSupply()
-        const bbkTokenSaleActive = await bbk.tokenSaleActive()
-        const bbkUTokenSaleActive = await bbkU.tokenSaleActive()
-        const bbkContractBalance = await bbk.balanceOf(bbk.address)
-        const bbkUContractBalance = await bbkU.balanceOf(bbkU.address)
-        const bbkBonusDistributionAddress = await bbk.bonusDistributionAddress()
-        const bbkUBonusDistributionAddress = await bbkU.bonusDistributionAddress()
-        const bbkFountainContractAddress = await bbk.fountainContractAddress()
-        const bbkUFountainContractAddress = await bbkU.fountainContractAddress()
+        await bbk.toggleDead.sendTransaction({
+          from: owner
+        })
 
-        assert.equal(
-          bbkTokenSaleActive,
-          bbkUTokenSaleActive,
-          'the tokenSaleActive status should be identical'
-        )
-        assert.equal(
-          bbkContractBalance.toString(),
-          bbkUContractBalance.toString(),
-          'the balance of the contracts should be identical'
-        )
-        assert.equal(
-          bbkBonusDistributionAddress,
-          bbkUBonusDistributionAddress,
-          'the bonusDistributionAddress should be identical for both contracts'
-        )
-        assert.equal(
-          bbkFountainContractAddress,
-          bbkUFountainContractAddress,
-          'the fountainContractAddress should be identical for both contracts'
-        )
+        const postDead = await bbk.dead()
+
+        assert(preDead != postDead, 'dead should be toggled')
       })
 
-      it('should start paused in any starting state', async () => {
-        const bbkUPaused = await bbkU.paused()
-        assert(bbkUPaused, 'the new contract should always start paused')
+      it('should toggle back dead when owner', async () => {
+        const preDead = await bbk.dead()
+
+        await bbk.toggleDead.sendTransaction({
+          from: owner
+        })
+
+        const postDead = await bbk.dead()
+
+        assert(preDead != postDead, 'dead should be toggled')
       })
 
-      it('should always have a predecessorAddress', async () => {
-        const predecessorAddress = await bbkU.predecessorAddress()
-        assert.equal(predecessorAddress, bbk.address)
-      })
-
-      it('should NOT allow non owners to call upgrade', async () => {
+      it('should NOT toggle dead when not owner', async () => {
         try {
-          await bbk.upgrade.sendTransaction(bbkU.address, { from: accounts[1] })
+          await bbk.toggleDead.sendTransaction({
+            from: accounts[9]
+          })
           assert(false, 'the contract should throw here')
         } catch (error) {
           assert(
             /invalid opcode/.test(error),
-            'the error should contain invalid opcode'
+            'the error message should contain invalid opcode'
           )
         }
-      })
-
-      it('should NOT upgrade when the successAddress is NOT a contract', async () => {
-        try {
-          await bbk.upgrade(accounts[9])
-          assert(false, 'the contract should throw')
-        } catch(error) {
-          assert(
-            /invalid opcode/.test(error),
-            'the error should contain invalid opcode'
-          )
-        }
-      })
-
-      it('should set the original contract to dead and paused when upgrade is called by owner', async () => {
-        await bbk.upgrade(bbkU.address)
-        const dead = await bbk.dead()
-        const paused = await bbk.paused()
-        assert(dead, 'the contract should have dead set when being upgraded')
-        assert(paused, 'the contract should be paused when dead')
-      })
-
-      it('should NOT be able to be unpaused by owner or anyone else once upgrade has been called', async () => {
-        try {
-          await bbk.unpause()
-          assert(
-            false,
-            'the contract should NOT be able to be unpaused if dead'
-          )
-        } catch (error) {
-          assert.equal(
-            true,
-            /invalid opcode/.test(error),
-            'the error should contain invalid opcode'
-          )
-        }
-      })
-
-      it('should not allow anyone but successor to call evacuate', async () => {
-        try {
-          await bbk.evacuate(accounts[4])
-          assert(false, 'the contract should throw here')
-        } catch (error) {
-          assert(
-            /invalid opcode/.test(error),
-            'the error should contain invalid opcode'
-          )
-        }
-      })
-
-      it('should not allow rescue to be called on original contract when there is no predecessor', async () => {
-        try {
-          await bbk.rescue.sendTransaction({ from: accounts[4] })
-          assert(false, 'the contract should throw here')
-        } catch (error) {
-          assert(
-            /invalid opcode/.test(error),
-            'the error should contain invalid opcode'
-          )
-        }
-      })
-
-      it('should allow users to call rescue from the new contract to get their balances moved', async () => {
-        for (let address of accounts.slice(4)) {
-          const preBBKTotalSupply = await bbk.totalSupply()
-          const preBBKUTotalSupply = await bbkU.totalSupply()
-          const preBBKBalance = await bbk.balanceOf(address)
-          const preBBKUBalance = await bbkU.balanceOf(address)
-          await bbkU.rescue.sendTransaction({ from: address })
-          const postBBKTotalSupply = await bbk.totalSupply()
-          const postBBKUTotalSupply = await bbkU.totalSupply()
-          const postBBKBalance = await bbk.balanceOf(address)
-          const postBBKUBalance = await bbkU.balanceOf(address)
-
-          assert.equal(
-            preBBKTotalSupply.minus(postBBKTotalSupply).toString(),
-            preBBKBalance.toString(),
-            'the total supply should be decremented from BBK contract by the account value'
-          )
-          assert.equal(
-            postBBKUTotalSupply.minus(preBBKUTotalSupply).toString(),
-            preBBKBalance.toString(),
-            'the total supply should be incremented from BBKU contract by the account value'
-          )
-          assert.equal(
-            postBBKBalance.toString(),
-            new BigNumber(0).toString(),
-            'the balance of the BBK contract should be 0'
-          )
-          assert.equal(
-            postBBKUBalance.toString(),
-            preBBKBalance.toString(),
-            'the new BBKU balance should be the same as the balance on old BBK balance'
-          )
-        }
-      })
-
-      it('should have the same totalSupply as the original once when all users have evacuated', async () => {
-        const finalTotalSupply = await bbkU.totalSupply()
-        assert.equal(
-          originalTotalSupplyDuringSale.toString(),
-          finalTotalSupply.toString(),
-          'the totalSupply of the upgrade contract should be identical to the original after all have evacuated'
-        )
-      })
-    })
-  })
-
-  describe('after the token sale has finished', () => {
-    contract('BrickblockTokenUpgraded', accounts => {
-      before(
-        'setup bbk BrickblockToken and bbkU BrickblockTokenUpgraded',
-        async () => {
-          bbk = await BrickblockToken.deployed()
-          const bbf = await BrickblockFountainExample.new(bbk.address)
-          fountainAddress = bbf.address
-          await bbk.changeFountainContractAddress(fountainAddress)
-          await bbk.changeBonusDistributionAddress(bonusAddress)
-          await distributeTokensToMany(bbk, accounts)
-          await bbk.finalizeTokenSale()
-          bbkU = await BrickblockTokenUpgraded.new(bbk.address)
-        }
-      )
-
-      it('should have the same properties as the original', async () => {
-        originalTotalSupplyDuringSale = await bbk.totalSupply()
-        const bbkTokenSaleActive = await bbk.tokenSaleActive()
-        const bbkUTokenSaleActive = await bbkU.tokenSaleActive()
-        const bbkContractBalance = await bbk.balanceOf(bbk.address)
-        const bbkUContractBalance = await bbkU.balanceOf(bbkU.address)
-        const bbkBonusDistributionAddress = await bbk.bonusDistributionAddress()
-        const bbkUBonusDistributionAddress = await bbkU.bonusDistributionAddress()
-        const bbkFountainContractAddress = await bbk.fountainContractAddress()
-        const bbkUFountainContractAddress = await bbkU.fountainContractAddress()
-
-        assert.equal(
-          bbkTokenSaleActive,
-          bbkUTokenSaleActive,
-          'the tokenSaleActive status should be identical'
-        )
-        assert.equal(
-          bbkContractBalance.toString(),
-          bbkUContractBalance.toString(),
-          'the balance of the contracts should be identical'
-        )
-        assert.equal(
-          bbkBonusDistributionAddress,
-          bbkUBonusDistributionAddress,
-          'the bonusDistributionAddress should be identical for both contracts'
-        )
-        assert.equal(
-          bbkFountainContractAddress,
-          bbkUFountainContractAddress,
-          'the fountainContractAddress should be identical for both contracts'
-        )
-      })
-
-      it('should start paused in any starting state', async () => {
-        const bbkUPaused = await bbkU.paused()
-        assert(bbkUPaused, 'the new contract should always start paused')
-      })
-
-      it('should always have a predecessorAddress', async () => {
-        const predecessorAddress = await bbkU.predecessorAddress()
-        assert.equal(predecessorAddress, bbk.address)
-      })
-
-      it('should not allow non owners to call upgrade', async () => {
-        try {
-          await bbk.upgrade.sendTransaction(bbkU.address, { from: accounts[1] })
-          assert(false, 'the contract should throw here')
-        } catch (error) {
-          assert(
-            /invalid opcode/.test(error),
-            'the error should contain invalid opcode'
-          )
-        }
-      })
-
-      it('should not allow anyone but successor to call evacuate', async () => {
-        try {
-          await bbk.evacuate(accounts[4])
-          assert(false, 'the contract should throw here')
-        } catch (error) {
-          assert(
-            /invalid opcode/.test(error),
-            'the error should contain invalid opcode'
-          )
-        }
-      })
-
-      it('should not allow rescue to be called on original contract when there is no predecessor', async () => {
-        try {
-          await bbk.rescue.sendTransaction({ from: accounts[4] })
-          assert(false, 'the contract should throw here')
-        } catch (error) {
-          assert(
-            /invalid opcode/.test(error),
-            'the error should contain invalid opcode'
-          )
-        }
-      })
-
-      it('should set the original contract to dead and paused when upgrade is called by owner', async () => {
-        await bbk.upgrade(bbkU.address)
-        const dead = await bbk.dead()
-        const paused = await bbk.paused()
-        assert(dead, 'the contract should have dead set when being upgraded')
-        assert(paused, 'the contract should be paused when dead')
-      })
-
-      it('should NOT be able to be unpaused by owner or anyone else once upgrade has been called', async () => {
-        try {
-          await bbk.unpause()
-          assert(
-            false,
-            'the contract should NOT be able to be unpaused if dead'
-          )
-        } catch (error) {
-          assert.equal(
-            true,
-            /invalid opcode/.test(error),
-            'the error should contain invalid opcode'
-          )
-        }
-      })
-
-      it('should allow users to call rescue from the new contract to get their balances moved', async () => {
-        // need to account for bonus address in this scenario when finalizeTokenSale has been called
-        for (let address of [accounts[1], ...accounts.slice(4)]) {
-          const preBBKTotalSupply = await bbk.totalSupply()
-          const preBBKUTotalSupply = await bbkU.totalSupply()
-          const preBBKBalance = await bbk.balanceOf(address)
-          const preBBKUBalance = await bbkU.balanceOf(address)
-          await bbkU.rescue.sendTransaction({ from: address })
-          const postBBKTotalSupply = await bbk.totalSupply()
-          const postBBKUTotalSupply = await bbkU.totalSupply()
-          const postBBKBalance = await bbk.balanceOf(address)
-          const postBBKUBalance = await bbkU.balanceOf(address)
-
-          assert.equal(
-            preBBKTotalSupply.minus(postBBKTotalSupply).toString(),
-            preBBKBalance.toString(),
-            'the total supply should be decremented from BBK contract by the account value'
-          )
-          assert.equal(
-            postBBKUTotalSupply.minus(preBBKUTotalSupply).toString(),
-            preBBKBalance.toString(),
-            'the total supply should be incremented from BBKU contract by the account value'
-          )
-          assert.equal(
-            postBBKBalance.toString(),
-            new BigNumber(0).toString(),
-            'the balance of the BBK contract should be 0'
-          )
-          assert.equal(
-            postBBKUBalance.toString(),
-            preBBKBalance.toString(),
-            'the new BBKU balance should be the same as the balance on old BBK balance'
-          )
-        }
-      })
-
-      it('should have the same totalSupply as the original once when all users have evacuated', async () => {
-        const finalTotalSupply = await bbkU.totalSupply()
-        assert.equal(
-          originalTotalSupplyDuringSale.toString(),
-          finalTotalSupply.toString(),
-          'the totalSupply of the upgrade contract should be identical to the original after all have evacuated'
-        )
       })
     })
   })
