@@ -7,17 +7,22 @@
 /* eslint-disable no-console */
 // console output is ok in yarn task
 
+const paths = require('../config/paths.js')
 const Web3 = require('web3')
 const Contract = require('truffle-contract')
 
 const web3 = new Web3()
 web3.setProvider(new Web3.providers.HttpProvider('http://localhost:8545'))
 
-const Brickblock = Contract(require('contracts/Brickblock.json'))
+// This is only dangerous when the filename is derived from user-input which its not here
+// eslint-disable-next-line security/detect-non-literal-require
+const Brickblock = Contract(require(paths.appContracts + '/Brickblock.json'))
 Brickblock.setProvider(web3.currentProvider)
 Brickblock.setNetwork('local-dev-testrpc')
 
-const PoAToken = Contract(require('contracts/POAToken.json'))
+// This is only dangerous when the filename is derived from user-input which its not here
+// eslint-disable-next-line security/detect-non-literal-require
+const PoAToken = Contract(require(paths.appContracts + '/POAToken.json'))
 PoAToken.setProvider(web3.currentProvider)
 PoAToken.setNetwork('local-dev-testrpc')
 
@@ -30,6 +35,7 @@ const maxGas = 4712388
 function constructSignature(custodian, symbol, totalSupply) {
   let amount = web3.toAscii(web3.toHex(totalSupply))
   while (amount.length < 32) amount = '\x00' + amount
+
   // produces bytes of form
   // 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 c2ab c38d for total supply of 0xabcd
   const payload = web3.toHex(symbol + amount)
@@ -69,7 +75,7 @@ async function createBB() {
     })
     return awaitReceipt(contract.transactionHash)
   } catch (err) {
-    console.error(`Creating Brickblock umbrella Contract failed : ${err}`)
+    console.error(`Creating BrickBlock umbrella Contract failed : ${err}`)
     throw err
   }
 }
@@ -110,7 +116,9 @@ async function createToken(aToken) {
             reject(err)
             return
           }
+
           if (event.transactionHash !== txid) return
+
           const receipt = await web3.eth.getTransactionReceipt(txid)
           resolve({
             addr: event.args.token,
@@ -131,6 +139,7 @@ async function buyTokens(aToken, amount, investee) {
   try {
     const poa = await PoAToken.at(aToken.addr)
     if (!amount) amount = await poa.balanceOf(await poa.owner()) // buy all of it
+
     const args = {
       from: investee,
       value: amount
@@ -150,6 +159,7 @@ async function activatePoA(aToken, signee) {
   console.log(`Activate [${aToken.symbol}]`)
   try {
     if (!signee) signee = broker
+
     const poa = await PoAToken.at(aToken.addr)
     const signature = constructSignature(
       signee,
@@ -186,6 +196,7 @@ async function sell(aToken, amount, investee) {
   try {
     const poa = await PoAToken.at(aToken.addr)
     if (!amount) amount = await poa.balanceOf(investee) // buy all of it
+
     const estimateGas = await poa.sell.estimateGas(amount, { from: investee })
     const txid = await poa.sell.sendTransaction(amount, { from: investee })
     const ret = await awaitReceipt(txid)
@@ -261,6 +272,7 @@ async function transfer(aToken, from, to, amount) {
   try {
     const poa = await PoAToken.at(aToken.addr)
     if (!amount) amount = await poa.balanceOf(from)
+
     const estimateGas = await poa.transfer.estimateGas(to, amount, {
       from: from
     })
@@ -319,8 +331,8 @@ async function collectGasUsage() {
   // missing : ERC20 functions
 
   try {
-    const BrickblockDeployment = await createBB()
-    results.BrickblockDeployment = { gasUsage: BrickblockDeployment.gasUsed }
+    const BrickBlockDeployment = await createBB()
+    results.BrickBlockDeployment = { gasUsage: BrickBlockDeployment.gasUsed }
     // prepare failed contract now, will be failed at the end of script due to timeout
 
     const createFailedResponse = await createToken(failedToken)
@@ -508,6 +520,7 @@ async function collectGasUsage() {
     }
 
     console.log('Results : ', JSON.stringify(results, 2, 2))
+    return results
   } catch (err) {
     console.error('Failed', err)
     console.log('Results : ', JSON.stringify(results, 2, 2))
@@ -520,6 +533,7 @@ collectGasUsage()
   .then(() => {
     console.log('done')
     process.exit(true)
+    return
   })
   .catch(err => {
     console.error(err)
