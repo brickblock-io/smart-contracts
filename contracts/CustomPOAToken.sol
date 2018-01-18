@@ -17,8 +17,11 @@ contract CustomPOAToken is PausableToken {
   uint256 public creationBlock;
   uint256 public timeoutBlock;
   uint256 public totalTokenPayout;
-  // rate is .05 percent
-  uint256 public constant feeRate = 5;
+  uint256 public tokenSaleRate;
+  uint256 public fundingGoal;
+  uint256 public initialSupply;
+  // !!! rate is .5 percent
+  uint256 public constant feeRate = 5; // ‰ permille
 
   mapping (address => bool) public whitelisted;
   mapping(address => uint256) public claimedPayouts;
@@ -38,6 +41,8 @@ contract CustomPOAToken is PausableToken {
   event Stage(Stages stage);
   event Buy(address buyer, uint256 amount);
   event Payout(uint256 amount);
+  event Claim(uint256 payout);
+  event Terminated();
 
   modifier isWhitelisted() {
     require(whitelisted[msg.sender]);
@@ -77,8 +82,9 @@ contract CustomPOAToken is PausableToken {
     string _symbol,
     address _broker,
     address _custodian,
-    uint _timeoutBlock,
-    uint256 _totalSupply
+    uint256 _timeoutBlock,
+    uint256 _totalSupply,
+    uint256 _fundingGoal
   )
     public
   {
@@ -89,10 +95,39 @@ contract CustomPOAToken is PausableToken {
     custodian = _custodian;
     timeoutBlock = _timeoutBlock;
     creationBlock = block.number;
+    // essentially sqm unit of building...
     totalSupply = _totalSupply;
+    initialSupply = _totalSupply;
+    fundingGoal = _fundingGoal;
     balances[this] = _totalSupply;
     paused = true;
   }
+
+  // start token conversion functions
+
+  /*******************
+  * TKN      supply  *
+  * ---  =  -------  *
+  * ETH     funding  *
+  *******************/
+
+  function ethToTokens(uint256 _ethAmount)
+    public
+    view
+    returns (uint256)
+  {
+    return _ethAmount.mul(1e18).mul(initialSupply).div(fundingGoal).div(1e18);
+  }
+
+  function tokensToEth(uint256 _tokenAmount)
+    public
+    view
+    returns (uint256)
+  {
+    return _tokenAmount.mul(fundingGoal).mul(1e18).div(initialSupply).div(1e18);
+  }
+
+  // end token conversion functions
 
   // pause override
   function unpause()
@@ -114,7 +149,7 @@ contract CustomPOAToken is PausableToken {
 
   // start whitelist related functions
   function whitelistAddress(address _address)
-    public
+    external
     onlyOwner
     atStage(Stages.Funding)
   {
@@ -123,12 +158,20 @@ contract CustomPOAToken is PausableToken {
   }
 
   function blacklistAddress(address _address)
-    public
+    external
     onlyOwner
     atStage(Stages.Funding)
   {
     require(whitelisted[_address] != false);
     whitelisted[_address] = false;
+  }
+
+  function whitelisted(address _address)
+    public
+    view
+    returns (bool)
+  {
+    return whitelisted[_address];
   }
 
   // end whitelist related functions
@@ -153,46 +196,60 @@ contract CustomPOAToken is PausableToken {
     isWhitelisted
     returns (bool)
   {
-    balances[this] = balances[this].sub(msg.value);
-    balances[msg.sender] = balances[msg.sender].add(msg.value);
-    Buy(msg.sender, msg.value);
-
-    if (balances[this] == 0) {
+    uint256 _buyAmount = ethToTokens(msg.value);
+    balances[this] = balances[this].sub(_buyAmount);
+    if (this.balance >= fundingGoal) {
+      uint256 _unsoldBalance = balances[this];
+      balances[this] = 0;
+      _buyAmount = _buyAmount.add(_unsoldBalance);
       enterStage(Stages.Pending);
     }
+
+    balances[msg.sender] = balances[msg.sender].add(_buyAmount);
+    Buy(msg.sender, _buyAmount);
+
     return true;
   }
 
   function activate()
-    public
+    external
     checkTimeout
     onlyCustodian
     payable
     atStage(Stages.Pending)
     returns (bool)
   {
-    uint256 _fee = calculateFee(totalSupply);
+    uint256 _fee = calculateFee(fundingGoal);
     require(msg.value == _fee);
+    enterStage(Stages.Active);
     // TODO: do we need to do checks on these transfers to make sure they go through?
     owner.transfer(_fee);
-    // TODO: should this be custodian or broker getting the ether?
-    custodian.transfer(totalSupply);
+    // !!! custodian gets the ether
+    custodian.transfer(fundingGoal);
     paused = false;
     Unpause();
-    enterStage(Stages.Active);
     return true;
   }
 
-  // TODO: who should be able to terminate? custodian? owner? both?
   function terminate()
-    public
+    external
     onlyCustodian
     atStage(Stages.Active)
     returns (bool)
   {
     enterStage(Stages.Terminated);
     paused = true;
-    Pause();
+    Terminated();
+  }
+
+  function kill()
+    external
+    onlyOwner
+  {
+    paused = true;
+    enterStage(Stages.Terminated);
+    owner.transfer(this.balance);
+    Terminated();
   }
 
   // end lifecycle functions
@@ -234,7 +291,7 @@ contract CustomPOAToken is PausableToken {
   }
 
   function reclaim()
-    public
+    external
     checkTimeout
     atStage(Stages.Failed)
     returns (bool)
@@ -243,12 +300,12 @@ contract CustomPOAToken is PausableToken {
     require(_balance > 0);
     balances[msg.sender] = 0;
     totalSupply = totalSupply.sub(_balance);
-    msg.sender.transfer(_balance);
+    msg.sender.transfer(tokensToEth(_balance));
     return true;
   }
 
   function payout()
-    public
+    external
     payable
     atEitherStage(Stages.Active, Stages.Terminated)
     onlyCustodian
@@ -258,13 +315,15 @@ contract CustomPOAToken is PausableToken {
     uint256 _fee = calculateFee(msg.value);
     uint256 _payoutAmount = msg.value.sub(_fee);
     totalTokenPayout = totalTokenPayout.add(_payoutAmount.mul(1e18).div(totalSupply));
-    owner.transfer(_fee);
+    uint256 delta = (_payoutAmount.mul(1e18) % totalSupply).div(1e18);
+    owner.transfer(_fee.add(delta));
+
     Payout(_payoutAmount);
     return true;
   }
 
   function claim()
-    public
+    external
     atEitherStage(Stages.Active, Stages.Terminated)
     returns (uint256)
   {
@@ -272,6 +331,8 @@ contract CustomPOAToken is PausableToken {
     require(_payoutAmount > 0);
     claimedPayouts[msg.sender] = totalTokenPayout;
     unclaimedPayouts[msg.sender] = 0;
+
+    Claim(_payoutAmount);
     msg.sender.transfer(_payoutAmount);
     return _payoutAmount;
   }

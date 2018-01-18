@@ -1,5 +1,6 @@
 const fs = require('fs')
 const HDWalletProvider = require('truffle-hdwallet-provider')
+const Web3 = require('web3')
 
 let hdwallet = null
 if (process.env.npm_lifecycle_event === 'migrate:ropsten') {
@@ -24,21 +25,23 @@ module.exports = {
     ropsten: {
       host: 'localhost',
       port: 8545,
-      provider: hdwallet,
       network_id: 3,
-      gas: 3712388
+      gas: 4600000,
+      gasPrice: 23e9
     },
     kovan: {
       host: 'localhost',
       port: 8545,
       network_id: 42,
-      gas: 3712388
+      gas: 4700000,
+      gasPrice: 20e9
     },
     live: {
       host: 'localhost',
       port: 8545,
       network_id: 0,
-      gas: 3712388
+      gas: 4700000,
+      gasPrice: 30e9
     }
   }
 }

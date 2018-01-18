@@ -561,7 +561,7 @@ describe('at the end of the ico when fountainAddress has been set', () => {
   })
 })
 
-describe('after the the ico', () => {
+describe('after the ico', () => {
   contract('BrickblockToken', accounts => {
     let bbk
     let owner = accounts[0]

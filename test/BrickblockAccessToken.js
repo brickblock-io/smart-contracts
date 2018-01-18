@@ -214,58 +214,61 @@ describe('when burning', () => {
     const zeroApprovalBroker = accounts[4]
     const amount = new BigNumber(1e24)
     const burnAmount = amount.div(5)
-    let activePOAToken;
-    let inactivePOAToken;
+    let activePOAToken
+    let inactivePOAToken
     let act
     let umbrellaStub
 
-    before('setup BrickblockAccessToken and related contracts state', async () => {
-      act = await BrickblockAccessToken.deployed()
-      umbrellaStub = await BrickblockUmbrellaStub.new()
-      activePOAToken = await POATokenStub.new()
-      inactivePOAToken = await POATokenStub.new()
-      await activePOAToken.changeAccessTokenAddress(act.address)
-      await inactivePOAToken.changeAccessTokenAddress(act.address)
-      await act.changeUmbrellaAddress(umbrellaStub.address)
-      await umbrellaStub.changeAccessTokenAddress(act.address)
-      await act.mint(activeBroker, amount)
-      await act.mint(inactiveBroker, amount)
-      await umbrellaStub.addBroker(activeBroker)
-      await umbrellaStub.addBroker(inactiveBroker)
-      await umbrellaStub.addBroker(brokeBroker)
-      await umbrellaStub.addBroker(zeroApprovalBroker)
-      await umbrellaStub.deactivateBroker(inactiveBroker)
-      await umbrellaStub.addFakeToken(activePOAToken.address)
-      await umbrellaStub.addFakeToken(inactivePOAToken.address)
-      await umbrellaStub.deactivateToken(inactivePOAToken.address)
-      await act.approve.sendTransaction(umbrellaStub.address, amount, {
-        from: activeBroker
-      })
-      await act.approve.sendTransaction(umbrellaStub.address, amount, {
-        from: inactiveBroker
-      })
-      await act.approve.sendTransaction(umbrellaStub.address, amount, {
-        from: brokeBroker
-      })
-      await act.approve.sendTransaction(activePOAToken.address, amount, {
-        from: activeBroker
-      })
-      await act.approve.sendTransaction(activePOAToken.address, amount, {
-        from: inactiveBroker
-      })
-      await act.approve.sendTransaction(activePOAToken.address, amount, {
-        from: brokeBroker
-      })
-      await act.approve.sendTransaction(inactivePOAToken.address, amount, {
-        from: activeBroker
-      })
-      await act.approve.sendTransaction(inactivePOAToken.address, amount, {
-        from: inactiveBroker
-      })
-      await act.approve.sendTransaction(inactivePOAToken.address, amount, {
-        from: brokeBroker
-      })
-    })
+    before(
+      'setup BrickblockAccessToken and related contracts state',
+      async () => {
+        act = await BrickblockAccessToken.deployed()
+        umbrellaStub = await BrickblockUmbrellaStub.new()
+        activePOAToken = await POATokenStub.new()
+        inactivePOAToken = await POATokenStub.new()
+        await activePOAToken.changeAccessTokenAddress(act.address)
+        await inactivePOAToken.changeAccessTokenAddress(act.address)
+        await act.changeUmbrellaAddress(umbrellaStub.address)
+        await umbrellaStub.changeAccessTokenAddress(act.address)
+        await act.mint(activeBroker, amount)
+        await act.mint(inactiveBroker, amount)
+        await umbrellaStub.addBroker(activeBroker)
+        await umbrellaStub.addBroker(inactiveBroker)
+        await umbrellaStub.addBroker(brokeBroker)
+        await umbrellaStub.addBroker(zeroApprovalBroker)
+        await umbrellaStub.deactivateBroker(inactiveBroker)
+        await umbrellaStub.addFakeToken(activePOAToken.address)
+        await umbrellaStub.addFakeToken(inactivePOAToken.address)
+        await umbrellaStub.deactivateToken(inactivePOAToken.address)
+        await act.approve.sendTransaction(umbrellaStub.address, amount, {
+          from: activeBroker
+        })
+        await act.approve.sendTransaction(umbrellaStub.address, amount, {
+          from: inactiveBroker
+        })
+        await act.approve.sendTransaction(umbrellaStub.address, amount, {
+          from: brokeBroker
+        })
+        await act.approve.sendTransaction(activePOAToken.address, amount, {
+          from: activeBroker
+        })
+        await act.approve.sendTransaction(activePOAToken.address, amount, {
+          from: inactiveBroker
+        })
+        await act.approve.sendTransaction(activePOAToken.address, amount, {
+          from: brokeBroker
+        })
+        await act.approve.sendTransaction(inactivePOAToken.address, amount, {
+          from: activeBroker
+        })
+        await act.approve.sendTransaction(inactivePOAToken.address, amount, {
+          from: inactiveBroker
+        })
+        await act.approve.sendTransaction(inactivePOAToken.address, amount, {
+          from: brokeBroker
+        })
+      }
+    )
 
     it('should should burn when sent from umbrella contract', async () => {
       const preTotalSupply = await act.totalSupply()
@@ -273,8 +276,16 @@ describe('when burning', () => {
       await umbrellaStub.simulateBurnFrom(burnAmount, activeBroker)
       const postActiveBrokerBalance = await act.balanceOf(activeBroker)
       const postTotalSupply = await act.totalSupply()
-      assert.equal(preTotalSupply.minus(postTotalSupply).toString(), burnAmount.toString(), 'the total supply should be decremented by the total amount')
-      assert.equal(preActiveBrokerBalance.minus(postActiveBrokerBalance).toString(), burnAmount.toString(), 'the activeBroker balance should be decremented by the burnAmount')
+      assert.equal(
+        preTotalSupply.minus(postTotalSupply).toString(),
+        burnAmount.toString(),
+        'the total supply should be decremented by the total amount'
+      )
+      assert.equal(
+        preActiveBrokerBalance.minus(postActiveBrokerBalance).toString(),
+        burnAmount.toString(),
+        'the activeBroker balance should be decremented by the burnAmount'
+      )
     })
 
     it('should burn when from activePOAToken contract', async () => {
@@ -283,16 +294,27 @@ describe('when burning', () => {
       await activePOAToken.simulateBurnFrom(burnAmount, activeBroker)
       const postActiveBrokerBalance = await act.balanceOf(activeBroker)
       const postTotalSupply = await act.totalSupply()
-      assert.equal(preTotalSupply.minus(postTotalSupply).toString(), burnAmount.toString(), 'the total supply should be decremented by the total amount')
-      assert.equal(preActiveBrokerBalance.minus(postActiveBrokerBalance).toString(), burnAmount.toString(), 'the activeBroker balance should be decremented by the burnAmount')
+      assert.equal(
+        preTotalSupply.minus(postTotalSupply).toString(),
+        burnAmount.toString(),
+        'the total supply should be decremented by the total amount'
+      )
+      assert.equal(
+        preActiveBrokerBalance.minus(postActiveBrokerBalance).toString(),
+        burnAmount.toString(),
+        'the activeBroker balance should be decremented by the burnAmount'
+      )
     })
 
     it('should NOT burn when not from activePOAToken or umbrella contract', async () => {
       try {
         await act.burnFrom(burnAmount, activeBroker)
         assert(false, 'the contract should throw here')
-      } catch(error) {
-        assert(/invalid opcode/.test(error), 'the error should contain invalid opcode')
+      } catch (error) {
+        assert(
+          /invalid opcode/.test(error),
+          'the error should contain invalid opcode'
+        )
       }
     })
 
@@ -300,8 +322,11 @@ describe('when burning', () => {
       try {
         await umbrellaStub.simulateBurnFrom(burnAmount, zeroApprovalBroker)
         assert(false, 'the contract should throw here')
-      } catch(error) {
-        assert(/invalid opcode/.test(error), 'the error should contain invalid opcode')
+      } catch (error) {
+        assert(
+          /invalid opcode/.test(error),
+          'the error should contain invalid opcode'
+        )
       }
     })
 
@@ -309,8 +334,11 @@ describe('when burning', () => {
       try {
         await umbrellaStub.simulateBurnFrom(burnAmount, brokeBroker)
         assert(false, 'the contract should throw here')
-      } catch(error) {
-        assert(/invalid opcode/.test(error), 'the error should contain invalid opcode')
+      } catch (error) {
+        assert(
+          /invalid opcode/.test(error),
+          'the error should contain invalid opcode'
+        )
       }
     })
 
@@ -318,8 +346,11 @@ describe('when burning', () => {
       try {
         await inactivePOAToken.simulateBurnFrom(burnAmount, activeBroker)
         assert(false, 'the contract should throw here')
-      } catch(error) {
-        assert(/invalid opcode/.test(error), 'the error should contain invalid opcode')
+      } catch (error) {
+        assert(
+          /invalid opcode/.test(error),
+          'the error should contain invalid opcode'
+        )
       }
     })
   })

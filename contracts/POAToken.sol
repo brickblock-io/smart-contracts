@@ -94,11 +94,8 @@ contract POAToken is StandardToken, Ownable {
     _;
   }
 
-  // TODO: do we really want the user to hold the balance? lots of room for
-  // fishy stuff to happen... better to have contract hold the balance i think
   // Create a new POAToken contract.
-  function POAToken
-  (
+  function POAToken(
     string _name,
     string _symbol,
     address _broker,
