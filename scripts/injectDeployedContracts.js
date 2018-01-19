@@ -20,7 +20,7 @@ const cpoaABI = path.resolve('./build/contracts/CustomPOAToken.json')
 
 let contract
 
-if(
+if (
   !bbkRopstenAddress ||
   !bbkKovanAddress ||
   !cpoaRopstenAddress ||

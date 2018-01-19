@@ -1,292 +1,263 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.8;
 
 import "zeppelin-solidity/contracts/token/StandardToken.sol";
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
-import "./BrickblockAccessToken.sol";
-import "./BrickblockWhitelist.sol";
 
 
 // Proof-of-Asset contract representing a token backed by a foreign asset.
-contract POAToken is StandardToken, Ownable {
+contract POAToken is StandardToken {
 
-  BrickblockWhitelist brickblockWhitelist;
-  BrickblockAccessToken brickblockAccessToken;
+    // Event emitted when a state change occurs.
+    event Stage(Stages stage);
 
-  event Stage(Stages stage);
-  event Buy(address buyer, uint256 amount);
-  event Sell(address seller, uint256 amount);
-  event Payout(uint256 amount);
+    // Event emitted when tokens are bought
+    event Buy(address buyer, uint256 amount);
 
-  string public name;
-  string public symbol;
+    // Event emitted when tokens are sold
+    event Sell(address seller, uint256 amount);
 
-  uint8 public constant decimals = 18;
+    // Event emitted when dividends are paid out
+    event Payout(uint256 amount);
 
-  address public owner;
-  address public broker;
-  address public custodian;
+    // The owner of this contract
+    address public owner;
 
-  // The time when the contract was created
-  uint256 public creationBlock;
+    // The name of this PoA Token
+    string public name;
 
-  // The time available to fund the contract
-  uint256 public timeoutBlock;
+    // The symbol of this PoA Token
+    string public symbol;
 
-  uint256 public constant feePercentage = 5;
+    // amount of decimals used for this Token
+    // this would be better as a constant, but linter won't let me
+    uint8 public decimals = 18;
 
-  struct Account {
-    uint256 balance;
-    uint256 claimedPayout;
-  }
 
-  mapping(address => Account) accounts;
-  mapping(address => uint256) claimedPayouts;
+    // The broker managing this contract
+    address public broker;
 
-  uint256 public totalPayout = 0;
+    // The custodian holding the assets for this contract
+    address public custodian;
 
-  enum Stages {
-    Funding,
-    Pending,
-    Failed,
-    Active,
-    Terminated
-  }
+    // The time when the contract was created
+    uint public creationTime;
 
-  Stages public stage = Stages.Funding;
+    // The time available to fund the contract
+    uint public timeout;
 
-  modifier atStage(Stages _stage) {
-    require(stage == _stage);
-    _;
-  }
-
-  modifier onlyBroker() {
-    require(msg.sender == broker);
-    _;
-  }
-
-  modifier onlyCustodian() {
-    require(msg.sender == custodian);
-    _;
-  }
-
-  modifier onlyOwner() {
-    require(msg.sender == owner);
-    _;
-  }
-
-  modifier isWhitelisted() {
-    require(brickblockWhitelist.whitelisted(msg.sender));
-    _;
-  }
-
-  function enterStage(Stages _stage)
-    private
-  {
-    stage = _stage;
-    Stage(_stage);
-  }
-
-  // Ensure funding timeoutBlock hasn't expired
-  modifier checkTimeout() {
-    if (stage == Stages.Funding && block.number >= creationBlock.add(timeoutBlock)) {
-      enterStage(Stages.Failed);
+    // An account carrying a +balance+ and +claimedPayout+ value.
+    struct Account {
+        uint256 balance;
+        uint256 claimedPayout;
     }
-    _;
-  }
 
-  // Create a new POAToken contract.
-  function POAToken(
-    string _name,
-    string _symbol,
-    address _broker,
-    address _custodian,
-    uint _timeoutBlock,
-    uint256 _supply
-  )
-    public
-  {
-    owner = msg.sender;
-    name = _name;
-    symbol = _symbol;
-    broker = _broker;
-    custodian = _custodian;
-    timeoutBlock = _timeoutBlock;
-    creationBlock = block.number;
-    totalSupply = _supply;
-    balances[owner] = _supply;
-  }
+    // Mapping of Account per address
+    mapping(address => Account) accounts;
 
-  // TODO: this function is temporary until registry contract is created... remove later!
-  function changeWhitelist(address _address)
-    public
-    onlyOwner
-    returns (bool)
-  {
-    brickblockWhitelist = BrickblockWhitelist(_address);
-    return true;
-  }
+    mapping(address => uint256) unliquidated;
 
-  // TODO: this function is temporary until registry contract is created... remove later!
-  function changeAccessToken(address _address)
-    public
-    onlyOwner
-    returns (bool)
-  {
-    brickblockAccessToken = BrickblockAccessToken(_address);
-    return true;
-  }
+    uint256 totalPayout = 0;
 
-  function calculateFee(uint256 _value)
-    public
-    view
-    returns (uint256)
-  {
-    return feePercentage.mul(_value).div(1000);
-  }
-
-  // Used to charge fees for broker transactions
-  function burnAccessTokens(uint256 _value, address _broker)
-    private
-    returns (bool)
-  {
-    require(address(brickblockAccessToken) != address(0));
-    return brickblockAccessToken.burnFrom(_value, _broker);
-  }
-
-  // Buy PoA tokens from the contract.
-  // Called by any investor during the `Funding` stage.
-  function buy()
-    payable
-    public
-    checkTimeout
-    atStage(Stages.Funding)
-    isWhitelisted
-    returns (bool)
-  {
-    balances[owner] = balances[owner].sub(msg.value);
-    balances[msg.sender] = balances[msg.sender].add(msg.value);
-    Buy(msg.sender, msg.value);
-
-    if (balances[owner] == 0) {
-      enterStage(Stages.Pending);
+    enum Stages {
+        Funding,
+        Pending,
+        Failed,
+        Active
     }
-    return true;
-  }
 
-  // Activate the PoA contract, providing a valid proof-of-assets.
-  // Called by the broker or custodian after assets have been received into the DTF account.
-  // This verifies that the provided signature matches the expected symbol/amount and
-  // was made with the custodians private key.
-  // TODO: don't need this here...
-  function activate()
-    public
-    onlyCustodian
-    checkTimeout
-    atStage(Stages.Pending)
-    returns (bool)
-  {
-    broker.transfer(this.balance);
-    enterStage(Stages.Active);
-    return true;
-  }
+    Stages public stage = Stages.Funding;
 
-  // end the token due to asset getting sold/lost/act of god
-  function terminate()
-    public
-    onlyBroker
-    atStage(Stages.Active)
-    payable
-    returns (bool)
-  {
-    require(stage == Stages.Pending || stage == Stages.Active);
-    require(msg.value == totalSupply);
-    uint256 _fee = calculateFee(msg.value);
-    require(burnAccessTokens(_fee, msg.sender));
-    enterStage(Stages.Terminated);
-  }
-
-  // Reclaim funds after failed funding run.
-  // Called by any investor during the `Failed` stage.
-  function reclaim()
-    public
-    checkTimeout
-    returns (bool)
-  {
-    require(stage == Stages.Failed || stage == Stages.Terminated);
-    uint256 balance = balances[msg.sender];
-    balances[msg.sender] = 0;
-    totalSupply.sub(balance);
-    msg.sender.transfer(balance);
-    return true;
-  }
-
-  // Provide funds from a dividend payout.
-  // Called by the broker after the asset yields dividends.
-  // This will simply add the received value to the stored `payout`.
-  function payout()
-    payable
-    public
-    atStage(Stages.Active)
-    onlyBroker
-    returns (bool)
-  {
-    require(msg.value > 0);
-    uint256 _fee = calculateFee(msg.value);
-    require(burnAccessTokens(_fee, msg.sender));
-    totalPayout = totalPayout.add(msg.value.mul(10e18).div(totalSupply));
-    Payout(msg.value);
-    return true;
-  }
-
-  function currentPayout(address _address)
-    public
-    view
-    returns (uint256)
-  {
-    uint256 _balance = balances[_address];
-    uint256 _claimedPayout = claimedPayouts[_address];
-    uint256 _totalUnclaimed = totalPayout.sub(_claimedPayout);
-    return _balance.mul(_totalUnclaimed).div(10e18);
-  }
-
-  // Claim dividend payout.
-  // Called by any investor after dividends have been received.
-  // This will calculate the payout, subtract any already claimed payouts,
-  // update the claimed payouts for the given account, and send the payout.
-  function claim()
-    public
-    atStage(Stages.Active)
-    returns (uint256)
-  {
-    uint256 _payoutAmount = currentPayout(msg.sender);
-    require(_payoutAmount > 0);
-    claimedPayouts[msg.sender] = totalPayout;
-    msg.sender.transfer(_payoutAmount);
-    return _payoutAmount;
-  }
-
-  // TODO: needs to only work during Active stage i think...
-  // Transfer +_value+ from sender to account +_to+.
-  function transfer(address _to, uint256 _value)
-    public
-    returns (bool)
-  {
-    // send any remaining unclaimed ETHER payouts to msg.sender
-    uint256 payoutAmount = currentPayout(msg.sender);
-    if (payoutAmount > 0) {
-      msg.sender.transfer(payoutAmount);
-      // set claimed payouts to max for both accounts
-      claimedPayouts[msg.sender] = totalPayout;
-      claimedPayouts[_to] = totalPayout;
+    // Ensure current stage is +_stage+
+    modifier atStage(Stages _stage) {
+        require(stage == _stage);
+        _;
     }
-    super.transfer(_to, _value);
-  }
 
-  function()
-    public
-    payable
-  {
-    buy();
-  }
+    modifier onlyBroker() {
+        require(msg.sender == broker);
+        _;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
+    }
+
+    // Enter given stage +_stage+
+    function enterStage(Stages _stage) {
+        stage = _stage;
+        Stage(_stage);
+    }
+
+    // Ensure funding timeout hasn't expired
+    modifier checkTimeout() {
+        if (stage == Stages.Funding &&
+            now >= creationTime.add(timeout))
+            enterStage(Stages.Failed);
+        _;
+    }
+
+    // Create a new POAToken contract.
+    function POAToken(
+        string _name,
+        string _symbol,
+        address _broker,
+        address _custodian,
+        uint _timeout,
+        uint256 _supply
+    ) {
+        owner = msg.sender;
+        name = _name;
+        symbol = _symbol;
+        broker = _broker;
+        custodian = _custodian;
+        timeout = _timeout;
+        creationTime = now;
+        totalSupply = _supply;
+        accounts[owner].balance = _supply;
+    }
+
+    /* Buy PoA tokens from the contract.
+     * Called by any investor during the +Funding+ stage.
+     */
+    function buy() payable
+        checkTimeout atStage(Stages.Funding)
+    {
+        /* SafeMath will do these checks for us
+        /* require(accounts[owner].balance >= msg.value); */
+        /* require(accounts[msg.sender].balance + msg.value > accounts[msg.sender].balance); */
+        accounts[owner].balance = accounts[owner].balance.sub(msg.value);
+        accounts[msg.sender].balance = accounts[msg.sender].balance.add(msg.value);
+        Buy(msg.sender, msg.value);
+
+        if (accounts[owner].balance == 0)
+            enterStage(Stages.Pending);
+    }
+
+    /* Activate the PoA contract, providing a valid proof-of-assets.
+     * Called by the broker or custodian after assets have been received into the DTF account.
+     * This verifies that the provided signature matches the expected symbol/amount and
+     * was made with the custodians private key.
+     */
+    function activate(uint8 _v, bytes32 _r, bytes32 _s)
+        checkTimeout atStage(Stages.Pending)
+    {
+        bytes32 hash = sha3(symbol, bytes32(totalSupply));
+        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+        bytes32 prefixedHash = sha3(prefix, hash);
+
+        address sigaddr = ecrecover(
+            prefixedHash,
+            _v,
+            _r,
+            _s
+        );
+
+        if (sigaddr == custodian) {
+            broker.transfer(this.balance);
+            enterStage(Stages.Active);
+        }
+    }
+
+    /* Reclaim funds after failed funding run.
+     * Called by any investor during the `Failed` stage.
+     */
+    function reclaim()
+        checkTimeout atStage(Stages.Failed)
+    {
+        uint256 balance = accounts[msg.sender].balance;
+        accounts[msg.sender].balance = 0;
+        msg.sender.transfer(balance);
+    }
+
+    /* Sell PoA tokens back to the contract.
+     * Called by any investor during the `Active` stage.
+     * This will subtract the given +amount+ from the users
+     * token balance and saves it as unliquidated balance.
+     */
+    function sell(uint256 _amount)
+        atStage(Stages.Active)
+    {
+        /* SafeMath will do this check for us */
+        /* require(accounts[msg.sender].balance >= amount); */
+        accounts[msg.sender].balance = accounts[msg.sender].balance.sub(_amount);
+        unliquidated[msg.sender] = unliquidated[msg.sender].add(_amount);
+        Sell(msg.sender, _amount);
+    }
+
+    /* Provide funds from liquidated assets.
+     * Called by the broker after liquidating assets.
+     * This checks if the user has unliquidated balances
+     * and transfers the value to the user.
+     */
+    function liquidated(address _account) payable
+        atStage(Stages.Active)
+        onlyBroker
+    {
+         /* SafeMath will do this check for us */
+         /* require(unliquidated[account] >= msg.value); */
+        unliquidated[_account] = unliquidated[_account].sub(msg.value);
+        totalSupply = totalSupply.sub(msg.value);
+        (_account.transfer(msg.value));  // (making solium happy)
+    }
+
+    /* Provide funds from a dividend payout.
+     * Called by the broker after the asset yields dividends.
+     * This will simply add the received value to the stored `payout`.
+     */
+    function payout() payable
+        atStage(Stages.Active)
+    {
+        require(msg.value > 0);
+        totalPayout = totalPayout.add(msg.value.mul(10e18).div(totalSupply));
+        Payout(msg.value);
+    }
+
+    function currentPayout(Account _account) internal returns (uint256) {
+        uint256 totalUnclaimed = totalPayout.sub(_account.claimedPayout);
+        return _account.balance.mul(totalUnclaimed).div(10e18);
+    }
+
+    /* Claim dividend payout.
+     * Called by any investor after dividends have been received.
+     * This will calculate the payout, subtract any already claimed payouts,
+     * update the claimed payouts for the given account, and send the payout.
+     */
+    function claim()
+        atStage(Stages.Active)
+    {
+        uint256 payoutAmount = currentPayout(accounts[msg.sender]);
+        require(payoutAmount > 0);
+        accounts[msg.sender].claimedPayout = totalPayout;
+        msg.sender.transfer(payoutAmount);
+    }
+
+    // Transfer +_value+ from sender to account +_to+.
+    function transfer(address _to, uint256 _value) returns (bool) {
+        // send any remaining unclaimed payouts to msg.sender
+        uint256 payoutAmount = currentPayout(accounts[msg.sender]);
+        if (payoutAmount > 0)
+            msg.sender.transfer(payoutAmount);
+
+        // shift balances
+        accounts[msg.sender].balance = accounts[msg.sender].balance.sub(_value);
+        accounts[_to].balance = accounts[_to].balance.add(_value);
+
+        // set claimed payouts to max for both accounts
+        accounts[msg.sender].claimedPayout = totalPayout;
+        accounts[_to].claimedPayout = totalPayout;
+
+        Transfer(msg.sender, _to, _value);
+        return true;
+    }
+
+    // Get balance of given address +_account+.
+    function balanceOf(address _account) constant returns (uint256 balance) {
+        return accounts[_account].balance;
+    }
+
+    // TODO: needed to test dividend payouts until we implement real changing supply
+    function debugSetSupply(uint256 _supply) onlyOwner {
+        totalSupply = _supply;
+    }
 
 }

@@ -1,4 +1,4 @@
-const POAToken = artifacts.require('POAToken')
+const POAToken = artifacts.require('POAToken2')
 const BrickblockAccessToken = artifacts.require('BrickblockAccessToken')
 const BrickblockUmbrellaStub = artifacts.require('BrickblockUmbrellaStub')
 const BrickblockWhitelist = artifacts.require('BrickblockWhitelist')

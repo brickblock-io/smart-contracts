@@ -3,7 +3,7 @@ const BrickblockFountain = artifacts.require('BrickblockFountain.sol')
 const BrickblockUmbrella = artifacts.require('BrickblockUmbrella.sol')
 const BrickblockFountainStub = artifacts.require('BrickblockFountainStub.sol')
 const BrickblockUmbrellaStub = artifacts.require('BrickblockUmbrellaStub.sol')
-const POATokenStub = artifacts.require('POATokenStub.sol')
+const POATokenStub = artifacts.require('POAToken2Stub.sol')
 const BigNumber = require('bignumber.js')
 
 describe('after the contract is created', () => {

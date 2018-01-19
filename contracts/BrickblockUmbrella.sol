@@ -1,6 +1,6 @@
 pragma solidity ^0.4.18;
 
-import "./POAToken.sol";
+import "./POAToken2.sol";
 import "./BrickblockAccessToken.sol";
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
@@ -223,7 +223,7 @@ contract BrickblockUmbrella is Ownable {
     require(accessTokenAddress != address(0));
     uint256 _fee = calculateFee(_supply);
     require(burnAccessTokens(_fee, msg.sender));
-    address _tokenAddress = new POAToken(
+    address _tokenAddress = new POAToken2(
       _name,
       _symbol,
       msg.sender,

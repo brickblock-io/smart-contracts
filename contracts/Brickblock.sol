@@ -38,18 +38,18 @@ contract Brickblock {
   }
 
   // List all active broker addresses
-  function listBrokers() public constant returns(address[]) {
+  function listBrokers() public view returns(address[]) {
     return brokers;
   }
 
   // Add broker +_broker+ to the list
-  function addBroker(address _broker) public constant onlyOwner {
+  function addBroker(address _broker) public onlyOwner {
     brokers.push(_broker);
     BrokerAdded(_broker, brokers.length - 1);
   }
 
   // Remove broker with given index +_i+ from the list.
-  function removeBroker(uint _i) public constant onlyOwner {
+  function removeBroker(uint _i) public onlyOwner {
     // TODO(mattgstevens): this makes the contract efficient but how will the UI keep in sync
     //  with changing index? Currently we must call listBrokers() after every removeBroker
     address broker = brokers[_i];
@@ -67,7 +67,7 @@ contract Brickblock {
     uint _timeout,
     uint256 _supply
   ) onlyOwner
-    public constant
+    public
   {
     address token = new POAToken(_name, _symbol, msg.sender, _custodian, _timeout, _supply);
     tokens.push(token);

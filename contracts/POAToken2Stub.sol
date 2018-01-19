@@ -3,7 +3,7 @@ pragma solidity ^0.4.18;
 import "./BrickblockAccessToken.sol";
 
 
-contract POATokenStub {
+contract POAToken2Stub {
 
   BrickblockAccessToken public brickblockAccessToken;
 

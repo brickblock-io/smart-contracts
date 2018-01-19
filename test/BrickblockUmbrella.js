@@ -1,5 +1,5 @@
 const BrickblockUmbrella = artifacts.require('BrickblockUmbrella.sol')
-const POAToken = artifacts.require('POAToken.sol')
+const POAToken = artifacts.require('POAToken2.sol')
 const BrickblockAccessToken = artifacts.require('BrickblockAccessToken.sol')
 const BigNumber = require('bignumber.js')
 
