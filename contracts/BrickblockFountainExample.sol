@@ -61,6 +61,7 @@ contract BrickblockFountainExample is Ownable {
     _bbt.transferFrom(brickBlockTokenAddress, this, _value);
     updateAccount(brickBlockTokenAddress, balances[brickBlockTokenAddress].tokens.add(_value));
     BBTLocked(brickBlockTokenAddress, _value);
+    return true;
   }
 
   // this is a basic representation of how locking tokens will look for contributors

@@ -458,12 +458,13 @@ describe('at the end of the ico when fountainAddress has been set', () => {
     let owner = accounts[0]
     let bonusAddress = accounts[1]
     let bbk
+    let bbf
     let bbkAddress
     let fountainAddress
 
     before('setup contract and relevant accounts', async () => {
       bbk = await BrickblockToken.new(bonusAddress)
-      const bbf = await BrickblockFountainExample.new(bbk.address)
+      bbf = await BrickblockFountainExample.new(bbk.address)
       fountainAddress = bbf.address
       bbkAddress = bbk.address
       await distributeTokensToMany(bbk, accounts)
@@ -564,6 +565,7 @@ describe('at the end of the ico when fountainAddress has been set', () => {
 describe('after the ico', () => {
   contract('BrickblockToken', accounts => {
     let bbk
+    let bbf
     let owner = accounts[0]
     let bonusAddress = accounts[1]
     let bbkAddress
@@ -573,7 +575,7 @@ describe('after the ico', () => {
     before('setup bbk BrickblockToken', async () => {
       bbk = await BrickblockToken.new(bonusAddress)
       bbkAddress = bbk.address
-      const bbf = await BrickblockFountainExample.new(bbk.address)
+      bbf = await BrickblockFountainExample.new(bbk.address)
       fountainAddress = bbf.address
       await bbk.changeFountainContractAddress(fountainAddress)
       await distributeTokensToMany(bbk, accounts)
@@ -627,6 +629,36 @@ describe('after the ico', () => {
           'invlid opcode should be the error'
         )
       }
+    })
+
+    it('should allow transferFrom from the fountain address for company tokens when bbk unpaused', async () => {
+      await unpauseIfPaused(bbk)
+      const bbkPaused = await bbk.paused()
+      assert(!bbkPaused, 'bbk should not be paused')
+      const prebbkContractTokenBalance = await bbk.balanceOf(bbk.address)
+      const preFountainContractTokenBalance = await bbk.balanceOf(bbf.address)
+
+      await bbf.lockCompanyFunds()
+
+      const postbbkContractTokenBalance = await bbk.balanceOf(bbk.address)
+      const postFountainContractTokenBalance = await bbk.balanceOf(bbf.address)
+
+      assert.equal(
+        prebbkContractTokenBalance.minus(postbbkContractTokenBalance).toString(),
+        companyTokens.toString(),
+        'the bbk contract balance should be decremented by the companyToken amount'
+      )
+      assert.equal(
+        postFountainContractTokenBalance.minus(preFountainContractTokenBalance).toString(),
+        companyTokens.toString(),
+        'the fountain contract balance should be incremented by the companyToken amount'
+      )
+
+      assert.equal(
+        postbbkContractTokenBalance.toString(),
+        new BigNumber(0).toString(),
+        'the bbk contract token balance should be 0'
+      )
     })
 
     it('should transfer tokens when NOT paused', async () => {
