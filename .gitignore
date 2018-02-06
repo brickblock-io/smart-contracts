@@ -20,6 +20,7 @@ src/contracts
 .env
 npm-debug.log
 .truffle-solidity-loader
+.node-xmlhttprequest*
 
 # tmp files
 ~*

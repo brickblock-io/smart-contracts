@@ -75,6 +75,12 @@ async function activeContract(_totalSupply, _fundingGoal) {
   )
   const fee = await contract.calculateFee(fundingGoal)
   await contract.activate({ from: custodian, value: fee })
+  console.log('claiming for OWNER (activation fee)')
+  await contract.claim()
+  console.log('claiming for CUSTODIAN (activation contract value)')
+  await contract.claim.sendTransaction({
+    from: custodian
+  })
   assert.equal(
     (await contract.stage()).toString(),
     '3',
@@ -107,7 +113,7 @@ async function claimAll(investors) {
   return payouts
 }
 
-describe('Claim and Payout 10years(120 rounds)', () => {
+describe('simulate claims and payouts for 10 years (120 rounds)', () => {
   contract('CustomPOA', () => {
     it('should create cpoa', async () => {
       cpoa = await activeContract(1000e18, 33.3333333333333e18)
@@ -122,9 +128,11 @@ describe('Claim and Payout 10years(120 rounds)', () => {
           gasPrice: new BigNumber(21e9)
         })
         console.log('payout : ', meta.logs[0].args.amount.div(1e18).toString())
-        // if(meta.logs[0].args.amount != '0')
-        //   console.log(JSON.stringify(meta.logs,null,2))
 
+        // claim owner fees
+        console.log('claiming for OWNER')
+        await cpoa.claim()
+        // claim or investors
         await claimAll(investors)
 
         const contractBalance = await web3.eth.getBalance(cpoa.address)
@@ -135,7 +143,6 @@ describe('Claim and Payout 10years(120 rounds)', () => {
         oldContractBalance = contractBalance
       }
       const cpoaBalance = await web3.eth.getBalance(cpoa.address)
-      console.log(`${cpoaBalance} in WEI`)
       assert(
         cpoaBalance.lessThan(6 * 120),
         `contract not empty ${cpoaBalance} left`
@@ -144,7 +151,7 @@ describe('Claim and Payout 10years(120 rounds)', () => {
   })
 }).timeout(0)
 
-describe('Payout for 100 years(1200 rounds) and no one claims until then', () => {
+describe('simulate payout for 100 years(1200 rounds) and no one claims until then', () => {
   contract('CustomPOA', () => {
     it('should create cpoa', async () => {
       cpoa = await activeContract(1000e18, 33.3333333333333e18)
@@ -161,13 +168,16 @@ describe('Payout for 100 years(1200 rounds) and no one claims until then', () =>
         console.log('payout : ', meta.logs[0].args.amount.div(1e18).toString())
         // if(meta.logs[0].args.amount != '0')
         //   console.log(JSON.stringify(meta.logs,null,2))
-      }
 
+      }
+      // claim owner fees
+      console.log('claiming for OWNER')
+      await cpoa.claim()
+      // claim for all investors
       await claimAll(investors)
 
       const cpoaBalance = await web3.eth.getBalance(cpoa.address)
 
-      console.log(`${cpoaBalance} in WEI`)
       assert(cpoaBalance.lessThan(6), `contract not empty ${cpoaBalance} left`)
     })
   })
@@ -224,10 +234,15 @@ describe('do random transfers and claim all after each payout', () => {
         const transferMeta = await cpoa.transfer(receipient, value, {
           from: sender
         })
-        // console.log(JSON.stringify(transferMeta, null, 2))
 
         console.log('claiming all')
+
+        // claim owner fees
+        console.log('claiming for OWNER')
+        await cpoa.claim()
+        // claim or investors
         const payouts = await claimAll(investors)
+
         realPayouts.forEach((payout, i) => {
           realPayouts[i] = payout.add(payouts[i])
         })
@@ -239,7 +254,6 @@ describe('do random transfers and claim all after each payout', () => {
         'payouts do not match'
       )
       const cpoaBalance = await web3.eth.getBalance(cpoa.address)
-      console.log(`${cpoaBalance} in WEI`)
       assert(
         cpoaBalance.lessThan(6 * 120),
         `contract not empty ${cpoaBalance} left`
@@ -312,6 +326,10 @@ describe('do random transfers and payouts and claims', () => {
       }
 
       console.log('claiming all')
+      // claim owner fees
+      console.log('claiming for OWNER')
+      await cpoa.claim()
+      // claim for investors
       const finalPayouts = await claimAll(investors)
       console.log(JSON.stringify([finalPayouts, realPayouts], null, 2))
       realPayouts.forEach((payout, i) => {
@@ -335,7 +353,6 @@ describe('do random transfers and payouts and claims', () => {
       )
 
       const cpoaBalance = await web3.eth.getBalance(cpoa.address)
-      console.log(`${cpoaBalance} in WEI`)
       assert(
         cpoaBalance.lessThan(120 * 3 + 6),
         `contract not empty ${cpoaBalance} left`

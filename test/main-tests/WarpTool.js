@@ -19,7 +19,6 @@ describe('when warping', () => {
       const warpAmount = 10
       await warpBlocks(warpAmount)
       const postBlock = web3.eth.blockNumber
-      console.log(preBlock, postBlock)
       assert.equal(postBlock - preBlock, 10, 'should warp the right amount')
     })
   })

@@ -16,17 +16,19 @@ contract CustomPOAToken is PausableToken {
 
   uint256 public creationBlock;
   uint256 public timeoutBlock;
-  uint256 public totalTokenPayout;
+  // the total per token payout rate: accumulates as payouts are received
+  uint256 public totalPerTokenPayout;
   uint256 public tokenSaleRate;
   uint256 public fundingGoal;
   uint256 public initialSupply;
-  // !!! rate is .5 percent
-  uint256 public constant feeRate = 5; // ‰ permille
+  // ‰ permille NOT percent
+  uint256 public constant feeRate = 5;
 
+  // self contained whitelist on contract, must be whitelisted to buy
   mapping (address => bool) public whitelisted;
-  mapping(address => uint256) public claimedPayouts;
+  mapping(address => uint256) public claimedPerTokenPayouts;
   // fallback for when a transfer happens with payouts remaining
-  mapping(address => uint256) public unclaimedPayouts;
+  mapping(address => uint256) public unclaimedPayoutTotals;
 
   enum Stages {
     Funding,
@@ -222,10 +224,8 @@ contract CustomPOAToken is PausableToken {
     uint256 _fee = calculateFee(fundingGoal);
     require(msg.value == _fee);
     enterStage(Stages.Active);
-    // TODO: do we need to do checks on these transfers to make sure they go through?
-    owner.transfer(_fee);
-    // !!! custodian gets the ether
-    custodian.transfer(fundingGoal);
+    unclaimedPayoutTotals[owner] = unclaimedPayoutTotals[owner].add(_fee);
+    unclaimedPayoutTotals[custodian] = unclaimedPayoutTotals[custodian].add(fundingGoal);
     paused = false;
     Unpause();
     return true;
@@ -260,33 +260,43 @@ contract CustomPOAToken is PausableToken {
     view
     returns (uint256)
   {
-    if (totalTokenPayout == 0) {
-      return 0;
-    }
-    uint256 _balance = balances[_address];
-    uint256 _claimedPayouts = claimedPayouts[_address];
-    uint256 _totalUnclaimed = totalTokenPayout
-      .sub(_claimedPayouts);
+    /*
+      need to check if there have been no payouts
+      safe math will throw otherwise due to dividing 0
 
-    return _includeUnclaimed
-      ? _balance
-      .mul(_totalUnclaimed)
-      .div(1e18)
-      .add(unclaimedPayouts[_address])
-      : _balance
-      .mul(_totalUnclaimed)
+      The below variable represents the total payout from the per token rate pattern
+      it uses this funky naming pattern in order to differentiate from the unclaimedPayoutTotals
+      which means something very different.
+    */
+    uint256 _totalPerTokenUnclaimedConverted = totalPerTokenPayout == 0
+      ? 0
+      : balances[_address]
+      .mul(totalPerTokenPayout.sub(claimedPerTokenPayouts[_address]))
       .div(1e18);
+
+    /*
+    balances may be bumped into unclaimedPayoutTotals in order to
+    maintain balance tracking accross token transfers
+
+    perToken payout rates are stored * 1e18 in order to be kept accurate
+    perToken payout is / 1e18 at time of usage for actual ether balances
+    unclaimedPayoutTotals are stored as actual ether value
+      no need for rate * balance
+    */
+    return _includeUnclaimed
+      ? _totalPerTokenUnclaimedConverted.add(unclaimedPayoutTotals[_address])
+      : _totalPerTokenUnclaimedConverted;
 
   }
 
-  function settleUnclaimedPayouts(address _from, address _to)
+  function settleUnclaimedPerTokenPayouts(address _from, address _to)
     private
     returns (bool)
   {
-    unclaimedPayouts[_from] = unclaimedPayouts[_from].add(currentPayout(_from, false));
-    claimedPayouts[_from] = totalTokenPayout;
-    unclaimedPayouts[_to] = unclaimedPayouts[_to].add(currentPayout(_to, false));
-    claimedPayouts[_to] = totalTokenPayout;
+    unclaimedPayoutTotals[_from] = unclaimedPayoutTotals[_from].add(currentPayout(_from, false));
+    claimedPerTokenPayouts[_from] = totalPerTokenPayout;
+    unclaimedPayoutTotals[_to] = unclaimedPayoutTotals[_to].add(currentPayout(_to, false));
+    claimedPerTokenPayouts[_to] = totalPerTokenPayout;
     return true;
   }
 
@@ -314,9 +324,21 @@ contract CustomPOAToken is PausableToken {
     require(msg.value > 0);
     uint256 _fee = calculateFee(msg.value);
     uint256 _payoutAmount = msg.value.sub(_fee);
-    totalTokenPayout = totalTokenPayout.add(_payoutAmount.mul(1e18).div(totalSupply));
-    uint256 delta = (_payoutAmount.mul(1e18) % totalSupply).div(1e18);
-    owner.transfer(_fee.add(delta));
+    /*
+    totalPerTokenPayout is a rate at which to payout based on token balance
+    it is stored as * 1e18 in order to keep accuracy
+    it is  / 1e18 when used relating to actual ether values
+    */
+    totalPerTokenPayout = totalPerTokenPayout
+      .add(_payoutAmount
+        .mul(1e18)
+        .div(totalSupply)
+      );
+
+    // take remaining dust and send to owner rather than leave stuck in contract
+    // should not be more than a few wei
+    uint256 _delta = (_payoutAmount.mul(1e18) % totalSupply).div(1e18);
+    unclaimedPayoutTotals[owner] = unclaimedPayoutTotals[owner].add(_fee.add(_delta));
 
     Payout(_payoutAmount);
     return true;
@@ -327,10 +349,15 @@ contract CustomPOAToken is PausableToken {
     atEitherStage(Stages.Active, Stages.Terminated)
     returns (uint256)
   {
+    /*
+    pass true to currentPayout in order to get both:
+      perToken payouts
+      unclaimedPayoutTotals
+    */
     uint256 _payoutAmount = currentPayout(msg.sender, true);
     require(_payoutAmount > 0);
-    claimedPayouts[msg.sender] = totalTokenPayout;
-    unclaimedPayouts[msg.sender] = 0;
+    claimedPerTokenPayouts[msg.sender] = totalPerTokenPayout;
+    unclaimedPayoutTotals[msg.sender] = 0;
 
     Claim(_payoutAmount);
     msg.sender.transfer(_payoutAmount);
@@ -349,7 +376,7 @@ contract CustomPOAToken is PausableToken {
     whenNotPaused
     returns (bool)
   {
-    require(settleUnclaimedPayouts(msg.sender, _to));
+    require(settleUnclaimedPerTokenPayouts(msg.sender, _to));
     return super.transfer(_to, _value);
   }
 
@@ -363,7 +390,7 @@ contract CustomPOAToken is PausableToken {
     whenNotPaused
     returns (bool)
   {
-    require(settleUnclaimedPayouts(_from, _to));
+    require(settleUnclaimedPerTokenPayouts(_from, _to));
     return super.transferFrom(_from, _to, _value);
   }
 
