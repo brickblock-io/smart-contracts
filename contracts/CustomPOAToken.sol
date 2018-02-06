@@ -369,6 +369,7 @@ contract CustomPOAToken is PausableToken {
 
   // end ERC20 overrides
 
+  // check if there is a way to get around gas issue when no gas limit calculated...
   // fallback function defaulting to buy
   function()
     public
