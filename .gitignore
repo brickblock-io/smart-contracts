@@ -10,6 +10,7 @@ build
 
 # testing
 coverage
+coverage.json
 
 # production
 build
