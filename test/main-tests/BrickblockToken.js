@@ -24,26 +24,35 @@ async function distributeTokensToMany(contract, accounts) {
     )
   )
 }
-
 function unpauseIfPaused(contract) {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     contract
       .paused()
       .then(paused => {
-        if (paused) contract.unpause()
+        if (paused) {
+          return contract.unpause()
+        }
+
+        return
       })
       .then(resolve)
+      .catch(reject)
   })
 }
 
 function pauseIfUnpaused(contract) {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     contract
       .paused()
       .then(paused => {
-        if (!paused) contract.pause()
+        if (!paused) {
+          return contract.pause()
+        }
+
+        return
       })
       .then(resolve)
+      .catch(reject)
   })
 }
 
