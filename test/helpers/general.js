@@ -1,4 +1,25 @@
+const WarpTool = artifacts.require('WarpTool')
+
 const BigNumber = require('bignumber.js')
+
+const warpBlocks = blocks => {
+  return new Promise(async resolve => {
+    const warpTool = await WarpTool.new()
+    for (let i = 0; i < blocks - 1; i++) {
+      // log every fifth block
+      if (i % 5 === 0) {
+        // eslint-disable-next-line no-console
+        console.log('💫  warping blocks')
+      }
+
+      await warpTool.warp()
+    }
+
+    // eslint-disable-next-line no-console
+    console.log('✅  warp complete')
+    resolve(true)
+  })
+}
 
 const sendTransaction = (web3, args) => {
   return new Promise(function(resolve, reject) {
@@ -55,10 +76,11 @@ const gasPrice = new BigNumber(30e9)
 const bigZero = new BigNumber(0)
 
 module.exports = {
-  testWillThrow,
+  bigZero,
+  gasPrice,
   getEtherBalance,
   getReceipt,
-  gasPrice,
-  bigZero,
-  sendTransaction
+  sendTransaction,
+  testWillThrow,
+  warpBlocks
 }
