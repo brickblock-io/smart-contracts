@@ -1,42 +1,38 @@
 /* eslint-disable no-console */
 // console output is ok in yarn task
+/* eslint-disable security/detect-non-literal-fs-filename */
+// this is ok since we know what files we are dealing with here
+/* eslint-disable security/detect-non-literal-require */
+// this is ok since we know what files we are dealing with here
 
 require('dotenv').config()
 const fs = require('fs')
 const path = require('path')
 const utils = require('ethereumjs-util')
+const cpoaAddressConfigPath = `${__dirname}/../build/cpoaAddressesConfig.json`
 
 // this will go away soon and be replaced by BrickblockUmbrella...
 const bbkRopstenAddress = process.env.BRICKBLOCK_ROPSTEN_ADDRESS
 const bbkKovanAddress = process.env.BRICKBLOCK_KOVAN_ADDRESS
 
 // these should stick around for the forseeable future...
-const cpoaRopstenAddress = process.env.CUSTOM_POA_ROPSTEN_ADDRESS
-const cpoaKovanAddress = process.env.CUSTOM_POA_KOVAN_ADDRESS
-const cpoaMainAddress = process.env.CUSTOM_POA_MAINNET_ADDRESS
+const cpoaRopstenAddresses = process.env.CUSTOM_POA_ROPSTEN_ADDRESSES
+  ? process.env.CUSTOM_POA_ROPSTEN_ADDRESSES.split(',')
+  : []
+const cpoaKovanAddresses = process.env.CUSTOM_POA_KOVAN_ADDRESSES
+  ? process.env.CUSTOM_POA_KOVAN_ADDRESSES.split(',')
+  : []
+const cpoaMainnetAddresses = process.env.CUSTOM_POA_MAINNET_ADDRESSES
+  ? process.env.CUSTOM_POA_MAINNET_ADDRESSES.split(',')
+  : []
 
 const bbkABI = path.resolve('./build/contracts/Brickblock.json')
-const cpoaABI = path.resolve('./build/contracts/CustomPOAToken.json')
 
-let contract
-
-if (
-  !bbkRopstenAddress ||
-  !bbkKovanAddress ||
-  !cpoaRopstenAddress ||
-  !cpoaKovanAddress
-) {
-  console.error('missing a contract address in .env')
-  process.exit(-1)
-} else {
-  setupContract(bbkRopstenAddress, bbkABI, 3)
-  setupContract(bbkKovanAddress, bbkABI, 42)
-  setupContract(cpoaRopstenAddress, cpoaABI, 3)
-  setupContract(cpoaKovanAddress, cpoaABI, 42)
-  setupContract(cpoaMainAddress, cpoaABI, 0)
+const resetCpoaAddressesConfig = () => {
+  fs.writeFileSync(cpoaAddressConfigPath, JSON.stringify({}, null, 2))
 }
 
-function setupContract(contractAddress, contractABIPath, chainId) {
+const setupContract = (contractAddress, contractABIPath, chainId) => {
   const contract = require(contractABIPath)
 
   const events = contract.abi
@@ -67,4 +63,43 @@ function setupContract(contractAddress, contractABIPath, chainId) {
   fs.writeFileSync(contractABIPath, JSON.stringify(contract, null, 2))
 
   console.log(`Injected ${chainId}:${contractAddress} into ${contractABIPath}`)
+}
+
+const exportCustomPoaAddresses = (addresses, network) => {
+  if (addresses.length === 0) {
+    console.log(
+      `⚠️  ⚠️  ⚠️  NO CONTRACT ADDRESSES FOUND FOR NETWORK ${
+        network
+      }! I sure hope you know what you are doing... ⚠️  ⚠️  ⚠️`
+    )
+    console.log('an empty array will be written to config for this network')
+  }
+
+  const cpoaAddressConfig = require(cpoaAddressConfigPath)
+  cpoaAddressConfig[network] = addresses
+  fs.writeFileSync(
+    cpoaAddressConfigPath,
+    JSON.stringify(cpoaAddressConfig, null, 2)
+  )
+  console.log(
+    `Wrote customPoaToken addresses to config file for network ${network}`
+  )
+}
+
+if (
+  !bbkRopstenAddress &&
+  !bbkKovanAddress &&
+  cpoaRopstenAddresses.length === 0 &&
+  cpoaKovanAddresses.length === 0 &&
+  cpoaMainnetAddresses.length === 0
+) {
+  console.error('no contract addresses in .env!')
+  process.exit(-1)
+} else {
+  setupContract(bbkRopstenAddress, bbkABI, 3)
+  setupContract(bbkKovanAddress, bbkABI, 42)
+  resetCpoaAddressesConfig()
+  exportCustomPoaAddresses(cpoaRopstenAddresses, 'ropsten')
+  exportCustomPoaAddresses(cpoaKovanAddresses, 'kovan')
+  exportCustomPoaAddresses(cpoaMainnetAddresses, 'main')
 }

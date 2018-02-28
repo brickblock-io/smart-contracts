@@ -1,6 +1,6 @@
 {
   "name": "@brickblock/smart-contracts",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "Smart contracts for the Brickblock platform",
   "engines": {
     "node": ">=8.7.0",
