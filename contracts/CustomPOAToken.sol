@@ -47,6 +47,7 @@ contract CustomPOAToken is PausableToken {
   event PayoutEvent(uint256 amount);
   event ClaimEvent(uint256 payout);
   event TerminatedEvent();
+  event Whitelisted(address indexed account, bool isWhitelisted);
 
   modifier isWhitelisted() {
     require(whitelisted[msg.sender]);
@@ -180,6 +181,7 @@ contract CustomPOAToken is PausableToken {
   {
     require(whitelisted[_address] != true);
     whitelisted[_address] = true;
+    Whitelisted(_address, true);
   }
 
   // disallow address to buy tokens.
@@ -190,6 +192,7 @@ contract CustomPOAToken is PausableToken {
   {
     require(whitelisted[_address] != false);
     whitelisted[_address] = false;
+    Whitelisted(_address, false);
   }
 
   // check to see if contract whitelist has approved address to buy

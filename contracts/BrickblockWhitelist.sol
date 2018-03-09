@@ -7,6 +7,8 @@ contract BrickblockWhitelist is Ownable {
 
   mapping (address => bool) public whitelisted;
 
+  event Whitelisted(address indexed account, bool isWhitelisted);
+
   function BrickblockWhitelist()
     public
   {
@@ -19,6 +21,7 @@ contract BrickblockWhitelist is Ownable {
   {
     require(whitelisted[_address] != true);
     whitelisted[_address] = true;
+    Whitelisted(_address, true);
   }
 
   function removeAddress(address _address)
@@ -27,5 +30,6 @@ contract BrickblockWhitelist is Ownable {
   {
     require(whitelisted[_address] != false);
     whitelisted[_address] = false;
+    Whitelisted(_address, false);
   }
 }
