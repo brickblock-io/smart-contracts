@@ -1,6 +1,6 @@
 {
   "name": "@brickblock/smart-contracts",
-  "version": "2.0.7",
+  "version": "2.0.10",
   "description": "Smart contracts for the Brickblock platform",
   "engines": {
     "node": ">=8.7.0",
@@ -84,6 +84,7 @@
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-prettier": "^2.6.0",
     "eslint-plugin-promise": "^3.6.0",
-    "eslint-plugin-security": "^1.4.0"
+    "eslint-plugin-security": "^1.4.0",
+    "ethereumjs-util": "^5.1.5"
   }
 }
