@@ -1,26 +1,8 @@
-# NOTE: We're currently not running build tasks inside docker containers because of
-# bad performance and missing docker caching in gitlab. See these issues for example:
-# - https://gitlab.com/gitlab-org/gitlab-ce/issues/17861#note_37212331
-# - https://gitlab.com/gitlab-org/gitlab-ce/issues/33313
-
 cache:
   untracked: true
   key: $CI_COMMIT_REF_NAME
   paths:
     - .yarn-cache/
-
-variables:
-  # From the docs: https://docs.gitlab.com/ee/ci/yaml/#git-strategy
-  #   „fetch is faster as it re-uses the project workspace (falling back
-  #   to clone if it doesn't exist). git clean is used to undo any changes
-  #   made by the last job, and git fetch is used to retrieve commits
-  #   made since the last job ran.“
-  GIT_STRATEGY: fetch
-
-  # https://medium.com/@gajus/making-docker-in-docker-builds-x2-faster-using-docker-cache-from-option-c01febd8ef84
-  # The 'latest' image. Used as a base to cache from
-  # when building the $BUILD_IMAGE.
-  RELEASE_IMAGE: $CI_REGISTRY_IMAGE:latest
 
 stages:
   - setup
@@ -48,3 +30,11 @@ test:
     policy: pull
   script:
     - yarn test
+
+mythril:
+  stage: test
+  cache:
+    policy: pull
+  script:
+    - yarn truffle compile
+    - /opt/python3/bin/python3 /opt/mythril/myth --truffle

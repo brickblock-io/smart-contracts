@@ -2,6 +2,7 @@
   "name": "@brickblock/smart-contracts",
   "version": "2.0.10",
   "description": "Smart contracts for the Brickblock platform",
+  "license": "UNLICENSED",
   "engines": {
     "node": ">=8.7.0",
     "yarn": ">=1.3.2"
@@ -33,8 +34,10 @@
     "---SECTION:TEST---": "-------------------- HOW TO TEST THE SMART CONTRACTS --------------------",
     "test": "yarn run clean:contracts && truffle test test/main-tests/* && truffle test test/unit-tests/*",
     "test:stress-test": "truffle test test/stress-tests/*",
+    "test:coverage:comment": "Because solidity-coverage is still experimental we won't fail CI if it fails for now",
     "test:coverage": "( yarn solidity-coverage || true ) && open coverage/contracts/index.html",
-    "coverage": "yarn test:coverage",
+    "test:mythril:comment": "ConsenSys' security vulnerability scanner for smart contracts",
+    "test:mythril": "yarn truffle compile && myth --truffle",
     "---SECTION:LINT---": "-------------------- HOW TO LINT --------------------",
     "lint": "yarn lint:sol && yarn lint:js",
     "lint:sol": "solium --dir ./contracts",
@@ -64,6 +67,7 @@
     "cross-env": "^5.1.1",
     "dotenv": "^4.0.0",
     "ethereumjs-testrpc": "^6.0.1",
+    "ethereumjs-util": "^5.1.5",
     "husky": "^0.14.3",
     "left-pad": "^1.1.3",
     "lint-staged": "^5.0.0",
@@ -84,7 +88,6 @@
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-prettier": "^2.6.0",
     "eslint-plugin-promise": "^3.6.0",
-    "eslint-plugin-security": "^1.4.0",
-    "ethereumjs-util": "^5.1.5"
+    "eslint-plugin-security": "^1.4.0"
   }
 }
