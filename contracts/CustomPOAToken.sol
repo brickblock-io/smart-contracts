@@ -43,7 +43,7 @@ contract CustomPOAToken is PausableToken {
   Stages public stage = Stages.Funding;
 
   event StageEvent(Stages stage);
-  event BuyEvent(address buyer, uint256 amount);
+  event BuyEvent(address indexed buyer, uint256 amount);
   event PayoutEvent(uint256 amount);
   event ClaimEvent(uint256 payout);
   event TerminatedEvent();
