@@ -7,12 +7,12 @@
     ```sh
     yarn
     ```
-    
+
 1. Install [mythril](https://github.com/ConsenSys/mythril), a security analysis tool for Ethereum smart contracts
 
     ```sh
     # You will need python3 and pip3 for this to work
-    pip3 install mythril 
+    pip3 install mythril
     ```
 
 ## Running the tests
@@ -91,44 +91,50 @@ BrickblockToken is an ERC20 Token with added features enabling the Brickblock co
 * be tradable on exchanges
 * be upgradeable
 
-Company tokens are locked in by assigning the value to the contract itself. The owner never starts with any token balance. This way there is no way to move the tokens without predetermined functions. The tokens are approved to be locked into the fountain contract when `finalizeTokenSale` is called. Once when the tokens are locked into the fountain, there will be no way to move them until November 30, 2020.
+Company tokens are locked in by assigning the value to the contract itself. The owner never starts with any token balance. This way there is no way to move the tokens without predetermined functions. The tokens are approved to be locked into the `BrickblockAccessToken` contract when `finalizeTokenSale` is called. Once when the tokens are locked into the `BrickblockAccessToken`, there will be no way to move them until November 30, 2020.
 
-The fountain contract will later be called to lock the company funds into the fountain. See below for more details.
+The `BrickblockAccessToken` contract will later be called to lock the company funds into the fountain. See below for more details.
 
-## BrickblockFountain (Work in Progress)
-BrickblockFountain will be the contract that locks in BrickblockTokens in order to mint new BrickblockAccessTokens. It will be able to:
+## BrickblockAccessToken2 (Work in Progress)
+`BrickblockAccessToken` allows for `BrickblockToken` holders to lock in their BBK in order to receive ACT whenever a fee is paid on the Brickblock network. When a fee is paid, users who have locked in their BBK receive an ACT reward proportional to their locked tokens relative to the entire locked BBK balance of the contract.
 
-* lock in BrickblockTokens through `transferFrom`, an ERC20 standard function
-* release BrickblockTokens after November 30, 2020
-* track time and amount as a ratio of total time and amount regarding locked BrickblockTokens from users and return a BrickblockAccessToken reward.
-* call mint function on BrickblockAccessToken contract
-* change the stored address for the BrickBlockAccessToken contract
-* change the stored address for the BrickblockToken contract
+`BrickblockAccessToken` is an ERC20 compliant token contract.
 
-The code to release the company tokens will look something like this:
+## BrickblockFeeManager (Work in Progress)
+
+`BrickblockFeeManager` allows for other smart contracts or accounts to pay a fee to the contract. When a fee is paid, ACT (BrickblockAccessTokens) are created and given proportionally to lockedBBK holders.
+
+Owners of ACT can claim Ether by running `claimFee`. When claiming, ACT is burnt in return for Ether.
+
+## BrickblockAccount (Work in Progress)
+
+`BrickblockAccount` is the sole means of the company to interact with the company tokens before the token release date of November 30, 2020. The code preventing token withdrawal is here:
+
 ```
-function claimCompanyTokens() public onlyOwner returns (bool) {
-  require(block.number > companyShareReleaseBlock);
-  BrickblockToken _bbt = BrickblockToken(brickBlockTokenAddress);
-  uint256 _companyTokens = balanceOf(_bbt);
-  balances[this].tokens = balances[this].tokens.sub(_companyTokens);
-  balances[owner].tokens = balances[owner].tokens.add(_companyTokens);
-  updateAccount(brickBlockTokenAddress, 0);
-  CompanyTokensReleased(owner, _companyTokens);
-}
+function withdrawBbkFunds(
+    address _address,
+    uint256 _value
+  )
+    external
+    onlyOwner
+    returns (bool)
+  {
+    require(fundsReleaseBlock < block.number);
+    BrickblockToken bbk = BrickblockToken(
+      registry.getContractAddress("BrickblockToken")
+    );
+    return bbk.transfer(_address, _value);
+  }
 ```
 
-The code included in this repository for BrickblockFountain is mostly placeholder code for tests and will likely undergo major changes.
+The rest of this functionality allows Brickblock to interact with the ecosystem as any other participant.
 
-## BrickblockAccessToken (Work in Progress)
-BrickblockAccessToken is the token that will be burned in order to perform a variety of functions in the Brickblock ecosystem. It will be an ERC20 token and will have some minting and pausing features.
+## BrickblockContractRegistry (Work in Progress)
+This contract allows for the communication between other smart contracts in our ecosystem.
 
-BrickblockAccessToken will be able to:
-* `mint` new tokens by owner or fountain
-* burn tokens
-* change the stored address for the fountain contract
-* be tradable amongst users through standard ERC20 functions
-* be tradable on exchanges through standard ERC20 functions
+## BrickblockWhitelist
+
+This contract stores whitelisted addresses. This will allow users to buy POA tokens after being whitelisted.
 
 ## Brickblock (Work in Progress)
 The Brickblock contract will allow brokers to be added and removed. It is also responsible for deploying new POATokens on behalf of the brokers. It will be able to:
@@ -149,6 +155,7 @@ The token will go through different phases:
 1. pending
 1. failed
 1. active
+1. terminated
 
 ### Funding Stage
 The token is put up on the platform and investors are able to buy a piece of the asset. If the funding goals are not met the token goes to failed stage. If the goals are met within the time limit, the token goes on to pending stage.
@@ -156,8 +163,14 @@ The token is put up on the platform and investors are able to buy a piece of the
 ### Pending Stage
 In the pending stage, a verified custodian of the asset must provide proof that they are in possession of the asset to move the token forward.
 
+### Failed Stage
+When failed, tokens that have been bought are redeemable for the amount of ether they were bought for. The contract will never become active or tradeable when reaching a failed state. The contract reaches failed state when the fundingGoal is not reached in time.
+
 ### Active Stage
 In the active stage, a token will produce monthly payouts and will be sent to owners in the form of ether.
+
+### Terminated Stage
+A contract enters the terminated stage when a poa contract needs to end. This could be because the building is sold, or some other "act of god" occurs. When in terminated stage, users will not be able to trade the tokens any longer. Payouts from custodian are still possible. This should allow sending money from insurance to token holders if a building is destroyed.
 
 ## Built With
 
@@ -165,10 +178,10 @@ In the active stage, a token will produce monthly payouts and will be sent to ow
 * [zeppelin-solidity v1.3.0](https://github.com/OpenZeppelin/zeppelin-solidity/releases)
 
 ## Authors
-* **Marius Hanne** - *Initial work* - [mhanne](https://github.com/mhanne)
-* **Adrian Kizlauskas** - *Initial work* - [dissaranged](https://github.com/dissaranged)
-* **Cody Lamson** - *Initial work* - [TovarishFin](https://github.com/TovarishFin)
-* **Matt Stevens** - *Initial work* - [mattgstevens](https://github.com/mattgstevens)
+* **Cody Lamson** - *BrickblockToken, CustomPOAToken, BrickblockAccessToken, BrickblockAccount, POAToken2, WarpTool, BrickblockWhitelist, BrickblockContractRegistry, BrickblockFeeManager* - [TovarishFin](https://github.com/TovarishFin)
+* **Matt Stevens** - *BrickblockToken, CustomPOAToken, POAToken, BrickblockUmbrella, BrickblockWhitelist, BrickblockContractRegistry* - [mattgstevens](https://github.com/mattgstevens)
+* **Adrian Kizlauskas** - *BrickblockToken, CustomPOAToken POAToken, BrickblockUmbrella* - [dissaranged](https://github.com/dissaranged)
+* **Marius Hanne** - *POAToken, BrickblockUmbrella* - [mhanne](https://github.com/mhanne)
 
 ## License
 
