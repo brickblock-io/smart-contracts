@@ -14,6 +14,7 @@ const cpoaAddressConfigPath = `${__dirname}/../build/cpoaAddressesConfig.json`
 // this will go away soon and be replaced by BrickblockUmbrella...
 const bbkRopstenAddress = process.env.BRICKBLOCK_ROPSTEN_ADDRESS
 const bbkKovanAddress = process.env.BRICKBLOCK_KOVAN_ADDRESS
+const bbkRinkebyAddress = process.env.BRICKBLOCK_RINKEBY_ADDRESS
 
 // these should stick around for the forseeable future...
 const cpoaRopstenAddresses = process.env.CUSTOM_POA_ROPSTEN_ADDRESSES
@@ -21,6 +22,9 @@ const cpoaRopstenAddresses = process.env.CUSTOM_POA_ROPSTEN_ADDRESSES
   : []
 const cpoaKovanAddresses = process.env.CUSTOM_POA_KOVAN_ADDRESSES
   ? process.env.CUSTOM_POA_KOVAN_ADDRESSES.split(',')
+  : []
+const cpoaRinkebyAddresses = process.env.CUSTOM_POA_RINKEBY_ADDRESSES
+  ? process.env.CUSTOM_POA_RINKEBY_ADDRESSES.split(',')
   : []
 const cpoaMainnetAddresses = process.env.CUSTOM_POA_MAINNET_ADDRESSES
   ? process.env.CUSTOM_POA_MAINNET_ADDRESSES.split(',')
@@ -87,8 +91,10 @@ const exportCustomPoaAddresses = (addresses, network) => {
 if (
   !bbkRopstenAddress &&
   !bbkKovanAddress &&
+  !bbkRinkebyAddress &&
   cpoaRopstenAddresses.length === 0 &&
   cpoaKovanAddresses.length === 0 &&
+  cpoaRinkebyAddresses.length === 0 &&
   cpoaMainnetAddresses.length === 0
 ) {
   console.error('no contract addresses in .env!')
@@ -96,8 +102,10 @@ if (
 } else {
   setupContract(bbkRopstenAddress, bbkABI, 3)
   setupContract(bbkKovanAddress, bbkABI, 42)
+  setupContract(bbkRinkebyAddress, bbkABI, 4)
   resetCpoaAddressesConfig()
   exportCustomPoaAddresses(cpoaRopstenAddresses, 'ropsten')
   exportCustomPoaAddresses(cpoaKovanAddresses, 'kovan')
+  exportCustomPoaAddresses(cpoaRinkebyAddresses, 'rinkeby')
   exportCustomPoaAddresses(cpoaMainnetAddresses, 'main')
 }
