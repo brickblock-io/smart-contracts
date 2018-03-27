@@ -72,7 +72,9 @@ const setupContract = (contractAddress, contractABIPath, chainId) => {
 const exportCustomPoaAddresses = (addresses, network) => {
   if (addresses.length === 0) {
     console.log(
-      `⚠️  ⚠️  ⚠️  NO CONTRACT ADDRESSES FOUND FOR NETWORK ${network}! I sure hope you know what you are doing... ⚠️  ⚠️  ⚠️`
+      `⚠️  ⚠️  ⚠️  NO CONTRACT ADDRESSES FOUND FOR NETWORK ${
+        network
+      }! I sure hope you know what you are doing... ⚠️  ⚠️  ⚠️`
     )
     console.log('an empty array will be written to config for this network')
   }
