@@ -38,6 +38,7 @@ const resetCpoaAddressesConfig = () => {
 
 const setupContract = (contractAddress, contractABIPath, chainId) => {
   const contract = require(contractABIPath)
+  const sanitizedAddress = contractAddress.toLowerCase()
 
   const events = contract.abi
     .filter(item => item.type === 'event')
@@ -58,7 +59,7 @@ const setupContract = (contractAddress, contractABIPath, chainId) => {
     [chainId.toString()]: {
       events,
       links: {},
-      address: contractAddress,
+      address: sanitizedAddress,
       updated_at: Date.now()
     }
   }
@@ -66,21 +67,21 @@ const setupContract = (contractAddress, contractABIPath, chainId) => {
   Object.assign(contract.networks, networks)
   fs.writeFileSync(contractABIPath, JSON.stringify(contract, null, 2))
 
-  console.log(`Injected ${chainId}:${contractAddress} into ${contractABIPath}`)
+  console.log(`Injected ${chainId}:${sanitizedAddress} into ${contractABIPath}`)
 }
 
 const exportCustomPoaAddresses = (addresses, network) => {
   if (addresses.length === 0) {
     console.log(
-      `⚠️  ⚠️  ⚠️  NO CONTRACT ADDRESSES FOUND FOR NETWORK ${
-        network
-      }! I sure hope you know what you are doing... ⚠️  ⚠️  ⚠️`
+      `⚠️  ⚠️  ⚠️  NO CONTRACT ADDRESSES FOUND FOR NETWORK ${network}! I sure hope you know what you are doing... ⚠️  ⚠️  ⚠️`
     )
     console.log('an empty array will be written to config for this network')
   }
 
+  const sanitizedAddresses = addresses.map(address => address.toLowerCase())
+
   const cpoaAddressConfig = require(cpoaAddressConfigPath)
-  cpoaAddressConfig[network] = addresses
+  cpoaAddressConfig[network] = sanitizedAddresses
   fs.writeFileSync(
     cpoaAddressConfigPath,
     JSON.stringify(cpoaAddressConfig, null, 2)
