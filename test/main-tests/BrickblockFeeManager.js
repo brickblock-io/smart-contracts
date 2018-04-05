@@ -1,4 +1,4 @@
-const AccessToken = artifacts.require('BrickblockAccessToken2')
+const AccessToken = artifacts.require('BrickblockAccessToken')
 const BrickblockToken = artifacts.require('BrickblockToken')
 const ContractRegistry = artifacts.require('BrickblockContractRegistry')
 const FeeManager = artifacts.require('BrickblockFeeManager')
@@ -7,7 +7,7 @@ const BigNumber = require('bignumber.js')
 
 const { testWillThrow, sendTransaction } = require('../helpers/general')
 const { setupContracts, testLockAndApproveMany } = require('../helpers/act')
-const { testPayFee, testPartialClaimFee } = require('../helpers/bfm')
+const { testPayFee, testPartialClaimFee } = require('../helpers/fmr')
 
 describe('when interacting with FeeManager', () => {
   contract('FeeManager', accounts => {
@@ -21,7 +21,7 @@ describe('when interacting with FeeManager', () => {
     const feeAmount = new BigNumber(1e19)
     let bbk
     let act
-    let bfm
+    let fmr
 
     before('setup contracts', async () => {
       const contracts = await setupContracts(
@@ -36,31 +36,31 @@ describe('when interacting with FeeManager', () => {
       )
       bbk = contracts.bbk
       act = contracts.act
-      bfm = contracts.bfm
+      fmr = contracts.fmr
       await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
     })
 
     it('should increment ether balance correctly for FeeManager', async () => {
-      await testPayFee(bfm, feePayer, feeAmount)
+      await testPayFee(fmr, feePayer, feeAmount)
     })
 
     it('should decrement ether balance correctly for FeeManager', async () => {
       const actBalance = await act.balanceOf(claimer)
       const claimAmount = actBalance.div(2)
-      await testPartialClaimFee(bfm, act, claimer, claimAmount)
+      await testPartialClaimFee(fmr, act, claimer, claimAmount)
     })
 
     it('should NOT allow fallback function payments', async () => {
       await testWillThrow(sendTransaction, [
         web3,
-        { from: feePayer, value: feeAmount, to: bfm.address }
+        { from: feePayer, value: feeAmount, to: fmr.address }
       ])
     })
 
     it('should NOT allow claiming more ACT than balance', async () => {
       const actBalance = await act.balanceOf(claimer)
       const claimAmount = actBalance.add(1)
-      await testWillThrow(bfm.claimFee, [claimAmount, { from: claimer }])
+      await testWillThrow(fmr.claimFee, [claimAmount, { from: claimer }])
     })
   })
 })

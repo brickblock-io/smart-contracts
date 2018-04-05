@@ -16,9 +16,9 @@ const setupContracts = async (
   BrickblockAccount,
   unlockBlock = 1000
 ) => {
-  const crt = await ContractRegistry.new()
-  const act = await AccessToken.new(crt.address)
-  const bat = await BrickblockAccount.new(crt.address, unlockBlock)
+  const reg = await ContractRegistry.new()
+  const act = await AccessToken.new(reg.address)
+  const bat = await BrickblockAccount.new(reg.address, unlockBlock)
   const bbk = await finalizedBBK(
     owner,
     BrickblockToken,
@@ -27,22 +27,22 @@ const setupContracts = async (
     contributors,
     tokenDistAmount
   )
-  const bfm = await FeeManager.new(crt.address)
+  const fmr = await FeeManager.new(reg.address)
 
-  await crt.updateContract('BrickblockToken', bbk.address)
-  await crt.updateContract('AccessToken', act.address)
-  await crt.updateContract('FeeManager', bfm.address)
-  await crt.updateContract('BrickblockAccount', bat.address)
+  await reg.updateContract('BrickblockToken', bbk.address)
+  await reg.updateContract('AccessToken', act.address)
+  await reg.updateContract('FeeManager', fmr.address)
+  await reg.updateContract('BrickblockAccount', bat.address)
 
   const balanceCheck = await bbk.balanceOf(contributors[0])
   const bbkPaused = await bbk.paused()
   assert(balanceCheck.greaterThan(0), 'balance should be more than 0')
   assert(!bbkPaused, 'contract should not be paused')
   return {
-    crt,
+    reg,
     act,
     bbk,
-    bfm,
+    fmr,
     bat
   }
 }
@@ -120,16 +120,16 @@ const testUnlockBBK = async (bbk, act, bat, amount) => {
   )
 }
 
-const testClaimFee = async (bbk, act, bfm, bat, amount) => {
+const testClaimFee = async (bbk, act, fmr, bat, amount) => {
   const value = new BigNumber(amount)
   const preBatActBalance = await act.balanceOf(bat.address)
   const preBatEthBalance = await getEtherBalance(bat.address)
-  const preBfmEthBalance = await getEtherBalance(bfm.address)
+  const preBfmEthBalance = await getEtherBalance(fmr.address)
   const preTotalSupply = await act.totalSupply()
   await bat.claimFee(value)
   const postBatActBalance = await act.balanceOf(bat.address)
   const postBatEthBalance = await getEtherBalance(bat.address)
-  const postBfmEthBalance = await getEtherBalance(bfm.address)
+  const postBfmEthBalance = await getEtherBalance(fmr.address)
   const postTotalSupply = await act.totalSupply()
 
   assert.equal(

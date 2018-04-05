@@ -1,12 +1,12 @@
 // THIS IS EXAMPLE CODE ONLY AND THE FUNCTIONS MOST LIKELY WILL CHANGE
 pragma solidity ^0.4.18;
 
-import "./BrickblockToken.sol";
+import "../BrickblockToken.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
-contract BrickblockFountainExample is Ownable {
+contract BrickblockFountainStub is Ownable {
   using SafeMath for uint256;
 
   struct Account {
@@ -25,7 +25,7 @@ contract BrickblockFountainExample is Ownable {
   event CompanyTokensReleased(address _owner, uint256 _tokenAmount);
   event Placeholder(address _address, uint256 _value);
 
-  function BrickblockFountainExample(address _brickBlockTokenAddress)
+  function BrickblockFountainStub(address _brickBlockTokenAddress)
     public
   {
     require(_brickBlockTokenAddress != address(0));

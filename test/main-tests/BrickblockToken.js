@@ -1,9 +1,8 @@
 const BigNumber = require('bignumber.js')
-const leftPad = require('left-pad')
 
 const BrickblockToken = artifacts.require('./BrickblockToken.sol')
-const BrickblockFountainExample = artifacts.require(
-  './BrickblockFountainExample.sol'
+const BrickblockFountainStub = artifacts.require(
+  './stubs/BrickblockFountainStub.sol'
 )
 
 const getContributorsBalanceSum = (bbk, contributors) =>
@@ -67,9 +66,9 @@ const distributableTokens = tokenTotal.minus(bonusTokens).minus(companyTokens)
 
 describe('during the ico', () => {
   contract('BrickblockToken', accounts => {
-    let ownerAddress = accounts[0]
-    let bonusAddress = accounts[1]
-    let contributorAddress = accounts[2]
+    const ownerAddress = accounts[0]
+    const bonusAddress = accounts[1]
+    const contributorAddress = accounts[2]
     let bbk
     let bbkAddress
 
@@ -187,8 +186,6 @@ describe('during the ico', () => {
       describe('when NOT sent from ownerAddress', () => {
         it('should NOT distribute tokens to bonusRecipientAddress', async () => {
           const bonusRecipientAddress = accounts[9]
-          const preRecipientBalance = await bbk.balanceOf(bonusRecipientAddress)
-          const preBonusBalance = await bbk.balanceOf(bonusAddress)
           const distributeAmount = new BigNumber(1e19)
 
           try {
@@ -264,7 +261,6 @@ describe('during the ico', () => {
 
         it('should NOT distribute more tokens due to previous block distribution', async () => {
           const bonusRecipientAddress = accounts[9]
-          const bonusBalance = await bbk.balanceOf(bonusAddress)
           const overDistributeAmount = new BigNumber(1)
 
           try {
@@ -385,7 +381,7 @@ describe('during the ico', () => {
       describe('when sent from ownerAddress', () => {
         describe('when fountainAddress is a contract that is NOT ownerAddress OR bbkAddress', () => {
           it('should change the fountainAddress', async () => {
-            const bbf = await BrickblockFountainExample.new(bbk.address)
+            const bbf = await BrickblockFountainStub.new(bbk.address)
             const fountainAddress = bbf.address
             const preAddress = await bbk.fountainContractAddress()
             await bbk.changeFountainContractAddress.sendTransaction(
@@ -439,7 +435,7 @@ describe('during the ico', () => {
 
       describe('when NOT sent from ownerAddress', () => {
         it('should NOT change the fountainAddress', async () => {
-          const bbf = await BrickblockFountainExample.new(bbk.address)
+          const bbf = await BrickblockFountainStub.new(bbk.address)
           const fountainAddress = bbf.address
 
           try {
@@ -464,8 +460,7 @@ describe('during the ico', () => {
 
 describe('at the end of the ico when fountainAddress has been set', () => {
   contract('BrickblockToken', accounts => {
-    let owner = accounts[0]
-    let bonusAddress = accounts[1]
+    const bonusAddress = accounts[1]
     let bbk
     let bbf
     let bbkAddress
@@ -473,7 +468,7 @@ describe('at the end of the ico when fountainAddress has been set', () => {
 
     before('setup contract and relevant accounts', async () => {
       bbk = await BrickblockToken.new(bonusAddress)
-      bbf = await BrickblockFountainExample.new(bbk.address)
+      bbf = await BrickblockFountainStub.new(bbk.address)
       fountainAddress = bbf.address
       bbkAddress = bbk.address
       await distributeTokensToMany(bbk, accounts)
@@ -482,14 +477,7 @@ describe('at the end of the ico when fountainAddress has been set', () => {
 
     it('should set the correct values when running finalizeTokenSale', async () => {
       const preBonusBalance = await bbk.balanceOf(bonusAddress)
-      const preContractBalance = await bbk.balanceOf(bbkAddress)
-      const preContractFountainAllowance = await bbk.allowance(
-        bbkAddress,
-        fountainAddress
-      )
       const contributors = accounts.slice(4)
-      const tokenAmount = new BigNumber(1e24)
-      const preTotalSupply = await bbk.totalSupply()
       const contributorShare = new BigNumber(51)
 
       const preContributorTotalDistributed = await getContributorsBalanceSum(
@@ -514,10 +502,6 @@ describe('at the end of the ico when fountainAddress has been set', () => {
       )
       const postTokenSaleActive = await bbk.tokenSaleActive()
       const postPaused = await bbk.paused()
-      // due to solidity integer division this is going to be slightly off... but contributors balance should remain exactly the same.
-      const bonusDiff = postBonusBalance
-        .minus(preBonusBalance)
-        .minus(postTotalSupply.times(bonusShare).div(100))
       const contributorsDiff = preContributorTotalDistributed.minus(
         postTotalSupply.times(contributorShare).div(100)
       )
@@ -575,16 +559,14 @@ describe('after the ico', () => {
   contract('BrickblockToken', accounts => {
     let bbk
     let bbf
-    let owner = accounts[0]
-    let bonusAddress = accounts[1]
-    let bbkAddress
+    const owner = accounts[0]
+    const bonusAddress = accounts[1]
     let fountainAddress
-    let testAmount = new BigNumber(1e24)
+    const testAmount = new BigNumber(1e24)
 
     before('setup bbk BrickblockToken', async () => {
       bbk = await BrickblockToken.new(bonusAddress)
-      bbkAddress = bbk.address
-      bbf = await BrickblockFountainExample.new(bbk.address)
+      bbf = await BrickblockFountainStub.new(bbk.address)
       fountainAddress = bbf.address
       await bbk.changeFountainContractAddress(fountainAddress)
       await distributeTokensToMany(bbk, accounts)
@@ -653,12 +635,16 @@ describe('after the ico', () => {
       const postFountainContractTokenBalance = await bbk.balanceOf(bbf.address)
 
       assert.equal(
-        prebbkContractTokenBalance.minus(postbbkContractTokenBalance).toString(),
+        prebbkContractTokenBalance
+          .minus(postbbkContractTokenBalance)
+          .toString(),
         companyTokens.toString(),
         'the bbk contract balance should be decremented by the companyToken amount'
       )
       assert.equal(
-        postFountainContractTokenBalance.minus(preFountainContractTokenBalance).toString(),
+        postFountainContractTokenBalance
+          .minus(preFountainContractTokenBalance)
+          .toString(),
         companyTokens.toString(),
         'the fountain contract balance should be incremented by the companyToken amount'
       )
@@ -682,7 +668,6 @@ describe('after the ico', () => {
       })
       const postSenderBalance = await bbk.balanceOf(recipient)
       const postRecipientBalance = await bbk.balanceOf(recipient)
-      const newBalance = await bbk.balanceOf(recipient)
       assert.equal(
         postSenderBalance.minus(preSenderBalance).toString(),
         transferAmount.toString(),
@@ -707,6 +692,7 @@ describe('after the ico', () => {
           'should contain invalid opcode in error'
         )
       }
+
       await bbk.unpause()
     })
 
@@ -843,8 +829,6 @@ describe('after the ico', () => {
       describe('when NOT sent from ownerAddress', () => {
         it('should NOT distribute tokens to bonusRecipientAddress', async () => {
           const bonusRecipientAddress = accounts[9]
-          const preRecipientBalance = await bbk.balanceOf(bonusRecipientAddress)
-          const preBonusBalance = await bbk.balanceOf(bonusAddress)
           const distributeAmount = new BigNumber(1e19)
 
           try {

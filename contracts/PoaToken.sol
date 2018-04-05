@@ -2,15 +2,36 @@ pragma solidity ^0.4.18;
 
 import "zeppelin-solidity/contracts/token/StandardToken.sol";
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
-import "./BrickblockAccessToken.sol";
-import "./BrickblockWhitelist.sol";
+
+
+// limited BrickblockContractRegistry definintion
+contract Registry {
+  function getContractAddress(string _name)
+    public
+    view
+    returns (address)
+  {}
+}
+
+
+contract FeeManager {
+  function payFee()
+    public
+    payable
+    returns (bool)
+  {}
+}
+
+
+contract Whitelist {
+  mapping (address => bool) public whitelisted;
+}
 
 
 // Proof-of-Asset contract representing a token backed by a foreign asset.
-contract POAToken2 is StandardToken, Ownable {
+contract PoaToken is StandardToken, Ownable {
 
-  BrickblockWhitelist brickblockWhitelist;
-  BrickblockAccessToken brickblockAccessToken;
+  Registry private registry;
 
   event Stage(Stages stage);
   event Buy(address buyer, uint256 amount);
@@ -75,7 +96,10 @@ contract POAToken2 is StandardToken, Ownable {
   }
 
   modifier isWhitelisted() {
-    require(brickblockWhitelist.whitelisted(msg.sender));
+    Whitelist whitelist = Whitelist(
+      registry.getContractAddress("Whitelist")
+    );
+    require(whitelist.whitelisted(msg.sender));
     _;
   }
 
@@ -95,17 +119,20 @@ contract POAToken2 is StandardToken, Ownable {
   }
 
   // Create a new POAToken contract.
-  function POAToken2(
+  function PoaToken(
     string _name,
     string _symbol,
     address _broker,
     address _custodian,
+    address _registry,
     uint _timeoutBlock,
     uint256 _supply
   )
     public
   {
+    require(_registry != address(0));
     owner = msg.sender;
+    registry = Registry(_registry);
     name = _name;
     symbol = _symbol;
     broker = _broker;
@@ -116,26 +143,6 @@ contract POAToken2 is StandardToken, Ownable {
     balances[owner] = _supply;
   }
 
-  // TODO: this function is temporary until registry contract is created... remove later!
-  function changeWhitelist(address _address)
-    public
-    onlyOwner
-    returns (bool)
-  {
-    brickblockWhitelist = BrickblockWhitelist(_address);
-    return true;
-  }
-
-  // TODO: this function is temporary until registry contract is created... remove later!
-  function changeAccessToken(address _address)
-    public
-    onlyOwner
-    returns (bool)
-  {
-    brickblockAccessToken = BrickblockAccessToken(_address);
-    return true;
-  }
-
   function calculateFee(uint256 _value)
     public
     view
@@ -144,13 +151,14 @@ contract POAToken2 is StandardToken, Ownable {
     return feePercentage.mul(_value).div(1000);
   }
 
-  // Used to charge fees for broker transactions
-  function burnAccessTokens(uint256 _value, address _broker)
+  function payFee(uint256 _value)
     private
     returns (bool)
   {
-    require(address(brickblockAccessToken) != address(0));
-    return brickblockAccessToken.burnFrom(_value, _broker);
+    FeeManager feeManager = FeeManager(
+      registry.getContractAddress("FeeManager")
+    );
+    feeManager.payFee.value(_value)();
   }
 
   // Buy PoA tokens from the contract.
@@ -201,7 +209,7 @@ contract POAToken2 is StandardToken, Ownable {
     require(stage == Stages.Pending || stage == Stages.Active);
     require(msg.value == totalSupply);
     uint256 _fee = calculateFee(msg.value);
-    require(burnAccessTokens(_fee, msg.sender));
+    require(payFee(_fee));
     enterStage(Stages.Terminated);
   }
 
@@ -232,8 +240,13 @@ contract POAToken2 is StandardToken, Ownable {
   {
     require(msg.value > 0);
     uint256 _fee = calculateFee(msg.value);
-    require(burnAccessTokens(_fee, msg.sender));
-    totalPayout = totalPayout.add(msg.value.mul(10e18).div(totalSupply));
+    payFee(_fee);
+    totalPayout = totalPayout.add(
+      msg.value
+        .sub(_fee)
+        .mul(10e18)
+        .div(totalSupply)
+    );
     Payout(msg.value);
     return true;
   }

@@ -1,19 +1,7 @@
-const WarpTool = artifacts.require('WarpTool')
-
-function warpBlocks(blocks) {
-  return new Promise((resolve, reject) => {
-    contract('WarpTool', async accounts => {
-      const warpTool = await WarpTool.new()
-      for (let i = 0; i < blocks - 1; i++) {
-        await warpTool.warp()
-      }
-      resolve(true)
-    })
-  })
-}
+const { warpBlocks } = require('../helpers/general')
 
 describe('when warping', () => {
-  contract('WarpTool', accounts => {
+  contract('WarpTool', () => {
     it('should warp to set block', async () => {
       const preBlock = web3.eth.blockNumber
       const warpAmount = 10

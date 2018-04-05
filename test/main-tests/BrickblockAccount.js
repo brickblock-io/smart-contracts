@@ -1,4 +1,4 @@
-const AccessToken = artifacts.require('BrickblockAccessToken2')
+const AccessToken = artifacts.require('BrickblockAccessToken')
 const BrickblockAccount = artifacts.require('BrickblockAccount')
 const BrickblockToken = artifacts.require('BrickblockToken')
 const ContractRegistry = artifacts.require('BrickblockContractRegistry')
@@ -32,7 +32,7 @@ describe('when interacting with BBK, ACT, and BFM', () => {
     let bbk
     let act
     let bat
-    let bfm
+    let fmr
 
     before('setup contracts', async () => {
       const contracts = await setupContracts(
@@ -49,7 +49,7 @@ describe('when interacting with BBK, ACT, and BFM', () => {
       bbk = contracts.bbk
       act = contracts.act
       bat = contracts.bat
-      bfm = contracts.bfm
+      fmr = contracts.fmr
     })
 
     it('should start with the correct owner', async () => {
@@ -88,9 +88,9 @@ describe('when interacting with BBK, ACT, and BFM', () => {
     })
 
     it('should claim ALL claimable by BrickblockAccount', async () => {
-      await testPayFee(feePayer, [bat.address], feeValue, act, bfm)
+      await testPayFee(feePayer, [bat.address], feeValue, act, fmr)
       const claimAmount = await act.balanceOf(bat.address)
-      await testClaimFee(bbk, act, bfm, bat, claimAmount)
+      await testClaimFee(bbk, act, fmr, bat, claimAmount)
     })
   })
 })
@@ -107,7 +107,7 @@ describe('when interacting with BBK, ACT, and BFM as NOT owner', () => {
     let bbk
     let act
     let bat
-    let bfm
+    let fmr
 
     before('setup contracts', async () => {
       const contracts = await setupContracts(
@@ -124,7 +124,7 @@ describe('when interacting with BBK, ACT, and BFM as NOT owner', () => {
       bbk = contracts.bbk
       act = contracts.act
       bat = contracts.bat
-      bfm = contracts.bfm
+      fmr = contracts.fmr
     })
 
     it('should NOT pull company BBK from BBK contract when NOT owner', async () => {
@@ -145,9 +145,9 @@ describe('when interacting with BBK, ACT, and BFM as NOT owner', () => {
     })
 
     it('should NOT claim claimable by BrickblockAccount when NOT owner', async () => {
-      await testPayFee(feePayer, [bat.address], feeValue, act, bfm)
+      await testPayFee(feePayer, [bat.address], feeValue, act, fmr)
       const claimAmount = await act.balanceOf(bat.address)
-      await testClaimFee(bbk, act, bfm, bat, claimAmount)
+      await testClaimFee(bbk, act, fmr, bat, claimAmount)
       await testWillThrow(bat.claimFee, [claimAmount, { from: otherAccount }])
     })
   })
@@ -165,7 +165,7 @@ describe('when withdrawing funds BEFORE BBK unlock block', () => {
     let bbk
     let act
     let bat
-    let bfm
+    let fmr
 
     beforeEach('setup contracts', async () => {
       const contracts = await setupContracts(
@@ -183,14 +183,14 @@ describe('when withdrawing funds BEFORE BBK unlock block', () => {
       bbk = contracts.bbk
       act = contracts.act
       bat = contracts.bat
-      bfm = contracts.bfm
+      fmr = contracts.fmr
 
       await testPullFunds(bbk, bat)
       const lockAmount = await bbk.balanceOf(bat.address)
       await testLockBBK(bbk, act, bat, lockAmount)
-      await testPayFee(feePayer, [bat.address], feeValue, act, bfm)
+      await testPayFee(feePayer, [bat.address], feeValue, act, fmr)
       const claimAmount = await act.balanceOf(bat.address)
-      await testClaimFee(bbk, act, bfm, bat, claimAmount)
+      await testClaimFee(bbk, act, fmr, bat, claimAmount)
     })
 
     it('should withdraw SOME ETH funds to owner account', async () => {
@@ -252,7 +252,7 @@ describe('when withdrawing funds AFTER BBK unlock block', () => {
     let bbk
     let act
     let bat
-    let bfm
+    let fmr
 
     beforeEach('setup contracts', async () => {
       const contracts = await setupContracts(
@@ -270,14 +270,14 @@ describe('when withdrawing funds AFTER BBK unlock block', () => {
       bbk = contracts.bbk
       act = contracts.act
       bat = contracts.bat
-      bfm = contracts.bfm
+      fmr = contracts.fmr
 
       await testPullFunds(bbk, bat)
       const lockAmount = await bbk.balanceOf(bat.address)
       await testLockBBK(bbk, act, bat, lockAmount)
-      await testPayFee(feePayer, [bat.address], feeValue, act, bfm)
+      await testPayFee(feePayer, [bat.address], feeValue, act, fmr)
       const claimAmount = await act.balanceOf(bat.address)
-      await testClaimFee(bbk, act, bfm, bat, claimAmount)
+      await testClaimFee(bbk, act, fmr, bat, claimAmount)
       await warpBlocks(20)
     })
 
@@ -320,7 +320,7 @@ describe('when trying to withdraw more than available balance', () => {
     let bbk
     let act
     let bat
-    let bfm
+    let fmr
 
     beforeEach('setup contracts', async () => {
       const contracts = await setupContracts(
@@ -338,14 +338,14 @@ describe('when trying to withdraw more than available balance', () => {
       bbk = contracts.bbk
       act = contracts.act
       bat = contracts.bat
-      bfm = contracts.bfm
+      fmr = contracts.fmr
 
       await testPullFunds(bbk, bat)
       const lockAmount = await bbk.balanceOf(bat.address)
       await testLockBBK(bbk, act, bat, lockAmount)
-      await testPayFee(feePayer, [bat.address], feeValue, act, bfm)
+      await testPayFee(feePayer, [bat.address], feeValue, act, fmr)
       const claimAmount = await act.balanceOf(bat.address)
-      await testClaimFee(bbk, act, bfm, bat, claimAmount)
+      await testClaimFee(bbk, act, fmr, bat, claimAmount)
       await warpBlocks(20)
     })
 
@@ -383,7 +383,7 @@ describe('when trying to withdraw as NOT owner', () => {
     let bbk
     let act
     let bat
-    let bfm
+    let fmr
 
     beforeEach('setup contracts', async () => {
       const contracts = await setupContracts(
@@ -401,14 +401,14 @@ describe('when trying to withdraw as NOT owner', () => {
       bbk = contracts.bbk
       act = contracts.act
       bat = contracts.bat
-      bfm = contracts.bfm
+      fmr = contracts.fmr
 
       await testPullFunds(bbk, bat)
       const lockAmount = await bbk.balanceOf(bat.address)
       await testLockBBK(bbk, act, bat, lockAmount)
-      await testPayFee(feePayer, [bat.address], feeValue, act, bfm)
+      await testPayFee(feePayer, [bat.address], feeValue, act, fmr)
       const claimAmount = await act.balanceOf(bat.address)
-      await testClaimFee(bbk, act, bfm, bat, claimAmount)
+      await testClaimFee(bbk, act, fmr, bat, claimAmount)
       await warpBlocks(20)
     })
 

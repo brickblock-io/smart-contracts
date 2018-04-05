@@ -13,8 +13,8 @@ const setupContracts = async (
   BrickblockToken,
   FeeManager
 ) => {
-  const crt = await ContractRegistry.new()
-  const act = await AccessToken.new(crt.address)
+  const reg = await ContractRegistry.new()
+  const act = await AccessToken.new(reg.address)
   const bbk = await finalizedBBK(
     owner,
     BrickblockToken,
@@ -23,21 +23,21 @@ const setupContracts = async (
     contributors,
     tokenDistAmount
   )
-  const bfm = await FeeManager.new(crt.address)
+  const fmr = await FeeManager.new(reg.address)
 
-  await crt.updateContract('BrickblockToken', bbk.address)
-  await crt.updateContract('AccessToken', act.address)
-  await crt.updateContract('FeeManager', bfm.address)
+  await reg.updateContract('BrickblockToken', bbk.address)
+  await reg.updateContract('AccessToken', act.address)
+  await reg.updateContract('FeeManager', fmr.address)
 
   const balanceCheck = await bbk.balanceOf(contributors[0])
   const bbkPaused = await bbk.paused()
   assert(balanceCheck.greaterThan(0), 'the balance should be more than 0')
   assert(!bbkPaused, 'the contract should not be paused')
   return {
-    crt,
+    reg,
     act,
     bbk,
-    bfm
+    fmr
   }
 }
 
@@ -104,7 +104,7 @@ const testLockAndApproveMany = async (bbk, act, bbkHolders, amount) => {
   return true
 }
 
-const testPayFee = async (feePayer, bbkHolders, feeValue, act, bfm) => {
+const testPayFee = async (feePayer, bbkHolders, feeValue, act, fmr) => {
   const totalLockedBBK = await act.totalLockedBBK()
   const preActTotalSupply = await act.totalSupply()
   const preFeePayerEtherBalance = await getEtherBalance(feePayer)
@@ -118,7 +118,7 @@ const testPayFee = async (feePayer, bbkHolders, feeValue, act, bfm) => {
     }
   }
 
-  const txid = await bfm.payFee({
+  const txid = await fmr.payFee({
     from: feePayer,
     value: feeValue,
     gasPrice
@@ -172,7 +172,7 @@ const testPayFee = async (feePayer, bbkHolders, feeValue, act, bfm) => {
   return postContributorsActBalance
 }
 
-const testClaimFeeMany = async (claimers, act, bfm) => {
+const testClaimFeeMany = async (claimers, act, fmr) => {
   const preContributorBalances = {}
   for (const claimer of claimers) {
     const preActBalance = await act.balanceOf(claimer)
@@ -185,7 +185,7 @@ const testClaimFeeMany = async (claimers, act, bfm) => {
 
   for (const claimer of claimers) {
     const { preActBalance, preEthBalance } = preContributorBalances[claimer]
-    const txid = await bfm.claimFee(preActBalance, {
+    const txid = await fmr.claimFee(preActBalance, {
       from: claimer,
       gasPrice
     })
@@ -213,7 +213,7 @@ const testClaimFeeMany = async (claimers, act, bfm) => {
     }
   }
 
-  const postFeeManagerEthBalance = await getEtherBalance(bfm.address)
+  const postFeeManagerEthBalance = await getEtherBalance(fmr.address)
   const postActTotalSupply = await act.totalSupply()
 
   assert.equal(

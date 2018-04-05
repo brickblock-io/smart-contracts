@@ -28,7 +28,7 @@ contract BrickblockContractRegistryInterface {
 
 
 // shortened version of actual contract in order to save on costs
-contract GenericRemoteContractInterface {
+contract RemoteContractStubInterface {
 
   function testNumber()
     public
@@ -50,7 +50,7 @@ contract GenericRemoteContractInterface {
 }
 
 
-contract GenericRemoteContractUser {
+contract RemoteContractUserStub {
 
   BrickblockContractRegistryInterface private registry;
   address private registryAddress;
@@ -61,19 +61,19 @@ contract GenericRemoteContractUser {
     _;
   }
 
-  function GenericRemoteContractUser(address _registryAddress)
+  function RemoteContractUserStub(address _registryAddress)
     public
   {
     require(_registryAddress != address(0));
     setContractRegistry(_registryAddress);
   }
 
-  function getGenericRemoteContract()
+  function getRemoteContractStub()
     private
     view
-    returns (GenericRemoteContractInterface)
+    returns (RemoteContractStubInterface)
   {
-    return GenericRemoteContractInterface(
+    return RemoteContractStubInterface(
       registry.getContractAddress("testName")
     );
   }
@@ -84,7 +84,7 @@ contract GenericRemoteContractUser {
     registryInitialized
     returns (uint256)
   {
-    GenericRemoteContractInterface genericRemoteContract = getGenericRemoteContract();
+    RemoteContractStubInterface genericRemoteContract = getRemoteContractStub();
     return genericRemoteContract.add(_num1, _num2);
   }
 
@@ -94,7 +94,7 @@ contract GenericRemoteContractUser {
     registryInitialized
     returns (uint256)
   {
-    GenericRemoteContractInterface genericRemoteContract = getGenericRemoteContract();
+    RemoteContractStubInterface genericRemoteContract = getRemoteContractStub();
     return genericRemoteContract.testNumber();
   }
 
@@ -103,7 +103,7 @@ contract GenericRemoteContractUser {
     registryInitialized
     returns (bool)
   {
-    GenericRemoteContractInterface genericRemoteContract = getGenericRemoteContract();
+    RemoteContractStubInterface genericRemoteContract = getRemoteContractStub();
     require(genericRemoteContract.setTestNumber(_newNumber));
     return true;
   }

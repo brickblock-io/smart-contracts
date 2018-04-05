@@ -1,11 +1,11 @@
 pragma solidity 0.4.18;
 
 
-contract GenericRemoteContract {
+contract RemoteContractStub {
   uint256 public testNumber;
   address public testAddress;
 
-  function GenericRemoteContract(
+  function RemoteContractStub(
     uint256 _testNumber
   )
     public

@@ -1,357 +1,365 @@
-const BrickblockAccessToken = artifacts.require('BrickblockAccessToken.sol')
-const BrickblockFountain = artifacts.require('BrickblockFountain.sol')
-const BrickblockUmbrella = artifacts.require('BrickblockUmbrella.sol')
-const BrickblockFountainStub = artifacts.require('BrickblockFountainStub.sol')
-const BrickblockUmbrellaStub = artifacts.require('BrickblockUmbrellaStub.sol')
-const POATokenStub = artifacts.require('POAToken2Stub.sol')
+const AccessToken = artifacts.require('BrickblockAccessToken')
+const BrickblockToken = artifacts.require('BrickblockToken')
+const ContractRegistry = artifacts.require('BrickblockContractRegistry')
+const FeeManager = artifacts.require('BrickblockFeeManager')
+
 const BigNumber = require('bignumber.js')
 
-describe('after the contract is created', () => {
-  contract('BrickblockAccessToken', accounts => {
-    let act
+const { testWillThrow } = require('../helpers/general')
+const {
+  setupContracts,
+  testLockAndApproveBBK,
+  testUnlockBBK,
+  testLockAndApproveMany,
+  testPayFee,
+  testClaimFeeMany,
+  testTransferAct,
+  testTransferActMany,
+  testActBalanceGreaterThanZero,
+  testApproveAct,
+  testApproveActMany,
+  testTransferFromAct,
+  testTransferFromActMany
+} = require('../helpers/act')
+
+describe('when interacting with BBK', () => {
+  contract('AccessToken/BrickblockToken', accounts => {
     const owner = accounts[0]
+    const bonusAddress = accounts[1]
+    const contributors = accounts.slice(2)
+    const contributor = contributors[0]
+    const tokenDistAmount = new BigNumber(1e24)
+    let bbk
+    let act
 
-    before('setup BrickblockAccessToken', async () => {
-      act = await BrickblockAccessToken.deployed()
+    before('setup contracts', async () => {
+      const contracts = await setupContracts(
+        owner,
+        bonusAddress,
+        contributors,
+        tokenDistAmount,
+        ContractRegistry,
+        AccessToken,
+        BrickblockToken,
+        FeeManager
+      )
+      bbk = contracts.bbk
+      act = contracts.act
     })
 
-    it('should set the owner as msg.sender on creation', async () => {
-      const newOwner = await act.owner()
-      assert.equal(newOwner, owner)
+    it('should NOT lock BBK if NO approval has been given on BBK', async () => {
+      const lockAmount = await bbk.balanceOf(contributor)
+      await testWillThrow(act.lockBBK, [lockAmount, { from: contributor }])
     })
 
-    it('should start with a total supply of 0', async () => {
-      const totalSupply = await act.totalSupply()
-      assert.equal(totalSupply.toNumber(), 0, 'the total supply should be 0')
+    it('should NOT lock more BBK than contributor balance', async () => {
+      const contributorBbkBalance = await bbk.balanceOf(contributor)
+      const lockAmount = contributorBbkBalance.add(1)
+      await testWillThrow(testLockAndApproveBBK, [
+        bbk,
+        act,
+        contributor,
+        lockAmount
+      ])
     })
 
-    it('should have 18 decimals set', async () => {
-      const decimals = await act.decimals()
-      assert.equal(decimals.toNumber(), 18, 'the decimals should be 18')
+    it('should lock BBK when approved', async () => {
+      const lockAmount = await bbk.balanceOf(contributor)
+      await testLockAndApproveBBK(bbk, act, contributor, lockAmount)
+    })
+
+    it('should NOT unlock more BBK than currently locked', async () => {
+      const contributorLockedBbkBalance = await act.lockedBbkOf(contributor)
+      const unlockAmount = contributorLockedBbkBalance.add(1)
+      await testWillThrow(testUnlockBBK, [bbk, act, contributor, unlockAmount])
+    })
+
+    it('should unlock BBK', async () => {
+      const unlockAmount = await bbk.balanceOf(contributor)
+      await testUnlockBBK(bbk, act, contributor, unlockAmount)
     })
   })
 })
 
-describe('when changing the fountain address', () => {
-  contract('BrickblockAccessToken', accounts => {
-    let act
+describe('when interacting with Fee manager', () => {
+  contract('AccessToken/FeeManager', accounts => {
     const owner = accounts[0]
-    let fountain
-    let altFountain
+    const bonusAddress = accounts[1]
+    const feePayer = accounts[2]
+    const contributors = accounts.slice(3)
+    const tokenDistAmount = new BigNumber(1e24)
+    const tokenLockAmount = new BigNumber(1e24)
+    let bbk
+    let act
+    let fmr
 
-    before('setup BrickblockAccessToken', async () => {
-      act = await BrickblockAccessToken.deployed()
-      fountain = await BrickblockFountain.deployed()
-      altFountain = await BrickblockFountainStub.new()
+    before('setup contracts', async () => {
+      const contracts = await setupContracts(
+        owner,
+        bonusAddress,
+        contributors,
+        tokenDistAmount,
+        ContractRegistry,
+        AccessToken,
+        BrickblockToken,
+        FeeManager
+      )
+      bbk = contracts.bbk
+      act = contracts.act
+      fmr = contracts.fmr
+      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
     })
 
-    it('should start with the accompanied migration address of fountain', async () => {
-      const savedFountain = await act.fountainAddress()
-      assert.equal(
-        savedFountain,
-        fountain.address,
-        'the fountain should be set to the deployed fountain by migrations'
+    it('should NOT distribute ACT tokens if NOT FeeManager contract', async () => {
+      await testWillThrow(act.distribute, [10e18, { from: contributors[2] }])
+    })
+
+    it('should distribute ACT tokens to locked BBK contributors when paying FeeManager', async () => {
+      const feeValue = new BigNumber(10e18)
+      await testPayFee(feePayer, contributors, feeValue, act, fmr)
+    })
+
+    it('should allow ACT holders to burn ACT for ETH', async () => {
+      const claimers = [...contributors, owner]
+      await testClaimFeeMany(claimers, act, fmr)
+    })
+  })
+})
+
+describe('when ACT has been distributed', () => {
+  contract('AccessToken', accounts => {
+    const owner = accounts[0]
+    const bonusAddress = accounts[1]
+    const feePayer = accounts[2]
+    const contributors = accounts.slice(3, 8)
+    const contributor = contributors[0]
+    const recipient = accounts[8]
+    const nonContributor = accounts[9]
+    const tokenDistAmount = new BigNumber(1e24)
+    const tokenLockAmount = new BigNumber(1e24)
+    const feeValue = new BigNumber(10e18)
+    let bbk
+    let act
+    let fmr
+
+    before('setup contracts', async () => {
+      const contracts = await setupContracts(
+        owner,
+        bonusAddress,
+        contributors,
+        tokenDistAmount,
+        ContractRegistry,
+        AccessToken,
+        BrickblockToken,
+        FeeManager
+      )
+      bbk = contracts.bbk
+      act = contracts.act
+      fmr = contracts.fmr
+      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      await testPayFee(feePayer, contributors, feeValue, act, fmr)
+    })
+
+    it('should transfer BEFORE unlocking act balance', async () => {
+      const actBalance = await testActBalanceGreaterThanZero(act, contributor)
+      await testTransferAct(act, contributor, recipient, actBalance.div(4))
+    })
+
+    it('should transferFrom BEFORE unlocking act balance', async () => {
+      const actBalance = await testActBalanceGreaterThanZero(act, contributor)
+      await testApproveAct(act, contributor, nonContributor, actBalance.div(4))
+      await testTransferFromAct(
+        act,
+        contributor,
+        recipient,
+        nonContributor,
+        actBalance.div(4)
       )
     })
 
-    it('should NOT set the fountain if the address is the same', async () => {
-      try {
-        await act.changeFountainAddress(fountain.address)
-        assert(
-          false,
-          'the contract should throw when changing fountain when NOT owner'
-        )
-      } catch (error) {
-        assert(
-          /invalid opcode/.test(error),
-          'message should contain invalid opcode'
-        )
-      }
+    it('should unlock BBK and keep ACT balance', async () => {
+      await testActBalanceGreaterThanZero(act, contributor)
+      await testUnlockBBK(bbk, act, contributor, tokenLockAmount)
     })
 
-    it('should NOT set the fountain when NOT owner', async () => {
-      try {
-        await act.changeFountainAddress.sendTransaction(altFountain.address, {
-          from: accounts[1]
-        })
-        assert(
-          false,
-          'the contract should throw when changing fountain when NOT owner'
-        )
-      } catch (error) {
-        assert(
-          /invalid opcode/.test(error),
-          'message should contain invalid opcode'
-        )
-      }
+    it('should transfer AFTER unlocking act balance', async () => {
+      const actBalance = await testActBalanceGreaterThanZero(act, contributor)
+      await testTransferAct(act, contributor, recipient, actBalance.div(4))
     })
 
-    it('should NOT set the fountain when NOT a contract', async () => {
-      try {
-        await act.changeFountainAddress(accounts[2])
-        assert(
-          false,
-          'the contract should throw when changing fountain when NOT a contract'
-        )
-      } catch (error) {
-        assert(
-          /invalid opcode/.test(error),
-          'message should contain invalid opcode'
-        )
-      }
-    })
-
-    it('should NOT set the fountain when address is the same as self', async () => {
-      try {
-        await act.changeFountainAddress(act.address)
-        assert(
-          false,
-          'the contract should throw when changing fountain to address same as self'
-        )
-      } catch (error) {
-        assert(
-          /invalid opcode/.test(error),
-          'message should contain invalid opcode'
-        )
-      }
-    })
-
-    it('should NOT set the fountain when address is the same as owner', async () => {
-      try {
-        await act.changeFountainAddress(owner)
-        assert(
-          false,
-          'the contract should throw when changing fountain to address same as owner'
-        )
-      } catch (error) {
-        assert(
-          /invalid opcode/.test(error),
-          'message should contain invalid opcode'
-        )
-      }
-    })
-
-    it('should set the fountain when owner, fountainAddress is contract, is NOT same as this, and is NOT set to the address of the owner', async () => {
-      const preFountain = await act.fountainAddress()
-      assert.equal(
-        preFountain,
-        fountain.address,
-        'the fountain should the address set in initial migrations'
-      )
-      await act.changeFountainAddress(altFountain.address)
-      const postFountain = await act.fountainAddress()
-      assert.equal(
-        postFountain,
-        altFountain.address,
-        'the fountain addresses does NOT match that just sent'
+    it('should transferFrom AFTER unlocking act balance', async () => {
+      const actBalance = await testActBalanceGreaterThanZero(act, contributor)
+      await testApproveAct(act, contributor, nonContributor, actBalance.div(4))
+      await testTransferFromAct(
+        act,
+        contributor,
+        recipient,
+        nonContributor,
+        actBalance.div(4)
       )
     })
   })
 })
 
-describe('when minting', () => {
-  contract('BrickblockAccessToken', accounts => {
-    let act
+describe('when testing different scenarios...', () => {
+  contract('AccessToken', accounts => {
     const owner = accounts[0]
-    let fountain
-    let recipient = accounts[1]
-    const amount = new BigNumber(1e24)
-
-    before('setup BrickblockAccessToken', async () => {
-      act = await BrickblockAccessToken.deployed()
-      fountain = await BrickblockFountainStub.new()
-      await act.changeFountainAddress(fountain.address)
-      await fountain.changeAccessTokenAddress(act.address)
-    })
-
-    it('should mint when owner', async () => {
-      const preBalance = await act.balanceOf(recipient)
-      await act.mint(recipient, amount)
-      const postBalance = await act.balanceOf(recipient)
-      assert.equal(
-        postBalance.minus(preBalance).toString(),
-        amount.toString(),
-        'the balance should be incremented by amount'
-      )
-    })
-
-    it('should mint when fountain', async () => {
-      const preBalance = await act.balanceOf(recipient)
-      await fountain.simulateFountainMint(recipient, amount)
-      const postBalance = await act.balanceOf(recipient)
-      assert.equal(
-        postBalance.minus(preBalance).toString(),
-        amount.toString(),
-        'the balance should be incremented by amount'
-      )
-    })
-
-    it('should NOT mint when not fountain or owner', async () => {
-      try {
-        await act.mint.sendTransaction(accounts[3], amount, {
-          from: accounts[3]
-        })
-        assert(
-          false,
-          'the contract should throw when trying to mint from NOT owner or fountain'
-        )
-      } catch (error) {
-        assert(
-          /invalid opcode/.test(error),
-          'invalid opcode should be in the error'
-        )
-      }
-    })
-  })
-})
-
-describe('when burning', () => {
-  contract('BrickblockAccessToken', accounts => {
-    const owner = accounts[0]
-    const activeBroker = accounts[1]
-    const inactiveBroker = accounts[2]
-    const brokeBroker = accounts[3]
-    const zeroApprovalBroker = accounts[4]
-    const amount = new BigNumber(1e24)
-    const burnAmount = amount.div(5)
-    let activePOAToken
-    let inactivePOAToken
+    const bonusAddress = accounts[1]
+    const feePayer = accounts[2]
+    const contributors = accounts.slice(3, 6)
+    const contributor = contributors[0]
+    const recipient = accounts[8]
+    const nonContributor = accounts[9]
+    const tokenDistAmount = new BigNumber(1e24)
+    const tokenLockAmount = new BigNumber(1e24)
+    const feeValue = new BigNumber(10e18)
+    let bbk
     let act
-    let umbrellaStub
+    let fmr
 
-    before(
-      'setup BrickblockAccessToken and related contracts state',
-      async () => {
-        act = await BrickblockAccessToken.deployed()
-        umbrellaStub = await BrickblockUmbrellaStub.new()
-        activePOAToken = await POATokenStub.new()
-        inactivePOAToken = await POATokenStub.new()
-        await activePOAToken.changeAccessTokenAddress(act.address)
-        await inactivePOAToken.changeAccessTokenAddress(act.address)
-        await act.changeUmbrellaAddress(umbrellaStub.address)
-        await umbrellaStub.changeAccessTokenAddress(act.address)
-        await act.mint(activeBroker, amount)
-        await act.mint(inactiveBroker, amount)
-        await umbrellaStub.addBroker(activeBroker)
-        await umbrellaStub.addBroker(inactiveBroker)
-        await umbrellaStub.addBroker(brokeBroker)
-        await umbrellaStub.addBroker(zeroApprovalBroker)
-        await umbrellaStub.deactivateBroker(inactiveBroker)
-        await umbrellaStub.addFakeToken(activePOAToken.address)
-        await umbrellaStub.addFakeToken(inactivePOAToken.address)
-        await umbrellaStub.deactivateToken(inactivePOAToken.address)
-        await act.approve.sendTransaction(umbrellaStub.address, amount, {
-          from: activeBroker
-        })
-        await act.approve.sendTransaction(umbrellaStub.address, amount, {
-          from: inactiveBroker
-        })
-        await act.approve.sendTransaction(umbrellaStub.address, amount, {
-          from: brokeBroker
-        })
-        await act.approve.sendTransaction(activePOAToken.address, amount, {
-          from: activeBroker
-        })
-        await act.approve.sendTransaction(activePOAToken.address, amount, {
-          from: inactiveBroker
-        })
-        await act.approve.sendTransaction(activePOAToken.address, amount, {
-          from: brokeBroker
-        })
-        await act.approve.sendTransaction(inactivePOAToken.address, amount, {
-          from: activeBroker
-        })
-        await act.approve.sendTransaction(inactivePOAToken.address, amount, {
-          from: inactiveBroker
-        })
-        await act.approve.sendTransaction(inactivePOAToken.address, amount, {
-          from: brokeBroker
-        })
-      }
-    )
-
-    it('should should burn when sent from umbrella contract', async () => {
-      const preTotalSupply = await act.totalSupply()
-      const preActiveBrokerBalance = await act.balanceOf(activeBroker)
-      await umbrellaStub.simulateBurnFrom(burnAmount, activeBroker)
-      const postActiveBrokerBalance = await act.balanceOf(activeBroker)
-      const postTotalSupply = await act.totalSupply()
-      assert.equal(
-        preTotalSupply.minus(postTotalSupply).toString(),
-        burnAmount.toString(),
-        'the total supply should be decremented by the total amount'
+    beforeEach('setup contracts', async () => {
+      const contracts = await setupContracts(
+        owner,
+        bonusAddress,
+        contributors,
+        tokenDistAmount,
+        ContractRegistry,
+        AccessToken,
+        BrickblockToken,
+        FeeManager
       )
-      assert.equal(
-        preActiveBrokerBalance.minus(postActiveBrokerBalance).toString(),
-        burnAmount.toString(),
-        'the activeBroker balance should be decremented by the burnAmount'
+      bbk = contracts.bbk
+      act = contracts.act
+      fmr = contracts.fmr
+    })
+
+    it('lock -> payFee -> transfer -> claim', async () => {
+      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      await testPayFee(feePayer, contributors, feeValue, act, fmr)
+      // this should work for all contributors since they have the same balance
+      const actBalance = await act.balanceOf(contributors[0])
+      await testTransferActMany(act, contributors, recipient, actBalance)
+      // all ACT should be owned by recipient and owner after transfers
+      const claimers = [recipient, owner]
+      await testClaimFeeMany(claimers, act, fmr)
+    })
+
+    it('lock -> payFee -> transferFrom -> claim', async () => {
+      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      await testPayFee(feePayer, contributors, feeValue, act, fmr)
+      // this should work for all contributors since they have the same balance
+      const actBalance = await act.balanceOf(contributors[0])
+      await testApproveActMany(act, contributors, nonContributor, actBalance)
+      await testTransferFromActMany(
+        act,
+        contributors,
+        recipient,
+        nonContributor,
+        actBalance
       )
+      // all ACT should be owned by recipient and owner after transfers
+      const claimers = [recipient, owner]
+      await testClaimFeeMany(claimers, act, fmr)
     })
 
-    it('should burn when from activePOAToken contract', async () => {
-      const preTotalSupply = await act.totalSupply()
-      const preActiveBrokerBalance = await act.balanceOf(activeBroker)
-      await activePOAToken.simulateBurnFrom(burnAmount, activeBroker)
-      const postActiveBrokerBalance = await act.balanceOf(activeBroker)
-      const postTotalSupply = await act.totalSupply()
-      assert.equal(
-        preTotalSupply.minus(postTotalSupply).toString(),
-        burnAmount.toString(),
-        'the total supply should be decremented by the total amount'
+    it('lock -> 50% payFee -> transfer -> claim', async () => {
+      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      await testPayFee(feePayer, contributors, feeValue, act, fmr)
+      // this should work for all contributors since they have the same balance
+      const actBalance = await act.balanceOf(contributors[0])
+      await testTransferActMany(act, contributors, recipient, actBalance.div(2))
+      // all ACT should be owned by recipient and owner after transfers
+      const claimers = [...contributors, recipient, owner]
+      await testClaimFeeMany(claimers, act, fmr)
+    })
+
+    it('lock -> 50% payFee -> transferFrom -> claim', async () => {
+      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      await testPayFee(feePayer, contributors, feeValue, act, fmr)
+      // this should work for all contributors since they have the same balance
+      const actBalance = await act.balanceOf(contributors[0])
+      await testApproveActMany(
+        act,
+        contributors,
+        nonContributor,
+        actBalance.div(2)
       )
-      assert.equal(
-        preActiveBrokerBalance.minus(postActiveBrokerBalance).toString(),
-        burnAmount.toString(),
-        'the activeBroker balance should be decremented by the burnAmount'
+      await testTransferFromActMany(
+        act,
+        contributors,
+        recipient,
+        nonContributor,
+        actBalance.div(2)
       )
+      // all ACT should be owned by recipient and owner after transfers
+      const claimers = [...contributors, recipient, owner]
+      await testClaimFeeMany(claimers, act, fmr)
     })
 
-    it('should NOT burn when not from activePOAToken or umbrella contract', async () => {
-      try {
-        await act.burnFrom(burnAmount, activeBroker)
-        assert(false, 'the contract should throw here')
-      } catch (error) {
-        assert(
-          /invalid opcode/.test(error),
-          'the error should contain invalid opcode'
-        )
-      }
+    it('lock -> payFee -> 1 50% transfer -> claim', async () => {
+      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      await testPayFee(feePayer, contributors, feeValue, act, fmr)
+      const actBalance = await act.balanceOf(contributor)
+      await testTransferAct(act, contributor, recipient, actBalance.div(2))
+      const claimers = [...contributors, recipient, owner]
+      await testClaimFeeMany(claimers, act, fmr)
     })
 
-    it('should NOT burn if there is NO approval for the user', async () => {
-      try {
-        await umbrellaStub.simulateBurnFrom(burnAmount, zeroApprovalBroker)
-        assert(false, 'the contract should throw here')
-      } catch (error) {
-        assert(
-          /invalid opcode/.test(error),
-          'the error should contain invalid opcode'
-        )
-      }
+    it('lock -> payFee -> 1 50% transferFrom -> claim', async () => {
+      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      await testPayFee(feePayer, contributors, feeValue, act, fmr)
+      const actBalance = await act.balanceOf(contributor)
+      await testApproveAct(act, contributor, nonContributor, actBalance.div(2))
+      await testTransferAct(act, contributor, recipient, actBalance.div(2))
+      const claimers = [...contributors, recipient, owner]
+      await testClaimFeeMany(claimers, act, fmr)
     })
 
-    it('should NOT burn if there is insufficient balance', async () => {
-      try {
-        await umbrellaStub.simulateBurnFrom(burnAmount, brokeBroker)
-        assert(false, 'the contract should throw here')
-      } catch (error) {
-        assert(
-          /invalid opcode/.test(error),
-          'the error should contain invalid opcode'
-        )
-      }
+    it('lock -> 1 unlock -> payFee -> claim', async () => {
+      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      const lockedBalance = await act.lockedBbkOf(contributor)
+      await testUnlockBBK(bbk, act, contributor, lockedBalance)
+      await testPayFee(
+        feePayer,
+        contributors.filter(account => account != contributor),
+        feeValue,
+        act,
+        fmr
+      )
+      const claimers = [
+        ...contributors.filter(account => account != contributor),
+        owner
+      ]
+      await testClaimFeeMany(claimers, act, fmr)
     })
 
-    it('should NOT burn if the token is inactive', async () => {
-      try {
-        await inactivePOAToken.simulateBurnFrom(burnAmount, activeBroker)
-        assert(false, 'the contract should throw here')
-      } catch (error) {
-        assert(
-          /invalid opcode/.test(error),
-          'the error should contain invalid opcode'
-        )
-      }
+    it('lock -> 1 50% unlock -> 1 payFee -> claim', async () => {
+      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      const lockedBalance = await act.lockedBbkOf(contributor)
+      await testUnlockBBK(bbk, act, contributor, lockedBalance.div(2))
+      await testPayFee(feePayer, contributors, feeValue, act, fmr)
+      const claimers = [...contributors, owner]
+      await testClaimFeeMany(claimers, act, fmr)
+    })
+
+    it('lock -> 1 unlock -> payFee -> 1 transfer -> claim', async () => {
+      // lock
+      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      const lockedBalance = await act.lockedBbkOf(contributor)
+
+      // unlock
+      await testUnlockBBK(bbk, act, contributor, lockedBalance.div(2))
+
+      // payfee
+      await testPayFee(feePayer, contributors, feeValue, act, fmr)
+
+      // transfer
+      const actBalance = await act.balanceOf(contributor)
+      await testTransferAct(act, contributor, recipient, actBalance.div(2))
+
+      // claim
+      const claimers = [...contributors, recipient, owner]
+      await testClaimFeeMany(claimers, act, fmr)
     })
   })
 })

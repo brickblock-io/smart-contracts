@@ -11,9 +11,7 @@ contract BrickblockWhitelist is Ownable {
 
   function BrickblockWhitelist()
     public
-  {
-
-  }
+  {}
 
   function addAddress(address _address)
     public

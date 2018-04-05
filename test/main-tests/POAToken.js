@@ -1,436 +1,364 @@
-// // TODO: remove completely when no longer needed. This is to be used as a temporary reference for the new test file
-// const POAToken = artifacts.require('POAToken')
-// require('chai').should()
-//
-// const toDecimalFromWei = bn => {
-//   return web3.toDecimal(web3.fromWei(bn, 'ether'))
-// }
-//
-// const sleep = async time =>
-//   await new Promise(resolve => {
-//     setTimeout(resolve, time)
-//   })
-//
-// const defaults = {
-//   name: 'Test Token',
-//   symbol: 'TST',
-//   owner: 0,
-//   broker: 1,
-//   user: 2,
-//   user2: 3,
-//   custodian: 4, // account index of the custodian
-//   timeout: 10,
-//   totalSupply: 10
-// }
-//
-// const stages = {
-//   funding: 0,
-//   pending: 1,
-//   failed: 2,
-//   active: 3
-// }
-//
-// function createSignature(symbol, amount, custodian) {
-//   amount = web3.toAscii(web3.toHex(web3.toWei(amount)))
-//   while (amount.length < 32) amount = '\x00' + amount
-//   const hash = web3.sha3(web3.toHex(symbol + amount), { encoding: 'hex' })
-//   const signature = web3.eth.sign(custodian, hash)
-//   const r = signature.slice(0, 66)
-//   const s = '0x' + signature.slice(66, 130)
-//   let v = '0x' + signature.slice(130, 132)
-//   v = web3.toDecimal(v) + 27
-//   return [r, s, v]
-// }
-//
-// async function newToken() {
-//   return await POAToken.new(
-//     defaults.name,
-//     defaults.symbol,
-//     web3.eth.accounts[defaults.broker],
-//     web3.eth.accounts[defaults.custodian],
-//     defaults.timeout,
-//     web3.toWei(defaults.totalSupply)
-//   )
-// }
-//
-// async function pendingToken() {
-//   const token = await newToken()
-//   await token.buy.sendTransaction({
-//     from: web3.eth.accounts[defaults.user],
-//     value: web3.toWei(defaults.totalSupply)
-//   })
-//   return token
-// }
-//
-// async function activeToken() {
-//   const token = await pendingToken()
-//   const [r, s, v] = createSignature(
-//     defaults.symbol,
-//     defaults.totalSupply,
-//     web3.eth.accounts[defaults.custodian]
-//   )
-//   await token.activate(v, r, s)
-//   return token
-// }
-//
-// contract('POAToken', accounts => {
-//   it('should create token', async () => {
-//     const token = await newToken()
-//     token.contract.name().should.eql(defaults.name)
-//     token.contract.symbol().should.eql(defaults.symbol)
-//     token.contract.broker().should.eql(accounts[defaults.broker])
-//     token.contract.custodian().should.eql(accounts[defaults.custodian])
-//     toDecimalFromWei(token.contract.totalSupply()).should.eql(
-//       defaults.totalSupply
-//     )
-//     const stage = await token.stage()
-//     web3.toDecimal(stage).should.eql(stages.funding)
-//   })
-//
-//   it('should time out', async () => {
-//     const token = await POAToken.new(
-//       defaults.name,
-//       defaults.symbol,
-//       accounts[defaults.broker],
-//       accounts[defaults.custodian],
-//       0,
-//       web3.toWei(defaults.totalSupply)
-//     )
-//     token.buy
-//       .sendTransaction({ from: accounts[defaults.user], value: web3.toWei(5) })
-//       .then(() => assert(false, 'Expected error'))
-//       .catch(e => e.should.match(/invalid opcode/))
-//   })
-//
-//   it('should buy tokens', async () => {
-//     const token = await newToken()
-//     await token.buy.sendTransaction({
-//       from: accounts[defaults.user],
-//       value: web3.toWei(5)
-//     })
-//     const balance = await token.balanceOf(accounts[defaults.user])
-//     toDecimalFromWei(balance).should.eql(5)
-//   })
-//
-//   it('should not buy if owner balance is insufficient', async () => {
-//     const token = await newToken()
-//     await token.buy.sendTransaction({
-//       from: accounts[defaults.user],
-//       value: web3.toWei(5)
-//     })
-//     token.buy
-//       .sendTransaction({ from: accounts[defaults.user], value: web3.toWei(6) })
-//       .then(() => assert(false, 'Expected to throw'))
-//       .catch(e => e.should.match(/invalid opcode/))
-//   })
-//
-//   it('should change to funding stage when all tokens are sold', async () => {
-//     const token = await newToken()
-//     await token.buy.sendTransaction({
-//       from: accounts[defaults.user],
-//       value: web3.toWei(10)
-//     })
-//     const stage = await token.stage()
-//     web3.toDecimal(stage).should.eql(stages.pending)
-//   })
-//
-//   it('should activate contract with valid signature', async () => {
-//     const token = await pendingToken(accounts)
-//     const [r, s, v] = createSignature(
-//       defaults.symbol,
-//       defaults.totalSupply,
-//       accounts[defaults.custodian]
-//     )
-//     const res = await token.activate(v, r, s)
-//     web3.toDecimal(res.logs[0].args.stage).should.eql(stages.active)
-//     const balance = await web3.eth.getBalance(token.address)
-//     toDecimalFromWei(balance).should.eql(0)
-//   })
-//
-//   it('should reclaim funds', async () => {
-//     const token = await POAToken.new(
-//       defaults.name,
-//       defaults.symbol,
-//       accounts[defaults.broker],
-//       accounts[defaults.custodian],
-//       1,
-//       web3.toWei(defaults.totalSupply)
-//     )
-//     await token.buy.sendTransaction({
-//       from: accounts[defaults.user],
-//       value: web3.toWei(5)
-//     })
-//
-//     await sleep(1500)
-//
-//     const balance = await web3.eth.getBalance(accounts[defaults.user])
-//     await token.reclaim.sendTransaction({ from: accounts[defaults.user] })
-//     web3.toDecimal(token.contract.stage()).should.eql(stages.failed)
-//     const balance2 = await web3.eth.getBalance(accounts[defaults.user])
-//     const diff = toDecimalFromWei(balance2 - balance)
-//     assert(diff > 4.9 && diff < 5)
-//     const balance3 = await token.balanceOf(accounts[defaults.user])
-//     toDecimalFromWei(balance3).should.eql(0)
-//   })
-//
-//   it('should sell tokens', async () => {
-//     const token = await activeToken()
-//     await token.sell.sendTransaction(web3.toWei(5), {
-//       from: accounts[defaults.user]
-//     })
-//     const tokens = await token.balanceOf(accounts[defaults.user])
-//     toDecimalFromWei(tokens).should.eql(5)
-//     const balance = await web3.eth.getBalance(accounts[defaults.user])
-//     await token.liquidated.sendTransaction(accounts[defaults.user], {
-//       from: accounts[defaults.broker],
-//       value: web3.toWei(5)
-//     })
-//     const balance2 = await web3.eth.getBalance(accounts[defaults.user])
-//     const diff = toDecimalFromWei(balance2 - balance)
-//     assert(diff === 5)
-//   })
-//
-//   it('should claim dividend payout', async () => {
-//     // get active token with total supply: 10, user balance: 5
-//     const token = await activeToken()
-//     await token.sell.sendTransaction(web3.toWei(5), {
-//       from: accounts[defaults.user]
-//     })
-//     const balance = web3.eth.getBalance(accounts[defaults.user])
-//
-//     // broker sends 1 ETH payout
-//     await token.payout.sendTransaction({
-//       from: accounts[defaults.broker],
-//       value: web3.toWei(1)
-//     })
-//
-//     // user claims payout
-//     await token.claim.sendTransaction({ from: accounts[defaults.user] })
-//
-//     // user received 0.5 ETH
-//     const balance2 = await web3.eth.getBalance(accounts[defaults.user])
-//     const diff = toDecimalFromWei(balance2 - balance)
-//     assert(diff > 0.4 && diff < 0.5)
-//
-//     // user transfers 5 tokens
-//     await token.transfer.sendTransaction(
-//       accounts[defaults.user2],
-//       web3.toWei(5),
-//       { from: accounts[defaults.user] }
-//     )
-//
-//     // other user cannot claim payout again
-//     const balance3 = await web3.eth.getBalance(accounts[defaults.user2])
-//     token.claim
-//       .sendTransaction({ from: accounts[defaults.custodian] })
-//       .then(() => assert(false, 'Expected error'))
-//       .catch(e => e.should.match(/invalid opcode/))
-//     const balance4 = await web3.eth.getBalance(accounts[defaults.user2])
-//     const diff2 = toDecimalFromWei(balance4 - balance3)
-//     diff2.should.eql(0)
-//   })
-//
-//   it('should transfer claimed payouts', async () => {
-//     const token = await activeToken()
-//
-//     // user1 sends 5 tokens to user2
-//     await token.transfer.sendTransaction(
-//       accounts[defaults.user2],
-//       web3.toWei(5),
-//       { from: accounts[defaults.user] }
-//     )
-//
-//     // broker sends 1 ETH payout
-//     await token.payout.sendTransaction({
-//       from: accounts[defaults.broker],
-//       value: web3.toWei(1)
-//     })
-//
-//     // user1 can claim 0.5 ETH
-//     const balance = await web3.eth.getBalance(accounts[defaults.user])
-//     await token.claim.sendTransaction({ from: accounts[defaults.user] })
-//     const balance2 = web3.eth.getBalance(accounts[defaults.user])
-//     const diff = toDecimalFromWei(balance2 - balance)
-//     assert(diff > 0.4 && diff < 0.5)
-//
-//     // user2 can claim 0.5 ETH
-//     const balance3 = await web3.eth.getBalance(accounts[defaults.user2])
-//     await token.claim.sendTransaction({ from: accounts[defaults.user2] })
-//     const balance4 = await web3.eth.getBalance(accounts[defaults.user2])
-//     const diff2 = toDecimalFromWei(balance4 - balance3)
-//     assert(diff2 > 0.4 && diff2 < 0.5)
-//   })
-//
-//   it('should claim multiple payouts one by one', async () => {
-//     const token = await activeToken()
-//     const balance = await web3.eth.getBalance(accounts[defaults.user])
-//
-//     // broker sends 1 ETH payout
-//     await token.payout.sendTransaction({
-//       from: accounts[defaults.broker],
-//       value: web3.toWei(1)
-//     })
-//
-//     // user can claim 1 ETH
-//     await token.claim.sendTransaction({ from: accounts[defaults.user] })
-//     const balance2 = await web3.eth.getBalance(accounts[defaults.user])
-//     const diff = toDecimalFromWei(balance2 - balance)
-//     assert(diff > 0.9 && diff < 1.0)
-//     const balance3 = await web3.eth.getBalance(accounts[defaults.user])
-//
-//     // broker sends 2 ETH payout
-//     await token.payout.sendTransaction({
-//       from: accounts[defaults.broker],
-//       value: web3.toWei(2)
-//     })
-//
-//     // user can claim 2 ETH
-//     await token.claim.sendTransaction({ from: accounts[defaults.user] })
-//
-//     const balance4 = await web3.eth.getBalance(accounts[defaults.user])
-//     const diff2 = toDecimalFromWei(balance4 - balance3)
-//     assert(diff2 > 1.9 && diff2 < 2.0)
-//   })
-//
-//   it('should claim multiple payouts at once', async () => {
-//     // get active token with total supply: 10: user balance: 10
-//     const token = await activeToken()
-//     const balance = await web3.eth.getBalance(accounts[defaults.user])
-//
-//     // broker sends 1 ETH payout
-//     await token.payout.sendTransaction({
-//       from: accounts[defaults.broker],
-//       value: web3.toWei(1)
-//     })
-//
-//     // broker sends 2 ETH payout
-//     await token.payout.sendTransaction({
-//       from: accounts[defaults.broker],
-//       value: web3.toWei(2)
-//     })
-//
-//     // user can claim 3 ETH
-//     await token.claim.sendTransaction({ from: accounts[defaults.user] })
-//
-//     const balance2 = await web3.eth.getBalance(accounts[defaults.user])
-//     const diff = toDecimalFromWei(balance2 - balance)
-//     assert(diff > 2.9 && diff < 3.0)
-//   })
-//
-//   it('should claim payouts before and after transfer', async () => {
-//     // get active token with total supply: 10: user balance: 10
-//     const token = await activeToken()
-//     const balance = await web3.eth.getBalance(accounts[defaults.user])
-//
-//     // broker sends 1 ETH payout
-//     await token.payout.sendTransaction({
-//       from: accounts[defaults.broker],
-//       value: web3.toWei(1)
-//     })
-//
-//     // user1 can claim 1 ETH
-//     await token.claim.sendTransaction({ from: accounts[defaults.user] })
-//
-//     const balance2 = await web3.eth.getBalance(accounts[defaults.user])
-//     const diff = toDecimalFromWei(balance2 - balance)
-//     assert(diff > 0.9 && diff < 1.0)
-//
-//     // user1 transfers tokens to user2
-//     await token.transfer.sendTransaction(
-//       accounts[defaults.user2],
-//       web3.toWei(10),
-//       { from: accounts[defaults.user] }
-//     )
-//
-//     const balance3 = await web3.eth.getBalance(accounts[defaults.user2])
-//
-//     // broker sends 2 ETH payout
-//     await token.payout.sendTransaction({
-//       from: accounts[defaults.broker],
-//       value: web3.toWei(2)
-//     })
-//
-//     // user2 can claim 2 ETH
-//     await token.claim.sendTransaction({ from: accounts[defaults.user2] })
-//
-//     const balance4 = await web3.eth.getBalance(accounts[defaults.user2])
-//     const diff2 = toDecimalFromWei(balance4 - balance3)
-//     assert(diff2 > 1.9 && diff2 < 2.0)
-//
-//     // TODO check user1 can't claim again
-//   })
-//
-//   it('should handle changing totalSupply', async () => {
-//     // get active token with total supply: 10: user balance: 10
-//     const token = await activeToken()
-//     const balance = await web3.eth.getBalance(accounts[defaults.user])
-//
-//     // broker sends 1 ETH payout (1 ETH for user)
-//     await token.payout.sendTransaction({
-//       from: accounts[defaults.broker],
-//       value: web3.toWei(1)
-//     })
-//
-//     // totalSupply changes to 20
-//     await token.debugSetSupply(web3.toWei(20))
-//
-//     // broker sends 2 ETH payout (1 ETH for user)
-//     await token.payout.sendTransaction({
-//       from: accounts[defaults.broker],
-//       value: web3.toWei(2)
-//     })
-//
-//     // user can claim 2 ETH
-//     await token.claim.sendTransaction({ from: accounts[defaults.user] })
-//     const balance2 = await web3.eth.getBalance(accounts[defaults.user])
-//     const diff = toDecimalFromWei(balance2 - balance)
-//     assert(diff > 1.9 && diff < 2.0)
-//   })
-//
-//   it('should handle changing totalSupply with transfers', async () => {
-//     // get active token with total supply: 10: user balance: 10
-//     const token = await activeToken()
-//     // broker sends 1 ETH payout (1 ETH for user)
-//     await token.payout.sendTransaction({
-//       from: accounts[defaults.broker],
-//       value: web3.toWei(1)
-//     })
-//
-//     // user1 should get paid out when transferring tokens
-//     const balance = await web3.eth.getBalance(accounts[defaults.user])
-//     await token.transfer.sendTransaction(
-//       accounts[defaults.user2],
-//       web3.toWei(10),
-//       { from: accounts[defaults.user] }
-//     )
-//     const balance2 = await web3.eth.getBalance(accounts[defaults.user])
-//     const diff = toDecimalFromWei(balance2 - balance)
-//     assert(diff > 0.9 && diff < 1.0)
-//
-//     // totalSupply changes to 20
-//     await token.debugSetSupply(web3.toWei(20))
-//
-//     // broker sends 2 ETH payout (1 ETH for user2)
-//     await token.payout.sendTransaction({
-//       from: accounts[defaults.broker],
-//       value: web3.toWei(2)
-//     })
-//
-//     // user1 should not be able to claim anything
-//     const balance3 = await web3.eth.getBalance(accounts[defaults.user])
-//     token.claim
-//       .sendTransaction({ from: accounts[defaults.user] })
-//       .then(() => assert(false, 'Expected error'))
-//       .catch(e => e.should.match(/invalid opcode/))
-//     const balance4 = await web3.eth.getBalance(accounts[defaults.user])
-//     const diff2 = toDecimalFromWei(balance4 - balance3)
-//     assert(diff2 == 0)
-//
-//     // user2 can claim 1 ETH
-//     const balance5 = await web3.eth.getBalance(accounts[defaults.user2])
-//     await token.claim.sendTransaction({ from: accounts[defaults.user2] })
-//     const balance6 = await web3.eth.getBalance(accounts[defaults.user2])
-//     const diff3 = toDecimalFromWei(balance6 - balance5)
-//     assert(diff3 > 0.9 && diff3 < 1.0)
-//   })
-// })
+const PoaToken = artifacts.require('PoaToken')
+const BigNumber = require('bignumber.js')
+const { getEtherBalance } = require('../helpers/general')
+const { stages } = require('../helpers/poa')
+const {
+  setupRegistry,
+  finalizeBbk,
+  lockAllBbk,
+  testWillThrow
+} = require('../helpers/general')
+
+describe('when in Funding stage', () => {
+  contract('PoaToken', accounts => {
+    const ownerAddress = accounts[0]
+    // for now this is the same... need to talk about this
+    const brokerAddress = accounts[0]
+    const custodianAddress = accounts[1]
+    const whitelistedBuyerAddress = accounts[2]
+    const nonWhitelistedBuyerAddress = accounts[3]
+    const amount = new BigNumber(1e18)
+    let poa
+    let wht
+
+    // TODO: do we really want to differentiate owner and broker? cody does not think so...
+    before('setup contracts state', async () => {
+      const { registry, whitelist } = await setupRegistry()
+      wht = whitelist
+      poa = await PoaToken.new(
+        'TestToken',
+        'TST',
+        ownerAddress,
+        custodianAddress,
+        registry.address,
+        100,
+        2e18
+      )
+      await wht.addAddress(whitelistedBuyerAddress)
+    })
+
+    it('should initalize with the right values', async () => {
+      const owner = await poa.owner()
+      const name = await poa.name()
+      const symbol = await poa.symbol()
+      const broker = await poa.broker()
+      const custodian = await poa.custodian()
+      const timeoutBlock = await poa.timeoutBlock()
+      const totalSupply = await poa.totalSupply()
+      const feePercentage = await poa.feePercentage()
+      const decimals = await poa.decimals()
+      assert(owner === ownerAddress, 'the owner should be that which was set')
+      assert(name === 'TestToken', 'the name should be that which was set')
+      assert(symbol === 'TST', 'the symbol should be that which was set')
+      assert.equal(
+        broker,
+        brokerAddress,
+        'the broker should be that which was set'
+      )
+      assert.equal(
+        custodian,
+        custodianAddress,
+        'the custodian should be that which was set'
+      )
+      assert.equal(
+        timeoutBlock.toString(),
+        new BigNumber(100).toString(),
+        'the timeout should be that which was set'
+      )
+      assert.equal(
+        totalSupply.toString(),
+        new BigNumber('2e18').toString(),
+        'the totalSupply should be that which was set'
+      )
+      assert.equal(
+        feePercentage.toString(),
+        new BigNumber(5).toString(),
+        'the owner should be that which was set'
+      )
+      assert.equal(
+        decimals.toString(),
+        new BigNumber(18).toString(),
+        'the owner should be that which was set'
+      )
+    })
+
+    it('should start in Funding stage', async () => {
+      const stage = await poa.stage()
+      assert.equal(
+        stage.toNumber(),
+        stages.funding,
+        'the contract stage should be Active'
+      )
+    })
+
+    it('should buy when whitelisted', async () => {
+      const preBuyerTokenBalance = await poa.balanceOf(whitelistedBuyerAddress)
+      const preOwnerTokenBalance = await poa.balanceOf(ownerAddress)
+      await poa.buy({
+        from: whitelistedBuyerAddress,
+        value: amount
+      })
+      const postBuyerTokenBalance = await poa.balanceOf(whitelistedBuyerAddress)
+      const postOwnerTokenBalance = await poa.balanceOf(ownerAddress)
+      assert.equal(
+        postBuyerTokenBalance.minus(preBuyerTokenBalance).toString(),
+        amount.toString(),
+        'the buyer balance should be incremented by the buy amount'
+      )
+      assert.equal(
+        preOwnerTokenBalance.minus(postOwnerTokenBalance).toString(),
+        amount.toString(),
+        'the owner balance should be decremented by the buy amount'
+      )
+    })
+
+    it('should NOT buy when NOT whitelisted', async () => {
+      await testWillThrow(poa.buy, [
+        {
+          from: nonWhitelistedBuyerAddress,
+          value: amount
+        }
+      ])
+    })
+
+    it('should NOT buy if more than is available', async () => {
+      await testWillThrow(poa.buy, [
+        {
+          from: whitelistedBuyerAddress,
+          value: amount.mul(2)
+        }
+      ])
+    })
+
+    it('should NOT be able to be activated by custodian', async () => {
+      await testWillThrow(poa.activate, [{ from: custodianAddress }])
+    })
+
+    it('should NOT be able to be terminated', async () => {
+      await testWillThrow(poa.terminate, [{ from: brokerAddress }])
+    })
+
+    it('should NOT allow reclaiming', async () => {
+      await testWillThrow(poa.reclaim, [{ from: whitelistedBuyerAddress }])
+    })
+
+    it('should NOT allow payouts', async () => {
+      await testWillThrow(poa.payout, [{ from: brokerAddress }])
+    })
+
+    it('should NOT allow claiming', async () => {
+      await testWillThrow(poa.claim, [{ from: whitelistedBuyerAddress }])
+    })
+
+    it('should enter Pending stage once all tokens have been bought', async () => {
+      const preBuyerTokenBalance = await poa.balanceOf(whitelistedBuyerAddress)
+      const preOwnerTokenBalance = await poa.balanceOf(ownerAddress)
+      await poa.buy({
+        from: whitelistedBuyerAddress,
+        value: amount
+      })
+      const postBuyerTokenBalance = await poa.balanceOf(whitelistedBuyerAddress)
+      const postOwnerTokenBalance = await poa.balanceOf(ownerAddress)
+      assert.equal(
+        postBuyerTokenBalance.minus(preBuyerTokenBalance).toString(),
+        amount.toString(),
+        'the buyer balance should be incremented by the buy amount'
+      )
+      assert.equal(
+        preOwnerTokenBalance.minus(postOwnerTokenBalance).toString(),
+        amount.toString(),
+        'the owner balance should be decremented by the buy amount'
+      )
+      const stage = await poa.stage()
+      assert.equal(
+        stage,
+        stages.pending,
+        'the contract should be in Pending stage'
+      )
+    })
+  })
+})
+
+describe('when in Pending stage', () => {
+  contract('PoaToken', accounts => {
+    const ownerAddress = accounts[0]
+    const brokerAddress = accounts[0]
+    const custodianAddress = accounts[1]
+    const whitelistedBuyerAddress = accounts[2]
+    const amount = new BigNumber(1e18)
+    let poa
+    let wht
+
+    before('setup contract pending state', async () => {
+      const { registry, whitelist } = await setupRegistry()
+      wht = whitelist
+      poa = await PoaToken.new(
+        'TestToken',
+        'TST',
+        ownerAddress,
+        custodianAddress,
+        registry.address,
+        100,
+        amount
+      )
+      await wht.addAddress(whitelistedBuyerAddress)
+      await poa.buy({
+        from: whitelistedBuyerAddress,
+        value: amount
+      })
+    })
+
+    it('should be in Pending stage', async () => {
+      const stage = await poa.stage()
+      assert.equal(
+        stage.toNumber(),
+        stages.pending,
+        'the contract stage should be Pending'
+      )
+    })
+
+    it('should NOT allow buying', async () => {
+      await testWillThrow(poa.buy, [{ from: whitelistedBuyerAddress }])
+    })
+
+    it('should NOT enter Active stage if not custodian', async () => {
+      await testWillThrow(poa.activate, [{ from: whitelistedBuyerAddress }])
+    })
+
+    it('should NOT allow reclaiming', async () => {
+      await testWillThrow(poa.reclaim, [{ from: whitelistedBuyerAddress }])
+    })
+
+    it('should NOT allow payouts', async () => {
+      await testWillThrow(poa.payout, [{ from: brokerAddress }])
+    })
+
+    it('should NOT allow claiming', async () => {
+      await testWillThrow(poa.claim, [{ from: whitelistedBuyerAddress }])
+    })
+
+    it('should enter Active stage if custodian', async () => {
+      await poa.activate({
+        from: custodianAddress
+      })
+      const stage = await poa.stage()
+      assert.equal(
+        stage.toNumber(),
+        stages.active,
+        'the contract stage should be Active'
+      )
+    })
+  })
+})
+
+describe('when in Active stage', () => {
+  contract('PoaToken', accounts => {
+    const ownerAddress = accounts[0]
+    const brokerAddress = accounts[0]
+    const custodianAddress = accounts[1]
+    const whitelistedBuyerAddress1 = accounts[2]
+    const whitelistedBuyerAddress2 = accounts[3]
+    const amount = new BigNumber(1e18)
+    let poa
+    let wht
+
+    before('setup contracts state', async () => {
+      const { registry, whitelist } = await setupRegistry()
+      const reg = registry
+      wht = whitelist
+      poa = await PoaToken.new(
+        'TestToken',
+        'TST',
+        ownerAddress,
+        custodianAddress,
+        reg.address,
+        100,
+        amount
+      )
+      await wht.addAddress(whitelistedBuyerAddress1)
+      await wht.addAddress(whitelistedBuyerAddress2)
+      await poa.buy({
+        from: whitelistedBuyerAddress1,
+        value: amount.div(2)
+      })
+      await poa.buy({
+        from: whitelistedBuyerAddress2,
+        value: amount.div(2)
+      })
+      await poa.activate({
+        from: custodianAddress
+      })
+      await finalizeBbk(reg)
+      await lockAllBbk(reg)
+    })
+
+    it('should be in Active stage', async () => {
+      const stage = await poa.stage()
+      assert.equal(
+        stage.toNumber(),
+        stages.active,
+        'the contract stage should be Active'
+      )
+    })
+
+    it('should calculate fees', async () => {
+      const feePercentage = await poa.feePercentage()
+      const expectedFee = amount.mul(feePercentage).div(100)
+      const calculatedFee = await poa.calculateFee(amount)
+      assert(
+        calculatedFee.toNumber(),
+        expectedFee.toNumber(),
+        'the fees should match'
+      )
+    })
+
+    it('should run payout when broker', async () => {
+      const preTotalPayout = await poa.totalPayout()
+      const preBrokerEtherBalance = await getEtherBalance(brokerAddress)
+      const fee = await poa.calculateFee(amount)
+      await poa.payout({
+        from: brokerAddress,
+        value: amount
+      })
+      const postTotalPayout = await poa.totalPayout()
+      const postBrokerEtherBalance = await getEtherBalance(brokerAddress)
+      assert(
+        postTotalPayout.minus(preTotalPayout).toString(),
+        amount.toString(),
+        'totalPayout should be incremented by the ether value of the transaction'
+      )
+      assert(
+        preBrokerEtherBalance.minus(postBrokerEtherBalance).toString(),
+        fee.toString(),
+        'the broker ether balance should be decremented by the fee value'
+      )
+    })
+
+    it('should NOT run payout when NOT broker', async () => {
+      await testWillThrow(poa.payout, [
+        { from: custodianAddress, value: amount }
+      ])
+    })
+
+    it('should allow claiming dividends', async () => {
+      const preEtherBalance = await getEtherBalance(whitelistedBuyerAddress1)
+      const currentPayout = await poa.currentPayout(whitelistedBuyerAddress1)
+      await poa.claim({
+        from: whitelistedBuyerAddress1
+      })
+      const postEtherBalance = await getEtherBalance(whitelistedBuyerAddress1)
+      assert(
+        postEtherBalance.minus(preEtherBalance).toString(),
+        currentPayout.toString()
+      )
+    })
+
+    it('should NOT allow claiming the same payout again', async () => {
+      await testWillThrow(poa.claim, [{ from: whitelistedBuyerAddress1 }])
+    })
+
+    it('should NOT allow claiming from a non-investor', async () => {
+      await testWillThrow(poa.claim, [{ from: brokerAddress }])
+    })
+  })
+})

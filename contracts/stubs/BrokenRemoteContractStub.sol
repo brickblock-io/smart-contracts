@@ -1,10 +1,10 @@
 pragma solidity 0.4.18;
 
 
-contract BrokenGenericRemoteContract {
+contract BrokenRemoteContractStub {
   uint256 public testNumber;
 
-  function BrokenGenericRemoteContract(uint256 _testNumber)
+  function BrokenRemoteContractStub(uint256 _testNumber)
     public
   {
     testNumber = _testNumber;

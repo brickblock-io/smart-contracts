@@ -11,7 +11,7 @@ contract Registry {
 }
 
 
-// limited BrickblockAccessToken2 definition
+// limited BrickblockAccessToken definition
 contract AccessToken {
   function distribute(
     uint256 _amount
@@ -39,6 +39,7 @@ contract BrickblockFeeManager {
   )
     public
   {
+    require(_registryAddress != address(0));
     registry = Registry(_registryAddress);
   }
 

@@ -1,21 +1,19 @@
-const BigNumber = require('bignumber.js')
-const leftPad = require('left-pad')
-
 const BrickblockWhitelist = artifacts.require('./BrickblockWhitelist.sol')
+
+const { testWillThrow } = require('../helpers/general')
 
 describe('when deployed', () => {
   contract('BrickblockWhitelist', accounts => {
     const ownerAddress = accounts[0]
     const investor1Address = accounts[1]
-    const investor2Address = accounts[2]
-    let whitelist
+    let wht
 
     before('setup contract and relevant accounts', async () => {
-      whitelist = await BrickblockWhitelist.deployed()
+      wht = await BrickblockWhitelist.new()
     })
 
     it('should have the owner set to contract creator', async () => {
-      const contractOwnerAddress = await whitelist.owner()
+      const contractOwnerAddress = await wht.owner()
       assert.equal(
         contractOwnerAddress,
         ownerAddress,
@@ -24,10 +22,10 @@ describe('when deployed', () => {
     })
 
     it('should whitelist an address', async () => {
-      const preInvestor1Status = await whitelist.whitelisted(investor1Address)
+      const preInvestor1Status = await wht.whitelisted(investor1Address)
       assert(!preInvestor1Status, 'the investor status should start as false')
-      await whitelist.addAddress(investor1Address)
-      const postInvestor1Status = await whitelist.whitelisted(investor1Address)
+      await wht.addAddress(investor1Address)
+      const postInvestor1Status = await wht.whitelisted(investor1Address)
       assert(
         postInvestor1Status,
         'the investor status should be changed to true'
@@ -35,22 +33,17 @@ describe('when deployed', () => {
     })
 
     it('should not whitelist an already whitelisted address', async () => {
-      try {
-        await whitelist.addAddress(investor1Address)
-        assert(false, 'the contract should throw')
-      } catch (error) {
-        assert(
-          /invalid opcode/.test(error),
-          'error message should contain invalid opcode'
-        )
-      }
+      await testWillThrow(wht.addAddress, [
+        investor1Address,
+        { from: ownerAddress }
+      ])
     })
 
     it('should de-whitelist and address', async () => {
-      const preInvestor1Status = await whitelist.whitelisted(investor1Address)
+      const preInvestor1Status = await wht.whitelisted(investor1Address)
       assert(preInvestor1Status, 'the investor status should be true')
-      await whitelist.removeAddress(investor1Address)
-      const postInvestor1Status = await whitelist.whitelisted(investor1Address)
+      await wht.removeAddress(investor1Address)
+      const postInvestor1Status = await wht.whitelisted(investor1Address)
       assert(
         !postInvestor1Status,
         'the investor status should be changed to false'
@@ -58,15 +51,24 @@ describe('when deployed', () => {
     })
 
     it('should not de-whitelist an already de-whitelisted address', async () => {
-      try {
-        await whitelist.removeAddress(investor1Address)
-        assert(false, 'the contract should throw')
-      } catch (error) {
-        assert(
-          /invalid opcode/.test(error),
-          'error message should contain invalid opcode'
-        )
-      }
+      await testWillThrow(wht.removeAddress, [
+        investor1Address,
+        { from: ownerAddress }
+      ])
+    })
+
+    it('should NOT whitelist as NOT owner', async () => {
+      await testWillThrow(wht.addAddress, [
+        investor1Address,
+        { from: investor1Address }
+      ])
+    })
+
+    it('should NOT de-whitelist as NOT owner', async () => {
+      await testWillThrow(wht.removeAddress, [
+        investor1Address,
+        { from: investor1Address }
+      ])
     })
   })
 })

@@ -11,7 +11,7 @@ const path = require('path')
 const utils = require('ethereumjs-util')
 const cpoaAddressConfigPath = `${__dirname}/../build/cpoaAddressesConfig.json`
 
-// this will go away soon and be replaced by BrickblockUmbrella...
+// this will go away soon and be replaced by PoaManager...
 const bbkRopstenAddress = process.env.BRICKBLOCK_ROPSTEN_ADDRESS
 const bbkKovanAddress = process.env.BRICKBLOCK_KOVAN_ADDRESS
 const bbkRinkebyAddress = process.env.BRICKBLOCK_RINKEBY_ADDRESS

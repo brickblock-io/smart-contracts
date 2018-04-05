@@ -1,5 +1,5 @@
 # Brickblock Smart Contracts
-
+ 
 ## Installing
 
 1. Install dependencies using:
@@ -95,7 +95,7 @@ Company tokens are locked in by assigning the value to the contract itself. The 
 
 The `BrickblockAccessToken` contract will later be called to lock the company funds into the fountain. See below for more details.
 
-## BrickblockAccessToken2 (Work in Progress)
+## BrickblockAccessToken (Work in Progress)
 `BrickblockAccessToken` allows for `BrickblockToken` holders to lock in their BBK in order to receive ACT whenever a fee is paid on the Brickblock network. When a fee is paid, users who have locked in their BBK receive an ACT reward proportional to their locked tokens relative to the entire locked BBK balance of the contract.
 
 `BrickblockAccessToken` is an ERC20 compliant token contract.
@@ -178,10 +178,10 @@ A contract enters the terminated stage when a poa contract needs to end. This co
 * [zeppelin-solidity v1.3.0](https://github.com/OpenZeppelin/zeppelin-solidity/releases)
 
 ## Authors
-* **Cody Lamson** - *BrickblockToken, CustomPOAToken, BrickblockAccessToken, BrickblockAccount, POAToken2, WarpTool, BrickblockWhitelist, BrickblockContractRegistry, BrickblockFeeManager* - [TovarishFin](https://github.com/TovarishFin)
-* **Matt Stevens** - *BrickblockToken, CustomPOAToken, POAToken, BrickblockUmbrella, BrickblockWhitelist, BrickblockContractRegistry* - [mattgstevens](https://github.com/mattgstevens)
-* **Adrian Kizlauskas** - *BrickblockToken, CustomPOAToken POAToken, BrickblockUmbrella* - [dissaranged](https://github.com/dissaranged)
-* **Marius Hanne** - *POAToken, BrickblockUmbrella* - [mhanne](https://github.com/mhanne)
+* **Cody Lamson** - *BrickblockToken, CustomPOAToken, BrickblockAccessToken, BrickblockAccount, PoaToken, WarpTool, BrickblockWhitelist, BrickblockContractRegistry, BrickblockFeeManager* - [TovarishFin](https://github.com/TovarishFin)
+* **Matt Stevens** - *BrickblockToken, CustomPOAToken, POAToken, PoaManager, BrickblockWhitelist, BrickblockContractRegistry* - [mattgstevens](https://github.com/mattgstevens)
+* **Adrian Kizlauskas** - *BrickblockToken, CustomPOAToken POAToken, PoaManager* - [dissaranged](https://github.com/dissaranged)
+* **Marius Hanne** - *POAToken, PoaManager* - [mhanne](https://github.com/mhanne)
 
 ## License
 
