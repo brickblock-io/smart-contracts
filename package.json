@@ -1,6 +1,6 @@
 {
   "name": "@brickblock/smart-contracts",
-  "version": "2.3.3",
+  "version": "2.4.0",
   "description": "Smart contracts for the Brickblock platform",
   "license": "UNLICENSED",
   "engines": {
@@ -14,7 +14,7 @@
     "start:dev": "truffle develop",
     "---SECTION:BUILD---": "-------------------- HOW TO BUILD THE SMART CONTRACTS --------------------",
     "build:comment": "Compile smart contracts and output into the build/ dir",
-    "build": "truffle compile && yarn build:inject-deployed-contracts",
+    "build": "yarn clean:contracts && truffle compile && yarn build:inject-deployed-contracts",
     "build:inject-deployed-contracts:comment": "making the deployed chainid:address pair as configured in .env available to build/contract/Brickblock.json",
     "build:inject-deployed-contracts": "cross-env node scripts/injectDeployedContracts.js",
     "---SECTION:CLEAN---": "-------------------- HOW TO CLEAN OLD BUILD OUTPUT --------------------",

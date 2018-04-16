@@ -11,10 +11,9 @@ const path = require('path')
 const utils = require('ethereumjs-util')
 const cpoaAddressConfigPath = `${__dirname}/../build/cpoaAddressesConfig.json`
 
-// this will go away soon and be replaced by PoaManager...
-const bbkRopstenAddress = process.env.BRICKBLOCK_ROPSTEN_ADDRESS
-const bbkKovanAddress = process.env.BRICKBLOCK_KOVAN_ADDRESS
-const bbkRinkebyAddress = process.env.BRICKBLOCK_RINKEBY_ADDRESS
+const poaManagerRopstenAddress = process.env.POA_MANAGER_ROPSTEN_ADDRESS
+const poaManagerKovanAddress = process.env.POA_MANAGER_KOVAN_ADDRESS
+const poaManagerRinkebyAddress = process.env.POA_MANAGER_RINKEBY_ADDRESS
 
 // these should stick around for the forseeable future...
 const cpoaRopstenAddresses = process.env.CUSTOM_POA_ROPSTEN_ADDRESSES
@@ -30,7 +29,7 @@ const cpoaMainnetAddresses = process.env.CUSTOM_POA_MAINNET_ADDRESSES
   ? process.env.CUSTOM_POA_MAINNET_ADDRESSES.split(',')
   : []
 
-const bbkABI = path.resolve('./build/contracts/Brickblock.json')
+const poaManagerAbi = path.resolve('./build/contracts/PoaManager.json')
 
 const resetCpoaAddressesConfig = () => {
   fs.writeFileSync(cpoaAddressConfigPath, JSON.stringify({}, null, 2))
@@ -92,9 +91,9 @@ const exportCustomPoaAddresses = (addresses, network) => {
 }
 
 if (
-  !bbkRopstenAddress &&
-  !bbkKovanAddress &&
-  !bbkRinkebyAddress &&
+  !poaManagerRopstenAddress &&
+  !poaManagerKovanAddress &&
+  !poaManagerRinkebyAddress &&
   cpoaRopstenAddresses.length === 0 &&
   cpoaKovanAddresses.length === 0 &&
   cpoaRinkebyAddresses.length === 0 &&
@@ -103,9 +102,9 @@ if (
   console.error('no contract addresses in .env!')
   process.exit(-1)
 } else {
-  setupContract(bbkRopstenAddress, bbkABI, 3)
-  setupContract(bbkKovanAddress, bbkABI, 42)
-  setupContract(bbkRinkebyAddress, bbkABI, 4)
+  setupContract(poaManagerRopstenAddress, poaManagerAbi, 3)
+  setupContract(poaManagerKovanAddress, poaManagerAbi, 42)
+  setupContract(poaManagerRinkebyAddress, poaManagerAbi, 4)
   resetCpoaAddressesConfig()
   exportCustomPoaAddresses(cpoaRopstenAddresses, 'ropsten')
   exportCustomPoaAddresses(cpoaKovanAddresses, 'kovan')
