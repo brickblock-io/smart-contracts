@@ -21,21 +21,17 @@ printf "1️⃣  Running linters…"
 chronic yarn lint
 printf " ✅\n"
 
-printf "2️⃣  Running application tests…"
-chronic yarn test:app
+printf "2️⃣  Running tests…"
+chronic yarn test
 printf " ✅\n"
 
-printf "3️⃣  Running smart contract tests…"
-chronic yarn test:contracts
+printf "3️⃣  Running mythril security scanner…"
+chronic yarn test:mythril
 printf " ✅\n"
 
-printf "4️⃣  Running flow typechecker…"
-chronic yarn flow
-printf " ✅\n"
-
-printf "5️⃣  Checking for vulnerabilities in dependencies…"
+printf "4️⃣  Checking for vulnerabilities in dependencies…"
 yarn vulnerability-check
 printf " ✅\n"
 
-printf "6️⃣  Searching for open TODOs and FIXMEs in the code…"
+printf "5️⃣  Searching for open TODOs and FIXMEs in the code…"
 yarn todo

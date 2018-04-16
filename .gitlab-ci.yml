@@ -8,9 +8,14 @@ stages:
   - setup
   - test
   - build
+  - release
 
 setup:
   stage: setup
+  cache:
+    key: $CI_COMMIT_REF_NAME
+    paths:
+      - node_modules/
   artifacts:
     expire_in: 3d
     paths:
@@ -47,3 +52,12 @@ build:
   script:
     - cat .env.example > .env
     - yarn build
+
+release:
+  stage: release
+  cache:
+    policy: pull
+  only:
+    - master
+  script:
+    - /bin/sh $(pwd)/scripts/ci-release.sh

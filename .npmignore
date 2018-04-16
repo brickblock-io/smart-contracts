@@ -1,5 +1,6 @@
-# all we want to publish the built contracts
+# all we want to publish are the built contracts
 *
 !build/contracts/*.json
+
 # custom json for cpoa addresses
 !build/*.json
