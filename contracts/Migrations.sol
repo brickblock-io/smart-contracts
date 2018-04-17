@@ -3,7 +3,7 @@ pragma solidity ^0.4.18;
 
 contract Migrations {
   address public owner;
-  uint public last_completed_migration;
+  uint public lastCompletedMigration;
 
   modifier restricted() {
     if (msg.sender == owner)
@@ -20,7 +20,7 @@ contract Migrations {
     restricted
     public
   {
-    last_completed_migration = completed;
+    lastCompletedMigration = completed;
   }
 
   function upgrade(address newAddress)
@@ -28,6 +28,6 @@ contract Migrations {
     public
   {
     Migrations upgraded = Migrations(newAddress);
-    upgraded.setCompleted(last_completed_migration);
+    upgraded.setCompleted(lastCompletedMigration);
   }
 }

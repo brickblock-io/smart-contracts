@@ -150,10 +150,10 @@ contract BrickblockAccount is Ownable {
     onlyOwner
     returns (bool)
   {
-    FeeManager bfm = FeeManager(
+    FeeManager fmr = FeeManager(
       registry.getContractAddress("FeeManager")
     );
-    return bfm.claimFee(_value);
+    return fmr.claimFee(_value);
   }
 
   function withdrawEthFunds(

@@ -10,7 +10,7 @@ contract BrickblockContractRegistry is Ownable {
 
   event UpdateContractEvent(string name, address indexed contractAddress);
 
-  function updateContract(string _name, address _address)
+  function updateContractAddress(string _name, address _address)
     public
     onlyOwner
     returns (address)
@@ -24,6 +24,7 @@ contract BrickblockContractRegistry is Ownable {
     view
     returns (address)
   {
+    require(contractAddresses[bytes(_name)] != address(0));
     return contractAddresses[bytes(_name)];
   }
 }

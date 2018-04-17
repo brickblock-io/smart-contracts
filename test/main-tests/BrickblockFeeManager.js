@@ -1,12 +1,9 @@
-const AccessToken = artifacts.require('BrickblockAccessToken')
-const BrickblockToken = artifacts.require('BrickblockToken')
-const ContractRegistry = artifacts.require('BrickblockContractRegistry')
 const FeeManager = artifacts.require('BrickblockFeeManager')
 
 const BigNumber = require('bignumber.js')
 
 const { testWillThrow, sendTransaction } = require('../helpers/general')
-const { setupContracts, testLockAndApproveMany } = require('../helpers/act')
+const { setupContracts, testApproveAndLockMany } = require('../helpers/act')
 const { testPayFee, testPartialClaimFee } = require('../helpers/fmr')
 
 describe('when interacting with FeeManager', () => {
@@ -29,15 +26,12 @@ describe('when interacting with FeeManager', () => {
         bonusAddress,
         contributors,
         tokenDistAmount,
-        ContractRegistry,
-        AccessToken,
-        BrickblockToken,
         FeeManager
       )
       bbk = contracts.bbk
       act = contracts.act
       fmr = contracts.fmr
-      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      await testApproveAndLockMany(bbk, act, contributors, tokenLockAmount)
     })
 
     it('should increment ether balance correctly for FeeManager', async () => {

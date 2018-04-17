@@ -1,3 +1,5 @@
+const BrickblockToken = artifacts.require('./BrickblockToken')
+
 const distributeBbkToMany = async (bbk, accounts, amount) => {
   await Promise.all(
     accounts.map(account => bbk.distributeTokens(account, amount))
@@ -6,7 +8,6 @@ const distributeBbkToMany = async (bbk, accounts, amount) => {
 
 const finalizedBBK = async (
   owner,
-  BrickblockToken,
   bonusAddress,
   fountainAddress,
   contributors,

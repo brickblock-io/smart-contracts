@@ -1,9 +1,3 @@
-const AccessToken = artifacts.require('BrickblockAccessToken')
-const BrickblockAccount = artifacts.require('BrickblockAccount')
-const BrickblockToken = artifacts.require('BrickblockToken')
-const ContractRegistry = artifacts.require('BrickblockContractRegistry')
-const FeeManager = artifacts.require('BrickblockFeeManager')
-
 const BigNumber = require('bignumber.js')
 
 const { testWillThrow, getEtherBalance } = require('../helpers/general')
@@ -39,12 +33,7 @@ describe('when interacting with BBK, ACT, and BFM', () => {
         owner,
         bonusAddress,
         contributors,
-        tokenDistAmount,
-        ContractRegistry,
-        AccessToken,
-        BrickblockToken,
-        FeeManager,
-        BrickblockAccount
+        tokenDistAmount
       )
       bbk = contracts.bbk
       act = contracts.act
@@ -114,12 +103,7 @@ describe('when interacting with BBK, ACT, and BFM as NOT owner', () => {
         owner,
         bonusAddress,
         contributors,
-        tokenDistAmount,
-        ContractRegistry,
-        AccessToken,
-        BrickblockToken,
-        FeeManager,
-        BrickblockAccount
+        tokenDistAmount
       )
       bbk = contracts.bbk
       act = contracts.act
@@ -173,11 +157,6 @@ describe('when withdrawing funds BEFORE BBK unlock block', () => {
         bonusAddress,
         contributors,
         tokenDistAmount,
-        ContractRegistry,
-        AccessToken,
-        BrickblockToken,
-        FeeManager,
-        BrickblockAccount,
         1000
       )
       bbk = contracts.bbk
@@ -260,11 +239,6 @@ describe('when withdrawing funds AFTER BBK unlock block', () => {
         bonusAddress,
         contributors,
         tokenDistAmount,
-        ContractRegistry,
-        AccessToken,
-        BrickblockToken,
-        FeeManager,
-        BrickblockAccount,
         20
       )
       bbk = contracts.bbk
@@ -328,11 +302,6 @@ describe('when trying to withdraw more than available balance', () => {
         bonusAddress,
         contributors,
         tokenDistAmount,
-        ContractRegistry,
-        AccessToken,
-        BrickblockToken,
-        FeeManager,
-        BrickblockAccount,
         20
       )
       bbk = contracts.bbk
@@ -391,11 +360,6 @@ describe('when trying to withdraw as NOT owner', () => {
         bonusAddress,
         contributors,
         tokenDistAmount,
-        ContractRegistry,
-        AccessToken,
-        BrickblockToken,
-        FeeManager,
-        BrickblockAccount,
         20
       )
       bbk = contracts.bbk

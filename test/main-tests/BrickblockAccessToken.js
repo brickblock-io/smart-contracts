@@ -8,9 +8,9 @@ const BigNumber = require('bignumber.js')
 const { testWillThrow } = require('../helpers/general')
 const {
   setupContracts,
-  testLockAndApproveBBK,
+  testApproveAndLockBBK,
   testUnlockBBK,
-  testLockAndApproveMany,
+  testApproveAndLockMany,
   testPayFee,
   testClaimFeeMany,
   testTransferAct,
@@ -55,7 +55,7 @@ describe('when interacting with BBK', () => {
     it('should NOT lock more BBK than contributor balance', async () => {
       const contributorBbkBalance = await bbk.balanceOf(contributor)
       const lockAmount = contributorBbkBalance.add(1)
-      await testWillThrow(testLockAndApproveBBK, [
+      await testWillThrow(testApproveAndLockBBK, [
         bbk,
         act,
         contributor,
@@ -65,7 +65,7 @@ describe('when interacting with BBK', () => {
 
     it('should lock BBK when approved', async () => {
       const lockAmount = await bbk.balanceOf(contributor)
-      await testLockAndApproveBBK(bbk, act, contributor, lockAmount)
+      await testApproveAndLockBBK(bbk, act, contributor, lockAmount)
     })
 
     it('should NOT unlock more BBK than currently locked', async () => {
@@ -107,7 +107,7 @@ describe('when interacting with Fee manager', () => {
       bbk = contracts.bbk
       act = contracts.act
       fmr = contracts.fmr
-      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      await testApproveAndLockMany(bbk, act, contributors, tokenLockAmount)
     })
 
     it('should NOT distribute ACT tokens if NOT FeeManager contract', async () => {
@@ -156,7 +156,7 @@ describe('when ACT has been distributed', () => {
       bbk = contracts.bbk
       act = contracts.act
       fmr = contracts.fmr
-      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      await testApproveAndLockMany(bbk, act, contributors, tokenLockAmount)
       await testPayFee(feePayer, contributors, feeValue, act, fmr)
     })
 
@@ -234,7 +234,7 @@ describe('when testing different scenarios...', () => {
     })
 
     it('lock -> payFee -> transfer -> claim', async () => {
-      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      await testApproveAndLockMany(bbk, act, contributors, tokenLockAmount)
       await testPayFee(feePayer, contributors, feeValue, act, fmr)
       // this should work for all contributors since they have the same balance
       const actBalance = await act.balanceOf(contributors[0])
@@ -245,7 +245,7 @@ describe('when testing different scenarios...', () => {
     })
 
     it('lock -> payFee -> transferFrom -> claim', async () => {
-      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      await testApproveAndLockMany(bbk, act, contributors, tokenLockAmount)
       await testPayFee(feePayer, contributors, feeValue, act, fmr)
       // this should work for all contributors since they have the same balance
       const actBalance = await act.balanceOf(contributors[0])
@@ -263,7 +263,7 @@ describe('when testing different scenarios...', () => {
     })
 
     it('lock -> 50% payFee -> transfer -> claim', async () => {
-      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      await testApproveAndLockMany(bbk, act, contributors, tokenLockAmount)
       await testPayFee(feePayer, contributors, feeValue, act, fmr)
       // this should work for all contributors since they have the same balance
       const actBalance = await act.balanceOf(contributors[0])
@@ -274,7 +274,7 @@ describe('when testing different scenarios...', () => {
     })
 
     it('lock -> 50% payFee -> transferFrom -> claim', async () => {
-      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      await testApproveAndLockMany(bbk, act, contributors, tokenLockAmount)
       await testPayFee(feePayer, contributors, feeValue, act, fmr)
       // this should work for all contributors since they have the same balance
       const actBalance = await act.balanceOf(contributors[0])
@@ -297,7 +297,7 @@ describe('when testing different scenarios...', () => {
     })
 
     it('lock -> payFee -> 1 50% transfer -> claim', async () => {
-      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      await testApproveAndLockMany(bbk, act, contributors, tokenLockAmount)
       await testPayFee(feePayer, contributors, feeValue, act, fmr)
       const actBalance = await act.balanceOf(contributor)
       await testTransferAct(act, contributor, recipient, actBalance.div(2))
@@ -306,7 +306,7 @@ describe('when testing different scenarios...', () => {
     })
 
     it('lock -> payFee -> 1 50% transferFrom -> claim', async () => {
-      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      await testApproveAndLockMany(bbk, act, contributors, tokenLockAmount)
       await testPayFee(feePayer, contributors, feeValue, act, fmr)
       const actBalance = await act.balanceOf(contributor)
       await testApproveAct(act, contributor, nonContributor, actBalance.div(2))
@@ -316,7 +316,7 @@ describe('when testing different scenarios...', () => {
     })
 
     it('lock -> 1 unlock -> payFee -> claim', async () => {
-      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      await testApproveAndLockMany(bbk, act, contributors, tokenLockAmount)
       const lockedBalance = await act.lockedBbkOf(contributor)
       await testUnlockBBK(bbk, act, contributor, lockedBalance)
       await testPayFee(
@@ -334,7 +334,7 @@ describe('when testing different scenarios...', () => {
     })
 
     it('lock -> 1 50% unlock -> 1 payFee -> claim', async () => {
-      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      await testApproveAndLockMany(bbk, act, contributors, tokenLockAmount)
       const lockedBalance = await act.lockedBbkOf(contributor)
       await testUnlockBBK(bbk, act, contributor, lockedBalance.div(2))
       await testPayFee(feePayer, contributors, feeValue, act, fmr)
@@ -344,7 +344,7 @@ describe('when testing different scenarios...', () => {
 
     it('lock -> 1 unlock -> payFee -> 1 transfer -> claim', async () => {
       // lock
-      await testLockAndApproveMany(bbk, act, contributors, tokenLockAmount)
+      await testApproveAndLockMany(bbk, act, contributors, tokenLockAmount)
       const lockedBalance = await act.lockedBbkOf(contributor)
 
       // unlock

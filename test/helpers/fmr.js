@@ -2,18 +2,18 @@ const assert = require('assert')
 const { getEtherBalance, getReceipt, gasPrice, bigZero } = require('./general')
 const BigNumber = require('bignumber.js')
 
-const testPayFee = async (bfm, account, amount) => {
+const testPayFee = async (fmr, account, amount) => {
   const value = new BigNumber(amount)
-  const preFeeManagerEthBalance = await getEtherBalance(bfm.address)
+  const preFeeManagerEthBalance = await getEtherBalance(fmr.address)
   const preFeePayerEthBalance = await getEtherBalance(account)
 
-  const txid = await bfm.payFee({ from: account, value, gasPrice })
+  const txid = await fmr.payFee({ from: account, value, gasPrice })
   const tx = await getReceipt(txid)
 
   const { gasUsed } = tx
   const gasCost = gasPrice.mul(gasUsed)
 
-  const postFeeManagerEthBalance = await getEtherBalance(bfm.address)
+  const postFeeManagerEthBalance = await getEtherBalance(fmr.address)
   const postFeePayerEthBalance = await getEtherBalance(account)
   const expectedFeePayerEthBalance = preFeePayerEthBalance
     .sub(value)
@@ -34,26 +34,26 @@ const testPayFee = async (bfm, account, amount) => {
   return postFeePayerEthBalance
 }
 
-const testPartialClaimFee = async (bfm, act, account, claimAmount) => {
+const testPartialClaimFee = async (fmr, act, account, claimAmount) => {
   const value = new BigNumber(claimAmount)
-  const preFeeManagerEthBalance = await getEtherBalance(bfm.address)
+  const preFeeManagerEthBalance = await getEtherBalance(fmr.address)
   const preFeeClaimerEthBalance = await getEtherBalance(account)
-  const preFeeManagerActBalance = await act.balanceOf(bfm.address)
+  const preFeeManagerActBalance = await act.balanceOf(fmr.address)
   const preFeeClaimerActBalance = await act.balanceOf(account)
   const preActTotalSupply = await act.totalSupply()
 
-  const txid = await bfm.claimFee(claimAmount, { from: account, gasPrice })
+  const txid = await fmr.claimFee(claimAmount, { from: account, gasPrice })
   const tx = await getReceipt(txid)
 
   const { gasUsed } = tx
   const gasCost = gasPrice.mul(gasUsed)
 
-  const postFeeManagerEthBalance = await getEtherBalance(bfm.address)
+  const postFeeManagerEthBalance = await getEtherBalance(fmr.address)
   const postFeeClaimerEthBalance = await getEtherBalance(account)
   const expectedFeeClaimerEthBalance = preFeeClaimerEthBalance
     .add(value)
     .sub(gasCost)
-  const postFeeManagerActBalance = await act.balanceOf(bfm.address)
+  const postFeeManagerActBalance = await act.balanceOf(fmr.address)
   const postFeeClaimerActBalance = await act.balanceOf(account)
   const postActTotalSupply = await act.totalSupply()
 

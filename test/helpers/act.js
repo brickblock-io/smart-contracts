@@ -1,3 +1,6 @@
+const ContractRegistry = artifacts.require('BrickblockContractRegistry')
+const AccessToken = artifacts.require('BrickblockAccessToken')
+const FeeManager = artifacts.require('BrickblockFeeManager')
 const assert = require('assert')
 const { finalizedBBK } = require('./bbk')
 const { getEtherBalance, getReceipt, gasPrice, bigZero } = require('./general')
@@ -7,17 +10,12 @@ const setupContracts = async (
   owner,
   bonusAddress,
   contributors,
-  tokenDistAmount,
-  ContractRegistry,
-  AccessToken,
-  BrickblockToken,
-  FeeManager
+  tokenDistAmount
 ) => {
   const reg = await ContractRegistry.new()
   const act = await AccessToken.new(reg.address)
   const bbk = await finalizedBBK(
     owner,
-    BrickblockToken,
     bonusAddress,
     act.address,
     contributors,
@@ -25,9 +23,9 @@ const setupContracts = async (
   )
   const fmr = await FeeManager.new(reg.address)
 
-  await reg.updateContract('BrickblockToken', bbk.address)
-  await reg.updateContract('AccessToken', act.address)
-  await reg.updateContract('FeeManager', fmr.address)
+  await reg.updateContractAddress('BrickblockToken', bbk.address)
+  await reg.updateContractAddress('AccessToken', act.address)
+  await reg.updateContractAddress('FeeManager', fmr.address)
 
   const balanceCheck = await bbk.balanceOf(contributors[0])
   const bbkPaused = await bbk.paused()
@@ -41,7 +39,7 @@ const setupContracts = async (
   }
 }
 
-const testLockAndApproveBBK = async (bbk, act, bbkHolder, amount) => {
+const testApproveAndLockBBK = async (bbk, act, bbkHolder, amount) => {
   const preBbkBalance = await bbk.balanceOf(bbkHolder)
   const preLockedBBK = await act.lockedBbkOf(bbkHolder)
 
@@ -96,9 +94,9 @@ const testUnlockBBK = async (bbk, act, bbkHolder, amount) => {
   return postLockedBBK
 }
 
-const testLockAndApproveMany = async (bbk, act, bbkHolders, amount) => {
+const testApproveAndLockMany = async (bbk, act, bbkHolders, amount) => {
   for (const bbkHolder of bbkHolders) {
-    await testLockAndApproveBBK(bbk, act, bbkHolder, amount)
+    await testApproveAndLockBBK(bbk, act, bbkHolder, amount)
   }
 
   return true
@@ -339,9 +337,9 @@ const testActBalanceGreaterThanZero = async (act, actHolder) => {
 
 module.exports = {
   setupContracts,
-  testLockAndApproveBBK,
+  testApproveAndLockBBK,
   testUnlockBBK,
-  testLockAndApproveMany,
+  testApproveAndLockMany,
   testPayFee,
   testClaimFeeMany,
   testTransferAct,

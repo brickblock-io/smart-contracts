@@ -6,32 +6,42 @@ const BrokenRemoteContractStub = artifacts.require(
   'stubs/BrokenRemoteContractStub'
 )
 const RemoteContractUserStub = artifacts.require('stubs/RemoteContractUserStub')
+const { testWillThrow } = require('../helpers/general')
+
 const assert = require('assert')
 const BigNumber = require('bignumber.js')
 
 describe('when using the contract registry', () => {
-  contract('BrickblockContractRegistry', () => {
+  contract('BrickblockContractRegistry', accounts => {
     const initialTestNumber = new BigNumber(123)
+    const owner = accounts[0]
+    const notOwner = accounts[1]
     let reg
     let brokenGrc
     let fixedGrc
     let grcu
 
-    before('setup reg', async () => {
+    before('setup Registry', async () => {
       reg = await BrickblockContractRegistry.new()
       brokenGrc = await BrokenRemoteContractStub.new(initialTestNumber)
       grcu = await RemoteContractUserStub.new(reg.address)
     })
 
+    it('should error when no address for string key', async () => {
+      await testWillThrow(reg.getContractAddress, ['TestName', { from: owner }])
+    })
+
+    it('should NOT set an address if NOT owner', async () => {
+      await testWillThrow(reg.updateContractAddress, [
+        'TestName',
+        brokenGrc.address,
+        { from: notOwner }
+      ])
+    })
+
     it('should set an address', async () => {
-      const preValue = await reg.getContractAddress('testName')
-      assert.equal(
-        preValue,
-        '0x' + '0'.repeat(40),
-        'the uninitialized value should be address(0)'
-      )
-      await reg.updateContract('testName', brokenGrc.address)
-      const postValue = await reg.getContractAddress('testName')
+      await reg.updateContractAddress('TestName', brokenGrc.address)
+      const postValue = await reg.getContractAddress('TestName')
       assert.equal(
         postValue,
         brokenGrc.address,
@@ -74,8 +84,8 @@ describe('when using the contract registry', () => {
     describe('when updating the broken contract in the registry', () => {
       it('should change the contract address in registry', async () => {
         fixedGrc = await RemoteContractStub.new(initialTestNumber)
-        await reg.updateContract('testName', fixedGrc.address)
-        const updatedAddress = await reg.getContractAddress('testName')
+        await reg.updateContractAddress('TestName', fixedGrc.address)
+        const updatedAddress = await reg.getContractAddress('TestName')
 
         assert.equal(
           updatedAddress,

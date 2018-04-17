@@ -17,11 +17,11 @@ const setupRegistry = async () => {
   const act = await BrickblockAccessToken.new(reg.address)
   const bbk = await BrickblockToken.new(web3.eth.accounts[0])
   const bat = await BrickblockAccount.new(reg.address, 1000)
-  await reg.updateContract('Whitelist', wht.address)
-  await reg.updateContract('FeeManager', fmr.address)
-  await reg.updateContract('AccessToken', act.address)
-  await reg.updateContract('BrickblockToken', bbk.address)
-  await reg.updateContract('BrickblockAccount', bat.address)
+  await reg.updateContractAddress('Whitelist', wht.address)
+  await reg.updateContractAddress('FeeManager', fmr.address)
+  await reg.updateContractAddress('AccessToken', act.address)
+  await reg.updateContractAddress('BrickblockToken', bbk.address)
+  await reg.updateContractAddress('BrickblockAccount', bat.address)
 
   return {
     whitelist: wht,

@@ -150,6 +150,22 @@ describe('when in Funding stage', () => {
       await testWillThrow(poa.claim, [{ from: whitelistedBuyerAddress }])
     })
 
+    it('should NOT be able to be terminated', async () => {
+      await testWillThrow(poa.terminate, [{ from: brokerAddress }])
+    })
+
+    it('should NOT allow reclaiming', async () => {
+      await testWillThrow(poa.reclaim, [{ from: whitelistedBuyerAddress }])
+    })
+
+    it('should NOT allow payouts', async () => {
+      await testWillThrow(poa.payout, [{ from: brokerAddress }])
+    })
+
+    it('should NOT allow claiming', async () => {
+      await testWillThrow(poa.claim, [{ from: whitelistedBuyerAddress }])
+    })
+
     it('should enter Pending stage once all tokens have been bought', async () => {
       const preBuyerTokenBalance = await poa.balanceOf(whitelistedBuyerAddress)
       const preOwnerTokenBalance = await poa.balanceOf(ownerAddress)
@@ -219,6 +235,22 @@ describe('when in Pending stage', () => {
 
     it('should NOT allow buying', async () => {
       await testWillThrow(poa.buy, [{ from: whitelistedBuyerAddress }])
+    })
+
+    it('should NOT enter Active stage if not custodian', async () => {
+      await testWillThrow(poa.activate, [{ from: whitelistedBuyerAddress }])
+    })
+
+    it('should NOT allow reclaiming', async () => {
+      await testWillThrow(poa.reclaim, [{ from: whitelistedBuyerAddress }])
+    })
+
+    it('should NOT allow payouts', async () => {
+      await testWillThrow(poa.payout, [{ from: brokerAddress }])
+    })
+
+    it('should NOT allow claiming', async () => {
+      await testWillThrow(poa.claim, [{ from: whitelistedBuyerAddress }])
     })
 
     it('should NOT enter Active stage if not custodian', async () => {

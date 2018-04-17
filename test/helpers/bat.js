@@ -1,6 +1,10 @@
 const assert = require('assert')
 const BigNumber = require('bignumber.js')
 const { finalizedBBK } = require('./bbk')
+const ContractRegistry = artifacts.require('./BrickblockContractRegistry')
+const AccessToken = artifacts.require('./BrickblockAccessToken')
+const FeeManager = artifacts.require('./BrickblockFeeManager')
+const BrickblockAccount = artifacts.require('./BrickblockAccount')
 
 const { getEtherBalance, gasPrice, getReceipt } = require('./general')
 
@@ -9,11 +13,6 @@ const setupContracts = async (
   bonusAddress,
   contributors,
   tokenDistAmount,
-  ContractRegistry,
-  AccessToken,
-  BrickblockToken,
-  FeeManager,
-  BrickblockAccount,
   unlockBlock = 1000
 ) => {
   const reg = await ContractRegistry.new()
@@ -21,7 +20,6 @@ const setupContracts = async (
   const bat = await BrickblockAccount.new(reg.address, unlockBlock)
   const bbk = await finalizedBBK(
     owner,
-    BrickblockToken,
     bonusAddress,
     bat.address,
     contributors,
@@ -29,10 +27,10 @@ const setupContracts = async (
   )
   const fmr = await FeeManager.new(reg.address)
 
-  await reg.updateContract('BrickblockToken', bbk.address)
-  await reg.updateContract('AccessToken', act.address)
-  await reg.updateContract('FeeManager', fmr.address)
-  await reg.updateContract('BrickblockAccount', bat.address)
+  await reg.updateContractAddress('BrickblockToken', bbk.address)
+  await reg.updateContractAddress('AccessToken', act.address)
+  await reg.updateContractAddress('FeeManager', fmr.address)
+  await reg.updateContractAddress('BrickblockAccount', bat.address)
 
   const balanceCheck = await bbk.balanceOf(contributors[0])
   const bbkPaused = await bbk.paused()
