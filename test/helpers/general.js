@@ -169,6 +169,11 @@ const getReceipt = txHash => {
   })
 }
 
+const getGasUsed = async txHash => {
+  const receipt = await getReceipt(txHash)
+  return receipt.gasUsed
+}
+
 const gasPrice = new BigNumber(30e9)
 const bigZero = new BigNumber(0)
 
@@ -184,5 +189,6 @@ module.exports = {
   getReceipt,
   sendTransaction,
   testWillThrow,
-  warpBlocks
+  warpBlocks,
+  getGasUsed
 }

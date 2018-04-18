@@ -19,12 +19,12 @@ module.exports = {
       gas: 4700000,
       gasPrice: 20e9
     },
-    live: {
+    rinkeby: {
       host: 'localhost',
       port: 8545,
-      network_id: 0,
-      gas: 4700000,
-      gasPrice: 30e9
+      network_id: 4,
+      gas: 7e6,
+      gasPrice: 1e9
     }
   }
 }
