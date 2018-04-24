@@ -263,7 +263,7 @@ contract ExchangeRates is Ownable {
     onlyOwner
     returns (bool)
   {
-    Settings _settings = currencySettings[toBytes8(toUpperCase(_currencyName))];
+    Settings storage _settings = currencySettings[toBytes8(toUpperCase(_currencyName))];
     _settings.queryString = toBytes32Array(_queryString);
     SettingsUpdated(_currencyName);
     return true;
@@ -278,7 +278,7 @@ contract ExchangeRates is Ownable {
     onlyOwner
     returns (bool)
   {
-    Settings _settings = currencySettings[toBytes8(toUpperCase(_currencyName))];
+    Settings storage _settings = currencySettings[toBytes8(toUpperCase(_currencyName))];
     _settings.callInterval = _callInterval;
     SettingsUpdated(_currencyName);
     return true;
@@ -293,7 +293,7 @@ contract ExchangeRates is Ownable {
     onlyOwner
     returns (bool)
   {
-    Settings _settings = currencySettings[toBytes8(toUpperCase(_currencyName))];
+    Settings storage _settings = currencySettings[toBytes8(toUpperCase(_currencyName))];
     _settings.callbackGasLimit = _callbackGasLimit;
     SettingsUpdated(_currencyName);
     return true;
