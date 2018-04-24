@@ -3,15 +3,17 @@ const BigNumber = require('bignumber.js')
 const BrickblockContractRegistry = artifacts.require(
   'BrickblockContractRegistry'
 )
-const BrickblockToken = artifacts.require('BrickblockToken')
 const BrickblockAccessToken = artifacts.require('BrickblockAccessToken')
 const BrickblockAccount = artifacts.require('BrickblockAccount')
-const FeeManager = artifacts.require('BrickblockFeeManager')
-const Whitelist = artifacts.require('BrickblockWhitelist')
-const { addContractsToRegistry, setFiatRate } = require('./helpers/general')
+const BrickblockToken = artifacts.require('BrickblockToken')
 const ExchangeRates = artifacts.require('ExchangeRates')
+const FeeManager = artifacts.require('BrickblockFeeManager')
+const PoaManager = artifacts.require('PoaManager')
 const PoaTokenConcept = artifacts.require('PoaTokenConcept')
+const Whitelist = artifacts.require('BrickblockWhitelist')
 let ExchangeRateProvider
+
+const { addContractsToRegistry, setFiatRate } = require('./helpers/general')
 
 module.exports = (deployer, network, accounts) => {
   // eslint-disable-next-line no-console
@@ -63,11 +65,18 @@ module.exports = (deployer, network, accounts) => {
       })
       const wht = await FeeManager.deployed()
 
+      // PoaManager
+      await deployer.deploy(PoaManager, {
+        from: owner
+      })
+      const pmr = await PoaManager.deployed()
+
       await deployer.deploy(ExchangeRates, reg.address, { from: owner })
+      const exr = await ExchangeRates.deployed()
+
       await deployer.deploy(ExchangeRateProvider, reg.address, {
         from: owner
       })
-      const exr = await ExchangeRates.deployed()
       const exp = await ExchangeRateProvider.deployed()
 
       addContractsToRegistry({
@@ -79,7 +88,8 @@ module.exports = (deployer, network, accounts) => {
         fmr,
         exr,
         exp,
-        wht
+        wht,
+        pmr
       })
 
       await exr.setActRate(1e3)

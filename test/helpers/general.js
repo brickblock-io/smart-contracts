@@ -101,33 +101,6 @@ const lockAllBbk = async reg => {
   }
 }
 
-// assumes even length arrays of addresses and statuses for Broker or Token
-const structToObject = arrayResponse => {
-  const addressIndex = 0
-  const statusIndex = 1
-  const addresses = arrayResponse[addressIndex]
-  const statuses = arrayResponse[statusIndex]
-  const objectResponse = []
-  for (let i = 0; i < addresses.length; i++) {
-    objectResponse.push({
-      address: addresses[i],
-      active: statuses[i]
-    })
-  }
-
-  return objectResponse
-}
-
-// assumes that passed in tuple from contract is a Broker or Token
-const tupleToObject = tupleArray => {
-  const address = tupleArray[0]
-  const active = tupleArray[1]
-  return {
-    address,
-    active
-  }
-}
-
 const warpBlocks = blocks => {
   return new Promise(async resolve => {
     const warpTool = await WarpTool.new()
@@ -229,25 +202,36 @@ const gasPrice = new BigNumber(30e9)
 const bigZero = new BigNumber(0)
 const addressZero = '0x' + '0'.repeat(40)
 
+const checkForEvent = (eventName, eventArgs, txReceipt) => {
+  assert.equal(txReceipt.logs.length, 1, 'there should be one event emitted')
+
+  const log = txReceipt.logs[0]
+  assert.equal(log.event, eventName, `the event emitted is ${eventName}`)
+  assert.deepEqual(
+    log.args,
+    eventArgs,
+    `the event args should match ${eventArgs}`
+  )
+}
+
 module.exports = {
-  setupRegistry,
-  finalizeBbk,
-  lockAllBbk,
-  structToObject,
-  tupleToObject,
   bigZero,
+  checkForEvent,
+  finalizeBbk,
   gasPrice,
   getEtherBalance,
-  getReceipt,
-  sendTransaction,
-  testWillThrow,
-  warpBlocks,
   getGasUsed,
-  isInRange,
-  testIsInRange,
-  getRandomInt,
   getRandomBigInt,
+  getRandomInt,
+  getReceipt,
+  isInRange,
+  lockAllBbk,
+  sendTransaction,
+  setupRegistry,
+  testIsInRange,
   timeTravel,
   addressZero,
-  areInRange
+  areInRange,
+  testWillThrow,
+  warpBlocks
 }

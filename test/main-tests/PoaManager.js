@@ -1,22 +1,11 @@
 const PoaManager = artifacts.require('PoaManager.sol')
 const {
-  structToObject,
-  tupleToObject,
+  checkForEvent,
   setupRegistry,
   testWillThrow
 } = require('../helpers/general')
 
-const placeholderBroker = {
-  address: '0x0000000000000000000000000000000000000000',
-  active: false
-}
-
-const placeholderToken = {
-  address: '0x0000000000000000000000000000000000000000',
-  active: false
-}
-
-describe('after the contract is created', () => {
+describe('when creating a new instance of the contract', () => {
   contract('PoaManager', accounts => {
     let pmr
     const owner = accounts[0]
@@ -28,329 +17,406 @@ describe('after the contract is created', () => {
 
     it('should set the owner as msg.sender on creation', async () => {
       const newOwner = await pmr.owner()
-      assert.equal(newOwner, owner)
+      assert.equal(
+        newOwner,
+        owner,
+        'owner will be the address that created the contract'
+      )
     })
   })
 })
 
-describe('when adjusting brokers', () => {
+describe('when calling broker functions', () => {
   contract('PoaManager', accounts => {
     let pmr
-    const broker1 = accounts[1]
-    const broker2 = accounts[2]
-    const broker3 = accounts[3]
+    const addedBroker = accounts[1]
+    const anotherBroker = accounts[2]
+    const notOwner = accounts[9]
 
     before('setup contract state', async () => {
       const { registry } = await setupRegistry()
       pmr = await PoaManager.new(registry.address)
     })
 
-    it('should have one placeholder broker in the brokers list', async () => {
-      const brokers = await pmr.listBrokers()
-      const formattedBrokers = structToObject(brokers)
-      const expectedBrokers = [placeholderBroker]
-      assert.deepEqual(
-        formattedBrokers,
-        expectedBrokers,
-        'there should only be a single placeholder broker'
-      )
+    it('should be created with an empty brokerAddressList', async () => {
+      const actual = await pmr.getBrokerAddressList()
+      const expected = []
+      assert.deepEqual(actual, expected, 'list should be empty')
     })
 
-    it('should add and list brokers', async () => {
-      await pmr.addBroker(broker1)
-      const brokers = await pmr.listBrokers()
-      const formattedBrokers = structToObject(brokers)
-      const expectedBrokers = [
-        placeholderBroker,
-        {
-          address: broker1,
-          active: true
-        }
-      ]
-      assert.deepEqual(
-        formattedBrokers,
-        expectedBrokers,
-        'the brokers list should match the expectedBrokers'
-      )
-    })
-
-    it('should get the single broker previously added', async () => {
-      const broker = await pmr.getBroker(broker1)
-      const formattedBroker = tupleToObject(broker)
-      const expectedBroker = {
-        address: broker1,
-        active: true
-      }
-      assert.deepEqual(
-        formattedBroker,
-        expectedBroker,
-        'the broker from getBroker should match expectedBroker'
-      )
-    })
-
-    it('should add the previously added broker to brokerIndexMap', async () => {
-      const brokerIndex = await pmr.brokerIndexMap(broker1)
-      const broker = await pmr.getBroker(broker1)
-      const formattedBroker = tupleToObject(broker)
-      assert(
-        brokerIndex.toNumber() > 0,
-        'the first non-placeholder entry into brokers should be position 1 in array'
-      )
-      assert.equal(
-        formattedBroker.address,
-        broker1,
-        'the address should match broker1 when using the index from contract'
-      )
-    })
-
-    it('should add brokers in the correct order', async () => {
-      await pmr.addBroker(broker2)
-      const brokers = await pmr.listBrokers()
-      const formattedBrokers = structToObject(brokers)
-      const expectedBrokers = [
-        placeholderBroker,
-        {
-          address: broker1,
-          active: true
-        },
-        {
-          address: broker2,
-          active: true
-        }
-      ]
-      assert.deepEqual(
-        formattedBrokers,
-        expectedBrokers,
-        'the brokers list should match the expectedBrokers'
-      )
-    })
-
-    it('should deactivate a broker when the broker is active', async () => {
-      const preBroker = await pmr.getBroker(broker1)
-      const preBrokerFormatted = tupleToObject(preBroker)
-      assert(
-        preBrokerFormatted.active,
-        'the broker before the operation should be active'
-      )
-
-      await pmr.deactivateBroker(broker1)
-
-      const postBroker = await pmr.getBroker(broker1)
-      const postBrokerFormatted = tupleToObject(postBroker)
-      assert.equal(
-        true,
-        postBrokerFormatted.active != true,
-        'the broker after the operation should be inactive'
-      )
-    })
-
-    it('should NOT deactivate a broker when the broker is already inactive', async () => {
-      await testWillThrow(pmr.deactivateBroker, [broker1])
-    })
-
-    it('should activate a broker when the broker is inactive', async () => {
-      const preBroker = await pmr.getBroker(broker1)
-      const preBrokerFormatted = tupleToObject(preBroker)
-      assert.equal(
-        true,
-        preBrokerFormatted.active === false,
-        'the broker before the operation should be inactive'
-      )
-
-      await pmr.activateBroker(broker1)
-
-      const postBroker = await pmr.getBroker(broker1)
-      const postBrokerFormatted = tupleToObject(postBroker)
-      assert(
-        postBrokerFormatted.active,
-        'the broker after the operation should be active'
-      )
-    })
-
-    it('should NOT activate a broker which is already active', async () => {
-      await testWillThrow(pmr.activateBroker, [broker1])
-    })
-
-    it('should get the broker status', async () => {
-      const preBroker = await pmr.getBroker(broker1)
-      const preBrokerFormatted = tupleToObject(preBroker)
-      assert(
-        preBrokerFormatted.active,
-        'the broker before the operation should be inactive'
-      )
-      const preBrokerStatus = await pmr.brokerStatus(broker1)
-      assert(
-        preBrokerStatus === preBrokerFormatted.active,
-        'the statuses should be the same for the same address'
-      )
-      await pmr.deactivateBroker(broker1)
-      const postBrokerStatus = await pmr.brokerStatus(broker1)
-      assert(
-        postBrokerStatus === false,
-        'the broker should show false after being deactivated'
-      )
-    })
-
-    it('should NOT add brokers that have already been added', async () => {
-      await testWillThrow(pmr.addBroker, [broker2])
-    })
-
-    it('should NOT allow broker registration from NON owner', async () => {
-      await testWillThrow(pmr.addBroker, [broker3, { from: broker3 }])
-    })
-  })
-})
-
-describe('when adjusting tokens', () => {
-  contract('PoaManager', accounts => {
-    let pmr
-    let savedToken
-    const activeBroker = accounts[1]
-    const inactiveBroker = accounts[2]
-    const custodian = accounts[5]
-
-    before('setup contract state', async () => {
-      const { registry } = await setupRegistry()
-      pmr = await PoaManager.new(registry.address)
-      await pmr.addBroker(activeBroker)
-      await pmr.addBroker(inactiveBroker)
-      await pmr.deactivateBroker(inactiveBroker)
-    })
-
-    it('should start with a placeholder token in tokens', async () => {
-      const tokens = await pmr.listTokens()
-      const formattedTokens = structToObject(tokens)
-      const expectedTokens = [placeholderToken]
-      assert.deepEqual(
-        formattedTokens,
-        expectedTokens,
-        'the contact should start with a placeholder token in tokens'
-      )
-    })
-
-    it('should add a token when sending as an active broker with enough ACT and approved for contract to spend', async () => {
-      const watcher = pmr.TokenAdded()
-      await pmr.addToken('test', 'TST', custodian, 1000, 1e18, {
-        from: activeBroker
+    describe('when adding a broker', () => {
+      it('should emit BrokerAdded', async () => {
+        checkForEvent(
+          'BrokerAdded',
+          { broker: addedBroker },
+          await pmr.addBroker(addedBroker)
+        )
       })
-      const events = await watcher.get()
-      assert(
-        events.length > 0 && events[0].event === 'TokenAdded',
-        'there should be an event named TokenAdded'
-      )
-      const loggedAddress = events[0].args._token
-      const savedTokenAddress = await pmr.getToken(loggedAddress)
-      const savedTokenIndex = await pmr.tokenIndexMap(loggedAddress)
-      const formattedSavedTokenAddress = tupleToObject(savedTokenAddress)
-      assert(
-        savedTokenIndex != 0,
-        'the token index should never be set to 0 unless it was never set'
-      )
-      assert.equal(
-        loggedAddress,
-        formattedSavedTokenAddress.address,
-        'the token addresses should match'
-      )
-      // TODO: we shouldn't be setting variables that other tests rely on like this
-      // we should use lifecycle events (such as "before")
-      savedToken = loggedAddress
+
+      it('should include new broker in brokerAddressList', async () => {
+        const actual = await pmr.getBrokerAddressList()
+        const expected = [addedBroker]
+        assert.deepEqual(
+          actual,
+          expected,
+          'brokerAddressList should contain addedBroker'
+        )
+      })
+
+      it('should set active value to true', async () => {
+        const actual = await pmr.getStatus(addedBroker)
+        const expected = true
+        assert.ok(actual === expected, 'addedBroker starts activated')
+      })
+
+      it('should allow for many brokers to be added', async () => {
+        await pmr.addBroker(anotherBroker)
+
+        const actual = await pmr.getBrokerAddressList()
+        const expected = [addedBroker, anotherBroker]
+        assert.deepEqual(
+          actual,
+          expected,
+          'brokerAddressList should contain all added brokers'
+        )
+      })
+
+      it('should error when trying to add a broker that has already been added', async () => {
+        await testWillThrow(pmr.addBroker, [addedBroker])
+      })
+
+      it('should error when trying to add a broker from notOwner address', async () => {
+        await testWillThrow(pmr.addBroker, [addedBroker, { from: notOwner }])
+      })
     })
 
-    it('should NOT add a token from a deactivated broker', async () => {
-      await testWillThrow(pmr.addToken, [
-        'test2',
-        'TS2',
-        custodian,
-        1000,
-        1e18,
-        { from: inactiveBroker }
-      ])
+    describe('when deactivating a broker', () => {
+      it('should emit BrokerStatusChanged', async () => {
+        checkForEvent(
+          'BrokerStatusChanged',
+          {
+            broker: addedBroker,
+            active: false
+          },
+          await pmr.deactivateBroker(addedBroker)
+        )
+      })
+
+      it('should set active value to false', async () => {
+        const actual = await pmr.getStatus(addedBroker)
+        const expected = false
+        assert.ok(
+          actual === expected,
+          'deactivated broker has active value set to false'
+        )
+      })
+
+      it('should error when trying to deactivate a broker address that is already deactivated', async () => {
+        await testWillThrow(pmr.deactivateBroker, [addedBroker])
+      })
+
+      it('should error when trying to deactivate a broker from notOwner address', async () => {
+        await testWillThrow(pmr.deactivateBroker, [
+          addedBroker,
+          { from: notOwner }
+        ])
+      })
     })
 
-    it('should NOT add a token from a non-broker', async () => {
-      const preToken = await pmr.getToken(savedToken)
-      const preTokenStatus = tupleToObject(preToken).active
-      assert(preTokenStatus, 'the token should be active')
-      await testWillThrow(pmr.addToken, [
-        'test2',
-        'TS2',
-        custodian,
-        1000,
-        1e18,
-        {
-          from: accounts[4]
-        }
-      ])
+    describe('when activating a broker', () => {
+      it('should emit BrokerStatusChanged', async () => {
+        checkForEvent(
+          'BrokerStatusChanged',
+          {
+            broker: addedBroker,
+            active: true
+          },
+          await pmr.activateBroker(addedBroker)
+        )
+      })
+
+      it('should set active value to true', async () => {
+        const actual = await pmr.getStatus(addedBroker)
+        const expected = true
+        assert.ok(
+          actual === expected,
+          'activated broker has active value set to true'
+        )
+      })
+
+      it('should error when trying to activate a broker address that is already activated', async () => {
+        await testWillThrow(pmr.activateBroker, [addedBroker])
+      })
+
+      it('should error when trying to activate a broker from notOwner address', async () => {
+        await testWillThrow(pmr.activateBroker, [
+          addedBroker,
+          { from: notOwner }
+        ])
+      })
     })
 
-    it('should NOT deactivate an active token when NOT owner', async () => {
-      const preToken = await pmr.getToken(savedToken)
-      const preTokenStatus = tupleToObject(preToken).active
-      assert(preTokenStatus, 'the token should be active')
-      await testWillThrow(pmr.deactivateToken, [
-        savedToken,
-        { from: activeBroker }
-      ])
+    describe('when removing a broker', () => {
+      it('should emit BrokerRemoved', async () => {
+        checkForEvent(
+          'BrokerRemoved',
+          { broker: addedBroker },
+          await pmr.removeBroker(addedBroker)
+        )
+      })
+
+      it('should remove broker from brokerAddressList', async () => {
+        const actual = await pmr.getBrokerAddressList()
+        const expected = [anotherBroker]
+        assert.deepEqual(
+          actual,
+          expected,
+          'brokerAddressList should not contain addedBroker'
+        )
+      })
+
+      it('should error when trying to getStatus of removed broker', async () => {
+        await testWillThrow(pmr.getStatus, [addedBroker])
+      })
+
+      it('should allow for many brokers to be removed', async () => {
+        await pmr.removeBroker(anotherBroker)
+
+        const actual = await pmr.getBrokerAddressList()
+        const expected = []
+        assert.deepEqual(
+          actual,
+          expected,
+          'brokerAddressList should not contain removed brokers'
+        )
+      })
+
+      it('should error when trying to add a broker that has already been removed', async () => {
+        await testWillThrow(pmr.removeBroker, [addedBroker])
+      })
+
+      it('should error when trying to add a broker from notOwner address', async () => {
+        await testWillThrow(pmr.removeBroker, [addedBroker, { from: notOwner }])
+      })
+    })
+  })
+})
+
+describe('when calling token functions', () => {
+  contract('PoaManager', accounts => {
+    let pmr
+    let addedToken
+    let anotherToken
+    const activatedBroker = accounts[1]
+    const deactivatedBroker = accounts[2]
+    const custodian = accounts[5]
+    const notBroker = accounts[8]
+    const notOwner = accounts[9]
+
+    before('setup contract state', async () => {
+      const { registry } = await setupRegistry()
+      pmr = await PoaManager.new(registry.address)
+      await pmr.addBroker(activatedBroker)
+      await pmr.addBroker(deactivatedBroker)
+      await pmr.deactivateBroker(deactivatedBroker)
     })
 
-    it('should deactivate an active token when owner', async () => {
-      const preToken = await pmr.getToken(savedToken)
-      const preTokenStatus = tupleToObject(preToken).active
-      assert(preTokenStatus, 'the token should be active')
-      await pmr.deactivateToken(savedToken)
-      const postToken = await pmr.getToken(savedToken)
-      const postTokenStatus = tupleToObject(postToken).active
-      assert.equal(
-        true,
-        postTokenStatus === false,
-        'the token should be deactivated'
-      )
+    it('should be created with an empty tokenAddressList', async () => {
+      const actual = await pmr.getTokenAddressList()
+      const expected = []
+      assert.deepEqual(actual, expected, 'list should be empty')
     })
 
-    it('should NOT deactivate an already inactive token', async () => {
-      const preToken = await pmr.getToken(savedToken)
-      const preTokenStatus = tupleToObject(preToken).active
-      assert.equal(
-        true,
-        preTokenStatus === false,
-        'the token should be inactive'
-      )
-      await testWillThrow(pmr.deactivateToken, [savedToken])
+    describe('when adding a token', () => {
+      it('should emit TokenAdded', async () => {
+        const txReceipt = await pmr.addToken(
+          'test',
+          'TST',
+          custodian,
+          1000,
+          1e18,
+          {
+            from: activatedBroker
+          }
+        )
+
+        // setting this here for use in following tests in this contract block
+        //
+        // Note: this is not ideal since we read from the event before calling `checkForEvent`
+        addedToken = txReceipt.logs[0].args.token
+
+        checkForEvent('TokenAdded', { token: addedToken }, txReceipt)
+      })
+
+      it('should include new token in tokenAddressList', async () => {
+        const actual = await pmr.getTokenAddressList()
+        const expected = [addedToken]
+
+        assert.deepEqual(
+          actual,
+          expected,
+          'tokenAddressList should contain added token'
+        )
+      })
+
+      it('should set active value to true', async () => {
+        const actual = await pmr.getStatus(addedToken)
+        const expected = true
+        assert.equal(actual, expected, 'added token starts activated')
+      })
+
+      it('should allow for many tokens to be added', async () => {
+        const txReceipt = await pmr.addToken(
+          'test-another',
+          'ANT',
+          custodian,
+          1000,
+          1e18,
+          {
+            from: activatedBroker
+          }
+        )
+
+        // setting this here for use in following tests in this contract block
+        anotherToken = txReceipt.logs[0].args.token
+
+        const actual = (await pmr.getTokenAddressList()).length
+        const expected = 2
+        assert.equal(
+          actual,
+          expected,
+          'tokenAddressList should contain all added tokens'
+        )
+      })
+
+      it('should error when trying to add a token from a deactivated broker address', async () => {
+        await testWillThrow(pmr.addToken, [
+          'test-another',
+          'ANT',
+          custodian,
+          1000,
+          1e18,
+          {
+            from: deactivatedBroker
+          }
+        ])
+      })
+
+      it('should error when trying to add a token from a non broker address', async () => {
+        await testWillThrow(pmr.addToken, [
+          'test-another',
+          'ANT',
+          custodian,
+          1000,
+          1e18,
+          {
+            from: notBroker
+          }
+        ])
+      })
     })
 
-    it('should NOT activate an inactive token when NOT owner', async () => {
-      const preToken = await pmr.getToken(savedToken)
-      const preTokenStatus = tupleToObject(preToken).active
-      assert.equal(
-        true,
-        preTokenStatus === false,
-        'the token should be inactive'
-      )
-      await testWillThrow(pmr.activateToken, [
-        savedToken,
-        { from: activeBroker }
-      ])
+    describe('when deactivating a token', () => {
+      it('should emit TokenStatusChanged', async () => {
+        checkForEvent(
+          'TokenStatusChanged',
+          { token: addedToken, active: false },
+          await pmr.deactivateToken(addedToken)
+        )
+      })
+
+      it('should set active value to false', async () => {
+        const actual = await pmr.getStatus(addedToken)
+        const expected = false
+        assert.equal(
+          actual,
+          expected,
+          'deactivated token has active value set to false'
+        )
+      })
+
+      it('should error when trying to deactivate a token address that is already deactivated', async () => {
+        await testWillThrow(pmr.deactivateToken, [addedToken])
+      })
+
+      it('should error when trying to deactivate a token from notOwner address', async () => {
+        await testWillThrow(pmr.deactivateToken, [
+          addedToken,
+          { from: notOwner }
+        ])
+      })
     })
 
-    it('should activate an inactive token when owner', async () => {
-      const preToken = await pmr.getToken(savedToken)
-      const preTokenStatus = tupleToObject(preToken).active
-      assert.equal(
-        true,
-        preTokenStatus === false,
-        'the token should be inactive'
-      )
-      await pmr.activateToken(savedToken)
-      const postToken = await pmr.getToken(savedToken)
-      const postTokenStatus = tupleToObject(postToken).active
-      assert(postTokenStatus, 'the token should be activated')
+    describe('when activating a token', () => {
+      it('should emit TokenStatusChanged', async () => {
+        checkForEvent(
+          'TokenStatusChanged',
+          { token: addedToken, active: true },
+          await pmr.activateToken(addedToken)
+        )
+      })
+
+      it('should set active value to true', async () => {
+        const actual = await pmr.getStatus(addedToken)
+        const expected = true
+        assert.equal(
+          actual,
+          expected,
+          'deactivated token has active value set to true'
+        )
+      })
+
+      it('should error when trying to activate a token address that is already activated', async () => {
+        await testWillThrow(pmr.activateToken, [addedToken])
+      })
+
+      it('should error when trying to activate a token from notOwner address', async () => {
+        await testWillThrow(pmr.activateToken, [addedToken, { from: notOwner }])
+      })
     })
 
-    it('should NOT activate an already active token', async () => {
-      const preToken = await pmr.getToken(savedToken)
-      const preTokenStatus = tupleToObject(preToken).active
-      assert(preTokenStatus, 'the token should be active')
-      await testWillThrow(pmr.activateToken, [savedToken])
+    describe('when removing a token', () => {
+      it('should emit TokenRemoved', async () => {
+        checkForEvent(
+          'TokenRemoved',
+          { token: addedToken },
+          await pmr.removeToken(addedToken)
+        )
+      })
+
+      it('should remove token from tokenAddressList', async () => {
+        const actual = await pmr.getTokenAddressList()
+        const expected = [anotherToken]
+        assert.deepEqual(
+          actual,
+          expected,
+          'tokenAddressList should not contain addedToken'
+        )
+      })
+
+      it('should error when trying to getStatus of removed token', async () => {
+        await testWillThrow(pmr.getStatus, [addedToken])
+      })
+
+      it('should allow for many tokens to be removed', async () => {
+        await pmr.removeToken(anotherToken)
+
+        const actual = await pmr.getTokenAddressList()
+        const expected = []
+        assert.deepEqual(
+          actual,
+          expected,
+          'tokenAddressList should not contain removed tokens'
+        )
+      })
+
+      it('should error when trying to add a token that has already been removed', async () => {
+        await testWillThrow(pmr.removeToken, [addedToken])
+      })
+
+      it('should error when trying to add a token from notOwner address', async () => {
+        await testWillThrow(pmr.removeToken, [addedToken, { from: notOwner }])
+      })
     })
   })
 })
