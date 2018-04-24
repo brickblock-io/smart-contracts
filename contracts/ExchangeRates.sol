@@ -219,7 +219,10 @@ contract ExchangeRates is Ownable {
     returns (bool)
   {
     require(_actRate > 0);
+
     rates[toBytes8("ACT")] = _actRate;
+    RateUpdated("ACT", _actRate);
+
     return true;
   }
 
