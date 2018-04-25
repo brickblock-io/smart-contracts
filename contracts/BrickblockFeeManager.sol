@@ -1,5 +1,7 @@
 pragma solidity 0.4.18;
 
+import "zeppelin-solidity/contracts/math/SafeMath.sol";
+
 
 // limited BrickblockContractRegistry definition
 contract Registry {
@@ -30,7 +32,18 @@ contract AccessToken {
 }
 
 
+// limited ExchangeRates definition
+contract ExR {
+  function getRate(bytes8 _queryTypeBytes)
+    public
+    view
+    returns (uint256)
+  {}
+}
+
+
 contract BrickblockFeeManager {
+  using SafeMath for uint256;
 
   Registry private registry;
 
@@ -43,6 +56,30 @@ contract BrickblockFeeManager {
     registry = Registry(_registryAddress);
   }
 
+  function weiToAct(uint256 _wei)
+    view
+    public
+    returns (uint256)
+  {
+    ExR exr = ExR(
+      registry.getContractAddress("ExchangeRates")
+    );
+    uint256 _rate = exr.getRate("ACT");
+    return _wei.mul(_rate);
+  }
+
+  function actToWei(uint256 _act)
+    view
+    public
+    returns (uint256)
+  {
+    ExR exr = ExR(
+      registry.getContractAddress("ExchangeRates")
+    );
+    uint256 _rate = exr.getRate("ACT");
+    return _act.div(_rate);
+  }
+
   function payFee()
     public
     payable
@@ -51,7 +88,7 @@ contract BrickblockFeeManager {
     AccessToken act = AccessToken(
       registry.getContractAddress("AccessToken")
     );
-    require(act.distribute(msg.value));
+    require(act.distribute(weiToAct(msg.value)));
     return true;
   }
 
@@ -65,7 +102,7 @@ contract BrickblockFeeManager {
       registry.getContractAddress("AccessToken")
     );
     require(act.burn(msg.sender, _value));
-    msg.sender.transfer(_value);
+    msg.sender.transfer(actToWei(_value));
     return true;
   }
 

@@ -3,6 +3,7 @@ const BigNumber = require('bignumber.js')
 const { finalizedBBK } = require('./bbk')
 const ContractRegistry = artifacts.require('./BrickblockContractRegistry')
 const AccessToken = artifacts.require('./BrickblockAccessToken')
+const ExchangeRates = artifacts.require('./ExchangeRates')
 const FeeManager = artifacts.require('./BrickblockFeeManager')
 const BrickblockAccount = artifacts.require('./BrickblockAccount')
 
@@ -13,10 +14,12 @@ const setupContracts = async (
   bonusAddress,
   contributors,
   tokenDistAmount,
-  unlockBlock = 1000
+  unlockBlock,
+  actRate
 ) => {
   const reg = await ContractRegistry.new()
   const act = await AccessToken.new(reg.address)
+  const exr = await ExchangeRates.new(reg.address)
   const bat = await BrickblockAccount.new(reg.address, unlockBlock)
   const bbk = await finalizedBBK(
     owner,
@@ -27,8 +30,13 @@ const setupContracts = async (
   )
   const fmr = await FeeManager.new(reg.address)
 
+  if (actRate.greaterThan(0)) {
+    await exr.setActRate(actRate)
+  }
+
   await reg.updateContractAddress('BrickblockToken', bbk.address)
   await reg.updateContractAddress('AccessToken', act.address)
+  await reg.updateContractAddress('ExchangeRates', exr.address)
   await reg.updateContractAddress('FeeManager', fmr.address)
   await reg.updateContractAddress('BrickblockAccount', bat.address)
 
@@ -118,13 +126,13 @@ const testUnlockBBK = async (bbk, act, bat, amount) => {
   )
 }
 
-const testClaimFee = async (bbk, act, fmr, bat, amount) => {
-  const value = new BigNumber(amount)
+const testClaimFee = async (bbk, act, fmr, bat, actAmount, actRate) => {
+  const actAsWei = actAmount.div(actRate)
   const preBatActBalance = await act.balanceOf(bat.address)
   const preBatEthBalance = await getEtherBalance(bat.address)
   const preBfmEthBalance = await getEtherBalance(fmr.address)
   const preTotalSupply = await act.totalSupply()
-  await bat.claimFee(value)
+  await bat.claimFee(actAmount)
   const postBatActBalance = await act.balanceOf(bat.address)
   const postBatEthBalance = await getEtherBalance(bat.address)
   const postBfmEthBalance = await getEtherBalance(fmr.address)
@@ -132,23 +140,23 @@ const testClaimFee = async (bbk, act, fmr, bat, amount) => {
 
   assert.equal(
     preBatActBalance.sub(postBatActBalance).toString(),
-    value.toString(),
-    'AccountManager ACT balance should be decremented by value'
+    actAmount.toString(),
+    'AccountManager ACT balance should be decremented by actAmount'
   )
   assert.equal(
     postBatEthBalance.sub(preBatEthBalance).toString(),
-    value.toString(),
-    'AccountManager ether balance should be incremented by value'
+    actAsWei.toString(),
+    'AccountManager ether balance should be incremented by actAmount'
   )
   assert.equal(
     preBfmEthBalance.sub(postBfmEthBalance).toString(),
-    value.toString(),
-    'FeeManager ether balance should be decremented by value'
+    actAsWei.toString(),
+    'FeeManager ether balance should be decremented by actAmount'
   )
   assert.equal(
     preTotalSupply.sub(postTotalSupply).toString(),
-    value.toString(),
-    'ACT totalSupply should be decremented by value'
+    actAmount.toString(),
+    'ACT totalSupply should be decremented by actAmount'
   )
 }
 

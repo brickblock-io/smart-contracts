@@ -1,6 +1,6 @@
 pragma solidity ^0.4.18;
 
-// don't need to import Registry in this contract because it is already defined in PoaToken
+// don't need to define Registry in this contract because it is already defined in PoaToken
 import "./PoaToken.sol";
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";

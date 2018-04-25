@@ -1,40 +1,43 @@
 const PoaToken = artifacts.require('PoaToken')
 const BigNumber = require('bignumber.js')
 const { getEtherBalance } = require('../helpers/general')
-const { stages } = require('../helpers/poa')
-const {
-  setupRegistry,
-  finalizeBbk,
-  lockAllBbk,
-  testWillThrow
-} = require('../helpers/general')
+const { stages, setupContracts } = require('../helpers/poa')
+const { lockAllBbk, testWillThrow } = require('../helpers/general')
 
 describe('when in Funding stage', () => {
   contract('PoaToken', accounts => {
     const ownerAddress = accounts[0]
-    // for now this is the same... need to talk about this
-    const brokerAddress = accounts[0]
-    const custodianAddress = accounts[1]
-    const whitelistedBuyerAddress = accounts[2]
-    const nonWhitelistedBuyerAddress = accounts[3]
-    const amount = new BigNumber(1e18)
+    const bonusAddress = accounts[1]
+    const brokerAddress = accounts[2]
+    const custodianAddress = accounts[3]
+    const whitelistedBuyerAddress1 = accounts[4]
+    const whitelistedBuyerAddress2 = accounts[5]
+    const icoContributors = accounts.slice(6)
+    const initialSupply = new BigNumber(2e18)
+    const buyAmount = new BigNumber(1e18)
+    const actRate = new BigNumber(1000)
+    const bbkDistAmount = new BigNumber(1e18)
     let poa
-    let wht
 
-    // TODO: do we really want to differentiate owner and broker? cody does not think so...
     before('setup contracts state', async () => {
-      const { registry, whitelist } = await setupRegistry()
-      wht = whitelist
+      const { reg } = await setupContracts(
+        ownerAddress,
+        bonusAddress,
+        icoContributors,
+        bbkDistAmount,
+        actRate,
+        [whitelistedBuyerAddress1, whitelistedBuyerAddress2]
+      )
+
       poa = await PoaToken.new(
         'TestToken',
         'TST',
-        ownerAddress,
+        brokerAddress,
         custodianAddress,
-        registry.address,
+        reg.address,
         100,
-        2e18
+        initialSupply
       )
-      await wht.addAddress(whitelistedBuyerAddress)
     })
 
     it('should initalize with the right values', async () => {
@@ -92,31 +95,33 @@ describe('when in Funding stage', () => {
     })
 
     it('should buy when whitelisted', async () => {
-      const preBuyerTokenBalance = await poa.balanceOf(whitelistedBuyerAddress)
+      const preBuyerTokenBalance = await poa.balanceOf(whitelistedBuyerAddress1)
       const preOwnerTokenBalance = await poa.balanceOf(ownerAddress)
       await poa.buy({
-        from: whitelistedBuyerAddress,
-        value: amount
+        from: whitelistedBuyerAddress1,
+        value: buyAmount
       })
-      const postBuyerTokenBalance = await poa.balanceOf(whitelistedBuyerAddress)
+      const postBuyerTokenBalance = await poa.balanceOf(
+        whitelistedBuyerAddress1
+      )
       const postOwnerTokenBalance = await poa.balanceOf(ownerAddress)
       assert.equal(
         postBuyerTokenBalance.minus(preBuyerTokenBalance).toString(),
-        amount.toString(),
-        'the buyer balance should be incremented by the buy amount'
+        buyAmount.toString(),
+        'the buyer balance should be incremented by the buy buyAmount'
       )
       assert.equal(
         preOwnerTokenBalance.minus(postOwnerTokenBalance).toString(),
-        amount.toString(),
-        'the owner balance should be decremented by the buy amount'
+        buyAmount.toString(),
+        'the owner balance should be decremented by the buy buyAmount'
       )
     })
 
     it('should NOT buy when NOT whitelisted', async () => {
       await testWillThrow(poa.buy, [
         {
-          from: nonWhitelistedBuyerAddress,
-          value: amount
+          from: custodianAddress,
+          value: buyAmount
         }
       ])
     })
@@ -124,8 +129,8 @@ describe('when in Funding stage', () => {
     it('should NOT buy if more than is available', async () => {
       await testWillThrow(poa.buy, [
         {
-          from: whitelistedBuyerAddress,
-          value: amount.mul(2)
+          from: whitelistedBuyerAddress1,
+          value: initialSupply.mul(2)
         }
       ])
     })
@@ -139,15 +144,15 @@ describe('when in Funding stage', () => {
     })
 
     it('should NOT allow reclaiming', async () => {
-      await testWillThrow(poa.reclaim, [{ from: whitelistedBuyerAddress }])
+      await testWillThrow(poa.reclaim, [{ from: whitelistedBuyerAddress1 }])
     })
 
     it('should NOT allow payouts', async () => {
-      await testWillThrow(poa.payout, [{ from: brokerAddress }])
+      await testWillThrow(poa.payout, [{ from: brokerAddress, value: 1e18 }])
     })
 
     it('should NOT allow claiming', async () => {
-      await testWillThrow(poa.claim, [{ from: whitelistedBuyerAddress }])
+      await testWillThrow(poa.claim, [{ from: whitelistedBuyerAddress1 }])
     })
 
     it('should NOT be able to be terminated', async () => {
@@ -155,7 +160,7 @@ describe('when in Funding stage', () => {
     })
 
     it('should NOT allow reclaiming', async () => {
-      await testWillThrow(poa.reclaim, [{ from: whitelistedBuyerAddress }])
+      await testWillThrow(poa.reclaim, [{ from: whitelistedBuyerAddress1 }])
     })
 
     it('should NOT allow payouts', async () => {
@@ -163,27 +168,29 @@ describe('when in Funding stage', () => {
     })
 
     it('should NOT allow claiming', async () => {
-      await testWillThrow(poa.claim, [{ from: whitelistedBuyerAddress }])
+      await testWillThrow(poa.claim, [{ from: whitelistedBuyerAddress1 }])
     })
 
     it('should enter Pending stage once all tokens have been bought', async () => {
-      const preBuyerTokenBalance = await poa.balanceOf(whitelistedBuyerAddress)
+      const preBuyerTokenBalance = await poa.balanceOf(whitelistedBuyerAddress1)
       const preOwnerTokenBalance = await poa.balanceOf(ownerAddress)
       await poa.buy({
-        from: whitelistedBuyerAddress,
-        value: amount
+        from: whitelistedBuyerAddress1,
+        value: buyAmount
       })
-      const postBuyerTokenBalance = await poa.balanceOf(whitelistedBuyerAddress)
+      const postBuyerTokenBalance = await poa.balanceOf(
+        whitelistedBuyerAddress1
+      )
       const postOwnerTokenBalance = await poa.balanceOf(ownerAddress)
       assert.equal(
         postBuyerTokenBalance.minus(preBuyerTokenBalance).toString(),
-        amount.toString(),
-        'the buyer balance should be incremented by the buy amount'
+        buyAmount.toString(),
+        'the buyer balance should be incremented by the buy buyAmount'
       )
       assert.equal(
         preOwnerTokenBalance.minus(postOwnerTokenBalance).toString(),
-        amount.toString(),
-        'the owner balance should be decremented by the buy amount'
+        buyAmount.toString(),
+        'the owner balance should be decremented by the buy buyAmount'
       )
       const stage = await poa.stage()
       assert.equal(
@@ -198,29 +205,38 @@ describe('when in Funding stage', () => {
 describe('when in Pending stage', () => {
   contract('PoaToken', accounts => {
     const ownerAddress = accounts[0]
-    const brokerAddress = accounts[0]
-    const custodianAddress = accounts[1]
-    const whitelistedBuyerAddress = accounts[2]
-    const amount = new BigNumber(1e18)
+    const bonusAddress = accounts[1]
+    const brokerAddress = accounts[2]
+    const custodianAddress = accounts[3]
+    const whitelistedBuyerAddress = accounts[4]
+    const icoContributors = accounts.slice(5)
+    const initialSupply = new BigNumber(1e18)
+    const actRate = new BigNumber(1000)
+    const bbkDistAmount = new BigNumber(1e18)
     let poa
-    let wht
 
     before('setup contract pending state', async () => {
-      const { registry, whitelist } = await setupRegistry()
-      wht = whitelist
+      const { reg } = await setupContracts(
+        ownerAddress,
+        bonusAddress,
+        icoContributors,
+        bbkDistAmount,
+        actRate,
+        [whitelistedBuyerAddress]
+      )
       poa = await PoaToken.new(
         'TestToken',
         'TST',
-        ownerAddress,
+        brokerAddress,
         custodianAddress,
-        registry.address,
+        reg.address,
         100,
-        amount
+        initialSupply
       )
-      await wht.addAddress(whitelistedBuyerAddress)
+
       await poa.buy({
         from: whitelistedBuyerAddress,
-        value: amount
+        value: initialSupply
       })
     })
 
@@ -286,41 +302,48 @@ describe('when in Pending stage', () => {
 describe('when in Active stage', () => {
   contract('PoaToken', accounts => {
     const ownerAddress = accounts[0]
-    const brokerAddress = accounts[0]
-    const custodianAddress = accounts[1]
-    const whitelistedBuyerAddress1 = accounts[2]
-    const whitelistedBuyerAddress2 = accounts[3]
-    const amount = new BigNumber(1e18)
+    const bonusAddress = accounts[1]
+    const brokerAddress = accounts[2]
+    const custodianAddress = accounts[3]
+    const whitelistedBuyerAddress1 = accounts[4]
+    const whitelistedBuyerAddress2 = accounts[5]
+    const icoContributors = accounts.slice(6)
+    const totalSupply = new BigNumber(1e18)
+    const payoutAmount = new BigNumber(5e17)
+    const actRate = new BigNumber(1000)
+    const bbkDistAmount = new BigNumber(1e18)
     let poa
-    let wht
 
     before('setup contracts state', async () => {
-      const { registry, whitelist } = await setupRegistry()
-      const reg = registry
-      wht = whitelist
+      const { reg } = await setupContracts(
+        ownerAddress,
+        bonusAddress,
+        icoContributors,
+        bbkDistAmount,
+        actRate,
+        [whitelistedBuyerAddress1, whitelistedBuyerAddress2]
+      )
       poa = await PoaToken.new(
         'TestToken',
         'TST',
-        ownerAddress,
+        brokerAddress,
         custodianAddress,
         reg.address,
         100,
-        amount
+        totalSupply
       )
-      await wht.addAddress(whitelistedBuyerAddress1)
-      await wht.addAddress(whitelistedBuyerAddress2)
       await poa.buy({
         from: whitelistedBuyerAddress1,
-        value: amount.div(2)
+        value: totalSupply.div(2)
       })
+
       await poa.buy({
         from: whitelistedBuyerAddress2,
-        value: amount.div(2)
+        value: totalSupply.div(2)
       })
       await poa.activate({
         from: custodianAddress
       })
-      await finalizeBbk(reg)
       await lockAllBbk(reg)
     })
 
@@ -335,8 +358,8 @@ describe('when in Active stage', () => {
 
     it('should calculate fees', async () => {
       const feePercentage = await poa.feePercentage()
-      const expectedFee = amount.mul(feePercentage).div(100)
-      const calculatedFee = await poa.calculateFee(amount)
+      const expectedFee = totalSupply.mul(feePercentage).div(100)
+      const calculatedFee = await poa.calculateFee(totalSupply)
       assert(
         calculatedFee.toNumber(),
         expectedFee.toNumber(),
@@ -347,16 +370,16 @@ describe('when in Active stage', () => {
     it('should run payout when broker', async () => {
       const preTotalPayout = await poa.totalPayout()
       const preBrokerEtherBalance = await getEtherBalance(brokerAddress)
-      const fee = await poa.calculateFee(amount)
+      const fee = await poa.calculateFee(payoutAmount)
       await poa.payout({
         from: brokerAddress,
-        value: amount
+        value: payoutAmount
       })
       const postTotalPayout = await poa.totalPayout()
       const postBrokerEtherBalance = await getEtherBalance(brokerAddress)
       assert(
         postTotalPayout.minus(preTotalPayout).toString(),
-        amount.toString(),
+        payoutAmount.toString(),
         'totalPayout should be incremented by the ether value of the transaction'
       )
       assert(
@@ -368,7 +391,7 @@ describe('when in Active stage', () => {
 
     it('should NOT run payout when NOT broker', async () => {
       await testWillThrow(poa.payout, [
-        { from: custodianAddress, value: amount }
+        { from: custodianAddress, value: payoutAmount }
       ])
     })
 

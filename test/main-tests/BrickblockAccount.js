@@ -23,6 +23,7 @@ describe('when interacting with BBK, ACT, and BFM', () => {
     const contributors = accounts.slice(3)
     const tokenDistAmount = new BigNumber(1e24)
     const feeValue = new BigNumber(10e18)
+    const actRate = new BigNumber(1000)
     let bbk
     let act
     let bat
@@ -33,7 +34,9 @@ describe('when interacting with BBK, ACT, and BFM', () => {
         owner,
         bonusAddress,
         contributors,
-        tokenDistAmount
+        tokenDistAmount,
+        1000,
+        actRate
       )
       bbk = contracts.bbk
       act = contracts.act
@@ -77,9 +80,9 @@ describe('when interacting with BBK, ACT, and BFM', () => {
     })
 
     it('should claim ALL claimable by BrickblockAccount', async () => {
-      await testPayFee(feePayer, [bat.address], feeValue, act, fmr)
+      await testPayFee(act, fmr, feePayer, [bat.address], feeValue, actRate)
       const claimAmount = await act.balanceOf(bat.address)
-      await testClaimFee(bbk, act, fmr, bat, claimAmount)
+      await testClaimFee(bbk, act, fmr, bat, claimAmount, actRate)
     })
   })
 })
@@ -93,6 +96,7 @@ describe('when interacting with BBK, ACT, and BFM as NOT owner', () => {
     const contributors = accounts.slice(4)
     const tokenDistAmount = new BigNumber(1e24)
     const feeValue = new BigNumber(10e18)
+    const actRate = new BigNumber(1000)
     let bbk
     let act
     let bat
@@ -103,7 +107,9 @@ describe('when interacting with BBK, ACT, and BFM as NOT owner', () => {
         owner,
         bonusAddress,
         contributors,
-        tokenDistAmount
+        tokenDistAmount,
+        1000,
+        actRate
       )
       bbk = contracts.bbk
       act = contracts.act
@@ -129,9 +135,9 @@ describe('when interacting with BBK, ACT, and BFM as NOT owner', () => {
     })
 
     it('should NOT claim claimable by BrickblockAccount when NOT owner', async () => {
-      await testPayFee(feePayer, [bat.address], feeValue, act, fmr)
+      await testPayFee(act, fmr, feePayer, [bat.address], feeValue, actRate)
       const claimAmount = await act.balanceOf(bat.address)
-      await testClaimFee(bbk, act, fmr, bat, claimAmount)
+      await testClaimFee(bbk, act, fmr, bat, claimAmount, actRate)
       await testWillThrow(bat.claimFee, [claimAmount, { from: otherAccount }])
     })
   })
@@ -146,6 +152,7 @@ describe('when withdrawing funds BEFORE BBK unlock block', () => {
     const contributors = accounts.slice(4)
     const tokenDistAmount = new BigNumber(1e24)
     const feeValue = new BigNumber(10e18)
+    const actRate = new BigNumber(1000)
     let bbk
     let act
     let bat
@@ -157,7 +164,8 @@ describe('when withdrawing funds BEFORE BBK unlock block', () => {
         bonusAddress,
         contributors,
         tokenDistAmount,
-        1000
+        1000,
+        actRate
       )
       bbk = contracts.bbk
       act = contracts.act
@@ -167,9 +175,9 @@ describe('when withdrawing funds BEFORE BBK unlock block', () => {
       await testPullFunds(bbk, bat)
       const lockAmount = await bbk.balanceOf(bat.address)
       await testLockBBK(bbk, act, bat, lockAmount)
-      await testPayFee(feePayer, [bat.address], feeValue, act, fmr)
+      await testPayFee(act, fmr, feePayer, [bat.address], feeValue, actRate)
       const claimAmount = await act.balanceOf(bat.address)
-      await testClaimFee(bbk, act, fmr, bat, claimAmount)
+      await testClaimFee(bbk, act, fmr, bat, claimAmount, actRate)
     })
 
     it('should withdraw SOME ETH funds to owner account', async () => {
@@ -213,7 +221,8 @@ describe('when withdrawing funds BEFORE BBK unlock block', () => {
         bat,
         bbk,
         owner,
-        withdrawalAmount
+        withdrawalAmount,
+        1000
       ])
     })
   })
@@ -228,6 +237,7 @@ describe('when withdrawing funds AFTER BBK unlock block', () => {
     const contributors = accounts.slice(4)
     const tokenDistAmount = new BigNumber(1e24)
     const feeValue = new BigNumber(10e18)
+    const actRate = new BigNumber(1000)
     let bbk
     let act
     let bat
@@ -239,7 +249,8 @@ describe('when withdrawing funds AFTER BBK unlock block', () => {
         bonusAddress,
         contributors,
         tokenDistAmount,
-        20
+        20,
+        actRate
       )
       bbk = contracts.bbk
       act = contracts.act
@@ -249,9 +260,9 @@ describe('when withdrawing funds AFTER BBK unlock block', () => {
       await testPullFunds(bbk, bat)
       const lockAmount = await bbk.balanceOf(bat.address)
       await testLockBBK(bbk, act, bat, lockAmount)
-      await testPayFee(feePayer, [bat.address], feeValue, act, fmr)
+      await testPayFee(act, fmr, feePayer, [bat.address], feeValue, actRate)
       const claimAmount = await act.balanceOf(bat.address)
-      await testClaimFee(bbk, act, fmr, bat, claimAmount)
+      await testClaimFee(bbk, act, fmr, bat, claimAmount, actRate)
       await warpBlocks(20)
     })
 
@@ -291,6 +302,7 @@ describe('when trying to withdraw more than available balance', () => {
     const contributors = accounts.slice(4)
     const tokenDistAmount = new BigNumber(1e24)
     const feeValue = new BigNumber(10e18)
+    const actRate = new BigNumber(1000)
     let bbk
     let act
     let bat
@@ -302,7 +314,8 @@ describe('when trying to withdraw more than available balance', () => {
         bonusAddress,
         contributors,
         tokenDistAmount,
-        20
+        20,
+        actRate
       )
       bbk = contracts.bbk
       act = contracts.act
@@ -312,9 +325,9 @@ describe('when trying to withdraw more than available balance', () => {
       await testPullFunds(bbk, bat)
       const lockAmount = await bbk.balanceOf(bat.address)
       await testLockBBK(bbk, act, bat, lockAmount)
-      await testPayFee(feePayer, [bat.address], feeValue, act, fmr)
+      await testPayFee(act, fmr, feePayer, [bat.address], feeValue, actRate)
       const claimAmount = await act.balanceOf(bat.address)
-      await testClaimFee(bbk, act, fmr, bat, claimAmount)
+      await testClaimFee(bbk, act, fmr, bat, claimAmount, actRate)
       await warpBlocks(20)
     })
 
@@ -349,6 +362,7 @@ describe('when trying to withdraw as NOT owner', () => {
     const contributors = accounts.slice(4)
     const tokenDistAmount = new BigNumber(1e24)
     const feeValue = new BigNumber(10e18)
+    const actRate = new BigNumber(1000)
     let bbk
     let act
     let bat
@@ -360,7 +374,8 @@ describe('when trying to withdraw as NOT owner', () => {
         bonusAddress,
         contributors,
         tokenDistAmount,
-        20
+        20,
+        actRate
       )
       bbk = contracts.bbk
       act = contracts.act
@@ -370,9 +385,9 @@ describe('when trying to withdraw as NOT owner', () => {
       await testPullFunds(bbk, bat)
       const lockAmount = await bbk.balanceOf(bat.address)
       await testLockBBK(bbk, act, bat, lockAmount)
-      await testPayFee(feePayer, [bat.address], feeValue, act, fmr)
+      await testPayFee(act, fmr, feePayer, [bat.address], feeValue, actRate)
       const claimAmount = await act.balanceOf(bat.address)
-      await testClaimFee(bbk, act, fmr, bat, claimAmount)
+      await testClaimFee(bbk, act, fmr, bat, claimAmount, actRate)
       await warpBlocks(20)
     })
 
