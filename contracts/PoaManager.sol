@@ -8,7 +8,7 @@ import "zeppelin-solidity/contracts/math/SafeMath.sol";
 contract PoaManager is Ownable {
   using SafeMath for uint256;
 
-  Registry private registry;
+  address private registryAddress;
 
   enum EntityType {
     Broker,
@@ -58,7 +58,7 @@ contract PoaManager is Ownable {
     _;
   }
 
-  function PoaManager(address _registry)
+  function PoaManager(address _registryAddress)
     public
   {
     require(_registryAddress != address(0));
@@ -210,7 +210,7 @@ contract PoaManager is Ownable {
       _symbol,
       msg.sender,
       _custodian,
-      address(registry),
+      registryAddress,
       _timeout,
       _supply
     );
