@@ -39,22 +39,29 @@ contract PoaManager is Ownable {
   event TokenRemoved(address indexed token);
   event TokenStatusChanged(address indexed token, bool active);
 
-  modifier isNewEntity(address _address) {
-    require(_address != address(0));
-    require(entityMap[_address].index == 0);
+  modifier isNewEntity(address _entityAddress) {
+    require(_entityAddress != address(0));
+    require(entityMap[_entityAddress].index == 0);
     _;
   }
 
-  modifier doesEntityExist(address _address) {
-    require(_address != address(0));
-    require(entityMap[_address].index != 0);
+  modifier doesEntityExist(address _entityAddress) {
+    require(_entityAddress != address(0));
+    require(entityMap[_entityAddress].index != 0);
     _;
   }
 
-  modifier onlyActiveBroker {
-    EntityState memory entity = entityMap[msg.sender];
+  modifier onlyActiveBroker(address _brokerAddress) {
+    EntityState memory entity = entityMap[_brokerAddress];
     require(entity.active);
     require(entity.entityType == EntityType.Broker);
+    _;
+  }
+
+  modifier onlyActiveToken(address _tokenAddress) {
+    EntityState memory entity = entityMap[_tokenAddress];
+    require(entity.active);
+    require(entity.entityType == EntityType.Token);
     _;
   }
 
@@ -69,41 +76,41 @@ contract PoaManager is Ownable {
   // Entity functions
   //
 
-  function getStatus(address _address)
+  function getStatus(address _entityAddress)
     public
     view
-    doesEntityExist(_address)
+    doesEntityExist(_entityAddress)
     returns (bool)
   {
-    return entityMap[_address].active;
+    return entityMap[_entityAddress].active;
   }
 
   function addEntity(
-    address _address,
+    address _entityAddress,
     address[] storage entityList,
     bool _active,
     EntityType _entityType
   )
     private
-    isNewEntity(_address)
+    isNewEntity(_entityAddress)
   {
-    entityList.push(_address);
+    entityList.push(_entityAddress);
     // we do not offset by `-1` so that we never have `entity.index = 0` as this is what is
     // used to check for existence in modifiers [isNewEntity, doesEntityExist]
     uint256 index = entityList.length;
     EntityState memory entity = EntityState(index, _active, _entityType);
-    entityMap[_address] = entity;
+    entityMap[_entityAddress] = entity;
   }
 
   function removeEntity(
-    address _address,
+    address _entityAddress,
     address[] storage _entityList
   )
     private
-    doesEntityExist(_address)
+    doesEntityExist(_entityAddress)
   {
     // we offset by -1 here to account for how `addEntity` marks the `entity.index` value
-    uint256 index = entityMap[_address].index.sub(1);
+    uint256 index = entityMap[_entityAddress].index.sub(1);
 
     // swap the entity to be removed with the last element in the list
     _entityList[index] = _entityList[_entityList.length - 1];
@@ -115,17 +122,17 @@ contract PoaManager is Ownable {
     // we do not need to delete the element, the compiler should clean up for us
     _entityList.length--;
 
-    delete entityMap[_address];
+    delete entityMap[_entityAddress];
   }
 
   function setEntityActiveValue(
-    address _address,
+    address _entityAddress,
     bool _active
   )
     private
-    doesEntityExist(_address)
+    doesEntityExist(_entityAddress)
   {
-    EntityState storage entity = entityMap[_address];
+    EntityState storage entity = entityMap[_entityAddress];
     require(entity.active != _active);
     entity.active = _active;
   }
@@ -148,7 +155,13 @@ contract PoaManager is Ownable {
     public
     onlyOwner
   {
-    addEntity(_brokerAddress, brokerAddressList, true, EntityType.Broker);
+    addEntity(
+      _brokerAddress,
+      brokerAddressList,
+      true,
+      EntityType.Broker
+    );
+
     BrokerAdded(_brokerAddress);
   }
 
@@ -202,7 +215,7 @@ contract PoaManager is Ownable {
     uint256 _supply
   )
     public
-    onlyActiveBroker
+    onlyActiveBroker(msg.sender)
     returns (address)
   {
     address _tokenAddress = new PoaToken(
@@ -214,7 +227,14 @@ contract PoaManager is Ownable {
       _timeout,
       _supply
     );
-    addEntity(_tokenAddress, tokenAddressList, true, EntityType.Token);
+
+    addEntity(
+      _tokenAddress,
+      tokenAddressList,
+      false,
+      EntityType.Token
+    );
+
     TokenAdded(_tokenAddress);
 
     return _tokenAddress;
@@ -245,6 +265,37 @@ contract PoaManager is Ownable {
   {
     setEntityActiveValue(_tokenAddress, false);
     TokenStatusChanged(_tokenAddress, false);
+  }
+
+  //
+  // Token ownerOnly functions as PoaManger is `owner` of all PoaToken
+  //
+
+  // Allow unpausing a activated PoaToken
+  function pauseToken(PoaToken _tokenAddress)
+    public
+    onlyOwner
+    onlyActiveToken(_tokenAddress)
+  {
+    _tokenAddress.pause();
+  }
+
+  // Allow unpausing a activated PoaToken
+  function unpauseToken(PoaToken _tokenAddress)
+    public
+    onlyOwner
+    onlyActiveToken(_tokenAddress)
+  {
+    _tokenAddress.unpause();
+  }
+
+  // Allow terminating a activated PoaToken
+  function terminateToken(PoaToken _tokenAddress)
+    public
+    onlyOwner
+    onlyActiveToken(_tokenAddress)
+  {
+    _tokenAddress.terminate();
   }
 
   //

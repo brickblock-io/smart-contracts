@@ -1,7 +1,6 @@
 pragma solidity ^0.4.18;
 
-import "zeppelin-solidity/contracts/token/StandardToken.sol";
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "zeppelin-solidity/contracts/token/PausableToken.sol";
 
 
 // limited BrickblockContractRegistry definintion
@@ -29,7 +28,7 @@ contract Whitelist {
 
 
 // Proof-of-Asset contract representing a token backed by a foreign asset.
-contract PoaToken is StandardToken, Ownable {
+contract PoaToken is PausableToken {
 
   Registry private registry;
 
