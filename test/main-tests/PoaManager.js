@@ -67,7 +67,7 @@ describe('when calling broker functions', () => {
       it('should set active value to true', async () => {
         const actual = await pmr.getStatus(addedBroker)
         const expected = true
-        assert.equal(actual, expected, 'addedBroker starts activated')
+        assert.equal(actual, expected, 'addedBroker starts listed')
       })
 
       it('should allow for many brokers to be added', async () => {
@@ -99,7 +99,7 @@ describe('when calling broker functions', () => {
             broker: addedBroker,
             active: false
           },
-          await pmr.deactivateBroker(addedBroker)
+          await pmr.delistBroker(addedBroker)
         )
       })
 
@@ -109,19 +109,16 @@ describe('when calling broker functions', () => {
         assert.equal(
           actual,
           expected,
-          'deactivated broker has active value set to false'
+          'delisted broker has active value set to false'
         )
       })
 
-      it('should error when trying to deactivate a broker address that is already deactivated', async () => {
-        await testWillThrow(pmr.deactivateBroker, [addedBroker])
+      it('should error when trying to delist a broker address that is already delisted', async () => {
+        await testWillThrow(pmr.delistBroker, [addedBroker])
       })
 
-      it('should error when trying to deactivate a broker from notOwner address', async () => {
-        await testWillThrow(pmr.deactivateBroker, [
-          addedBroker,
-          { from: notOwner }
-        ])
+      it('should error when trying to delist a broker from notOwner address', async () => {
+        await testWillThrow(pmr.delistBroker, [addedBroker, { from: notOwner }])
       })
     })
 
@@ -133,7 +130,7 @@ describe('when calling broker functions', () => {
             broker: addedBroker,
             active: true
           },
-          await pmr.activateBroker(addedBroker)
+          await pmr.listBroker(addedBroker)
         )
       })
 
@@ -143,19 +140,16 @@ describe('when calling broker functions', () => {
         assert.equal(
           actual,
           expected,
-          'activated broker has active value set to true'
+          'listed broker has active value set to true'
         )
       })
 
-      it('should error when trying to activate a broker address that is already activated', async () => {
-        await testWillThrow(pmr.activateBroker, [addedBroker])
+      it('should error when trying to list a broker address that is already listed', async () => {
+        await testWillThrow(pmr.listBroker, [addedBroker])
       })
 
-      it('should error when trying to activate a broker from notOwner address', async () => {
-        await testWillThrow(pmr.activateBroker, [
-          addedBroker,
-          { from: notOwner }
-        ])
+      it('should error when trying to list a broker from notOwner address', async () => {
+        await testWillThrow(pmr.listBroker, [addedBroker, { from: notOwner }])
       })
     })
 
@@ -210,8 +204,8 @@ describe('when calling token functions', () => {
     let pmr
     let addedToken
     let anotherToken
-    const activatedBroker = accounts[1]
-    const deactivatedBroker = accounts[2]
+    const listedBroker = accounts[1]
+    const delistedBroker = accounts[2]
     const custodian = accounts[5]
     const notBroker = accounts[8]
     const notOwner = accounts[9]
@@ -219,9 +213,9 @@ describe('when calling token functions', () => {
     before('setup contract state', async () => {
       const { registry } = await setupRegistry()
       pmr = await PoaManager.new(registry.address)
-      await pmr.addBroker(activatedBroker)
-      await pmr.addBroker(deactivatedBroker)
-      await pmr.deactivateBroker(deactivatedBroker)
+      await pmr.addBroker(listedBroker)
+      await pmr.addBroker(delistedBroker)
+      await pmr.delistBroker(delistedBroker)
     })
 
     it('should be created with an empty tokenAddressList', async () => {
@@ -235,7 +229,7 @@ describe('when calling token functions', () => {
         const { txReceipt, tokenAddress } = await addToken(
           pmr,
           custodian,
-          activatedBroker
+          listedBroker
         )
 
         // setting this here for use in following tests in this contract block
@@ -267,11 +261,11 @@ describe('when calling token functions', () => {
       it('should set active value to false', async () => {
         const actual = await pmr.getStatus(addedToken)
         const expected = false
-        assert.equal(actual, expected, 'added token starts deactivated')
+        assert.equal(actual, expected, 'added token starts delisted')
       })
 
       it('should allow for many tokens to be added', async () => {
-        const { tokenAddress } = await addToken(pmr, custodian, activatedBroker)
+        const { tokenAddress } = await addToken(pmr, custodian, listedBroker)
 
         // setting this here for use in following tests in this contract block
         anotherToken = tokenAddress
@@ -285,7 +279,7 @@ describe('when calling token functions', () => {
         )
       })
 
-      it('should error when trying to add a token from a deactivated broker address', async () => {
+      it('should error when trying to add a token from a delisted broker address', async () => {
         await testWillThrow(pmr.addToken, [
           'test-another',
           'ANT',
@@ -293,7 +287,7 @@ describe('when calling token functions', () => {
           1000,
           1e18,
           {
-            from: deactivatedBroker
+            from: delistedBroker
           }
         ])
       })
@@ -317,7 +311,7 @@ describe('when calling token functions', () => {
         checkForEvent(
           'TokenStatusChanged',
           { token: addedToken, active: true },
-          await pmr.activateToken(addedToken)
+          await pmr.listToken(addedToken)
         )
       })
 
@@ -327,16 +321,16 @@ describe('when calling token functions', () => {
         assert.equal(
           actual,
           expected,
-          'deactivated token has active value set to true'
+          'delisted token has active value set to true'
         )
       })
 
-      it('should error when trying to activate a token address that is already activated', async () => {
-        await testWillThrow(pmr.activateToken, [addedToken])
+      it('should error when trying to list a token address that is already listed', async () => {
+        await testWillThrow(pmr.listToken, [addedToken])
       })
 
-      it('should error when trying to activate a token from notOwner address', async () => {
-        await testWillThrow(pmr.activateToken, [addedToken, { from: notOwner }])
+      it('should error when trying to list a token from notOwner address', async () => {
+        await testWillThrow(pmr.listToken, [addedToken, { from: notOwner }])
       })
     })
 
@@ -345,7 +339,7 @@ describe('when calling token functions', () => {
         checkForEvent(
           'TokenStatusChanged',
           { token: addedToken, active: false },
-          await pmr.deactivateToken(addedToken)
+          await pmr.delistToken(addedToken)
         )
       })
 
@@ -355,19 +349,16 @@ describe('when calling token functions', () => {
         assert.equal(
           actual,
           expected,
-          'deactivated token has active value set to false'
+          'delisted token has active value set to false'
         )
       })
 
-      it('should error when trying to deactivate a token address that is already deactivated', async () => {
-        await testWillThrow(pmr.deactivateToken, [addedToken])
+      it('should error when trying to delist a token address that is already delisted', async () => {
+        await testWillThrow(pmr.delistToken, [addedToken])
       })
 
-      it('should error when trying to deactivate a token from notOwner address', async () => {
-        await testWillThrow(pmr.deactivateToken, [
-          addedToken,
-          { from: notOwner }
-        ])
+      it('should error when trying to delist a token from notOwner address', async () => {
+        await testWillThrow(pmr.delistToken, [addedToken, { from: notOwner }])
       })
     })
 
@@ -424,8 +415,8 @@ describe('when calling token convenience functions', () => {
     const notOwner = accounts[1]
     const broker = accounts[2]
     const custodian = accounts[3]
-    let activatedToken
-    let deactivatedToken
+    let listedToken
+    let delistedToken
 
     before('setup contract state', async () => {
       const { registry } = await setupRegistry()
@@ -433,93 +424,93 @@ describe('when calling token convenience functions', () => {
 
       await pmr.addBroker(broker)
 
-      const { tokenAddress: activatedTokenAddress } = await addToken(
+      const { tokenAddress: listedTokenAddress } = await addToken(
         pmr,
         custodian,
         broker
       )
-      pmr.activateToken(activatedTokenAddress, { from: owner })
-      activatedToken = PoaToken.at(activatedTokenAddress)
+      pmr.listToken(listedTokenAddress, { from: owner })
+      listedToken = PoaToken.at(listedTokenAddress)
 
-      const { tokenAddress: deactivatedTokenAddress } = await addToken(
+      const { tokenAddress: delistedTokenAddress } = await addToken(
         pmr,
         custodian,
         broker
       )
-      deactivatedToken = PoaToken.at(deactivatedTokenAddress)
+      delistedToken = PoaToken.at(delistedTokenAddress)
     })
 
     describe('when pausing a token', () => {
       it('should error when caller is notOwner', async () => {
         await testWillThrow(pmr.pauseToken, [
-          activatedToken.address,
+          listedToken.address,
           { from: notOwner }
         ])
       })
 
-      it('should pause the activatedToken', async () => {
+      it('should pause the listedToken', async () => {
         assert.equal(
-          await activatedToken.paused(),
+          await listedToken.paused(),
           false,
           'token should begin unpaused'
         )
 
-        await pmr.pauseToken(activatedToken.address, { from: owner })
+        await pmr.pauseToken(listedToken.address, { from: owner })
 
         assert.equal(
-          await activatedToken.paused(),
+          await listedToken.paused(),
           true,
           'token should then become paused'
         )
       })
 
-      it('should error when token is not activated', async () => {
+      it('should error when token is not listed', async () => {
         assert.equal(
-          await deactivatedToken.paused(),
+          await delistedToken.paused(),
           false,
           'token should begin unpaused'
         )
 
-        await testWillThrow(pmr.pauseToken, [deactivatedToken.address])
+        await testWillThrow(pmr.pauseToken, [delistedToken.address])
       })
     })
 
     describe('when unpausing a token', () => {
       it('should error when caller is notOwner', async () => {
         await testWillThrow(pmr.unpauseToken, [
-          activatedToken.address,
+          listedToken.address,
           { from: notOwner }
         ])
       })
 
-      it('should unpause the activatedToken', async () => {
+      it('should unpause the listedToken', async () => {
         assert.equal(
-          await activatedToken.paused(),
+          await listedToken.paused(),
           true,
           'token should begin paused'
         )
 
-        await pmr.unpauseToken(activatedToken.address, { from: owner })
+        await pmr.unpauseToken(listedToken.address, { from: owner })
 
         assert.equal(
-          await activatedToken.paused(),
+          await listedToken.paused(),
           false,
           'token should then become unpaused'
         )
       })
 
-      it('should error when token is not activated', async () => {
-        await pmr.activateToken(deactivatedToken.address)
-        await pmr.pauseToken(deactivatedToken.address)
-        await pmr.deactivateToken(deactivatedToken.address)
+      it('should error when token is not listed', async () => {
+        await pmr.listToken(delistedToken.address)
+        await pmr.pauseToken(delistedToken.address)
+        await pmr.delistToken(delistedToken.address)
 
         assert.equal(
-          await deactivatedToken.paused(),
+          await delistedToken.paused(),
           true,
           'token should begin paused'
         )
 
-        await testWillThrow(pmr.unpauseToken, [deactivatedToken.address])
+        await testWillThrow(pmr.unpauseToken, [delistedToken.address])
       })
     })
   })

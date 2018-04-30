@@ -174,8 +174,8 @@ contract PoaManager is Ownable {
     BrokerRemoved(_brokerAddress);
   }
 
-  // Set previously deactivated broker to activated
-  function activateBroker(address _brokerAddress)
+  // Set previously delisted broker to listed
+  function listBroker(address _brokerAddress)
     public
     onlyOwner
   {
@@ -183,8 +183,8 @@ contract PoaManager is Ownable {
     BrokerStatusChanged(_brokerAddress, true);
   }
 
-  // Set previously activated broker to deactivated
-  function deactivateBroker(address _brokerAddress)
+  // Set previously listed broker to delisted
+  function delistBroker(address _brokerAddress)
     public
     onlyOwner
   {
@@ -249,8 +249,8 @@ contract PoaManager is Ownable {
     TokenRemoved(_tokenAddress);
   }
 
-  // Set previously deactivated token to activated
-  function activateToken(address _tokenAddress)
+  // Set previously delisted token to listed
+  function listToken(address _tokenAddress)
     public
     onlyOwner
   {
@@ -258,8 +258,8 @@ contract PoaManager is Ownable {
     TokenStatusChanged(_tokenAddress, true);
   }
 
-  // Set previously activated token to deactivated
-  function deactivateToken(address _tokenAddress)
+  // Set previously listed token to delisted
+  function delistToken(address _tokenAddress)
     public
     onlyOwner
   {
@@ -271,7 +271,7 @@ contract PoaManager is Ownable {
   // Token ownerOnly functions as PoaManger is `owner` of all PoaToken
   //
 
-  // Allow unpausing a activated PoaToken
+  // Allow unpausing a listed PoaToken
   function pauseToken(PoaToken _tokenAddress)
     public
     onlyOwner
@@ -280,7 +280,7 @@ contract PoaManager is Ownable {
     _tokenAddress.pause();
   }
 
-  // Allow unpausing a activated PoaToken
+  // Allow unpausing a listed PoaToken
   function unpauseToken(PoaToken _tokenAddress)
     public
     onlyOwner
@@ -289,7 +289,7 @@ contract PoaManager is Ownable {
     _tokenAddress.unpause();
   }
 
-  // Allow terminating a activated PoaToken
+  // Allow terminating a listed PoaToken
   function terminateToken(PoaToken _tokenAddress)
     public
     onlyOwner
