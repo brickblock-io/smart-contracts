@@ -10,26 +10,18 @@ contract PoaManager is Ownable {
 
   address private registryAddress;
 
-  enum EntityType {
-    Broker,
-    Token
-  }
-
-  // Both brokers and tokens are tracked by the same values, so this struct is called EntityState
   struct EntityState {
     uint256 index;
     bool active;
-    EntityType entityType;
   }
 
-  // A mapping of all tracked entities
-  //
-  // NOTE: this means we expect that a Broker and Token can never have the same address
-  mapping (address => EntityState) private entityMap;
-
-  // Keeping a list for each entity address we track for easy access
+  // Keeping a list for addresses we track for easy access
   address[] private brokerAddressList;
   address[] private tokenAddressList;
+
+  // A mapping for each address we track
+  mapping (address => EntityState) private tokenMap;
+  mapping (address => EntityState) private brokerMap;
 
   event BrokerAdded(address indexed broker);
   event BrokerRemoved(address indexed broker);
@@ -39,29 +31,27 @@ contract PoaManager is Ownable {
   event TokenRemoved(address indexed token);
   event TokenStatusChanged(address indexed token, bool active);
 
-  modifier isNewEntity(address _entityAddress) {
+  modifier doesEntityExist(address _entityAddress, EntityState entity) {
     require(_entityAddress != address(0));
-    require(entityMap[_entityAddress].index == 0);
+    require(entity.index != 0);
     _;
   }
 
-  modifier doesEntityExist(address _entityAddress) {
-    require(_entityAddress != address(0));
-    require(entityMap[_entityAddress].index != 0);
+  modifier isNewBroker(address _brokerAddress) {
+    require(_brokerAddress != address(0));
+    require(brokerMap[_brokerAddress].index == 0);
     _;
   }
 
   modifier onlyActiveBroker(address _brokerAddress) {
-    EntityState memory entity = entityMap[_brokerAddress];
+    EntityState memory entity = brokerMap[_brokerAddress];
     require(entity.active);
-    require(entity.entityType == EntityType.Broker);
     _;
   }
 
   modifier onlyActiveToken(address _tokenAddress) {
-    EntityState memory entity = entityMap[_tokenAddress];
+    EntityState memory entity = tokenMap[_tokenAddress];
     require(entity.active);
-    require(entity.entityType == EntityType.Token);
     _;
   }
 
@@ -76,63 +66,52 @@ contract PoaManager is Ownable {
   // Entity functions
   //
 
-  function getStatus(address _entityAddress)
-    public
-    view
-    doesEntityExist(_entityAddress)
-    returns (bool)
-  {
-    return entityMap[_entityAddress].active;
-  }
-
   function addEntity(
     address _entityAddress,
     address[] storage entityList,
-    bool _active,
-    EntityType _entityType
+    bool _active
   )
     private
-    isNewEntity(_entityAddress)
+    returns (EntityState)
   {
     entityList.push(_entityAddress);
     // we do not offset by `-1` so that we never have `entity.index = 0` as this is what is
-    // used to check for existence in modifiers [isNewEntity, doesEntityExist]
+    // used to check for existence in modifier [doesEntityExist]
     uint256 index = entityList.length;
-    EntityState memory entity = EntityState(index, _active, _entityType);
-    entityMap[_entityAddress] = entity;
+    EntityState memory entity = EntityState(index, _active);
+    return entity;
   }
 
   function removeEntity(
-    address _entityAddress,
+    EntityState _entityToRemove,
     address[] storage _entityList
   )
     private
-    doesEntityExist(_entityAddress)
+    returns (address, uint256)
   {
     // we offset by -1 here to account for how `addEntity` marks the `entity.index` value
-    uint256 index = entityMap[_entityAddress].index.sub(1);
+    uint256 index = _entityToRemove.index.sub(1);
 
     // swap the entity to be removed with the last element in the list
     _entityList[index] = _entityList[_entityList.length - 1];
 
-    // update the index in swapped element
-    EntityState storage entityToSwap = entityMap[_entityList[index]];
-    entityToSwap.index = index.add(1);
+    // because we wanted seperate mappings for token and broker, and we cannot pass a storage mapping
+    // as a function argument, this abstraction is leaky; we return the address and index so the
+    // caller can update the mapping
+    address entityToSwapAddress = _entityList[index];
 
     // we do not need to delete the element, the compiler should clean up for us
     _entityList.length--;
 
-    delete entityMap[_entityAddress];
+    return (entityToSwapAddress, _entityToRemove.index);
   }
 
   function setEntityActiveValue(
-    address _entityAddress,
+    EntityState storage entity,
     bool _active
   )
     private
-    doesEntityExist(_entityAddress)
   {
-    EntityState storage entity = entityMap[_entityAddress];
     require(entity.active != _active);
     entity.active = _active;
   }
@@ -154,12 +133,12 @@ contract PoaManager is Ownable {
   function addBroker(address _brokerAddress)
     public
     onlyOwner
+    isNewBroker(_brokerAddress)
   {
-    addEntity(
+    brokerMap[_brokerAddress] = addEntity(
       _brokerAddress,
       brokerAddressList,
-      true,
-      EntityType.Broker
+      true
     );
 
     BrokerAdded(_brokerAddress);
@@ -169,8 +148,12 @@ contract PoaManager is Ownable {
   function removeBroker(address _brokerAddress)
     public
     onlyOwner
+    doesEntityExist(_brokerAddress, brokerMap[_brokerAddress])
   {
-    removeEntity(_brokerAddress, brokerAddressList);
+    var (addressToUpdate, indexUpdate) = removeEntity(brokerMap[_brokerAddress], brokerAddressList);
+    brokerMap[addressToUpdate].index = indexUpdate;
+    delete brokerMap[_brokerAddress];
+
     BrokerRemoved(_brokerAddress);
   }
 
@@ -178,8 +161,9 @@ contract PoaManager is Ownable {
   function listBroker(address _brokerAddress)
     public
     onlyOwner
+    doesEntityExist(_brokerAddress, brokerMap[_brokerAddress])
   {
-    setEntityActiveValue(_brokerAddress, true);
+    setEntityActiveValue(brokerMap[_brokerAddress], true);
     BrokerStatusChanged(_brokerAddress, true);
   }
 
@@ -187,9 +171,19 @@ contract PoaManager is Ownable {
   function delistBroker(address _brokerAddress)
     public
     onlyOwner
+    doesEntityExist(_brokerAddress, brokerMap[_brokerAddress])
   {
-    setEntityActiveValue(_brokerAddress, false);
+    setEntityActiveValue(brokerMap[_brokerAddress], false);
     BrokerStatusChanged(_brokerAddress, false);
+  }
+
+  function getBrokerStatus(address _brokerAddress)
+    public
+    view
+    doesEntityExist(_brokerAddress, brokerMap[_brokerAddress])
+    returns (bool)
+  {
+    return brokerMap[_brokerAddress].active;
   }
 
   //
@@ -228,11 +222,10 @@ contract PoaManager is Ownable {
       _supply
     );
 
-    addEntity(
+    tokenMap[_tokenAddress] = addEntity(
       _tokenAddress,
       tokenAddressList,
-      false,
-      EntityType.Token
+      false
     );
 
     TokenAdded(_tokenAddress);
@@ -244,8 +237,12 @@ contract PoaManager is Ownable {
   function removeToken(address _tokenAddress)
     public
     onlyOwner
+    doesEntityExist(_tokenAddress, tokenMap[_tokenAddress])
   {
-    removeEntity(_tokenAddress, tokenAddressList);
+    var (addressToUpdate, indexUpdate) = removeEntity(tokenMap[_tokenAddress], tokenAddressList);
+    tokenMap[addressToUpdate].index = indexUpdate;
+    delete tokenMap[_tokenAddress];
+
     TokenRemoved(_tokenAddress);
   }
 
@@ -253,8 +250,9 @@ contract PoaManager is Ownable {
   function listToken(address _tokenAddress)
     public
     onlyOwner
+    doesEntityExist(_tokenAddress, tokenMap[_tokenAddress])
   {
-    setEntityActiveValue(_tokenAddress, true);
+    setEntityActiveValue(tokenMap[_tokenAddress], true);
     TokenStatusChanged(_tokenAddress, true);
   }
 
@@ -262,9 +260,19 @@ contract PoaManager is Ownable {
   function delistToken(address _tokenAddress)
     public
     onlyOwner
+    doesEntityExist(_tokenAddress, tokenMap[_tokenAddress])
   {
-    setEntityActiveValue(_tokenAddress, false);
+    setEntityActiveValue(tokenMap[_tokenAddress], false);
     TokenStatusChanged(_tokenAddress, false);
+  }
+
+  function getTokenStatus(address _tokenAddress)
+    public
+    view
+    doesEntityExist(_tokenAddress, tokenMap[_tokenAddress])
+    returns (bool)
+  {
+    return tokenMap[_tokenAddress].active;
   }
 
   //

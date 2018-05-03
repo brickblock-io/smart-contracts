@@ -65,7 +65,7 @@ describe('when calling broker functions', () => {
       })
 
       it('should set active value to true', async () => {
-        const actual = await pmr.getStatus(addedBroker)
+        const actual = await pmr.getBrokerStatus(addedBroker)
         const expected = true
         assert.equal(actual, expected, 'addedBroker starts listed')
       })
@@ -104,7 +104,7 @@ describe('when calling broker functions', () => {
       })
 
       it('should set active value to false', async () => {
-        const actual = await pmr.getStatus(addedBroker)
+        const actual = await pmr.getBrokerStatus(addedBroker)
         const expected = false
         assert.equal(
           actual,
@@ -135,7 +135,7 @@ describe('when calling broker functions', () => {
       })
 
       it('should set active value to true', async () => {
-        const actual = await pmr.getStatus(addedBroker)
+        const actual = await pmr.getBrokerStatus(addedBroker)
         const expected = true
         assert.equal(
           actual,
@@ -172,11 +172,11 @@ describe('when calling broker functions', () => {
         )
       })
 
-      it('should error when trying to getStatus of removed broker', async () => {
-        await testWillThrow(pmr.getStatus, [addedBroker])
+      it('should error when trying to getBrokerStatus of removed broker', async () => {
+        await testWillThrow(pmr.getBrokerStatus, [addedBroker])
       })
 
-      it('should allow for many brokers to be removed', async () => {
+      it('should allow for all brokers to be removed', async () => {
         await pmr.removeBroker(anotherBroker)
 
         const actual = await pmr.getBrokerAddressList()
@@ -259,7 +259,7 @@ describe('when calling token functions', () => {
       })
 
       it('should set active value to false', async () => {
-        const actual = await pmr.getStatus(addedToken)
+        const actual = await pmr.getTokenStatus(addedToken)
         const expected = false
         assert.equal(actual, expected, 'added token starts delisted')
       })
@@ -316,7 +316,7 @@ describe('when calling token functions', () => {
       })
 
       it('should set active value to true', async () => {
-        const actual = await pmr.getStatus(addedToken)
+        const actual = await pmr.getTokenStatus(addedToken)
         const expected = true
         assert.equal(
           actual,
@@ -344,7 +344,7 @@ describe('when calling token functions', () => {
       })
 
       it('should set active value to false', async () => {
-        const actual = await pmr.getStatus(addedToken)
+        const actual = await pmr.getTokenStatus(addedToken)
         const expected = false
         assert.equal(
           actual,
@@ -381,8 +381,8 @@ describe('when calling token functions', () => {
         )
       })
 
-      it('should error when trying to getStatus of removed token', async () => {
-        await testWillThrow(pmr.getStatus, [addedToken])
+      it('should error when trying to getTokenStatus of removed token', async () => {
+        await testWillThrow(pmr.getTokenStatus, [addedToken])
       })
 
       it('should allow for many tokens to be removed', async () => {
