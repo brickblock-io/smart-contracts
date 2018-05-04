@@ -3,9 +3,19 @@ const AccessToken = artifacts.require('BrickblockAccessToken')
 const ExchangeRates = artifacts.require('ExchangeRates')
 const FeeManager = artifacts.require('BrickblockFeeManager')
 const assert = require('assert')
+const chalk = require('chalk')
 const { finalizedBBK } = require('./bbk')
-const { getEtherBalance, getReceipt, gasPrice, bigZero } = require('./general')
+const {
+  getEtherBalance,
+  getReceipt,
+  gasPrice,
+  bigZero,
+  testIsInRange,
+  getRandomBigInt
+} = require('./general')
+
 const BigNumber = require('bignumber.js')
+const defaultRange = { min: 0, max: 100 }
 
 const setupContracts = async (
   owner,
@@ -37,6 +47,9 @@ const setupContracts = async (
 
   const balanceCheck = await bbk.balanceOf(contributors[0])
   const bbkPaused = await bbk.paused()
+
+  exr.setActRate(actRate)
+
   assert(balanceCheck.greaterThan(0), 'the balance should be more than 0')
   assert(!bbkPaused, 'the contract should not be paused')
   return {
@@ -59,14 +72,17 @@ const testApproveAndLockBBK = async (bbk, act, bbkHolder, amount) => {
   const postBbkBalance = await bbk.balanceOf(bbkHolder)
   const postLockedBBK = await act.lockedBbkOf(bbkHolder)
 
-  assert.equal(
-    preBbkBalance.minus(postBbkBalance).toString(),
-    amount.toString(),
+  testIsInRange(
+    amount.minus(preBbkBalance.minus(postBbkBalance)).abs(),
+    defaultRange.min,
+    defaultRange.max,
     'bbkHolder BBK balance should be decremented by amount'
   )
-  assert.equal(
-    postLockedBBK.minus(preLockedBBK).toString(),
-    amount.toString(),
+
+  testIsInRange(
+    amount.minus(postLockedBBK.minus(preLockedBBK)).abs(),
+    defaultRange.min,
+    defaultRange.max,
     'bbkHolder lockedBBK should be incremented by amount'
   )
 
@@ -164,9 +180,10 @@ const testPayFee = async (
       console.warn(`⚠️  ${bbkHolder} has ACT balance of 0 during testPayFee`)
     }
 
-    assert.equal(
-      expectedActBalance.toString(),
-      actBalance.toString(),
+    testIsInRange(
+      actBalance.minus(expectedActBalance).abs(),
+      defaultRange.min,
+      defaultRange.max,
       'the actBalance should match the expected act balance'
     )
   }
@@ -187,7 +204,13 @@ const testPayFee = async (
   return postContributorsActBalance
 }
 
-const testClaimFeeMany = async (act, fmr, claimers, actRate) => {
+const testClaimFeeMany = async (
+  act,
+  fmr,
+  claimers,
+  actRate,
+  { actTotalSupplyToleranceAfterBurn = 100 } = {}
+) => {
   const preContributorBalances = {}
   for (const claimer of claimers) {
     const preActBalance = await act.balanceOf(claimer)
@@ -221,11 +244,14 @@ const testClaimFeeMany = async (act, fmr, claimers, actRate) => {
       bigZero.toString(),
       'the entire ACT balance should be used'
     )
-    assert.equal(
-      expectedPostEthBalance.toString(),
-      postEthBalance.toString(),
+
+    testIsInRange(
+      postEthBalance.minus(expectedPostEthBalance).abs(),
+      defaultRange.min,
+      defaultRange.max,
       'the ETH balance for claimer should be incremented by previous ACT balance'
     )
+
     if (preActBalance.equals(0)) {
       // eslint-disable-next-line no-console
       console.warn(
@@ -237,15 +263,18 @@ const testClaimFeeMany = async (act, fmr, claimers, actRate) => {
   const postFeeManagerEthBalance = await getEtherBalance(fmr.address)
   const postActTotalSupply = await act.totalSupply()
 
-  assert.equal(
-    postFeeManagerEthBalance.toString(),
-    bigZero.toString(),
-    'the feeManager should have 0 ether left if all ACT burned'
+  testIsInRange(
+    postFeeManagerEthBalance,
+    defaultRange.min,
+    300,
+    'the feeManager should have ~0 ether left if all ACT burned'
   )
-  assert.equal(
-    postActTotalSupply.toString(),
-    bigZero.toString(),
-    'the act contract totalSupply should be 0 if all ACT burned and all ETH claimed'
+
+  testIsInRange(
+    postActTotalSupply,
+    defaultRange.min,
+    actTotalSupplyToleranceAfterBurn,
+    'the act contract totalSupply should be ~0 if all ACT burned and all ETH claimed'
   )
 
   return postActTotalSupply
@@ -285,6 +314,22 @@ const testTransferActMany = async (act, senders, to, value) => {
   const amount = new BigNumber(value)
   for (const sender of senders) {
     await testTransferAct(act, sender, to, amount)
+  }
+}
+
+const testTransferActManyWithIndividualAmounts = async (
+  act,
+  senders,
+  to,
+  amounts
+) => {
+  let index = 0
+
+  for (const sender of senders) {
+    const amount = amounts[index]
+
+    await testTransferAct(act, sender, to, amount)
+    index++
   }
 }
 
@@ -358,6 +403,97 @@ const testActBalanceGreaterThanZero = async (act, actHolder) => {
   return actBalance
 }
 
+const testApproveAndLockManyWithIndividualAmounts = async (
+  bbk,
+  act,
+  bbkHolders,
+  amounts
+) => {
+  let index = 0
+
+  for (const bbkHolder of bbkHolders) {
+    const amount = amounts[index]
+    await testApproveAndLockBBK(bbk, act, bbkHolder, amount)
+    index++
+  }
+
+  return true
+}
+
+const generateRandomLockAmounts = async (
+  contributors,
+  { min = new BigNumber(1e10), logBalance = false } = {}
+) => {
+  return Promise.all(
+    contributors.map(async contributor => {
+      const contributorBalance = await getEtherBalance(contributor)
+
+      let res = getRandomBigInt(min, contributorBalance)
+
+      if (res.gt(contributorBalance)) {
+        res = contributorBalance
+      }
+
+      if (logBalance) {
+        // eslint-disable-next-line
+        console.log(chalk.yellowBright(`For address ${contributor}:`))
+        // eslint-disable-next-line
+        console.log(
+          chalk.yellow('Contributor balance:'),
+          web3.fromWei(contributorBalance).toString(),
+          'ETH'
+        )
+        // eslint-disable-next-line
+        console.log(chalk.yellow('Token Lock Amount:'), res.toString(), 'BBK')
+      }
+
+      return res
+    })
+  )
+}
+
+const testRandomLockAndUnlock = async (
+  bbk,
+  act,
+  contributors,
+  {
+    rounds = 10,
+    min = new BigNumber(1e15),
+    logBalance = false,
+    logRoundInfo = true
+  } = {}
+) => {
+  for (let i = 0; i < rounds; i++) {
+    // Lock random amount of BBK Tokens first
+    await testApproveAndLockManyWithIndividualAmounts(
+      bbk,
+      act,
+      contributors,
+      await generateRandomLockAmounts(contributors, {
+        min,
+        logBalance
+      })
+    )
+
+    await Promise.all(
+      contributors.map(async contributor => {
+        const lockedBbkAmount = await act.lockedBbkOf(contributor)
+        const amount = getRandomBigInt(
+          lockedBbkAmount.div(2).floor(),
+          lockedBbkAmount
+        )
+
+        await testUnlockBBK(bbk, act, contributor, amount)
+      })
+    )
+
+    if (logRoundInfo) {
+      // eslint-disable-next-line
+      console.log(chalk.green(`BBK Token Lock&Unlock passed ${i + 1} times.`))
+    }
+  }
+}
+
 module.exports = {
   setupContracts,
   testApproveAndLockBBK,
@@ -371,5 +507,9 @@ module.exports = {
   testApproveAct,
   testApproveActMany,
   testTransferFromAct,
-  testTransferFromActMany
+  testTransferFromActMany,
+  testApproveAndLockManyWithIndividualAmounts,
+  testTransferActManyWithIndividualAmounts,
+  generateRandomLockAmounts,
+  testRandomLockAndUnlock
 }
