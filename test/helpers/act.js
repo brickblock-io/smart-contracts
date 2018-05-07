@@ -170,6 +170,7 @@ const testPayFee = async (
       actBalance,
       lockedBBK
     }
+
     const expectedPerTokenRate = weiAsAct
       .mul(1e18)
       .div(totalLockedBBK)

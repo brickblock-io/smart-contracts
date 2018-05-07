@@ -146,7 +146,9 @@ contract ExchangeRateProvider is usingOraclize {
     ) = _exchangeRates.getCurrencySettings(_queryType);
 
     // set rate on ExchangeRates contract giving queryId for validation
-    require(_exchangeRates.setRate(_queryId, parseInt(_result)));
+    // rate is set in cents api returns float string which is parsed as int
+    /* TODO: make sure that tests are all fine with this */
+    require(_exchangeRates.setRate(_queryId, parseInt(_result, 2)));
 
     // check if call interval has been set and that _ratesActive is still true
     // if so, call again with the interval

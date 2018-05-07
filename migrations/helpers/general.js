@@ -1,13 +1,13 @@
 const addContractsToRegistry = async ({
   owner,
-  reg,
-  bbk,
-  act,
-  bat,
-  fmr,
-  exr,
-  exp,
-  wht
+  reg, // reg = Registry
+  bbk, // bbk = BrickblockToken
+  act, // act = AccessToken
+  bat, // bat = BrickblockAccount
+  fmr, // fmr = BrickblockFeeManager
+  exr, // exr = ExchangeRates
+  exp, // exp = ExchangeRatesProvider
+  wht // wht = BrickblockWhitelist
 }) => {
   await reg.updateContractAddress('BrickblockToken', bbk.address, {
     from: owner
@@ -32,6 +32,25 @@ const addContractsToRegistry = async ({
   })
 }
 
+const setFiatRate = async (exr, exp, queryType, rate, config) => {
+  await exr.setCurrencySettings(
+    queryType,
+    'https://domain.com?currency=ETH',
+    30,
+    1.5e5,
+    {
+      from: config.from
+    }
+  )
+  await exr.getCurrencySettingsReadable(queryType)
+  await exr.fetchRate(queryType, config)
+  const pendingQueryId = await exp.pendingTestQueryId()
+  await exp.simulate__callback(pendingQueryId, '50000', {
+    from: config.from
+  })
+}
+
 module.exports = {
-  addContractsToRegistry
+  addContractsToRegistry,
+  setFiatRate
 }

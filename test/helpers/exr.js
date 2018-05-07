@@ -55,7 +55,7 @@ const testSetCurrencySettings = async (
     preCallInterval,
     preCallbackGasLimit,
     preQueryString
-  ] = await exr.getCurrencySettingsReadable('USD')
+  ] = await exr.getCurrencySettingsReadable(queryType)
 
   await exr.setCurrencySettings(
     queryType,
@@ -69,14 +69,14 @@ const testSetCurrencySettings = async (
     postCallInterval,
     postCallbackGasLimit,
     postQueryString
-  ] = await exr.getCurrencySettingsReadable('USD')
+  ] = await exr.getCurrencySettingsReadable(queryType)
 
   assert(
-    preCallInterval != postCallInterval,
+    preCallInterval.toString() != postCallInterval.toString(),
     'postCallInterval should not match uninitialized value'
   )
   assert(
-    preCallbackGasLimit != postCallbackGasLimit,
+    preCallbackGasLimit.toString() != postCallbackGasLimit.toString(),
     'postCallbackGasLimit should not match uninitialized value'
   )
   assert(

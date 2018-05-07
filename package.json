@@ -68,11 +68,11 @@
     "vulnerability-check:comment": "Checks for vulnerabilities in all used npm packages",
     "vulnerability-check": "snyk test || true",
     "todo:comment": "Prints out all code comments that begin with `TODO:` or `FIXME:`",
-    "todo": "leasot '**/*.js' '**/*.css' --ignore 'node_modules/**/*','build/**/*','.git/**/*' || true"
+    "todo": "leasot '**/*.js' --ignore 'node_modules/**/*','build/**/*','.git/**/*' || true"
   },
   "lint-staged": {
     "*.sol": [
-      "solium",
+      "solium -f",
       "git add"
     ],
     "*.js": [
