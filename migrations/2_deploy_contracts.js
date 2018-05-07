@@ -66,14 +66,16 @@ module.exports = (deployer, network, accounts) => {
       const wht = await FeeManager.deployed()
 
       // PoaManager
-      await deployer.deploy(PoaManager, {
+      await deployer.deploy(PoaManager, reg.address, {
         from: owner
       })
       const pmr = await PoaManager.deployed()
 
+      // ExchangeRates
       await deployer.deploy(ExchangeRates, reg.address, { from: owner })
       const exr = await ExchangeRates.deployed()
 
+      // ExchangeRateProvider
       await deployer.deploy(ExchangeRateProvider, reg.address, {
         from: owner
       })
