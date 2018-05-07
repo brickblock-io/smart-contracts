@@ -8,7 +8,7 @@ import "zeppelin-solidity/contracts/math/SafeMath.sol";
 contract PoaManager is Ownable {
   using SafeMath for uint256;
 
-  uint256 constant version 1;
+  uint256 constant version = 1;
 
   address private registryAddress;
 
