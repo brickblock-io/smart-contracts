@@ -49,12 +49,6 @@ contract PoaManager is Ownable {
     _;
   }
 
-  modifier onlyActiveToken(address _tokenAddress) {
-    EntityState memory entity = tokenMap[_tokenAddress];
-    require(entity.active);
-    _;
-  }
-
   function PoaManager(address _registryAddress)
     public
   {
@@ -283,7 +277,6 @@ contract PoaManager is Ownable {
   function pauseToken(PoaToken _tokenAddress)
     public
     onlyOwner
-    onlyActiveToken(_tokenAddress)
   {
     _tokenAddress.pause();
   }
@@ -292,7 +285,6 @@ contract PoaManager is Ownable {
   function unpauseToken(PoaToken _tokenAddress)
     public
     onlyOwner
-    onlyActiveToken(_tokenAddress)
   {
     _tokenAddress.unpause();
   }
@@ -301,7 +293,6 @@ contract PoaManager is Ownable {
   function terminateToken(PoaToken _tokenAddress)
     public
     onlyOwner
-    onlyActiveToken(_tokenAddress)
   {
     _tokenAddress.terminate();
   }

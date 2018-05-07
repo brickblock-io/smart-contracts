@@ -425,8 +425,7 @@ describe('when calling token convenience functions', () => {
     const notOwner = accounts[1]
     const broker = accounts[2]
     const custodian = accounts[3]
-    let listedToken
-    let delistedToken
+    let addedToken
 
     before('setup contract state', async () => {
       const { registry } = await setupRegistry()
@@ -434,93 +433,62 @@ describe('when calling token convenience functions', () => {
 
       await pmr.addBroker(broker)
 
-      const { tokenAddress: listedTokenAddress } = await addToken(
+      const { tokenAddress: addedTokenAddress } = await addToken(
         pmr,
         custodian,
         broker
       )
-      pmr.listToken(listedTokenAddress, { from: owner })
-      listedToken = PoaToken.at(listedTokenAddress)
-
-      const { tokenAddress: delistedTokenAddress } = await addToken(
-        pmr,
-        custodian,
-        broker
-      )
-      delistedToken = PoaToken.at(delistedTokenAddress)
+      pmr.listToken(addedTokenAddress, { from: owner })
+      addedToken = PoaToken.at(addedTokenAddress)
     })
 
     describe('when pausing a token', () => {
       it('should error when caller is notOwner', async () => {
         await testWillThrow(pmr.pauseToken, [
-          listedToken.address,
+          addedToken.address,
           { from: notOwner }
         ])
       })
 
-      it('should pause the listedToken', async () => {
+      it('should pause the addedToken', async () => {
         assert.equal(
-          await listedToken.paused(),
+          await addedToken.paused(),
           false,
           'token should begin unpaused'
         )
 
-        await pmr.pauseToken(listedToken.address, { from: owner })
+        await pmr.pauseToken(addedToken.address, { from: owner })
 
         assert.equal(
-          await listedToken.paused(),
+          await addedToken.paused(),
           true,
           'token should then become paused'
         )
-      })
-
-      it('should error when token is not listed', async () => {
-        assert.equal(
-          await delistedToken.paused(),
-          false,
-          'token should begin unpaused'
-        )
-
-        await testWillThrow(pmr.pauseToken, [delistedToken.address])
       })
     })
 
     describe('when unpausing a token', () => {
       it('should error when caller is notOwner', async () => {
         await testWillThrow(pmr.unpauseToken, [
-          listedToken.address,
+          addedToken.address,
           { from: notOwner }
         ])
       })
 
-      it('should unpause the listedToken', async () => {
+      it('should unpause the addedToken', async () => {
         assert.equal(
-          await listedToken.paused(),
+          await addedToken.paused(),
           true,
           'token should begin paused'
         )
 
-        await pmr.unpauseToken(listedToken.address, { from: owner })
+        await pmr.unpauseToken(addedToken.address, { from: owner })
 
         assert.equal(
-          await listedToken.paused(),
+          await addedToken.paused(),
           false,
           'token should then become unpaused'
         )
-      })
-
-      it('should error when token is not listed', async () => {
-        await pmr.listToken(delistedToken.address)
-        await pmr.pauseToken(delistedToken.address)
-        await pmr.delistToken(delistedToken.address)
-
-        assert.equal(
-          await delistedToken.paused(),
-          true,
-          'token should begin paused'
-        )
-
-        await testWillThrow(pmr.unpauseToken, [delistedToken.address])
       })
     })
   })
