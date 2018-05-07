@@ -48,9 +48,9 @@ describe('when calling broker functions', () => {
     })
 
     describe('when adding a broker', () => {
-      it('should emit BrokerAdded', async () => {
+      it('should emit BrokerAddedEvent', async () => {
         checkForEvent(
-          'BrokerAdded',
+          'BrokerAddedEvent',
           { broker: addedBroker },
           await pmr.addBroker(addedBroker)
         )
@@ -94,9 +94,9 @@ describe('when calling broker functions', () => {
     })
 
     describe('when delisting a broker', () => {
-      it('should emit BrokerStatusChanged', async () => {
+      it('should emit BrokerStatusChangedEvent', async () => {
         checkForEvent(
-          'BrokerStatusChanged',
+          'BrokerStatusChangedEvent',
           {
             broker: addedBroker,
             active: false
@@ -128,9 +128,9 @@ describe('when calling broker functions', () => {
     })
 
     describe('when listing a broker', () => {
-      it('should emit BrokerStatusChanged', async () => {
+      it('should emit BrokerStatusChangedEvent', async () => {
         checkForEvent(
-          'BrokerStatusChanged',
+          'BrokerStatusChangedEvent',
           {
             broker: addedBroker,
             active: true
@@ -159,9 +159,9 @@ describe('when calling broker functions', () => {
     })
 
     describe('when removing a broker', () => {
-      it('should emit BrokerRemoved', async () => {
+      it('should emit BrokerRemovedEvent', async () => {
         checkForEvent(
-          'BrokerRemoved',
+          'BrokerRemovedEvent',
           { broker: addedBroker },
           await pmr.removeBroker(addedBroker)
         )
@@ -235,7 +235,7 @@ describe('when calling token functions', () => {
     })
 
     describe('when adding a token', () => {
-      it('should emit TokenAdded', async () => {
+      it('should emit TokenAddedEvent', async () => {
         const { txReceipt, tokenAddress } = await addToken(
           pmr,
           custodian,
@@ -245,7 +245,7 @@ describe('when calling token functions', () => {
         // setting this here for use in following tests in this contract block
         addedToken = tokenAddress
 
-        checkForEvent('TokenAdded', { token: addedToken }, txReceipt)
+        checkForEvent('TokenAddedEvent', { token: addedToken }, txReceipt)
       })
 
       it('should have the PoaManager as the owner', async () => {
@@ -317,9 +317,9 @@ describe('when calling token functions', () => {
     })
 
     describe('when listing a token', () => {
-      it('should emit TokenStatusChanged', async () => {
+      it('should emit TokenStatusChangedEvent', async () => {
         checkForEvent(
-          'TokenStatusChanged',
+          'TokenStatusChangedEvent',
           { token: addedToken, active: true },
           await pmr.listToken(addedToken)
         )
@@ -345,9 +345,9 @@ describe('when calling token functions', () => {
     })
 
     describe('when delisting a token', () => {
-      it('should emit TokenStatusChanged', async () => {
+      it('should emit TokenStatusChangedEvent', async () => {
         checkForEvent(
-          'TokenStatusChanged',
+          'TokenStatusChangedEvent',
           { token: addedToken, active: false },
           await pmr.delistToken(addedToken)
         )
@@ -373,9 +373,9 @@ describe('when calling token functions', () => {
     })
 
     describe('when removing a token', () => {
-      it('should emit TokenRemoved', async () => {
+      it('should emit TokenRemovedEvent', async () => {
         checkForEvent(
-          'TokenRemoved',
+          'TokenRemovedEvent',
           { token: addedToken },
           await pmr.removeToken(addedToken)
         )
