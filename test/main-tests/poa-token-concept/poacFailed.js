@@ -174,7 +174,7 @@ describe('when in Failed (stage 3)', () => {
     })
 
     it('should reclaim', async () => {
-      await testReclaim(poac, { from: whitelistedPoaBuyers[0] })
+      await testReclaim(poac, { from: whitelistedPoaBuyers[0] }, true)
     })
 
     it('should reclaim all tokens', async () => {

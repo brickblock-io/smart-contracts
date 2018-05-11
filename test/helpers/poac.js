@@ -44,6 +44,7 @@ const defaultFiatCurrency = 'EUR'
 const defaultFundingTimeout = new BigNumber(60 * 60 * 24)
 const defaultActivationTimeout = new BigNumber(60 * 60 * 24 * 7)
 const defaultFundingGoal = new BigNumber(5e5)
+const defaultTotalSupply = new BigNumber(1e23)
 const defaultFiatRate = new BigNumber(33333)
 const defaultIpfsHash = 'QmSUfCtXgb59G9tczrz2WuHNAbecV55KRBGXBbZkou5RtE'
 const getDefaultStartTime = async () => {
@@ -283,27 +284,27 @@ const testInitialization = async (exr, exp, reg) => {
   )
   assert.equal(
     totalPerTokenPayout.toString(),
-    new BigNumber(0).toString(),
+    bigZero.toString(),
     'totalPerTokenPayout should start uninitialized'
   )
   assert.equal(
     fundedAmountInWei.toString(),
-    new BigNumber(0).toString(),
+    bigZero.toString(),
     'fundedAmountInWei should start uninitialized'
   )
   assert.equal(
     totalSupply.toString(),
-    new BigNumber(0).toString(),
-    'totalSupply should be 0 (uninitialized)'
+    defaultTotalSupply.toString(),
+    'totalSupply should match defaultTotalSupply'
   )
   assert.equal(
     contractBalance.toString(),
-    totalSupply.toString(),
-    'contract balance should match totalSupply'
+    bigZero.toString(),
+    'contract balance should be 0'
   )
   assert.equal(
     stage.toString(),
-    new BigNumber(0).toString(),
+    bigZero.toString(),
     'stage should start at 0 (PreFunding)'
   )
   assert(paused, 'contract should start paused')
@@ -386,7 +387,7 @@ const testStartSale = async (poac, config) => {
 
   assert.equal(
     preStage.toString(),
-    new BigNumber(0).toString(),
+    bigZero.toString(),
     'stage should start as 0, PreFunding'
   )
   assert.equal(
@@ -585,7 +586,7 @@ const testBrokerClaim = async poac => {
   )
   assert.equal(
     postContractBalance.toString(),
-    new BigNumber(0).toString(),
+    bigZero.toString(),
     'postContractBalance should be 0'
   )
 }
@@ -665,7 +666,7 @@ const testClaim = async (poac, config, isTerminated) => {
     from: claimer,
     gasPrice
   })
-  const gasUsed = tx.receipt.gasUsed || new BigNumber(0)
+  const gasUsed = tx.receipt.gasUsed || bigZero
   const gasCost = gasPrice.mul(gasUsed)
 
   const postClaimerEtherBalance = await getEtherBalance(claimer)
@@ -700,7 +701,7 @@ const testClaimAllPayouts = async (poac, poaTokenHolders) => {
     'stage should be in 4, Active'
   )
 
-  let totalClaimAmount = new BigNumber(0)
+  let totalClaimAmount = bigZero
 
   for (const tokenHolder of poaTokenHolders) {
     const tokenHolderClaimAmount = await poac.currentPayout(tokenHolder, true)
@@ -713,7 +714,7 @@ const testClaimAllPayouts = async (poac, poaTokenHolders) => {
         gasPrice
       })
 
-      const gasUsed = tx.receipt.gasUsed || new BigNumber(0)
+      const gasUsed = tx.receipt.gasUsed || bigZero
       const gasCost = gasPrice.mul(gasUsed)
       const expectedTokenHolderEtherBalance = preTokenHolderEtherBalance
         .sub(gasCost)
@@ -748,7 +749,7 @@ const testClaimAllPayouts = async (poac, poaTokenHolders) => {
     'total claim amount should be more than 0'
   )
   assert(
-    areInRange(finalContractEtherBalance, new BigNumber(0), 1e2),
+    areInRange(finalContractEtherBalance, bigZero, 1e2),
     `contract should have very small ether balance after all payouts have been claimed but ${finalContractEtherBalance} wei remain`
   )
 }
@@ -764,7 +765,7 @@ const testFirstReclaim = async (poac, config, shouldBePending) => {
     } before reclaiming`
   )
 
-  await testReclaim(poac, config)
+  await testReclaim(poac, config, true)
 
   const postStage = await poac.stage()
 
@@ -806,13 +807,14 @@ const testSetFailed = async (poac, shouldBePending) => {
   )
 }
 
-const testReclaim = async (poac, config) => {
+const testReclaim = async (poac, config, first = false) => {
   const claimer = config.from
 
   const preTotalSupply = await poac.totalSupply()
   const preContractEtherBalance = await getEtherBalance(poac.address)
   const preClaimerTokenBalance = await poac.balanceOf(claimer)
   const preClaimerEtherBalance = await getEtherBalance(claimer)
+  const preFundedAmountInWei = await poac.fundedAmountInWei()
   const preOutstandingEtherBalance = await poac.investmentAmountPerUserInWei(
     claimer
   )
@@ -828,6 +830,7 @@ const testReclaim = async (poac, config) => {
   const postContractEtherBalance = await getEtherBalance(poac.address)
   const postClaimerTokenBalance = await poac.balanceOf(claimer)
   const postClaimerEtherBalance = await getEtherBalance(claimer)
+  const postFundedAmountInWei = await poac.fundedAmountInWei()
   const postOutstandingEtherBalance = await poac.investmentAmountPerUserInWei(
     claimer
   )
@@ -835,10 +838,34 @@ const testReclaim = async (poac, config) => {
     .sub(gasCost)
     .add(preOutstandingEtherBalance) // initialInvestAmount
 
+  if (first) {
+    assert.equal(
+      preTotalSupply.toString(),
+      defaultTotalSupply.toString(),
+      'totalSupply should be unchanged and match defaultTotalSupply'
+    )
+    assert.equal(
+      postTotalSupply.toString(),
+      bigZero.toString(),
+      'totalSupply should be 0 after first reclaim'
+    )
+  } else {
+    assert.equal(
+      preTotalSupply.toString(),
+      bigZero.toString(),
+      'totalSupply should start as 0 after previous reclaim'
+    )
+    assert.equal(
+      postTotalSupply.toString(),
+      bigZero.toString(),
+      'totalSupply should be 0 after reclaiming'
+    )
+  }
+
   assert.equal(
-    preTotalSupply.sub(postTotalSupply).toString(),
-    preClaimerTokenBalance.toString(),
-    'totalSupply should be deducted by claimer token balance'
+    preFundedAmountInWei.sub(postFundedAmountInWei).toString(),
+    preOutstandingEtherBalance.toString(),
+    'fundedAmountInWei should be decremented by claimed ether amount'
   )
   assert.equal(
     preContractEtherBalance.sub(postContractEtherBalance).toString(),
@@ -846,9 +873,14 @@ const testReclaim = async (poac, config) => {
     'contract ether balance should be decremented by claimed outstanding balance'
   )
   assert.equal(
+    preClaimerTokenBalance.toString(),
+    bigZero.toString(),
+    'claimer token balance should be 0 unless reaching  Funding stage'
+  )
+  assert.equal(
     postClaimerTokenBalance.toString(),
-    new BigNumber(0).toString(),
-    'claim token balance should be 0 after reclaiming'
+    bigZero.toString(),
+    'claimer token balance should be 0 unless reaching Funding stage'
   )
   assert.equal(
     postClaimerEtherBalance.toString(),
@@ -857,30 +889,37 @@ const testReclaim = async (poac, config) => {
   )
   assert.equal(
     postOutstandingEtherBalance.toString(),
-    new BigNumber(0).toString(),
+    bigZero.toString(),
     'claimer should have no outstanding balance after reclaiming'
   )
 }
 
-const testReclaimAll = async (poac, tokenHolders) => {
-  for (const tokenHolder of tokenHolders) {
-    const tokenBalance = await poac.balanceOf(tokenHolder)
-    if (tokenBalance.greaterThan(0)) {
-      await testReclaim(poac, { from: tokenHolder })
+const testReclaimAll = async (poac, tokenBuyers) => {
+  for (const tokenBuyer of tokenBuyers) {
+    const claimableBalance = await poac.investmentAmountPerUserInWei(tokenBuyer)
+    if (claimableBalance.greaterThan(0)) {
+      await testReclaim(poac, { from: tokenBuyer })
     }
   }
 
   const finalContractTotalSupply = await poac.totalSupply()
   const finalContractEtherBalance = await getEtherBalance(poac.address)
+  const finalFundedAmountInWei = await poac.fundedAmountInWei()
 
   assert.equal(
     finalContractTotalSupply.toString(),
-    new BigNumber(0).toString(),
-    'the final contract total supply should be 0 after all investors have reclaimed'
+    bigZero.toString(),
+    'the final contract total supply should be 0 after all have reclaimed'
   )
-  assert(
-    areInRange(finalContractEtherBalance, new BigNumber(0), 10),
-    'final contract ether balance should be within 10 wei of 0 after all investors have reclaimed'
+  assert.equal(
+    bigZero.toString(),
+    finalContractEtherBalance.toString(),
+    'finalContractEtherBalance should be 0 after all have reclaimed'
+  )
+  assert.equal(
+    bigZero.toString(),
+    finalFundedAmountInWei.toString(),
+    'fundedAmountInWei should be 0 after all have reclaimed'
   )
 }
 
@@ -1070,6 +1109,7 @@ module.exports = {
   defaultFiatCurrency,
   defaultFundingTimeout,
   defaultFundingGoal,
+  defaultTotalSupply,
   defaultFiatRate,
   getDefaultStartTime,
   defaultIpfsHash,
