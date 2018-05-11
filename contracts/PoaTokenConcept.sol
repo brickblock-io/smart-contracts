@@ -393,7 +393,8 @@ contract PoaTokenConcept is PausableToken {
     returns (bool)
   {
     // save this for later in case needing to reclaim
-    investmentAmountPerUserInWei[msg.sender] = _payAmount;
+    investmentAmountPerUserInWei[msg.sender] = investmentAmountPerUserInWei[msg.sender]
+      .add(_payAmount);
     // increment the funded amount
     fundedAmountInWei = fundedAmountInWei.add(_payAmount);
     CommitmentEvent(msg.sender, _payAmount);
