@@ -266,9 +266,9 @@ const testInitialization = async (exr, exp, reg) => {
     'fee rate should be a constant of 5'
   )
   assert(
-    creationTime.lessThan(new BigNumber(Date.now()).div(1000)) &&
-      creationTime.greaterThan(new BigNumber(Date.now()).div(1000).sub(5000)),
-    'creationTime no less than 5 seconds before now()'
+    creationTime.lessThan(new BigNumber(Date.now()).div(1e3)) &&
+      creationTime.greaterThan(new BigNumber(Date.now()).div(1e3).sub(2e4)),
+    'creationTime should be no less than 20 seconds before now()'
   )
   assert.equal(
     startTime.toString(),
