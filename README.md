@@ -1,5 +1,5 @@
 # Brickblock Smart Contracts
- 
+
 ## Installing
 
 1. Install dependencies using:
@@ -173,16 +173,11 @@ In the active stage, a token will produce monthly payouts and will be sent to ow
 A contract enters the terminated stage when a poa contract needs to end. This could be because the building is sold, or some other "act of god" occurs. When in terminated stage, users will not be able to trade the tokens any longer. Payouts from custodian are still possible. This should allow sending money from insurance to token holders if a building is destroyed.
 
 ## Built With
-
 * [Truffle v4.0.1](https://github.com/trufflesuite/truffle/releases/tag/v4.0.1)
 * [zeppelin-solidity v1.3.0](https://github.com/OpenZeppelin/zeppelin-solidity/releases)
 
 ## Authors
-* **Cody Lamson** - *BrickblockToken, CustomPOAToken, BrickblockAccessToken, BrickblockAccount, PoaToken, WarpTool, BrickblockWhitelist, BrickblockContractRegistry, BrickblockFeeManager* - [TovarishFin](https://github.com/TovarishFin)
-* **Matt Stevens** - *BrickblockToken, CustomPOAToken, POAToken, PoaManager, BrickblockWhitelist, BrickblockContractRegistry* - [mattgstevens](https://github.com/mattgstevens)
-* **Adrian Kizlauskas** - *BrickblockToken, CustomPOAToken POAToken, PoaManager* - [dissaranged](https://github.com/dissaranged)
-* **Marius Hanne** - *POAToken, PoaManager* - [mhanne](https://github.com/mhanne)
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+* **Cody Lamson** - [TovarishFin](https://github.com/TovarishFin)
+* **Matt Stevens**  - [mattgstevens](https://github.com/mattgstevens)
+* **Adrian Kizlauskas**  - [dissaranged](https://github.com/dissaranged)
+* **Marius Hanne** - [mhanne](https://github.com/mhanne)
