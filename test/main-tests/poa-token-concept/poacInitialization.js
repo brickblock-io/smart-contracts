@@ -23,13 +23,19 @@ describe('when initializing PoaTokenConcept', () => {
     let reg
     let exr
     let exp
+    let poac
 
     beforeEach('setup contracts', async () => {
       const contracts = await setupEcosystem()
+      poac = await PoaTokenConcept.new()
 
       reg = contracts.reg
       exr = contracts.exr
       exp = contracts.exp
+
+      // we change the PoaManager to owner address in registry in order to "trick"
+      // the only owner function so that testing is easier
+      await reg.updateContractAddress('PoaManager', owner)
     })
 
     it('should start with the right values', async () => {
@@ -37,7 +43,7 @@ describe('when initializing PoaTokenConcept', () => {
     })
 
     it('should NOT initialize with a NON ready fiatRate', async () => {
-      await testWillThrow(PoaTokenConcept.new, [
+      await testWillThrow(poac.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -63,7 +69,7 @@ describe('when initializing PoaTokenConcept', () => {
         }
       )
 
-      await testWillThrow(PoaTokenConcept.new, [
+      await testWillThrow(poac.setupContract, [
         'is',
         defaultSymbol,
         defaultFiatCurrency,
@@ -89,7 +95,7 @@ describe('when initializing PoaTokenConcept', () => {
         }
       )
 
-      await testWillThrow(PoaTokenConcept.new, [
+      await testWillThrow(poac.setupContract, [
         defaultName,
         'US',
         defaultFiatCurrency,
@@ -115,7 +121,7 @@ describe('when initializing PoaTokenConcept', () => {
         }
       )
 
-      await testWillThrow(PoaTokenConcept.new, [
+      await testWillThrow(poac.setupContract, [
         defaultName,
         defaultSymbol,
         'US',
@@ -141,7 +147,7 @@ describe('when initializing PoaTokenConcept', () => {
         }
       )
 
-      await testWillThrow(PoaTokenConcept.new, [
+      await testWillThrow(poac.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -154,7 +160,7 @@ describe('when initializing PoaTokenConcept', () => {
         defaultFundingGoal
       ])
 
-      await testWillThrow(PoaTokenConcept.new, [
+      await testWillThrow(poac.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -180,7 +186,7 @@ describe('when initializing PoaTokenConcept', () => {
         }
       )
 
-      await testWillThrow(PoaTokenConcept.new, [
+      await testWillThrow(poac.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -193,7 +199,7 @@ describe('when initializing PoaTokenConcept', () => {
         defaultFundingGoal
       ])
 
-      await testWillThrow(PoaTokenConcept.new, [
+      await testWillThrow(poac.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -219,7 +225,7 @@ describe('when initializing PoaTokenConcept', () => {
         }
       )
 
-      await testWillThrow(PoaTokenConcept.new, [
+      await testWillThrow(poac.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -232,7 +238,7 @@ describe('when initializing PoaTokenConcept', () => {
         defaultFundingGoal
       ])
 
-      await testWillThrow(PoaTokenConcept.new, [
+      await testWillThrow(poac.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -258,7 +264,7 @@ describe('when initializing PoaTokenConcept', () => {
         }
       )
 
-      await testWillThrow(PoaTokenConcept.new, [
+      await testWillThrow(poac.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -285,7 +291,7 @@ describe('when initializing PoaTokenConcept', () => {
         }
       )
 
-      await testWillThrow(PoaTokenConcept.new, [
+      await testWillThrow(poac.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -298,6 +304,7 @@ describe('when initializing PoaTokenConcept', () => {
           .mul(60)
           .mul(24)
           .sub(1),
+        defaultActivationTimeout,
         defaultFundingGoal
       ])
     })
@@ -314,7 +321,7 @@ describe('when initializing PoaTokenConcept', () => {
         }
       )
 
-      await testWillThrow(PoaTokenConcept.new, [
+      await testWillThrow(poac.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -323,6 +330,11 @@ describe('when initializing PoaTokenConcept', () => {
         reg.address,
         await getDefaultStartTime(),
         // simulate 1 second less than a day
+        new BigNumber(60)
+          .mul(60)
+          .mul(24)
+          .mul(7)
+          .sub(1),
         new BigNumber(60)
           .mul(60)
           .mul(24)
@@ -344,7 +356,7 @@ describe('when initializing PoaTokenConcept', () => {
         }
       )
 
-      await testWillThrow(PoaTokenConcept.new, [
+      await testWillThrow(poac.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,

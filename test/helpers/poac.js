@@ -169,6 +169,8 @@ const setupPoaAndEcosystem = async () => {
     defaultFundingGoal
   )
 
+  // we change the PoaManager to owner address in registry in order to "trick"
+  // the only owner function so that testing is easier
   await reg.updateContractAddress('PoaManager', owner)
 
   return {
@@ -192,7 +194,8 @@ const testInitialization = async (exr, exp, reg) => {
 
   const defaultStartTime = await getDefaultStartTime()
 
-  const poac = await PoaTokenConcept.new(
+  const poac = await PoaTokenConcept.new()
+  await poac.setupContract(
     defaultName,
     defaultSymbol,
     defaultFiatCurrency,
@@ -1108,6 +1111,7 @@ module.exports = {
   defaultSymbol,
   defaultFiatCurrency,
   defaultFundingTimeout,
+  defaultActivationTimeout,
   defaultFundingGoal,
   defaultTotalSupply,
   defaultFiatRate,
