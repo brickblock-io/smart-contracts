@@ -2,48 +2,46 @@ pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/token/ERC20/PausableToken.sol";
 
+/* solium-disable security/no-block-members */
 
 // limited BrickblockContractRegistry definintion
-contract Registry {
+interface Registry {
   function getContractAddress(string _name)
-    public
+    external
     view
-    returns (address)
-  {}
+    returns (address);
 }
 
-
 // limited BrickblockFeeManager definition
-contract FeeManager {
+interface FeeManager {
   function payFee()
-    public
+    external
     payable
-    returns (bool)
-  {}
+    returns (bool);
 }
 
 
 // limited BrickblockWhitelist
-contract Whitelist {
-  mapping (address => bool) public whitelisted;
+interface Whitelist {
+  function whitelisted(address _address)
+    external
+    returns (bool);
 }
 
 
 // limited ExchangeRates definition
-contract ExR {
+interface ExR {
   function getRate(bytes8 _queryTypeBytes)
-    public
+    external
     view
-    returns (uint256)
-  {}
+    returns (uint256);
 
   // temp used to get rate... will use getRate later when updated to use string
   // relates 0.4.22
   function getRateReadable(string _queryTypeString)
     external
     view
-    returns (uint256)
-  {}
+    returns (uint256);
 }
 
 
@@ -69,6 +67,8 @@ contract PoaTokenConcept is PausableToken {
   uint256 public constant decimals = 18;
   // ‰ permille NOT percent: fee paid to BBK holders through ACT
   uint256 public constant feeRate = 5;
+  // 100 000 tokens
+  uint256 public totalSupply = 1e23;
   // use to calculate when the contract should to Failed stage
   uint256 public creationTime;
   // used to check when contract should move from PreFunding to Funding stage
@@ -93,6 +93,10 @@ contract PoaTokenConcept is PausableToken {
   // needs to be used due to tokens not directly correlating to fundingGoal
   // due to fluctuating fiat rates
   mapping(address => uint256) public investmentAmountPerUserInWei;
+  // used to calculate balanceOf by deducting spent balances
+  mapping(address => uint256) public spentBalances;
+  // used to calculate balanceOf by adding received balances
+  mapping(address => uint256) public receivedBalances;
 
   enum Stages {
     PreFunding,
@@ -106,7 +110,7 @@ contract PoaTokenConcept is PausableToken {
   Stages public stage = Stages.PreFunding;
 
   event StageEvent(Stages stage);
-  event BuyEvent(address indexed buyer, uint256 amount);
+  event CommitmentEvent(address indexed buyer, uint256 amount);
   event PayoutEvent(uint256 amount);
   event ClaimEvent(uint256 payout);
   event TerminatedEvent();
@@ -175,7 +179,7 @@ contract PoaTokenConcept is PausableToken {
   }
 
   // token totalSupply must be more than fundingGoalInCents!
-  constructor
+  function setupContract
   (
     string _name,
     string _symbol,
@@ -285,7 +289,7 @@ contract PoaTokenConcept is PausableToken {
   // public utility function to allow checking of required fee for a given amount
   function calculateFee(uint256 _value)
     public
-    view
+    pure
     returns (uint256)
   {
     // divide by 1000 because feeRate permille
@@ -345,20 +349,6 @@ contract PoaTokenConcept is PausableToken {
     return true;
   }
 
-  function mint(
-    address _to,
-    uint256 _amount
-  )
-    private
-    returns (bool)
-  {
-    totalSupply_ = totalSupply().add(_amount);
-    balances[_to] = balances[_to].add(_amount);
-    emit MintEvent(_to, _amount);
-    emit Transfer(address(0), _to, _amount);
-    return true;
-  }
-
   function buy()
     public
     payable
@@ -385,7 +375,7 @@ contract PoaTokenConcept is PausableToken {
       // give a range due to fun fun integer division
       if (fundingGoalInCents.sub(_currentFundedCents) > 1) {
         // continue sale if more than 1 cent from goal in fiat
-        return buyAndContinueFunding();
+        return buyAndContinueFunding(msg.value);
       } else {
         // finish sale if within 1 cent of goal in fiat
         // no refunds for overpayment should be given
@@ -398,24 +388,15 @@ contract PoaTokenConcept is PausableToken {
     }
   }
 
-  function buyAndContinueFunding()
+  function buyAndContinueFunding(uint256 _payAmount)
     private
     returns (bool)
   {
-    // _payAmount is just value sent
-    uint256 _payAmount = msg.value;
-    // get token amount from wei... drops remainders (keeps wei dust in contract)
-    uint256 _buyAmount = weiToTokens(_payAmount);
-    // check that buyer will indeed receive something after integer division
-    require(_buyAmount > 0);
-    // create new tokens for user
-    mint(msg.sender, _buyAmount);
     // save this for later in case needing to reclaim
     investmentAmountPerUserInWei[msg.sender] = _payAmount;
     // increment the funded amount
     fundedAmountInWei = fundedAmountInWei.add(_payAmount);
-    emit BuyEvent(msg.sender, _buyAmount);
-
+    CommitmentEvent(msg.sender, _payAmount);
     return true;
   }
 
@@ -434,16 +415,8 @@ contract PoaTokenConcept is PausableToken {
     msg.sender.transfer(_refundAmount);
     // actual Ξ amount to buy after refund
     uint256 _payAmount = msg.value.sub(_refundAmount);
-    // token buy amount with refund taken into account
-    uint256 _buyAmount = weiToTokens(_payAmount);
-    // create new tokens for user
-    mint(msg.sender, _buyAmount);
-    // save this for later in case needing to reclaim
-    investmentAmountPerUserInWei[msg.sender] = _payAmount;
-    // increment the funded amount
-    fundedAmountInWei = fundedAmountInWei.add(_payAmount);
-    emit BuyEvent(msg.sender, _buyAmount);
-
+    buyAndContinueFunding(_payAmount);
+    
     return true;
   }
 
@@ -542,7 +515,7 @@ contract PoaTokenConcept is PausableToken {
     */
     uint256 _totalPerTokenUnclaimedConverted = totalPerTokenPayout == 0
       ? 0
-      : balances[_address]
+      : balanceOf(_address)
       .mul(totalPerTokenPayout.sub(claimedPerTokenPayouts[_address]))
       .div(1e18);
 
@@ -585,14 +558,11 @@ contract PoaTokenConcept is PausableToken {
     atStage(Stages.Failed)
     returns (bool)
   {
+    totalSupply = 0;
     uint256 _refundAmount = investmentAmountPerUserInWei[msg.sender];
     investmentAmountPerUserInWei[msg.sender] = 0;
     require(_refundAmount > 0);
-    uint256 _tokenBalance = balances[msg.sender];
-    balances[msg.sender] = 0;
-    totalSupply_ = totalSupply().sub(_tokenBalance);
     fundedAmountInWei = fundedAmountInWei.sub(_refundAmount);
-    emit Transfer(msg.sender, address(0), _tokenBalance);
     msg.sender.transfer(_refundAmount);
     return true;
   }
@@ -673,7 +643,30 @@ contract PoaTokenConcept is PausableToken {
 
   // end payout related functions
 
+  function startingBalance(address _address)
+    public
+    view
+    returns (uint256)
+  {
+    return uint256(stage) > 3 ? 
+      investmentAmountPerUserInWei[_address]
+        .mul(1e20)
+        .div(fundedAmountInWei) :
+      0;
+  }
+
   // start ERC20 overrides
+
+  // ERC20 override
+  function balanceOf(address _address)
+    public
+    view
+    returns (uint256)
+  {
+    return startingBalance(_address)
+      .add(receivedBalances[_address])
+      .sub(spentBalances[_address]);
+  }
 
   // same as ERC20 transfer other than settling unclaimed payouts
   function transfer
@@ -686,8 +679,14 @@ contract PoaTokenConcept is PausableToken {
     returns (bool)
   {
     // move perToken payout balance to unclaimedPayoutTotals
-    require(settleUnclaimedPerTokenPayouts(msg.sender, _to));
-    return super.transfer(_to, _value);
+    settleUnclaimedPerTokenPayouts(msg.sender, _to);
+
+    require(_to != address(0));
+    require(_value <= balanceOf(msg.sender));
+    spentBalances[msg.sender] = spentBalances[msg.sender].add(_value);
+    receivedBalances[_to] = receivedBalances[_to].add(_value);
+    Transfer(msg.sender, _to, _value);
+    return true;
   }
 
   // same as ERC20 transfer other than settling unclaimed payouts
@@ -702,8 +701,16 @@ contract PoaTokenConcept is PausableToken {
     returns (bool)
   {
     // move perToken payout balance to unclaimedPayoutTotals
-    require(settleUnclaimedPerTokenPayouts(_from, _to));
-    return super.transferFrom(_from, _to, _value);
+    settleUnclaimedPerTokenPayouts(_from, _to);
+
+    require(_to != address(0));
+    require(_value <= balanceOf(_from));
+    require(_value <= allowed[_from][msg.sender]);
+    spentBalances[_from] = spentBalances[_from].add(_value);
+    receivedBalances[_to] = receivedBalances[_to].add(_value);
+    allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
+    Transfer(_from, _to, _value);
+    return true;
   }
 
   // end ERC20 overrides
