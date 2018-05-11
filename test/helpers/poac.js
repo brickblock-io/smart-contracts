@@ -1,4 +1,5 @@
 const PoaTokenConcept = artifacts.require('PoaTokenConcept')
+const PoaManager = artifacts.require('PoaManager')
 const ContractRegistry = artifacts.require('BrickblockContractRegistry')
 const Whitelist = artifacts.require('BrickblockWhitelist')
 const AccessToken = artifacts.require('BrickblockAccessToken')
@@ -14,7 +15,8 @@ const {
   gasPrice,
   timeTravel,
   sendTransaction,
-  testWillThrow
+  testWillThrow,
+  bigZero
 } = require('./general')
 const { finalizedBBK } = require('./bbk')
 const { testApproveAndLockMany } = require('./act')
@@ -91,6 +93,7 @@ const setupEcosystem = async () => {
   const exp = await ExchangeRateProvider.new(reg.address)
   const fmr = await FeeManager.new(reg.address)
   const wht = await Whitelist.new(reg.address)
+  const pmr = await PoaManager.new(reg.address)
 
   for (const buyer of whitelistedPoaBuyers) {
     const preWhitelisted = await wht.whitelisted(buyer)
@@ -107,6 +110,7 @@ const setupEcosystem = async () => {
   await reg.updateContractAddress('ExchangeRateProvider', exp.address)
   await reg.updateContractAddress('FeeManager', fmr.address)
   await reg.updateContractAddress('Whitelist', wht.address)
+  await reg.updateContractAddress('PoaManager', pmr.address)
 
   testApproveAndLockMany(bbk, act, bbkContributors, bbkTokenDistAmount)
 
@@ -117,7 +121,8 @@ const setupEcosystem = async () => {
     exr,
     exp,
     fmr,
-    wht
+    wht,
+    pmr
   }
 }
 
@@ -142,14 +147,15 @@ const testSetCurrencyRate = async (exr, exp, currencyType, rate, config) => {
 }
 
 const setupPoaAndEcosystem = async () => {
-  const { reg, act, bbk, exr, exp, fmr, wht } = await setupEcosystem()
+  const { reg, act, bbk, exr, exp, fmr, wht, pmr } = await setupEcosystem()
 
   await testSetCurrencyRate(exr, exp, defaultFiatCurrency, defaultFiatRate, {
     from: owner,
     value: 1e18
   })
 
-  const poac = await PoaTokenConcept.new(
+  const poac = await PoaTokenConcept.new()
+  await poac.setupContract(
     defaultName,
     defaultSymbol,
     defaultFiatCurrency,
@@ -162,6 +168,8 @@ const setupPoaAndEcosystem = async () => {
     defaultFundingGoal
   )
 
+  await reg.updateContractAddress('PoaManager', owner)
+
   return {
     reg,
     act,
@@ -170,6 +178,7 @@ const setupPoaAndEcosystem = async () => {
     exp,
     fmr,
     wht,
+    pmr,
     poac
   }
 }
@@ -389,6 +398,9 @@ const testStartSale = async (poac, config) => {
 
 const testBuyTokens = async (poac, config) => {
   assert(!!config.gasPrice, 'gasPrice must be given')
+  assert(!!config.value, 'value must be given')
+  assert(!!config.from, 'from must be given')
+
   const buyer = config.from
   const weiBuyAmount = new BigNumber(config.value)
 
@@ -400,13 +412,13 @@ const testBuyTokens = async (poac, config) => {
   const tx = await poac.buy(config)
   const gasUsed = await getGasUsed(tx)
   const gasCost = new BigNumber(gasUsed).mul(config.gasPrice)
+
   const postEthBalance = await getEtherBalance(buyer)
   const postTokenBalance = await poac.balanceOf(buyer)
   const postFundedAmount = await poac.fundedAmountInWei()
   const postUserWeiInvested = await poac.investmentAmountPerUserInWei(buyer)
 
   const expectedPostEthBalance = preEthBalance.sub(weiBuyAmount).sub(gasCost)
-  const tokenBuyAmount = await poac.weiToTokens(weiBuyAmount)
 
   assert.equal(
     expectedPostEthBalance.toString(),
@@ -414,9 +426,14 @@ const testBuyTokens = async (poac, config) => {
     'postEth balance should match expected value'
   )
   assert.equal(
-    postTokenBalance.sub(preTokenBalance).toString(),
-    tokenBuyAmount.toString(),
-    'buyer token balance should be incremented by tokenBuyAmount'
+    bigZero.toString(),
+    preTokenBalance.toString(),
+    'token balance should be 0 before Active stage'
+  )
+  assert.equal(
+    bigZero.toString(),
+    postTokenBalance.toString(),
+    'token balance should be 0 before Active stage even after buying'
   )
   assert.equal(
     postFundedAmount.sub(preFundedAmount).toString(),
@@ -463,19 +480,23 @@ const testBuyRemainingTokens = async (poac, config) => {
   const postFundedWei = await poac.fundedAmountInWei()
 
   const expectedPostEthBalance = preEthBalance.sub(weiBuyAmount).sub(gasCost)
-  const tokenBuyAmount = await poac.weiToTokens(weiBuyAmount)
   const postFundedFiatCents = await poac.weiToFiatCents(postFundedWei)
+  const postStage = await poac.stage()
 
   assert.equal(
     expectedPostEthBalance.toString(),
     postEthBalance.toString(),
     'postEth balance should match expected value'
   )
-
-  assert(
-    // we lose A LOT of precision due to handling fiat...
-    areInRange(postTokenBalance.sub(preTokenBalance), tokenBuyAmount, 1e15),
-    'buyer token balance should be incremented by tokenBuyAmount'
+  assert.equal(
+    bigZero.toString(),
+    preTokenBalance.toString(),
+    'token balance should be 0 before Active stage'
+  )
+  assert.equal(
+    bigZero.toString(),
+    postTokenBalance.toString(),
+    'token balance should be 0 even after buying all remaining and entering Pending stage'
   )
   assert.equal(
     postFundedWei.sub(preFundedWei).toString(),
@@ -484,11 +505,8 @@ const testBuyRemainingTokens = async (poac, config) => {
   )
   assert(
     areInRange(fundingGoalInCents, postFundedFiatCents, 1e1),
-    'fundingGoal should be met'
+    'fundedAmount in fiat cents should be within 1 cent of fundingGoalCents'
   )
-
-  const postStage = await poac.stage()
-
   assert.equal(
     preStage.toString(),
     new BigNumber(1).toString(),

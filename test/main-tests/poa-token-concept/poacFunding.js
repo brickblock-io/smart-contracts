@@ -21,8 +21,12 @@ const {
   testApprove,
   testTransferFrom,
   testTerminate
-} = require('../helpers/poac')
-const { testWillThrow, timeTravel, gasPrice } = require('../helpers/general.js')
+} = require('../../helpers/poac')
+const {
+  testWillThrow,
+  timeTravel,
+  gasPrice
+} = require('../../helpers/general.js')
 
 describe('when in Funding (stage 1)', () => {
   contract('PoaTokenConcept', () => {
@@ -33,7 +37,6 @@ describe('when in Funding (stage 1)', () => {
       const contracts = await setupPoaAndEcosystem()
       poac = contracts.poac
       fmr = contracts.fmr
-
       const neededTime = await determineNeededTimeTravel(poac)
       await timeTravel(neededTime)
       await testStartSale(poac)

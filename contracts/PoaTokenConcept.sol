@@ -128,6 +128,12 @@ contract PoaTokenConcept is PausableToken {
     _;
   }
 
+  modifier onlyOwner() {
+    owner = registry.getContractAddress("PoaManager");
+    require(msg.sender == owner);
+    _;
+  }
+
   modifier onlyCustodian() {
     require(msg.sender == custodian);
     _;
@@ -222,10 +228,10 @@ contract PoaTokenConcept is PausableToken {
     fiatCurrency = _fiatCurrency;
 
     // assign addresses
-    owner = msg.sender;
     broker = _broker;
     custodian = _custodian;
     registry = Registry(_registry);
+    owner = registry.getContractAddress("PoaManager");
 
     // assign times
     creationTime = block.timestamp;
@@ -284,6 +290,14 @@ contract PoaTokenConcept is PausableToken {
   {
     // 1e20 = to wei units (1e18) to percentage units (1e2)
     return weiToFiatCents(_weiAmount).mul(1e20).div(fundingGoalInCents);
+  }
+
+  function fundingGoalInWei()
+    public
+    view
+    returns (uint256)
+  {
+    return fiatCentsToWei(fundingGoalInCents);
   }
 
   // public utility function to allow checking of required fee for a given amount

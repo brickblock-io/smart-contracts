@@ -21,13 +21,13 @@ const {
   testBuyTokensMulti,
   getAccountInformation,
   testResetCurrencyRate
-} = require('../helpers/poac')
+} = require('../../helpers/poac')
 const {
   timeTravel,
   gasPrice,
   areInRange,
   getEtherBalance
-} = require('../helpers/general.js')
+} = require('../../helpers/general.js')
 const BigNumber = require('bignumber.js')
 
 describe('when handling unhappy paths', async () => {

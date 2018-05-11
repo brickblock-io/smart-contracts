@@ -22,8 +22,12 @@ const {
   testApprove,
   testTransferFrom,
   testTerminate
-} = require('../helpers/poac')
-const { testWillThrow, timeTravel, gasPrice } = require('../helpers/general.js')
+} = require('../../helpers/poac')
+const {
+  testWillThrow,
+  timeTravel,
+  gasPrice
+} = require('../../helpers/general.js')
 
 describe('when in Terminated (stage 5)', () => {
   contract('PoaTokenConcept', () => {

@@ -22,8 +22,12 @@ const {
   testApprove,
   testTransferFrom,
   testTerminate
-} = require('../helpers/poac')
-const { testWillThrow, timeTravel, gasPrice } = require('../helpers/general.js')
+} = require('../../helpers/poac')
+const {
+  testWillThrow,
+  timeTravel,
+  gasPrice
+} = require('../../helpers/general.js')
 const BigNumber = require('bignumber.js')
 
 describe('when in Failed (stage 3)', () => {

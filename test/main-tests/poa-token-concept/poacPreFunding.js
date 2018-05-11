@@ -20,13 +20,13 @@ const {
   testTerminate,
   defaultIpfsHash,
   setupPoaAndEcosystem
-} = require('../helpers/poac')
+} = require('../../helpers/poac')
 const {
   testWillThrow,
 
   timeTravel,
   gasPrice
-} = require('../helpers/general.js')
+} = require('../../helpers/general.js')
 
 describe('when in PreFunding (stage 0)', async () => {
   contract('PoaTokenConcept', () => {

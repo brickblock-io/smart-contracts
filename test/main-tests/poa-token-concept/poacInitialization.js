@@ -14,8 +14,8 @@ const {
   setupEcosystem,
   testSetCurrencyRate,
   testInitialization
-} = require('../helpers/poac')
-const { testWillThrow, addressZero } = require('../helpers/general.js')
+} = require('../../helpers/poac')
+const { testWillThrow, addressZero } = require('../../helpers/general.js')
 const BigNumber = require('bignumber.js')
 
 describe('when initializing PoaTokenConcept', () => {
