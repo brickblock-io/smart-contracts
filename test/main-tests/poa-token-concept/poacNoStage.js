@@ -4,7 +4,6 @@ const {
   setupPoaAndEcosystem,
   testWeiToFiatCents,
   testFiatCentsToWei,
-  testWeiToTokens,
   testCalculateFee,
   testFallback,
   testChangeCustodianAddress
@@ -27,10 +26,6 @@ describe('when testing stage independent functions', () => {
 
     it('should use fiatCentsToWei to return correct value', async () => {
       await testFiatCentsToWei(poac, new BigNumber('3e4'))
-    })
-
-    it('should use weiToTokens to calculate correct value', async () => {
-      await testWeiToTokens(poac, new BigNumber('1e18'))
     })
 
     it('should calculate correct fee', async () => {

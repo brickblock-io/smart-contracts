@@ -97,6 +97,8 @@ contract PoaTokenConcept is PausableToken {
   mapping(address => uint256) public spentBalances;
   // used to calculate balanceOf by adding received balances
   mapping(address => uint256) public receivedBalances;
+  // hide balances to ensure that only balanceOf is being used
+  mapping(address => uint256) private balances;
 
   enum Stages {
     PreFunding,
@@ -116,7 +118,6 @@ contract PoaTokenConcept is PausableToken {
   event TerminatedEvent();
   event WhitelistedEvent(address indexed account, bool isWhitelisted);
   event ProofOfCustodyUpdatedEvent(string ipfsHash);
-  event MintEvent(address indexed to, uint256 amount);
   event ReclaimEvent(address indexed reclaimer, uint256 amount);
   event CustodianChangedEvent(address newAddress);
 
@@ -280,18 +281,6 @@ contract PoaTokenConcept is PausableToken {
       );
   }
 
-  // util function to convert wei to tokens. can be used publicly to see
-  // what the balance would be for a given Ξ amount.
-  // will drop miniscule amounts of wei due to integer division
-  function weiToTokens(uint256 _weiAmount)
-    public
-    view
-    returns (uint256)
-  {
-    // 1e20 = to wei units (1e18) to percentage units (1e2)
-    return weiToFiatCents(_weiAmount).mul(1e20).div(fundingGoalInCents);
-  }
-
   function fundingGoalInWei()
     public
     view
@@ -319,14 +308,6 @@ contract PoaTokenConcept is PausableToken {
       registry.getContractAddress("FeeManager")
     );
     require(feeManager.payFee.value(_value)());
-  }
-
-  function fundedAmountCents()
-    public
-    view
-    returns (uint256)
-  {
-    return weiToFiatCents(fundedAmountInWei);
   }
 
   // end utility functions
@@ -540,8 +521,7 @@ contract PoaTokenConcept is PausableToken {
 
     perToken payout rates are stored * 1e18 in order to be kept accurate
     perToken payout is / 1e18 at time of usage for actual Ξ balances
-    unclaimedPayoutTotals are stored as actual Ξ value
-      no need for rate * balance
+    unclaimedPayoutTotals are stored as actual Ξ value no need for rate * balance
     */
     return _includeUnclaimed
       ? _totalPerTokenUnclaimedConverted.add(unclaimedPayoutTotals[_address])
@@ -657,17 +637,16 @@ contract PoaTokenConcept is PausableToken {
   }
 
   // end payout related functions
-
   function startingBalance(address _address)
     public
     view
     returns (uint256)
   {
-    return uint256(stage) > 3 ? 
-      investmentAmountPerUserInWei[_address]
-        .mul(1e20)
-        .div(fundedAmountInWei) :
-      0;
+    return uint256(stage) > 3
+      ? investmentAmountPerUserInWei[_address]
+        .mul(totalSupply)
+        .div(fundedAmountInWei)
+      : 0;
   }
 
   // start ERC20 overrides

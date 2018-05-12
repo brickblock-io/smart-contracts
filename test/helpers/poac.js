@@ -266,9 +266,8 @@ const testInitialization = async (exr, exp, reg) => {
     'fee rate should be a constant of 5'
   )
   assert(
-    creationTime.lessThan(new BigNumber(Date.now()).div(1e3)) &&
-      creationTime.greaterThan(new BigNumber(Date.now()).div(1e3).sub(2e4)),
-    'creationTime should be no less than 20 seconds before now()'
+    areInRange(creationTime, new BigNumber(Date.now()).div(1e3), 60),
+    'creationTime should be within 60 seconds of now()'
   )
   assert.equal(
     startTime.toString(),
@@ -340,23 +339,6 @@ const testFiatCentsToWei = async (poac, fiatCentInput) => {
     expectedWei.toString(),
     actualWei.toString(),
     'fiatCentInput converted to actualWei should match expectedWei'
-  )
-}
-
-const testWeiToTokens = async (poac, weiInput) => {
-  const expectedTokens = weiInput
-    .mul(defaultFiatRate)
-    .div(1e18)
-    .mul(1e20)
-    .div(defaultFundingGoal)
-    .floor()
-
-  const actualTokens = await poac.weiToTokens(weiInput)
-
-  assert.equal(
-    expectedTokens.toString(),
-    actualTokens.toString(),
-    'weiInput converted to actualTokens should match expectedTokens'
   )
 }
 
@@ -660,7 +642,7 @@ const testPayout = async (poac, fmr, config) => {
 const testClaim = async (poac, config, isTerminated) => {
   const claimer = config.from
   const stage = await poac.stage()
-  const claimerClaimAmount = await poac.currentPayout(claimer, true)
+  const preClaimerClaimAmount = await poac.currentPayout(claimer, true)
 
   const preClaimerEtherBalance = await getEtherBalance(claimer)
   const preContractEtherBalance = await getEtherBalance(poac.address)
@@ -674,10 +656,11 @@ const testClaim = async (poac, config, isTerminated) => {
 
   const postClaimerEtherBalance = await getEtherBalance(claimer)
   const postContractEtherBalance = await getEtherBalance(poac.address)
+  const postClaimerClaimAmount = await poac.currentPayout(claimer, true)
 
   const expectedClaimerEtherBalance = preClaimerEtherBalance
     .sub(gasCost)
-    .add(claimerClaimAmount)
+    .add(preClaimerClaimAmount)
 
   assert.equal(
     expectedClaimerEtherBalance.toString(),
@@ -686,8 +669,13 @@ const testClaim = async (poac, config, isTerminated) => {
   )
   assert.equal(
     preContractEtherBalance.sub(postContractEtherBalance).toString(),
-    claimerClaimAmount.toString(),
+    preClaimerClaimAmount.toString(),
     'contract ether balance should be decremented by the claimerClaimAmount'
+  )
+  assert.equal(
+    bigZero.toString(),
+    postClaimerClaimAmount.toString(),
+    'poaTokenHolder currentPayout should be zero after claiming'
   )
   assert.equal(
     stage.toString(),
@@ -1123,7 +1111,6 @@ module.exports = {
   testInitialization,
   testWeiToFiatCents,
   testFiatCentsToWei,
-  testWeiToTokens,
   testCalculateFee,
   testStartSale,
   testBuyTokens,
