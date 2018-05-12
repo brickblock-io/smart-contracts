@@ -217,7 +217,6 @@ const testInitialization = async (exr, exp, reg) => {
   const actualCustodian = await poac.custodian()
   const decimals = await poac.decimals()
   const feeRate = await poac.feeRate()
-  const creationTime = await poac.creationTime()
   const startTime = await poac.startTime()
   const fundingTimeout = await poac.fundingTimeout()
   const fundingGoalInCents = await poac.fundingGoalInCents()
@@ -264,10 +263,6 @@ const testInitialization = async (exr, exp, reg) => {
     feeRate.toString(),
     new BigNumber(5).toString(),
     'fee rate should be a constant of 5'
-  )
-  assert(
-    areInRange(creationTime, new BigNumber(Date.now()).div(1e3), 60),
-    'creationTime should be within 60 seconds of now()'
   )
   assert.equal(
     startTime.toString(),

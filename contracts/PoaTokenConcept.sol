@@ -122,6 +122,7 @@ contract PoaTokenConcept is PausableToken {
   event CustodianChangedEvent(address newAddress);
 
   modifier eitherCustodianOrOwner() {
+    owner = registry.getContractAddress("PoaManager");
     require(
       msg.sender == custodian ||
       msg.sender == owner
