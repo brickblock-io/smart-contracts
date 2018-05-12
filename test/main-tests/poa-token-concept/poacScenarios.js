@@ -19,9 +19,16 @@ const {
   testApprove,
   testTransferFrom,
   testBuyTokensMulti,
-  getAccountInformation
+  getAccountInformation,
+  testResetCurrencyRate,
+  testActiveBalances
 } = require('../../helpers/poac')
-const { timeTravel, gasPrice, areInRange } = require('../../helpers/general.js')
+const {
+  timeTravel,
+  gasPrice,
+  areInRange,
+  getEtherBalance
+} = require('../../helpers/general.js')
 const BigNumber = require('bignumber.js')
 
 describe('when handling unhappy paths', async () => {
@@ -764,6 +771,200 @@ describe('when trying various scenarios involving payout, transfer, approve, and
 
         await testClaimAllPayouts(poac, whitelistedPoaBuyers)
       })
+    })
+  })
+})
+
+describe('when buying tokens with a fluctuating fiatRate', () => {
+  contract('PoaTokenConcept', () => {
+    const defaultBuyAmount = new BigNumber(1e18)
+    let poac
+    let exr
+    let exp
+    let fmr
+    let rate
+
+    beforeEach('setup contracts', async () => {
+      const contracts = await setupPoaAndEcosystem()
+      poac = contracts.poac
+      exr = contracts.exr
+      exp = contracts.exp
+      fmr = contracts.fmr
+      rate = new BigNumber(5e4)
+
+      // move into Funding
+      const neededTime = await determineNeededTimeTravel(poac)
+      await timeTravel(neededTime)
+      await testStartSale(poac)
+
+      // set starting rate to be sure of rate
+      await testResetCurrencyRate(exr, exp, 'EUR', rate)
+    })
+
+    it('should give token balance proportional to commitment and fundingGoal, even when rates go down', async () => {
+      const commitments = []
+      // increase by 10 percent
+      const decreaseRate = 0.1
+      for (const from of whitelistedPoaBuyers) {
+        const preFundingGoalInWei = await poac.fundingGoalInWei()
+        rate = rate.sub(rate.mul(decreaseRate)).floor()
+        await testResetCurrencyRate(exr, exp, 'EUR', rate)
+        const postFundingGoalInWei = await poac.fundingGoalInWei()
+        assert(
+          postFundingGoalInWei.greaterThan(preFundingGoalInWei),
+          'fundingGoalInWei should increase when fiat rate goes down'
+        )
+
+        const purchase = await testBuyTokens(poac, {
+          from,
+          value: defaultBuyAmount,
+          gasPrice
+        })
+
+        commitments.push({
+          address: from,
+          amount: purchase
+        })
+      }
+
+      const purchase = await testBuyRemainingTokens(poac, {
+        from: whitelistedPoaBuyers[0],
+        gasPrice
+      })
+
+      commitments[0].amount = purchase
+
+      await testActivate(poac, fmr, defaultIpfsHash, {
+        from: custodian,
+        gasPrice
+      })
+
+      await testActiveBalances(poac, commitments)
+    })
+
+    it('should give token balance proportional to commitment and fundingGoal, even when rates go up', async () => {
+      const commitments = []
+      // increase by 10 percent
+      const increaseRate = 0.1
+      for (const from of whitelistedPoaBuyers) {
+        const preFundingGoalInWei = await poac.fundingGoalInWei()
+        rate = rate.add(rate.mul(increaseRate)).floor()
+        await testResetCurrencyRate(exr, exp, 'EUR', rate)
+        const postFundingGoalInWei = await poac.fundingGoalInWei()
+        assert(
+          postFundingGoalInWei.lessThan(preFundingGoalInWei),
+          'fundingGoalInWei should increase when fiat rate goes down'
+        )
+
+        const purchase = await testBuyTokens(poac, {
+          from,
+          value: defaultBuyAmount,
+          gasPrice
+        })
+
+        commitments.push({
+          address: from,
+          amount: purchase
+        })
+      }
+
+      const purchase = await testBuyRemainingTokens(poac, {
+        from: whitelistedPoaBuyers[0],
+        gasPrice
+      })
+
+      commitments[0].amount = purchase
+
+      await testActivate(poac, fmr, defaultIpfsHash, {
+        from: custodian,
+        gasPrice
+      })
+
+      await testActiveBalances(poac, commitments)
+    })
+
+    it('should NOT move to pending if rate goes low enough before a buy', async () => {
+      const fundingGoalFiatCents = await poac.fundingGoalInCents()
+      const preNeededWei = await poac.fiatCentsToWei(fundingGoalFiatCents)
+      // suddenly eth drops to half of value vs EUR
+      rate = rate.div(2).floor()
+      await testResetCurrencyRate(exr, exp, 'EUR', rate)
+
+      await testBuyTokens(poac, {
+        from: whitelistedPoaBuyers[0],
+        value: preNeededWei,
+        gasPrice
+      })
+
+      const postStage = await poac.stage()
+      const postFundedAmountCents = await poac.fundedAmountInCents()
+
+      assert.equal(
+        postStage.toString(),
+        new BigNumber(1).toString(),
+        'contract should still be in stage 1, Funding'
+      )
+      assert(
+        areInRange(postFundedAmountCents, fundingGoalFiatCents.div(2), 1e2),
+        'fundedAmountInCents should be half of fundingGoalFiatCents'
+      )
+    })
+
+    it('should NOT buy tokens when rate goes high enough before buy', async () => {
+      const fundingGoalFiatCents = await poac.fundingGoalInCents()
+      const preNeededWei = await poac.fiatCentsToWei(fundingGoalFiatCents)
+
+      // buy half of tokens based on original rate
+      await testBuyTokens(poac, {
+        from: whitelistedPoaBuyers[0],
+        value: preNeededWei.div(2),
+        gasPrice
+      })
+
+      // rate doubles
+      rate = rate.mul(2).floor()
+      await testResetCurrencyRate(exr, exp, 'EUR', rate)
+
+      const interimStage = await poac.stage()
+      const preSecondEthBalance = await getEtherBalance(whitelistedPoaBuyers[1])
+
+      // try to buy after rate doubling (fundingGoal should be met)
+      const tx = await poac.buy({
+        from: whitelistedPoaBuyers[1],
+        value: preNeededWei.div(2).floor(),
+        gasPrice
+      })
+      const { gasUsed } = tx.receipt
+      const gasCost = gasPrice.mul(gasUsed)
+
+      const postStage = await poac.stage()
+      const postSecondEthBalance = await getEtherBalance(
+        whitelistedPoaBuyers[1]
+      )
+      const postSecondTokenBalance = await poac.balanceOf(
+        whitelistedPoaBuyers[1]
+      )
+
+      assert.equal(
+        interimStage.toString(),
+        new BigNumber(1).toString(),
+        'stage should still be 1, Funding'
+      )
+      assert.equal(
+        postStage.toString(),
+        new BigNumber(2).toString(),
+        'stage should now be 2, Pending'
+      )
+      assert.equal(
+        postSecondTokenBalance.toString(),
+        new BigNumber(0).toString(),
+        'buyer should get no tokens'
+      )
+      assert.equal(
+        preSecondEthBalance.sub(postSecondEthBalance).toString(),
+        gasCost.toString(),
+        'only gasCost should be deducted, the rest should be sent back'
+      )
     })
   })
 })

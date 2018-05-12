@@ -282,6 +282,14 @@ contract PoaTokenConcept is PausableToken {
       );
   }
 
+  function fundedAmountInCents()
+    public
+    view
+    returns (uint256)
+  {
+    return weiToFiatCents(fundedAmountInWei);
+  }
+
   function fundingGoalInWei()
     public
     view
@@ -384,6 +392,7 @@ contract PoaTokenConcept is PausableToken {
     }
   }
 
+  event Test(uint256 value);
   function buyAndContinueFunding(uint256 _payAmount)
     private
     returns (bool)
@@ -393,6 +402,7 @@ contract PoaTokenConcept is PausableToken {
       .add(_payAmount);
     // increment the funded amount
     fundedAmountInWei = fundedAmountInWei.add(_payAmount);
+    Test(investmentAmountPerUserInWei[msg.sender]);
     CommitmentEvent(msg.sender, _payAmount);
     return true;
   }

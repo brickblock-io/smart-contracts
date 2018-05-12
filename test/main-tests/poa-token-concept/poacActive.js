@@ -21,7 +21,9 @@ const {
   testTransfer,
   testApprove,
   testTransferFrom,
-  testTerminate
+  testTerminate,
+  testActiveBalances,
+  defaultBuyAmount
 } = require('../../helpers/poac')
 const {
   testWillThrow,
@@ -34,6 +36,7 @@ describe('when in Active (stage 4)', () => {
     const newIpfsHash = 'Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u'
     let poac
     let fmr
+    const commitments = []
 
     before('setup contracts', async () => {
       const contracts = await setupPoaAndEcosystem()
@@ -48,13 +51,25 @@ describe('when in Active (stage 4)', () => {
       // move into Pending
       await testBuyTokens(poac, {
         from: whitelistedPoaBuyers[0],
-        value: 1e18,
+        value: defaultBuyAmount,
         gasPrice
       })
 
-      await testBuyRemainingTokens(poac, {
+      // save for testing token balances once Active
+      commitments.push({
+        address: whitelistedPoaBuyers[0],
+        amount: defaultBuyAmount
+      })
+
+      const commitAmount = await testBuyRemainingTokens(poac, {
         from: whitelistedPoaBuyers[1],
         gasPrice
+      })
+
+      // save for testing token balances once Active
+      commitments.push({
+        address: whitelistedPoaBuyers[1],
+        amount: commitAmount
       })
 
       // move into Active
@@ -64,6 +79,10 @@ describe('when in Active (stage 4)', () => {
 
       // clean out broker balance for easier debugging
       await testBrokerClaim(poac)
+    })
+
+    it('should have correct token balances once in Active stage', async () => {
+      await testActiveBalances(poac, commitments)
     })
 
     it('should be unpaused', async () => {

@@ -47,6 +47,7 @@ const defaultFundingGoal = new BigNumber(5e5)
 const defaultTotalSupply = new BigNumber(1e23)
 const defaultFiatRate = new BigNumber(33333)
 const defaultIpfsHash = 'QmSUfCtXgb59G9tczrz2WuHNAbecV55KRBGXBbZkou5RtE'
+const defaultBuyAmount = new BigNumber(1e18)
 const getDefaultStartTime = async () => {
   const currentBlock = await web3.eth.getBlock(web3.eth.blockNumber)
   const blockTime = new BigNumber(currentBlock.timestamp)
@@ -427,7 +428,7 @@ const testBuyTokens = async (poac, config) => {
     'userWeiInvested should be incremented for the buying user'
   )
 
-  return postTokenBalance
+  return postUserWeiInvested
 }
 
 const testBuyTokensMulti = async (poac, buyAmount) => {
@@ -439,6 +440,10 @@ const testBuyTokensMulti = async (poac, buyAmount) => {
 const testBuyRemainingTokens = async (poac, config) => {
   assert(!!config.gasPrice, 'gasPrice must be given')
   assert(!!config.from, 'from must be given')
+
+  const preUserWeiInvested = await poac.investmentAmountPerUserInWei(
+    config.from
+  )
   const fundedAmountInWei = await poac.fundedAmountInWei()
   const fundingGoalInCents = await poac.fundingGoalInCents()
   const fundingGoalWei = await poac.fiatCentsToWei(fundingGoalInCents)
@@ -456,6 +461,9 @@ const testBuyRemainingTokens = async (poac, config) => {
   const gasUsed = await getGasUsed(tx)
   const gasCost = new BigNumber(gasUsed).mul(config.gasPrice)
 
+  const postUserWeiInvested = await poac.investmentAmountPerUserInWei(
+    config.from
+  )
   const postEthBalance = await getEtherBalance(buyer)
   const postTokenBalance = await poac.balanceOf(buyer)
   const postFundedWei = await poac.fundedAmountInWei()
@@ -464,6 +472,11 @@ const testBuyRemainingTokens = async (poac, config) => {
   const postFundedFiatCents = await poac.weiToFiatCents(postFundedWei)
   const postStage = await poac.stage()
 
+  assert.equal(
+    postUserWeiInvested.sub(preUserWeiInvested).toString(),
+    remainingBuyableEth.toString(),
+    'investmentAmountPerUserInWei should be incremented by remainingBuyableEth'
+  )
   assert.equal(
     expectedPostEthBalance.toString(),
     postEthBalance.toString(),
@@ -485,7 +498,7 @@ const testBuyRemainingTokens = async (poac, config) => {
     'fiat fundedAmountInWei should be incremented by fiatBuyAmount'
   )
   assert(
-    areInRange(fundingGoalInCents, postFundedFiatCents, 1e1),
+    areInRange(fundingGoalInCents, postFundedFiatCents, 1),
     'fundedAmount in fiat cents should be within 1 cent of fundingGoalCents'
   )
   assert.equal(
@@ -498,6 +511,8 @@ const testBuyRemainingTokens = async (poac, config) => {
     new BigNumber(2).toString(),
     'stage should be 2, Pending'
   )
+
+  return postUserWeiInvested
 }
 
 const testActivate = async (poac, fmr, ipfsHash, config) => {
@@ -1080,6 +1095,29 @@ const testResetCurrencyRate = async (exr, exp, currencyType, rate) => {
   await testSetRate(exr, exp, rate, false)
 }
 
+const testActiveBalances = async (poac, commitments) => {
+  const totalSupply = await poac.totalSupply()
+  const fundedAmountInWei = await poac.fundedAmountInWei()
+  let tokenBalanceTotal = bigZero
+
+  for (const commitment of commitments) {
+    const { address, amount } = commitment
+    const tokenBalance = await poac.balanceOf(address)
+    const expectedBalance = amount.mul(totalSupply).div(fundedAmountInWei)
+    tokenBalanceTotal = tokenBalanceTotal.add(tokenBalance)
+
+    assert(
+      areInRange(tokenBalance, expectedBalance, 1),
+      'token balance should be within 1 wei of expectedBalance'
+    )
+  }
+
+  assert(
+    areInRange(tokenBalanceTotal, totalSupply, commitments.length),
+    'totalSupply should be within 1 wei of tokenBalanceTotal'
+  )
+}
+
 module.exports = {
   accounts,
   owner,
@@ -1100,6 +1138,7 @@ module.exports = {
   defaultFiatRate,
   getDefaultStartTime,
   defaultIpfsHash,
+  defaultBuyAmount,
   setupEcosystem,
   testSetCurrencyRate,
   setupPoaAndEcosystem,
@@ -1135,5 +1174,6 @@ module.exports = {
   testBuyTokensMulti,
   testCurrentPayout,
   getAccountInformation,
-  testResetCurrencyRate
+  testResetCurrencyRate,
+  testActiveBalances
 }
