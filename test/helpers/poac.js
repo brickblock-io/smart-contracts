@@ -1118,6 +1118,21 @@ const testActiveBalances = async (poac, commitments) => {
   )
 }
 
+const testToggleWhitelistTransfers = async (poac, config) => {
+  const preWhitelistTransfers = await poac.whitelistTransfers()
+
+  await poac.toggleWhitelistTransfers(config)
+
+  const postWhitelistTransfers = await poac.whitelistTransfers()
+
+  assert(
+    preWhitelistTransfers != postWhitelistTransfers,
+    'whitelistTransfers should be toggled'
+  )
+
+  return postWhitelistTransfers
+}
+
 module.exports = {
   accounts,
   owner,
@@ -1175,5 +1190,6 @@ module.exports = {
   testCurrentPayout,
   getAccountInformation,
   testResetCurrencyRate,
-  testActiveBalances
+  testActiveBalances,
+  testToggleWhitelistTransfers
 }

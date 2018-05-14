@@ -23,7 +23,8 @@ const {
   testTransferFrom,
   testTerminate,
   testActiveBalances,
-  defaultBuyAmount
+  defaultBuyAmount,
+  testToggleWhitelistTransfers
 } = require('../../helpers/poac')
 const {
   testWillThrow,
@@ -205,8 +206,8 @@ describe('when in Active (stage 4)', () => {
       ])
     })
 
-    it('should transfer', async () => {
-      await testTransfer(poac, whitelistedPoaBuyers[1], 1e17, {
+    it('should transfer to NOT whitelisted addresses when whitelistTransfers=false', async () => {
+      await testTransfer(poac, custodian, 1e17, {
         from: whitelistedPoaBuyers[0]
       })
     })
@@ -217,7 +218,61 @@ describe('when in Active (stage 4)', () => {
       })
     })
 
-    it('should transferFrom', async () => {
+    it('should transferFrom to NOT whitelisted address when whitelistTransfers=false', async () => {
+      await testTransferFrom(poac, whitelistedPoaBuyers[0], custodian, 1e17, {
+        from: whitelistedPoaBuyers[1]
+      })
+    })
+
+    it('should NOT toggleWhitelistTransfers if NOT owner', async () => {
+      await testWillThrow(testToggleWhitelistTransfers, [
+        poac,
+        { from: custodian }
+      ])
+    })
+
+    it('should toggleWhitelistTransfers to true if owner', async () => {
+      const whitelistTransfers = await testToggleWhitelistTransfers(poac, {
+        from: owner
+      })
+      assert(
+        whitelistTransfers,
+        'transfers/transferFroms should require whitelisting now'
+      )
+    })
+
+    it('should NOT transfer to NOT whitelisted address', async () => {
+      await testWillThrow(testTransfer, [
+        poac,
+        custodian,
+        1e17,
+        { from: whitelistedPoaBuyers[0] }
+      ])
+    })
+
+    it('should still approve when whitelistTransfers is enabled when whitelistTransfers=true', async () => {
+      await testApprove(poac, whitelistedPoaBuyers[1], 1e17, {
+        from: whitelistedPoaBuyers[0]
+      })
+    })
+
+    it('should NOT transferFrom to NOT whitelisted address when whitelistTransfers=true', async () => {
+      await testWillThrow(testTransferFrom, [
+        poac,
+        whitelistedPoaBuyers[0],
+        custodian,
+        1e17,
+        { from: whitelistedPoaBuyers[1] }
+      ])
+    })
+
+    it('should transfer to whitelisted addresses when whitelistTransfers=true', async () => {
+      await testTransfer(poac, whitelistedPoaBuyers[1], 1e17, {
+        from: whitelistedPoaBuyers[0]
+      })
+    })
+
+    it('should transferFrom to whitelisted address when whitelistTransfers=false', async () => {
       await testTransferFrom(
         poac,
         whitelistedPoaBuyers[0],

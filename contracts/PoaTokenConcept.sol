@@ -85,6 +85,8 @@ contract PoaTokenConcept is PausableToken {
   uint256 public totalPerTokenPayout;
   // used to keep track of of actual fundedAmount in eth
   uint256 public fundedAmountInWei;
+  // used to enable/disable whitelist required transfers/transferFroms
+  bool public whitelistTransfers;
 
   // used to deduct already claimed payouts on a per token basis
   mapping(address => uint256) public claimedPerTokenPayouts;
@@ -151,11 +153,25 @@ contract PoaTokenConcept is PausableToken {
     _;
   }
 
-  modifier isWhitelisted() {
+  // enforce whitelisting if is not transfer OR
+  // if is transfer and whitelistTransfers is enables
+  modifier isBuyWhitelisted() {
     require(
       Whitelist(registry.getContractAddress("Whitelist"))
         .whitelisted(msg.sender)
     );
+
+    _;
+  }
+
+  modifier isTransferWhitelisted(address _to) {
+    if (whitelistTransfers) {
+      require(
+        Whitelist(registry.getContractAddress("Whitelist"))
+          .whitelisted(_to)
+      );
+    }
+
     _;
   }
 
@@ -246,6 +262,7 @@ contract PoaTokenConcept is PausableToken {
 
     // start paused
     paused = true;
+    whitelistTransfers = false;
 
     // run getRate once in order to see if rate is initialized, throws if not
     ExR(registry.getContractAddress("ExchangeRates"))
@@ -358,7 +375,7 @@ contract PoaTokenConcept is PausableToken {
     payable
     checkTimeout
     atStage(Stages.Funding)
-    isWhitelisted
+    isBuyWhitelisted
     returns (bool)
   {
     // prevent case where buying after reaching fundingGoal results in buyer
@@ -658,6 +675,16 @@ contract PoaTokenConcept is PausableToken {
       : 0;
   }
 
+  // enables whitelisted transfers/transferFroms
+  function toggleWhitelistTransfers()
+    public
+    onlyOwner
+    returns (bool)
+  {
+    whitelistTransfers = !whitelistTransfers;
+    return whitelistTransfers;
+  }
+
   // start ERC20 overrides
 
   // ERC20 override
@@ -679,6 +706,7 @@ contract PoaTokenConcept is PausableToken {
   )
     public
     whenNotPaused
+    isTransferWhitelisted(_to)
     returns (bool)
   {
     // move perToken payout balance to unclaimedPayoutTotals
@@ -701,6 +729,7 @@ contract PoaTokenConcept is PausableToken {
   )
     public
     whenNotPaused
+    isTransferWhitelisted(_to)
     returns (bool)
   {
     // move perToken payout balance to unclaimedPayoutTotals
