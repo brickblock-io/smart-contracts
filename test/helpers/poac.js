@@ -227,6 +227,7 @@ const testInitialization = async (exr, exp, reg) => {
   const contractBalance = await poac.balanceOf(poac.address)
   const stage = await poac.stage()
   const paused = await poac.paused()
+  const whitelistTransfers = await poac.whitelistTransfers()
 
   assert.equal(name, defaultName, 'name should match that given in constructor')
   assert.equal(
@@ -306,6 +307,10 @@ const testInitialization = async (exr, exp, reg) => {
     'stage should start at 0 (PreFunding)'
   )
   assert(paused, 'contract should start paused')
+  assert(
+    !whitelistTransfers,
+    'contract should start not requiring whitelisted for transfers'
+  )
 }
 
 const testWeiToFiatCents = async (poac, weiInput) => {
