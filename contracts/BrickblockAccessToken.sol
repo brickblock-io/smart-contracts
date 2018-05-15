@@ -125,10 +125,10 @@ contract BrickblockAccessToken is PausableToken {
   mapping(address => uint256) private balances;
   // mapping tracking incoming balances in order to have correct balanceOf
   // used in doubleEntryParadigm (see glossary)
-  mapping(address => uint256) private receivedBalances;
+  mapping(address => uint256) public receivedBalances;
   // mapping tracking outgoing balances in order to have correct balanceOf
   // used in doubleEntryParadigm (see glossary)
-  mapping(address => uint256) private spentBalances;
+  mapping(address => uint256) public spentBalances;
 
 
   event MintEvent(uint256 amount);
