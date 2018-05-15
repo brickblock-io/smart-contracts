@@ -1,3 +1,5 @@
+// snapshot from commit hash 60b8371a5caf75e37be74d809a24447e2e366cca
+
 const assert = require('assert')
 const BigNumber = require('bignumber.js')
 
@@ -520,10 +522,7 @@ async function testKill(owner, contract) {
   const preContractEtherBalance = await getEtherBalance(contract.address)
   const preOwnerEtherBalance = await getEtherBalance(owner)
 
-  const meta = await contract.kill({
-    from: owner,
-    gasPrice
-  })
+  const meta = await contract.kill({ from: owner, gasPrice })
   const gasUsed = meta.receipt.gasUsed
   const gasCost = gasPrice.mul(gasUsed)
   const expectedOwnerEtherBalance = preOwnerEtherBalance

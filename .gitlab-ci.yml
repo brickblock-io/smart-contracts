@@ -37,6 +37,13 @@ lint:
 #   script:
 #     - yarn test
 
+test-frozen:
+  stage: test
+  cache:
+    policy: pull
+  script:
+    - yarn test:frozen
+
 # mythril:
 #   stage: test
 #   cache:

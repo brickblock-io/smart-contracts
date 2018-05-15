@@ -1,11 +1,7 @@
 const assert = require('assert')
 const BigNumber = require('bignumber.js')
 
-const {
-  sendTransaction,
-  getReceipt,
-  getEtherBalance
-} = require('../helpers/general')
+const { sendTransaction, getReceipt, getEtherBalance } = require('./general')
 
 const totalSupply = new BigNumber(33e18)
 const fundingGoal = new BigNumber(10e18)
@@ -497,9 +493,7 @@ async function testClaimAllPayouts(investors, contract) {
     } else {
       // eslint-disable-next-line no-console
       console.log(
-        `⚠️ ${
-          investor
-        } has 0 claimable balances... this may happen due to current test setup, be sure that this is correct`
+        `⚠️ ${investor} has 0 claimable balances... this may happen due to current test setup, be sure that this is correct`
       )
     }
   }
@@ -512,9 +506,7 @@ async function testClaimAllPayouts(investors, contract) {
   )
   assert(
     finalContractEtherBalance.lessThan(100),
-    `the contract should have very small ether balance after all payouts have been claimed but ${
-      finalContractEtherBalance
-    } wei remain`
+    `the contract should have very small ether balance after all payouts have been claimed but ${finalContractEtherBalance} wei remain`
   )
 
   return true

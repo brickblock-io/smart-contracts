@@ -1,6 +1,6 @@
 pragma solidity 0.4.18;
 
-import "zeppelin-solidity/contracts/token/PausableToken.sol";
+import "frozen-zeppelin-solidity/contracts/token/PausableToken.sol";
 
 
 contract CustomPOAToken is PausableToken {
