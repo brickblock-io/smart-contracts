@@ -803,7 +803,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
 
     it('should give token balance proportional to commitment and fundingGoal, even when rates go down', async () => {
       const commitments = []
-      // increase by 10 percent
+      // decrease by 10 percent
       const decreaseRate = 0.1
       for (const from of whitelistedPoaBuyers) {
         const preFundingGoalInWei = await poac.fundingGoalInWei()
@@ -832,6 +832,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
         gasPrice
       })
 
+      // this matches the first buyer's first purchase (whitelistedPoaBuers[0])
       commitments[0].amount = purchase
 
       await testActivate(poac, fmr, defaultIpfsHash, {
@@ -873,6 +874,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
         gasPrice
       })
 
+      // this matches the first buyer's first purchase (whitelistedPoaBuers[0])
       commitments[0].amount = purchase
 
       await testActivate(poac, fmr, defaultIpfsHash, {

@@ -272,7 +272,7 @@ describe('when in Active (stage 4)', () => {
       })
     })
 
-    it('should transferFrom to whitelisted address when whitelistTransfers=false', async () => {
+    it('should transferFrom to whitelisted address when whitelistTransfers=true', async () => {
       await testTransferFrom(
         poac,
         whitelistedPoaBuyers[0],

@@ -112,7 +112,7 @@ contract PoaTokenConcept is PausableToken {
   Stages public stage = Stages.PreFunding;
 
   event StageEvent(Stages stage);
-  event CommitmentEvent(address indexed buyer, uint256 amount);
+  event BuyEvent(address indexed buyer, uint256 amount);
   event PayoutEvent(uint256 amount);
   event ClaimEvent(uint256 payout);
   event TerminatedEvent();
@@ -151,8 +151,6 @@ contract PoaTokenConcept is PausableToken {
     _;
   }
 
-  // enforce whitelisting if is not transfer OR
-  // if is transfer and whitelistTransfers is enabled
   modifier isBuyWhitelisted() {
     require(
       Whitelist(registry.getContractAddress("Whitelist"))
@@ -422,7 +420,7 @@ contract PoaTokenConcept is PausableToken {
       .add(_payAmount);
     // increment the funded amount
     fundedAmountInWei = fundedAmountInWei.add(_payAmount);
-    emit CommitmentEvent(msg.sender, _payAmount);
+    emit BuyEvent(msg.sender, _payAmount);
     return true;
   }
 
