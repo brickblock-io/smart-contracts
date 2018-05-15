@@ -96,9 +96,9 @@ contract PoaTokenConcept is PausableToken {
   // due to fluctuating fiat rates
   mapping(address => uint256) public investmentAmountPerUserInWei;
   // used to calculate balanceOf by deducting spent balances
-  mapping(address => uint256) private spentBalances;
+  mapping(address => uint256) public spentBalances;
   // used to calculate balanceOf by adding received balances
-  mapping(address => uint256) private receivedBalances;
+  mapping(address => uint256) public receivedBalances;
   // hide balances to ensure that only balanceOf is being used
   mapping(address => uint256) private balances;
 
