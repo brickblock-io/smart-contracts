@@ -1,6 +1,6 @@
 {
   "name": "@brickblock/smart-contracts",
-  "version": "2.5.1",
+  "version": "2.5.2",
   "description": "Smart contracts for the Brickblock platform",
   "license": "UNLICENSED",
   "engines": {
