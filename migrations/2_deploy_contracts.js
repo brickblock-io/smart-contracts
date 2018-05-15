@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 const BigNumber = require('bignumber.js')
 
 const BrickblockContractRegistry = artifacts.require(
@@ -16,7 +18,6 @@ let ExchangeRateProvider
 const { addContractsToRegistry, setFiatRate } = require('./helpers/general')
 
 module.exports = (deployer, network, accounts) => {
-  // eslint-disable-next-line no-console
   console.log(`deploying on ${network} network`)
 
   if (network === 'dev' || network == 'test') {
@@ -48,7 +49,7 @@ module.exports = (deployer, network, accounts) => {
       const act = await BrickblockAccessToken.deployed()
 
       //BrickblockAccount
-      await deployer.deploy(BrickblockAccount, reg.address, {
+      await deployer.deploy(BrickblockAccount, reg.address, 100, {
         from: owner
       })
       const bat = await BrickblockAccount.deployed()
@@ -81,7 +82,9 @@ module.exports = (deployer, network, accounts) => {
       })
       const exp = await ExchangeRateProvider.deployed()
 
-      addContractsToRegistry({
+      // eslint-disable-next-line no-console
+      console.log('adding contracts to the registry')
+      await addContractsToRegistry({
         owner,
         reg,
         bbk,
@@ -94,13 +97,17 @@ module.exports = (deployer, network, accounts) => {
         pmr
       })
 
+      console.log('setting ACT rate')
       await exr.setActRate(1e3)
+
+      console.log('setting EUR rate')
       await setFiatRate(exr, exp, 'EUR', 5e4, {
         from: owner,
         value: 1e18
       })
 
-      await deployer.deploy(
+      console.log('deploying POA token concept')
+      const poa = await deployer.deploy(
         PoaTokenConcept,
         'TestToken',
         'TST',
@@ -113,6 +120,8 @@ module.exports = (deployer, network, accounts) => {
         new BigNumber(60 * 60 * 24 * 7),
         new BigNumber(5e5)
       )
+
+      await reg.updateContractAddress('PoaTokenMaster', poa.address)
 
       return true
     })

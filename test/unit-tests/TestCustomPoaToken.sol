@@ -1,8 +1,9 @@
-pragma solidity 0.4.18;
+pragma solidity ^0.4.18;
 
 import "truffle/Assert.sol";
-import "zeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../../contracts/CustomPOAToken.sol";
+
 
 contract TestCustomPoaToken {
   using SafeMath for uint256;
@@ -21,7 +22,9 @@ contract TestCustomPoaToken {
 
   uint256 private remainder;
 
-  function testSafeMath() {
+  function testSafeMath() 
+    private
+  {
     uint256 _wei = 3;
     uint256 _expectedRemainder = (_wei * totalSupply) % fundingGoal;
     uint256 _safeExpectedRemainder = _wei.mul(totalSupply) % fundingGoal;
@@ -33,7 +36,9 @@ contract TestCustomPoaToken {
     );
   }
 
-  function testWeiToTokens() {
+  function testWeiToTokens() 
+    private
+  {
     uint256 _wei = 3;
     uint256 _expectedTokens = 9;
     uint256 _tokens;

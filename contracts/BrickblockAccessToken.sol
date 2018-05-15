@@ -1,6 +1,6 @@
-pragma solidity 0.4.18;
+pragma solidity ^0.4.23;
 
-import "zeppelin-solidity/contracts/token/PausableToken.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/PausableToken.sol";
 
 
 // limited BrickblockContractRegistry definintion
@@ -98,8 +98,10 @@ contract BrickblockAccessToken is PausableToken {
   */
 
   // instance of registry contract to get contract addresses
-  Registry private registry;
 
+  uint8 public constant version = 1;
+
+  Registry private registry;
   string public constant name = "BrickblockAccessToken";
   string public constant symbol = "ACT";
   uint8 public constant decimals = 18;
@@ -129,8 +131,8 @@ contract BrickblockAccessToken is PausableToken {
   mapping(address => uint256) private spentBalances;
 
 
-  event Mint(uint256 amount);
-  event Burn(address indexed burner, uint256 value);
+  event MintEvent(uint256 amount);
+  event BurnEvent(address indexed burner, uint256 value);
 
   modifier onlyContract(string _contractName)
   {
@@ -140,8 +142,7 @@ contract BrickblockAccessToken is PausableToken {
     _;
   }
 
-  // constructor
-  function BrickblockAccessToken(
+  constructor (
     address _registryAddress
   )
     public
@@ -221,8 +222,8 @@ contract BrickblockAccessToken is PausableToken {
 
     uint256 _delta = (_amount.mul(1e18) % totalLockedBBK).div(1e18);
     securedTokenDistributions[owner] = securedTokenDistributions[owner].add(_delta);
-    totalSupply = totalSupply.add(_amount);
-    Mint(_amount);
+    totalSupply_ = totalSupply_.add(_amount);
+    emit MintEvent(_amount);
     return true;
   }
 
@@ -300,7 +301,7 @@ contract BrickblockAccessToken is PausableToken {
     spentBalances[msg.sender] = spentBalances[msg.sender].add(_value);
     receivedBalances[_to] = receivedBalances[_to].add(_value);
     injectCustomBalances(msg.sender, _to);
-    Transfer(msg.sender, _to, _value);
+    emit Transfer(msg.sender, _to, _value);
     return true;
   }
 
@@ -323,7 +324,7 @@ contract BrickblockAccessToken is PausableToken {
     receivedBalances[_to] = receivedBalances[_to].add(_value);
     allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
     injectCustomBalances(_from, _to);
-    Transfer(_from, _to, _value);
+    emit Transfer(_from, _to, _value);
     return true;
   }
 
@@ -342,8 +343,8 @@ contract BrickblockAccessToken is PausableToken {
   {
     require(_value <= balanceOf(_address));
     spentBalances[_address] = spentBalances[_address].add(_value);
-    totalSupply = totalSupply.sub(_value);
-    Burn(_address, _value);
+    totalSupply_ = totalSupply_.sub(_value);
+    emit BurnEvent(_address, _value);
     return true;
   }
 

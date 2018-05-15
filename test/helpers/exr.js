@@ -315,7 +315,7 @@ const testSelfDestruct = async (exr, exp, caller) => {
   )
   const funder = web3.eth.accounts[9]
   const preCallerBalance = await getEtherBalance(caller)
-  const preAlive = await exp.isAlive()
+  const preCode = await web3.eth.getCode(exp.address)
   await sendTransaction(web3, {
     from: funder,
     to: exp.address,
@@ -328,12 +328,16 @@ const testSelfDestruct = async (exr, exp, caller) => {
     .add(1e18)
     .sub(new BigNumber(gasUsed).mul(1e9))
   const postCallerBalance = await getEtherBalance(caller)
-  const postAlive = await exp.isAlive()
+  const postCode = await web3.eth.getCode(exp.address)
 
-  assert(preAlive, 'the contract should be alive')
   assert(
-    !postAlive,
-    'the contract should NOT be alive after running selfDestruct'
+    preCode != '0x0',
+    'the contract should have code at address before selfdestruct'
+  )
+  assert.equal(
+    postCode,
+    '0x0',
+    'the contract should NOT have any code after selfDestruct'
   )
 
   assert.equal(

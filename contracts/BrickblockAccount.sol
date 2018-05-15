@@ -1,6 +1,6 @@
-pragma solidity 0.4.18;
+pragma solidity ^0.4.23;
 
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
 contract Registry {
@@ -84,10 +84,12 @@ contract AccessToken {
 
 
 contract BrickblockAccount is Ownable {
+
+  uint8 public constant version = 1;
   uint256 public fundsReleaseBlock;
   Registry private registry;
 
-  function BrickblockAccount
+  constructor
   (
     address _registryAddress,
     uint256 _fundsReleaseBlock
@@ -164,7 +166,7 @@ contract BrickblockAccount is Ownable {
     onlyOwner
     returns (bool)
   {
-    require(this.balance > 0);
+    require(address(this).balance > 0);
     _address.transfer(_value);
     return true;
   }

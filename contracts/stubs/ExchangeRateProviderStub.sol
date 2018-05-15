@@ -1,6 +1,6 @@
-pragma solidity 0.4.18;
+pragma solidity ^0.4.23;
 
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
 contract ExRates {
@@ -103,7 +103,7 @@ contract ExchangeRateProviderStub {
   {
     // simulate price of 2 000 000 000
     uint256 _simulatedPrice = 2e9;
-    if (_simulatedPrice > this.balance) {
+    if (_simulatedPrice > address(this).balance) {
       // set to empty if not enought ether
       setQueryId(0x0, 0x0);
       return false;

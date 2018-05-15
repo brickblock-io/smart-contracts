@@ -37,13 +37,13 @@ test:
   script:
     - yarn test
 
-mythril:
-  stage: test
-  cache:
-    policy: pull
-  script:
-    - yarn truffle compile
-    - /opt/python3/bin/python3 /opt/mythril/myth --truffle
+# mythril:
+#   stage: test
+#   cache:
+#     policy: pull
+#   script:
+#     - yarn truffle compile
+#     - /opt/python3/bin/python3 /opt/mythril/myth --truffle
 
 build:
   stage: build

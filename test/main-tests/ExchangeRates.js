@@ -245,7 +245,7 @@ describe('when testing events', async () => {
       exr = contracts.exr
     })
 
-    it('should trigger QuerySent if a query is sent with no min balance', async () => {
+    it('should trigger QuerySentEvent if a query is sent with no min balance', async () => {
       await testSetCurrencySettings(
         exr,
         queryType,
@@ -257,10 +257,14 @@ describe('when testing events', async () => {
       await testSettingsExists(exr, queryType)
       const tx = await exr.fetchRate(queryType, { from: owner, value: 1e18 })
       const log = tx.logs[0].event
-      assert.equal(log, 'QuerySent', 'event log even should match QuerySent')
+      assert.equal(
+        log,
+        'QuerySentEvent',
+        'event log even should match QuerySentEvent'
+      )
     })
 
-    it('should trigger QueryNoMinBalance if a query is sent with no min balance', async () => {
+    it('should trigger QueryNoMinBalanceEvent if a query is sent with no min balance', async () => {
       await testSetCurrencySettings(
         exr,
         queryType,
@@ -274,8 +278,8 @@ describe('when testing events', async () => {
       const log = tx.logs[0].event
       assert.equal(
         log,
-        'QueryNoMinBalance',
-        'event log even should match QueryNoMinBalance'
+        'QueryNoMinBalanceEvent',
+        'event log even should match QueryNoMinBalanceEvent'
       )
     })
     // TODO: find a better way to get logs while keeping async/await working...

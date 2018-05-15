@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity ^0.4.23;
 
 
 // shortened version of actual contract in order to save on costs

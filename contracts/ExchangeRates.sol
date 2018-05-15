@@ -1,10 +1,10 @@
-pragma solidity 0.4.18;
+pragma solidity ^0.4.23;
 
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
 // minimal ExchangeRateProvider definition
-contract ExRatesProvider {
+interface ExRatesProvider {
   function sendQuery(
     bytes32[5] _queryString,
     uint256 _callInterval,
@@ -13,17 +13,15 @@ contract ExRatesProvider {
   )
     public
     payable
-    returns (bool)
-  {}
+    returns (bool);
 
   function setCallbackGasPrice(uint256 _gasPrice)
     public
-    returns (bool)
-  {}
+    returns (bool);
 
   function selfDestruct(address _address)
-    public
-  {}
+    public;
+
 }
 
 
@@ -84,10 +82,10 @@ contract ExchangeRates is Ownable {
   // accessed and used by ExchangeRateProvider
   mapping (bytes8 => Settings) public currencySettings;
 
-  event RateUpdated(string currency, uint256 rate);
-  event QueryNoMinBalance();
-  event QuerySent(string currency);
-  event SettingsUpdated(string currency);
+  event RateUpdatedEvent(string currency, uint256 rate);
+  event QueryNoMinBalanceEvent();
+  event QuerySentEvent(string currency);
+  event SettingsUpdatedEvent(string currency);
 
   // used to only allow specific contract to call specific functions
   modifier onlyContract(string _contractName)
@@ -99,7 +97,9 @@ contract ExchangeRates is Ownable {
   }
 
   // constructor: sets registry for talking to ExchangeRateProvider
-  function ExchangeRates(address _registryAddress)
+  constructor(
+    address _registryAddress
+  )
     public
     payable
   {
@@ -165,10 +165,10 @@ contract ExchangeRates is Ownable {
     returns (bool)
   {
     if (_queryId[0] != 0x0 && _queryType[0] != 0x0) {
-      QuerySent(toShortString(_queryType));
+      emit QuerySentEvent(toShortString(_queryType));
       queryTypes[_queryId] = _queryType;
     } else {
-      QueryNoMinBalance();
+      emit QueryNoMinBalanceEvent();
     }
     return true;
   }
@@ -196,7 +196,7 @@ contract ExchangeRates is Ownable {
     // get the settings for a specific currency
     Settings storage _settings = currencySettings[_queryType];
     // event for particular rate that was updated
-    RateUpdated(
+    emit RateUpdatedEvent(
       toShortString(_queryType),
       _result
     );
@@ -221,7 +221,7 @@ contract ExchangeRates is Ownable {
     require(_actRate > 0);
 
     rates[toBytes8("ACT")] = _actRate;
-    RateUpdated("ACT", _actRate);
+    emit RateUpdatedEvent("ACT", _actRate);
 
     return true;
   }
@@ -250,7 +250,7 @@ contract ExchangeRates is Ownable {
       _callInterval,
       _callbackGasLimit
     );
-    SettingsUpdated(_currencyName);
+    emit SettingsUpdatedEvent(_currencyName);
     return true;
   }
 
@@ -265,7 +265,7 @@ contract ExchangeRates is Ownable {
   {
     Settings storage _settings = currencySettings[toBytes8(toUpperCase(_currencyName))];
     _settings.queryString = toBytes32Array(_queryString);
-    SettingsUpdated(_currencyName);
+    emit SettingsUpdatedEvent(_currencyName);
     return true;
   }
 
@@ -280,7 +280,7 @@ contract ExchangeRates is Ownable {
   {
     Settings storage _settings = currencySettings[toBytes8(toUpperCase(_currencyName))];
     _settings.callInterval = _callInterval;
-    SettingsUpdated(_currencyName);
+    emit SettingsUpdatedEvent(_currencyName);
     return true;
   }
 
@@ -295,7 +295,7 @@ contract ExchangeRates is Ownable {
   {
     Settings storage _settings = currencySettings[toBytes8(toUpperCase(_currencyName))];
     _settings.callbackGasLimit = _callbackGasLimit;
-    SettingsUpdated(_currencyName);
+    emit SettingsUpdatedEvent(_currencyName);
     return true;
   }
 
@@ -310,7 +310,7 @@ contract ExchangeRates is Ownable {
       registry.getContractAddress("ExchangeRateProvider")
     );
     provider.setCallbackGasPrice(_gasPrice);
-    SettingsUpdated("ALL");
+    emit SettingsUpdatedEvent("ALL");
     return true;
   }
 
@@ -322,7 +322,7 @@ contract ExchangeRates is Ownable {
     returns (bool)
   {
     ratesActive = !ratesActive;
-    SettingsUpdated("ALL");
+    emit SettingsUpdatedEvent("ALL");
     return true;
   }
 
@@ -335,7 +335,7 @@ contract ExchangeRates is Ownable {
     returns (bool)
   {
     shouldClearRateIntervals = !shouldClearRateIntervals;
-    SettingsUpdated("ALL");
+    emit SettingsUpdatedEvent("ALL");
     return true;
   }
 

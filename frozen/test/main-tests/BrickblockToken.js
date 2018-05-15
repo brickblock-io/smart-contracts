@@ -1,10 +1,10 @@
+const assert = require('assert')
 const BigNumber = require('bignumber.js')
 
 const BrickblockToken = artifacts.require('./BrickblockToken.sol')
 const BrickblockFountainStub = artifacts.require(
   './stubs/BrickblockFountainStub.sol'
 )
-const { testWillThrow } = require('../helpers/general')
 
 const getContributorsBalanceSum = (bbk, contributors) =>
   Promise.all(contributors.map(contributor => bbk.balanceOf(contributor))).then(
@@ -24,6 +24,7 @@ async function distributeTokensToMany(contract, accounts) {
     )
   )
 }
+
 function unpauseIfPaused(contract) {
   return new Promise((resolve, reject) => {
     contract
@@ -169,7 +170,17 @@ describe('during the ico', () => {
       })
 
       it('should NOT toggle dead when not owner', async () => {
-        await testWillThrow(bbk.toggleDead, [{ from: accounts[9] }])
+        try {
+          await bbk.toggleDead.sendTransaction({
+            from: accounts[9]
+          })
+          assert(false, 'the contract should throw here')
+        } catch (error) {
+          assert(
+            /invalid opcode/.test(error),
+            'the error message should contain invalid opcode'
+          )
+        }
       })
     })
 
@@ -179,13 +190,21 @@ describe('during the ico', () => {
           const bonusRecipientAddress = accounts[9]
           const distributeAmount = new BigNumber(1e19)
 
-          await testWillThrow(bbk.distributeBonusTokens, [
-            bonusRecipientAddress,
-            distributeAmount,
-            {
-              from: bonusAddress
-            }
-          ])
+          try {
+            await bbk.distributeBonusTokens.sendTransaction(
+              bonusRecipientAddress,
+              distributeAmount,
+              {
+                from: bonusAddress
+              }
+            )
+            assert(false, 'the contract should throw here')
+          } catch (error) {
+            assert(
+              /invalid opcode/.test(error),
+              'the error message should contain invalid opcode'
+            )
+          }
         })
       })
 
@@ -193,13 +212,21 @@ describe('during the ico', () => {
         it('should NOT distribute tokens to owner', async () => {
           const distributeAmount = new BigNumber(1e19)
 
-          await testWillThrow(bbk.distributeBonusTokens, [
-            ownerAddress,
-            distributeAmount,
-            {
-              from: ownerAddress
-            }
-          ])
+          try {
+            await bbk.distributeBonusTokens.sendTransaction(
+              ownerAddress,
+              distributeAmount,
+              {
+                from: ownerAddress
+              }
+            )
+            assert(false, 'the contract should throw here')
+          } catch (error) {
+            assert(
+              /invalid opcode/.test(error),
+              'the error message should contain invalid opcode'
+            )
+          }
         })
 
         it('should distribute tokens to bonusRecipientAddress', async () => {
@@ -238,13 +265,21 @@ describe('during the ico', () => {
           const bonusRecipientAddress = accounts[9]
           const overDistributeAmount = new BigNumber(1)
 
-          await testWillThrow(bbk.distributeBonusTokens, [
-            bonusRecipientAddress,
-            overDistributeAmount,
-            {
-              from: ownerAddress
-            }
-          ])
+          try {
+            await bbk.distributeBonusTokens.sendTransaction(
+              bonusRecipientAddress,
+              overDistributeAmount,
+              {
+                from: ownerAddress
+              }
+            )
+            assert(false, 'the contract should throw here')
+          } catch (error) {
+            assert(
+              /invalid opcode/.test(error),
+              'the error message should contain invalid opcode'
+            )
+          }
         })
       })
     })
@@ -253,28 +288,44 @@ describe('during the ico', () => {
       describe('when NOT sent from ownerAddress', () => {
         it('should NOT distribute tokens to contributorAddress', async () => {
           const distributeAmount = new BigNumber(1e24)
-
-          await testWillThrow(bbk.distributeTokens, [
-            contributorAddress,
-            distributeAmount,
-            {
-              from: contributorAddress
-            }
-          ])
+          try {
+            await bbk.distributeTokens.sendTransaction(
+              contributorAddress,
+              distributeAmount,
+              {
+                from: contributorAddress
+              }
+            )
+            assert(false, 'the contract should throw in this case')
+          } catch (error) {
+            assert.equal(
+              true,
+              /invalid opcode/.test(error),
+              'invalid opcode should be the error'
+            )
+          }
         })
       })
 
       describe('when sent from ownerAddress', () => {
         it('should NOT distribute tokens to ownerAddress', async () => {
           const distributeAmount = new BigNumber(1e18)
-
-          await testWillThrow(bbk.distributeTokens, [
-            ownerAddress,
-            distributeAmount,
-            {
-              from: ownerAddress
-            }
-          ])
+          try {
+            await bbk.distributeTokens.sendTransaction(
+              ownerAddress,
+              distributeAmount,
+              {
+                from: ownerAddress
+              }
+            )
+            assert(false, 'the contract should throw in this case')
+          } catch (error) {
+            assert.equal(
+              true,
+              /invalid opcode/.test(error),
+              'invalid opcode should be the error'
+            )
+          }
         })
 
         it('should distribute tokens to contributorAddress', async () => {
@@ -304,10 +355,15 @@ describe('during the ico', () => {
           const preContributorBalance = await bbk.balanceOf(contributorAddress)
           const distributeAmount = new BigNumber(1)
 
-          await testWillThrow(bbk.distributeTokens, [
-            contributorAddress,
-            distributeAmount
-          ])
+          try {
+            await bbk.distributeTokens(contributorAddress, distributeAmount)
+            assert(false, 'the contract should throw here')
+          } catch (error) {
+            assert(
+              /invalid opcode/.test(error),
+              'the errror should contain invalid opcode'
+            )
+          }
 
           const postContractBalance = await bbk.balanceOf(bbkAddress)
           const postContributorBalance = await bbk.balanceOf(contributorAddress)
@@ -354,15 +410,29 @@ describe('during the ico', () => {
 
         describe('when fountainAddress is NOT a contract', () => {
           it('should NOT change the fountainAddress', async () => {
-            await testWillThrow(bbk.changeFountainContractAddress, [
-              contributorAddress
-            ])
+            try {
+              await bbk.changeFountainContractAddress(contributorAddress)
+              assert(false, 'the contract should throw here')
+            } catch (error) {
+              assert(
+                /invalid opcode/.test(error),
+                'the error should contain invalid opcode'
+              )
+            }
           })
         })
 
         describe('when fountainAddress is bbkAddress', () => {
           it('should NOT change the fountainAddress', async () => {
-            await testWillThrow(bbk.changeFountainContractAddress, [bbkAddress])
+            try {
+              await bbk.changeFountainContractAddress(bbkAddress)
+              assert(false, 'the contract should throw here')
+            } catch (error) {
+              assert(
+                /invalid opcode/.test(error),
+                'the error should contain invalid opcode'
+              )
+            }
           })
         })
       })
@@ -372,12 +442,20 @@ describe('during the ico', () => {
           const bbf = await BrickblockFountainStub.new(bbk.address)
           const fountainAddress = bbf.address
 
-          await testWillThrow(bbk.changeFountainContractAddress, [
-            fountainAddress,
-            {
-              from: contributorAddress
-            }
-          ])
+          try {
+            await bbk.changeFountainContractAddress.sendTransaction(
+              fountainAddress,
+              {
+                from: contributorAddress
+              }
+            )
+            assert(false, 'the contract should throw here')
+          } catch (error) {
+            assert(
+              /invalid opcode/.test(error),
+              'the error should contain invalid opcode'
+            )
+          }
         })
       })
     })
@@ -467,7 +545,16 @@ describe('at the end of the ico when fountainAddress has been set', () => {
     })
 
     it('should NOT be able to call finalizeTokenSale again', async () => {
-      await testWillThrow(bbk.finalizeTokenSale)
+      try {
+        await bbk.finalizeTokenSale()
+        assert(false, 'this should throw an error')
+      } catch (error) {
+        assert(
+          true,
+          /invalid opcode/.test(error),
+          'the error message should contain invalid opcode'
+        )
+      }
     })
   })
 })
@@ -505,7 +592,17 @@ describe('after the ico', () => {
 
     it('should NOT pause when non-owner calls pause', async () => {
       await pauseIfUnpaused(bbk)
-      await testWillThrow(bbk.pause, [{ from: accounts[1] }])
+      try {
+        await bbk.pause.sendTransaction({
+          from: accounts[1]
+        })
+      } catch (error) {
+        assert.equal(
+          true,
+          /invalid opcode/.test(error),
+          'invlid opcode should be the error'
+        )
+      }
     })
 
     it('should pause when the owner calls pause', async () => {
@@ -516,7 +613,17 @@ describe('after the ico', () => {
 
     it('should NOT unpause when non-owner calls pause', async () => {
       await pauseIfUnpaused(bbk)
-      await testWillThrow(bbk.unpause, [{ from: accounts[1] }])
+      try {
+        await bbk.unpause.sendTransaction({
+          from: accounts[1]
+        })
+      } catch (error) {
+        assert.equal(
+          true,
+          /invalid opcode/.test(error),
+          'invlid opcode should be the error'
+        )
+      }
     })
 
     it('should allow transferFrom from the fountain address for company tokens when bbk unpaused', async () => {
@@ -579,8 +686,16 @@ describe('after the ico', () => {
 
     it('should NOT transfer tokens when paused', async () => {
       await pauseIfUnpaused(bbk)
-
-      await testWillThrow(bbk.transfer, [accounts[1], web3.toWei(1000)])
+      try {
+        await bbk.transfer(accounts[1], web3.toWei(1000))
+        assert(false, 'should throw when paused')
+      } catch (error) {
+        assert.equal(
+          true,
+          /invalid opcode/.test(error),
+          'should contain invalid opcode in error'
+        )
+      }
 
       await bbk.unpause()
     })
@@ -600,16 +715,19 @@ describe('after the ico', () => {
 
     it('should NOT set allowances for other addresses when paused', async () => {
       await pauseIfUnpaused(bbk)
-
-      await testWillThrow(bbk.approve, [
-        accounts[5],
-        testAmount,
-        {
+      try {
+        await bbk.approve.sendTransaction(accounts[5], testAmount, {
           from: accounts[4]
-        }
-      ])
-
-      await bbk.unpause()
+        })
+        assert(false, 'should throw when paused')
+      } catch (error) {
+        assert.equal(
+          true,
+          /invalid opcode/.test(error),
+          'should contain invalid opcode in error'
+        )
+        await bbk.unpause()
+      }
     })
 
     it('should increase approval when NOT paused', async () => {
@@ -628,16 +746,19 @@ describe('after the ico', () => {
 
     it('should NOT increase approval when paused', async () => {
       await pauseIfUnpaused(bbk)
-
-      await testWillThrow(bbk.increaseApproval, [
-        accounts[5],
-        testAmount,
-        {
+      try {
+        await bbk.increaseApproval(accounts[5], testAmount, {
           from: accounts[4]
-        }
-      ])
-
-      await bbk.unpause()
+        })
+        assert(false, 'should throw when paused')
+      } catch (error) {
+        assert.equal(
+          true,
+          /invalid opcode/.test(error),
+          'should contian invalid opcode in error'
+        )
+        await bbk.unpause()
+      }
     })
 
     it('should decrease approval when NOT paused', async () => {
@@ -656,16 +777,19 @@ describe('after the ico', () => {
 
     it('should NOT decrease approval when paused', async () => {
       await pauseIfUnpaused(bbk)
-
-      await testWillThrow(bbk.decreaseApproval, [
-        accounts[5],
-        testAmount,
-        {
+      try {
+        await bbk.decreaseApproval(accounts[5], testAmount, {
           from: accounts[4]
-        }
-      ])
-
-      await bbk.unpause()
+        })
+        assert(false, 'should throw when paused')
+      } catch (error) {
+        assert.equal(
+          true,
+          /invalid opcode/.test(error),
+          'should contian invalid opcode in error'
+        )
+        await bbk.unpause()
+      }
     })
 
     it('should allow transferFrom when NOT paused', async () => {
@@ -711,13 +835,21 @@ describe('after the ico', () => {
           const bonusRecipientAddress = accounts[9]
           const distributeAmount = new BigNumber(1e19)
 
-          await testWillThrow(bbk.distributeBonusTokens, [
-            bonusRecipientAddress,
-            distributeAmount,
-            {
-              from: bonusAddress
-            }
-          ])
+          try {
+            await bbk.distributeBonusTokens.sendTransaction(
+              bonusRecipientAddress,
+              distributeAmount,
+              {
+                from: bonusAddress
+              }
+            )
+            assert(false, 'the contract should throw here')
+          } catch (error) {
+            assert(
+              /invalid opcode/.test(error),
+              'the error message should contain invalid opcode'
+            )
+          }
         })
       })
 
@@ -725,13 +857,21 @@ describe('after the ico', () => {
         it('should NOT distribute tokens to owner', async () => {
           const distributeAmount = new BigNumber(1e19)
 
-          await testWillThrow(bbk.distributeBonusTokens, [
-            owner,
-            distributeAmount,
-            {
-              from: owner
-            }
-          ])
+          try {
+            await bbk.distributeBonusTokens.sendTransaction(
+              owner,
+              distributeAmount,
+              {
+                from: owner
+              }
+            )
+            assert(false, 'the contract should throw here')
+          } catch (error) {
+            assert(
+              /invalid opcode/.test(error),
+              'the error message should contain invalid opcode'
+            )
+          }
         })
 
         it('should distribute tokens to bonusRecipientAddress', async () => {
@@ -771,13 +911,21 @@ describe('after the ico', () => {
           const bonusBalance = await bbk.balanceOf(bonusAddress)
           const overDistributeAmount = bonusBalance.add(1)
 
-          await testWillThrow(bbk.distributeBonusTokens, [
-            bonusRecipientAddress,
-            overDistributeAmount,
-            {
-              from: owner
-            }
-          ])
+          try {
+            await bbk.distributeBonusTokens.sendTransaction(
+              bonusRecipientAddress,
+              overDistributeAmount,
+              {
+                from: owner
+              }
+            )
+            assert(false, 'the contract should throw here')
+          } catch (error) {
+            assert(
+              /invalid opcode/.test(error),
+              'the error message should contain invalid opcode'
+            )
+          }
         })
       })
     })
@@ -808,7 +956,17 @@ describe('after the ico', () => {
       })
 
       it('should NOT toggle dead when not owner', async () => {
-        await testWillThrow(bbk.toggleDead, [{ from: accounts[9] }])
+        try {
+          await bbk.toggleDead.sendTransaction({
+            from: accounts[9]
+          })
+          assert(false, 'the contract should throw here')
+        } catch (error) {
+          assert(
+            /invalid opcode/.test(error),
+            'the error message should contain invalid opcode'
+          )
+        }
       })
     })
   })

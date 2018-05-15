@@ -1,4 +1,4 @@
-pragma solidity 0.4.18;
+pragma solidity ^0.4.23;
 
 import "./OraclizeAPI.sol";
 
@@ -40,6 +40,9 @@ contract Registry {
 
 
 contract ExchangeRateProvider is usingOraclize {
+
+  uint8 public constant version = 1;
+
   Registry private registry;
   // used to check on if the contract has self destructed
   bool public isAlive = true;
@@ -60,8 +63,9 @@ contract ExchangeRateProvider is usingOraclize {
     _;
   }
 
-  // constructor: setup and require registry
-  function ExchangeRateProvider(address _registryAddress)
+  constructor(
+    address _registryAddress
+  )
     public
   {
     require(_registryAddress != address(0));
@@ -92,7 +96,7 @@ contract ExchangeRateProvider is usingOraclize {
     returns (bool)
   {
     // check that there is enough money to make the query
-    if (oraclize_getPrice("URL") > this.balance) {
+    if (oraclize_getPrice("URL") > address(this).balance) {
       setQueryId(0x0, 0x0);
       return false;
     } else {

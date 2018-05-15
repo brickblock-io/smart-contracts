@@ -1,11 +1,16 @@
+pragma solidity ^0.4.18;
+
 import "truffle/Assert.sol";
-import "zeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../../contracts/PoaTokenConcept.sol";
 import "truffle/DeployedAddresses.sol";
 
+
 contract TestPoaTokenConcept {
 
-  function testWeiToTokens() {
+  function testWeiToTokens()
+    private
+  {
     PoaTokenConcept poac = PoaTokenConcept(DeployedAddresses.PoaTokenConcept());
     uint256 _wei = 1e18;
     uint256 _actualTokens = poac.weiToTokens(_wei);

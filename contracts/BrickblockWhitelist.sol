@@ -1,17 +1,15 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.23;
 
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
 contract BrickblockWhitelist is Ownable {
 
+  uint8 public constant version = 1;
+
   mapping (address => bool) public whitelisted;
 
-  event Whitelisted(address indexed account, bool isWhitelisted);
-
-  function BrickblockWhitelist()
-    public
-  {}
+  event WhitelistedEvent(address indexed account, bool isWhitelisted);
 
   function addAddress(address _address)
     public
@@ -19,7 +17,7 @@ contract BrickblockWhitelist is Ownable {
   {
     require(whitelisted[_address] != true);
     whitelisted[_address] = true;
-    Whitelisted(_address, true);
+    emit WhitelistedEvent(_address, true);
   }
 
   function removeAddress(address _address)
@@ -28,6 +26,6 @@ contract BrickblockWhitelist is Ownable {
   {
     require(whitelisted[_address] != false);
     whitelisted[_address] = false;
-    Whitelisted(_address, false);
+    emit WhitelistedEvent(_address, false);
   }
 }

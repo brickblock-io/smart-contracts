@@ -1,9 +1,9 @@
 // THIS IS EXAMPLE CODE ONLY AND THE FUNCTIONS MOST LIKELY WILL CHANGE
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.23;
 
 import "../BrickblockToken.sol";
-import "zeppelin-solidity/contracts/math/SafeMath.sol";
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
 contract BrickblockFountainStub is Ownable {
@@ -46,7 +46,7 @@ contract BrickblockFountainStub is Ownable {
     private
     returns (uint256)
   {
-    Placeholder(_locker, _value);
+    emit Placeholder(_locker, _value);
   }
 
   // this will be called to owner to lock in company tokens. they cannot be claimed until 2020
@@ -60,7 +60,7 @@ contract BrickblockFountainStub is Ownable {
     require(_value > 0);
     _bbt.transferFrom(brickBlockTokenAddress, this, _value);
     updateAccount(brickBlockTokenAddress, balances[brickBlockTokenAddress].tokens.add(_value));
-    BBTLocked(brickBlockTokenAddress, _value);
+    emit BBTLocked(brickBlockTokenAddress, _value);
     return true;
   }
 
@@ -75,7 +75,7 @@ contract BrickblockFountainStub is Ownable {
     require(_value > 0);
     _bbt.transferFrom(user, this, _value);
     updateAccount(user, balances[user].tokens.add(_value));
-    BBTLocked(user, _value);
+    emit BBTLocked(user, _value);
   }
 
   // the company will only be able to claim tokens through this function
@@ -91,7 +91,7 @@ contract BrickblockFountainStub is Ownable {
     balances[owner].tokens = balances[owner].tokens.add(_companyTokens);
     updateAccount(brickBlockTokenAddress, 0);
     _bbt.transfer(owner, _companyTokens);
-    CompanyTokensReleased(owner, _companyTokens);
+    emit CompanyTokensReleased(owner, _companyTokens);
   }
 
   // much more functionality is already built and undergoing development and refinement!

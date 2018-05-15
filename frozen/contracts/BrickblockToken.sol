@@ -1,6 +1,6 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.18;
 
-import "openzeppelin-solidity/contracts/token/ERC20/PausableToken.sol";
+import "zeppelin-solidity/contracts/token/PausableToken.sol";
 
 
 contract BrickblockToken is PausableToken {
@@ -36,22 +36,20 @@ contract BrickblockToken is PausableToken {
     _;
   }
 
-  constructor(
-    address _bonusDistributionAddress
-  )
+  function BrickblockToken(address _bonusDistributionAddress)
     public
   {
     require(_bonusDistributionAddress != address(0));
     bonusTokens = initialSupply.mul(bonusShare).div(100);
     companyTokens = initialSupply.mul(companyShare).div(100);
     bonusDistributionAddress = _bonusDistributionAddress;
-    totalSupply_ = initialSupply;
+    totalSupply = initialSupply;
     balances[this] = initialSupply;
-    emit Transfer(address(0), this, initialSupply);
+    Transfer(address(0), this, initialSupply);
     // distribute bonusTokens to bonusDistributionAddress
     balances[this] = balances[this].sub(bonusTokens);
     balances[bonusDistributionAddress] = balances[bonusDistributionAddress].add(bonusTokens);
-    emit Transfer(this, bonusDistributionAddress, bonusTokens);
+    Transfer(this, bonusDistributionAddress, bonusTokens);
     // we need to start with trading paused to make sure that there can be no transfers while the token sale is still ongoing
     // we will unpause the contract manually after finalizing the token sale by calling `unpause()` which is a function inherited from PausableToken
     paused = true;
@@ -104,7 +102,7 @@ contract BrickblockToken is PausableToken {
     require(_contributor != owner);
     balances[this] = balances[this].sub(_value);
     balances[_contributor] = balances[_contributor].add(_value);
-    emit Transfer(this, _contributor, _value);
+    Transfer(this, _contributor, _value);
     return true;
   }
 
@@ -118,7 +116,7 @@ contract BrickblockToken is PausableToken {
     require(_recipient != owner);
     balances[bonusDistributionAddress] = balances[bonusDistributionAddress].sub(_value);
     balances[_recipient] = balances[_recipient].add(_value);
-    emit Transfer(bonusDistributionAddress, _recipient, _value);
+    Transfer(bonusDistributionAddress, _recipient, _value);
     return true;
   }
 
@@ -136,20 +134,20 @@ contract BrickblockToken is PausableToken {
     uint256 _distributedTokens = initialSupply.sub(balances[this].add(bonusTokens));
     uint256 _newTotalSupply = _distributedTokens.add(bonusTokens.add(companyTokens));
     // unpurchased amount of tokens which will be burned
-    uint256 _burnAmount = totalSupply_.sub(_newTotalSupply);
+    uint256 _burnAmount = totalSupply.sub(_newTotalSupply);
     // leave remaining balance for company to be claimed at later date
     balances[this] = balances[this].sub(_burnAmount);
-    emit Burn(this, _burnAmount);
+    Burn(this, _burnAmount);
     // allow our fountain contract to transfer the company tokens to itself
     allowed[this][fountainContractAddress] = companyTokens;
-    emit Approval(this, fountainContractAddress, companyTokens);
+    Approval(this, fountainContractAddress, companyTokens);
     // set new totalSupply
-    totalSupply_ = _newTotalSupply;
+    totalSupply = _newTotalSupply;
     // prevent this function from ever running again after finalizing the token sale
     tokenSaleActive = false;
     // dispatch event showing sale is finished
-    emit TokenSaleFinished(
-      totalSupply_,
+    TokenSaleFinished(
+      totalSupply,
       _distributedTokens,
       bonusTokens,
       companyTokens

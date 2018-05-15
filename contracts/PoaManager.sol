@@ -1,8 +1,8 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.23;
 
 import "./PoaToken.sol";
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
-import "zeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 
 contract PoaManager is Ownable {
@@ -51,7 +51,9 @@ contract PoaManager is Ownable {
     _;
   }
 
-  function PoaManager(address _registryAddress)
+  constructor(
+    address _registryAddress
+  )
     public
   {
     require(_registryAddress != address(0));
@@ -137,7 +139,7 @@ contract PoaManager is Ownable {
       true
     );
 
-    BrokerAddedEvent(_brokerAddress);
+    emit BrokerAddedEvent(_brokerAddress);
   }
 
   // Remove a broker
@@ -150,7 +152,7 @@ contract PoaManager is Ownable {
     brokerMap[addressToUpdate].index = indexUpdate;
     delete brokerMap[_brokerAddress];
 
-    BrokerRemovedEvent(_brokerAddress);
+    emit BrokerRemovedEvent(_brokerAddress);
   }
 
   // Set previously delisted broker to listed
@@ -160,7 +162,7 @@ contract PoaManager is Ownable {
     doesEntityExist(_brokerAddress, brokerMap[_brokerAddress])
   {
     setEntityActiveValue(brokerMap[_brokerAddress], true);
-    BrokerStatusChangedEvent(_brokerAddress, true);
+    emit BrokerStatusChangedEvent(_brokerAddress, true);
   }
 
   // Set previously listed broker to delisted
@@ -170,7 +172,7 @@ contract PoaManager is Ownable {
     doesEntityExist(_brokerAddress, brokerMap[_brokerAddress])
   {
     setEntityActiveValue(brokerMap[_brokerAddress], false);
-    BrokerStatusChangedEvent(_brokerAddress, false);
+    emit BrokerStatusChangedEvent(_brokerAddress, false);
   }
 
   function getBrokerStatus(address _brokerAddress)
@@ -224,7 +226,7 @@ contract PoaManager is Ownable {
       false
     );
 
-    TokenAddedEvent(_tokenAddress);
+    emit TokenAddedEvent(_tokenAddress);
 
     return _tokenAddress;
   }
@@ -239,7 +241,7 @@ contract PoaManager is Ownable {
     tokenMap[addressToUpdate].index = indexUpdate;
     delete tokenMap[_tokenAddress];
 
-    TokenRemovedEvent(_tokenAddress);
+    emit TokenRemovedEvent(_tokenAddress);
   }
 
   // Set previously delisted token to listed
@@ -249,7 +251,7 @@ contract PoaManager is Ownable {
     doesEntityExist(_tokenAddress, tokenMap[_tokenAddress])
   {
     setEntityActiveValue(tokenMap[_tokenAddress], true);
-    TokenStatusChangedEvent(_tokenAddress, true);
+    emit TokenStatusChangedEvent(_tokenAddress, true);
   }
 
   // Set previously listed token to delisted
@@ -259,7 +261,7 @@ contract PoaManager is Ownable {
     doesEntityExist(_tokenAddress, tokenMap[_tokenAddress])
   {
     setEntityActiveValue(tokenMap[_tokenAddress], false);
-    TokenStatusChangedEvent(_tokenAddress, false);
+    emit TokenStatusChangedEvent(_tokenAddress, false);
   }
 
   function getTokenStatus(address _tokenAddress)

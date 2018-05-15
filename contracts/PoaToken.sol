@@ -1,6 +1,6 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.23;
 
-import "zeppelin-solidity/contracts/token/PausableToken.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/PausableToken.sol";
 
 
 // limited BrickblockContractRegistry definintion
@@ -106,7 +106,7 @@ contract PoaToken is PausableToken {
     private
   {
     stage = _stage;
-    Stage(_stage);
+    emit Stage(_stage);
   }
 
   // Ensure funding timeoutBlock hasn't expired
@@ -118,7 +118,7 @@ contract PoaToken is PausableToken {
   }
 
   // Create a new POAToken contract.
-  function PoaToken(
+  constructor(
     string _name,
     string _symbol,
     address _broker,
@@ -138,7 +138,7 @@ contract PoaToken is PausableToken {
     custodian = _custodian;
     timeoutBlock = _timeoutBlock;
     creationBlock = block.number;
-    totalSupply = _supply;
+    totalSupply_ = _supply;
     balances[owner] = _supply;
   }
 
@@ -172,7 +172,7 @@ contract PoaToken is PausableToken {
   {
     balances[owner] = balances[owner].sub(msg.value);
     balances[msg.sender] = balances[msg.sender].add(msg.value);
-    Buy(msg.sender, msg.value);
+    emit Buy(msg.sender, msg.value);
 
     if (balances[owner] == 0) {
       enterStage(Stages.Pending);
@@ -192,7 +192,7 @@ contract PoaToken is PausableToken {
     atStage(Stages.Pending)
     returns (bool)
   {
-    broker.transfer(this.balance);
+    broker.transfer(address(this).balance);
     enterStage(Stages.Active);
     return true;
   }
@@ -206,7 +206,7 @@ contract PoaToken is PausableToken {
     returns (bool)
   {
     require(stage == Stages.Pending || stage == Stages.Active);
-    require(msg.value == totalSupply);
+    require(msg.value == totalSupply());
     uint256 _fee = calculateFee(msg.value);
     require(payFee(_fee));
     enterStage(Stages.Terminated);
@@ -222,7 +222,7 @@ contract PoaToken is PausableToken {
     require(stage == Stages.Failed || stage == Stages.Terminated);
     uint256 balance = balances[msg.sender];
     balances[msg.sender] = 0;
-    totalSupply.sub(balance);
+    totalSupply_ = totalSupply().sub(balance);
     msg.sender.transfer(balance);
     return true;
   }
@@ -244,9 +244,9 @@ contract PoaToken is PausableToken {
       msg.value
         .sub(_fee)
         .mul(10e18)
-        .div(totalSupply)
+        .div(totalSupply())
     );
-    Payout(msg.value);
+    emit Payout(msg.value);
     return true;
   }
 

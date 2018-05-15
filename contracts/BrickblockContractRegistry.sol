@@ -1,10 +1,11 @@
-pragma solidity 0.4.18;
+pragma solidity ^0.4.23;
 
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
 contract BrickblockContractRegistry is Ownable {
 
+  uint8 public constant version = 1;
   address public owner;
   mapping (bytes => address) contractAddresses;
 
@@ -16,7 +17,7 @@ contract BrickblockContractRegistry is Ownable {
     returns (address)
   {
     contractAddresses[bytes(_name)] = _address;
-    UpdateContractEvent(_name, _address);
+    emit UpdateContractEvent(_name, _address);
   }
 
   function getContractAddress(string _name)

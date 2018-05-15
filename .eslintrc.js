@@ -15,12 +15,7 @@ module.exports = {
     'plugin:promise/recommended',
     'plugin:security/recommended'
   ],
-  plugins: [
-    'compat',
-    'prettier',
-    'promise',
-    'security'
-  ],
+  plugins: ['compat', 'prettier', 'promise', 'security'],
   settings: {
     'import/resolver': {
       node: {
@@ -31,7 +26,7 @@ module.exports = {
     polyfills: ['fetch', 'promises']
   },
   env: {
-    node: true,
+    node: true
   },
   globals: {
     __DEV__: true,
@@ -57,7 +52,8 @@ module.exports = {
     setTimeout: true,
     test: true,
     xdescribe: true,
-    xit: true
+    xit: true,
+    web3: true
   },
   rules: {
     'compat/compat': 'error',

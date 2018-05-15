@@ -1,6 +1,6 @@
-pragma solidity ^0.4.18;
+pragma solidity 0.4.18;
 
-import "openzeppelin-solidity/contracts/token/ERC20/PausableToken.sol";
+import "zeppelin-solidity/contracts/token/PausableToken.sol";
 
 
 contract CustomPOAToken is PausableToken {
@@ -74,8 +74,8 @@ contract CustomPOAToken is PausableToken {
     if (stage == Stages.Funding && block.number >= creationBlock.add(timeoutBlock)) {
       uint256 _unsoldBalance = balances[this];
       balances[this] = 0;
-      totalSupply_ = totalSupply_.sub(_unsoldBalance);
-      emit Transfer(this, address(0), balances[this]);
+      totalSupply = totalSupply.sub(_unsoldBalance);
+      Transfer(this, address(0), balances[this]);
       enterStage(Stages.Failed);
     }
     _;
@@ -83,7 +83,7 @@ contract CustomPOAToken is PausableToken {
   // end stage related modifiers
 
   // token totalSupply must be more than fundingGoal!
-  constructor
+  function CustomPOAToken
   (
     string _name,
     string _symbol,
@@ -105,7 +105,7 @@ contract CustomPOAToken is PausableToken {
     timeoutBlock = _timeoutBlock;
     creationBlock = block.number;
     // essentially sqm unit of building...
-    totalSupply_ = _totalSupply;
+    totalSupply = _totalSupply;
     initialSupply = _totalSupply;
     fundingGoal = _fundingGoal;
     balances[this] = _totalSupply;
@@ -168,7 +168,7 @@ contract CustomPOAToken is PausableToken {
     private
   {
     stage = _stage;
-    emit StageEvent(_stage);
+    StageEvent(_stage);
   }
 
   // start whitelist related functions
@@ -181,7 +181,7 @@ contract CustomPOAToken is PausableToken {
   {
     require(whitelisted[_address] != true);
     whitelisted[_address] = true;
-    emit WhitelistedEvent(_address, true);
+    WhitelistedEvent(_address, true);
   }
 
   // disallow address to buy tokens.
@@ -192,7 +192,7 @@ contract CustomPOAToken is PausableToken {
   {
     require(whitelisted[_address] != false);
     whitelisted[_address] = false;
-    emit WhitelistedEvent(_address, false);
+    WhitelistedEvent(_address, false);
   }
 
   // check to see if contract whitelist has approved address to buy
@@ -256,7 +256,7 @@ contract CustomPOAToken is PausableToken {
       balances[this] = balances[this].sub(_dust);
       // give dust to owner
       balances[owner] = balances[owner].add(_dust);
-      emit Transfer(this, owner, _dust);
+      Transfer(this, owner, _dust);
       // SHOULD be ok even with reentrancy because of enterStage(Stages.Pending)
       msg.sender.transfer(_refundAmount);
     }
@@ -267,8 +267,8 @@ contract CustomPOAToken is PausableToken {
     // increment the funded amount
     fundedAmount = fundedAmount.add(_payAmount);
     // send out event giving info on amount bought as well as claimable dust
-    emit Transfer(this, msg.sender, _buyAmount);
-    emit BuyEvent(msg.sender, _buyAmount);
+    Transfer(this, msg.sender, _buyAmount);
+    BuyEvent(msg.sender, _buyAmount);
     return true;
   }
 
@@ -292,11 +292,11 @@ contract CustomPOAToken is PausableToken {
     // set all eth in contract other than fee as claimable.
     // should only be buy()s. this ensures buy() dust is cleared
     unclaimedPayoutTotals[custodian] = unclaimedPayoutTotals[custodian]
-      .add(address(this).balance.sub(_fee));
+      .add(this.balance.sub(_fee));
     // allow trading of tokens
     paused = false;
     // let world know that this token can now be traded.
-    emit Unpause();
+    Unpause();
     return true;
   }
 
@@ -313,7 +313,7 @@ contract CustomPOAToken is PausableToken {
     // pause. Cannot be unpaused now that in Stages.Terminated
     paused = true;
     // let the world know this token is in Terminated Stage
-    emit TerminatedEvent();
+    TerminatedEvent();
   }
 
   // emergency temporary function used only in case of emergency to return
@@ -327,9 +327,9 @@ contract CustomPOAToken is PausableToken {
     // enter stage which will no longer allow unpausing
     enterStage(Stages.Terminated);
     // transfer funds to company in order to redistribute manually
-    owner.transfer(address(this).balance);
+    owner.transfer(this.balance);
     // let the world know that this token is in Terminated Stage
-    emit TerminatedEvent();
+    TerminatedEvent();
   }
 
   // end lifecycle functions
@@ -416,8 +416,8 @@ contract CustomPOAToken is PausableToken {
     // set token balance to 0 so re reclaims are not possible
     balances[msg.sender] = 0;
     // decrement totalSupply by token amount being reclaimed
-    totalSupply_ = totalSupply_.sub(_tokenBalance);
-    emit Transfer(msg.sender, address(0), _tokenBalance);
+    totalSupply = totalSupply.sub(_tokenBalance);
+    Transfer(msg.sender, address(0), _tokenBalance);
     // decrement fundedAmount by eth amount converted from token amount being reclaimed
     fundedAmount = fundedAmount.sub(tokensToWei(_tokenBalance));
     // set reclaim total as token value
@@ -449,15 +449,15 @@ contract CustomPOAToken is PausableToken {
     totalPerTokenPayout = totalPerTokenPayout
       .add(_payoutAmount
         .mul(1e18)
-        .div(totalSupply_)
+        .div(totalSupply)
       );
 
     // take remaining dust and send to owner rather than leave stuck in contract
     // should not be more than a few wei
-    uint256 _delta = (_payoutAmount.mul(1e18) % totalSupply_).div(1e18);
+    uint256 _delta = (_payoutAmount.mul(1e18) % totalSupply).div(1e18);
     unclaimedPayoutTotals[owner] = unclaimedPayoutTotals[owner].add(_fee).add(_delta);
     // let the world know that a payout has happened for this token
-    emit PayoutEvent(_payoutAmount);
+    PayoutEvent(_payoutAmount);
     return true;
   }
 
@@ -481,7 +481,7 @@ contract CustomPOAToken is PausableToken {
     // 0 out unclaimedPayoutTotals for user
     unclaimedPayoutTotals[msg.sender] = 0;
     // let the world know that a payout for sender has been claimed
-    emit ClaimEvent(_payoutAmount);
+    ClaimEvent(_payoutAmount);
     // transfer Ξ payable amount to sender
     msg.sender.transfer(_payoutAmount);
     return _payoutAmount;
