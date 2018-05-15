@@ -67,8 +67,6 @@ contract PoaTokenConcept is PausableToken {
   uint256 public constant decimals = 18;
   // ‰ permille NOT percent: fee paid to BBK holders through ACT
   uint256 public constant feeRate = 5;
-  // 100 000 tokens
-  uint256 public totalSupply = 1e23;
   // use to calculate when the contract should to Failed stage
   uint256 public creationTime;
   // used to check when contract should move from PreFunding to Funding stage
@@ -212,6 +210,7 @@ contract PoaTokenConcept is PausableToken {
     address _broker,
     address _custodian,
     address _registry,
+    uint256 _totalSupply,
     // given as unix time (seconds since 01.01.1970)
     uint256 _startTime,
     // given as seconds
@@ -232,6 +231,8 @@ contract PoaTokenConcept is PausableToken {
     require(_custodian != address(0));
     require(_registry != address(0));
 
+    // ensure totalSupply is at least 1 whole token
+    require(_totalSupply >= 1e18);
     // ensure all uints are valid
     require(_startTime > block.timestamp);
     // ensure that fundingTimeout is at least 24 hours
@@ -259,6 +260,9 @@ contract PoaTokenConcept is PausableToken {
 
     // set funding goal in cents
     fundingGoalInCents = _fundingGoalInCents;
+
+    // set totalSupply
+    totalSupply_ = _totalSupply;
 
     // start paused
     paused = true;
@@ -418,7 +422,7 @@ contract PoaTokenConcept is PausableToken {
       .add(_payAmount);
     // increment the funded amount
     fundedAmountInWei = fundedAmountInWei.add(_payAmount);
-    CommitmentEvent(msg.sender, _payAmount);
+    emit CommitmentEvent(msg.sender, _payAmount);
     return true;
   }
 
@@ -579,7 +583,7 @@ contract PoaTokenConcept is PausableToken {
     atStage(Stages.Failed)
     returns (bool)
   {
-    totalSupply = 0;
+    totalSupply_ = 0;
     uint256 _refundAmount = investmentAmountPerUserInWei[msg.sender];
     investmentAmountPerUserInWei[msg.sender] = 0;
     require(_refundAmount > 0);
@@ -670,7 +674,7 @@ contract PoaTokenConcept is PausableToken {
   {
     return uint256(stage) > 3
       ? investmentAmountPerUserInWei[_address]
-        .mul(totalSupply)
+        .mul(totalSupply())
         .div(fundedAmountInWei)
       : 0;
   }
@@ -716,7 +720,7 @@ contract PoaTokenConcept is PausableToken {
     require(_value <= balanceOf(msg.sender));
     spentBalances[msg.sender] = spentBalances[msg.sender].add(_value);
     receivedBalances[_to] = receivedBalances[_to].add(_value);
-    Transfer(msg.sender, _to, _value);
+    emit Transfer(msg.sender, _to, _value);
     return true;
   }
 
@@ -741,7 +745,7 @@ contract PoaTokenConcept is PausableToken {
     spentBalances[_from] = spentBalances[_from].add(_value);
     receivedBalances[_to] = receivedBalances[_to].add(_value);
     allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
-    Transfer(_from, _to, _value);
+    emit Transfer(_from, _to, _value);
     return true;
   }
 

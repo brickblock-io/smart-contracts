@@ -13,7 +13,8 @@ const {
   getDefaultStartTime,
   setupEcosystem,
   testSetCurrencyRate,
-  testInitialization
+  testInitialization,
+  defaultTotalSupply
 } = require('../../helpers/poac')
 const { testWillThrow, addressZero } = require('../../helpers/general.js')
 const BigNumber = require('bignumber.js')
@@ -50,6 +51,7 @@ describe('when initializing PoaTokenConcept', () => {
         broker,
         custodian,
         reg.address,
+        defaultTotalSupply,
         await getDefaultStartTime(),
         defaultFundingTimeout,
         defaultActivationTimeout,
@@ -76,6 +78,7 @@ describe('when initializing PoaTokenConcept', () => {
         broker,
         custodian,
         reg.address,
+        defaultTotalSupply,
         await getDefaultStartTime(),
         defaultFundingTimeout,
         defaultActivationTimeout,
@@ -102,6 +105,7 @@ describe('when initializing PoaTokenConcept', () => {
         broker,
         custodian,
         reg.address,
+        defaultTotalSupply,
         await getDefaultStartTime(),
         defaultFundingTimeout,
         defaultActivationTimeout,
@@ -128,6 +132,7 @@ describe('when initializing PoaTokenConcept', () => {
         broker,
         custodian,
         reg.address,
+        defaultTotalSupply,
         await getDefaultStartTime(),
         defaultFundingTimeout,
         defaultActivationTimeout,
@@ -154,6 +159,7 @@ describe('when initializing PoaTokenConcept', () => {
         addressZero,
         custodian,
         reg.address,
+        defaultTotalSupply,
         await getDefaultStartTime(),
         defaultFundingTimeout,
         defaultActivationTimeout,
@@ -167,6 +173,7 @@ describe('when initializing PoaTokenConcept', () => {
         null,
         custodian,
         reg.address,
+        defaultTotalSupply,
         await getDefaultStartTime(),
         defaultFundingTimeout,
         defaultActivationTimeout,
@@ -193,6 +200,7 @@ describe('when initializing PoaTokenConcept', () => {
         broker,
         addressZero,
         reg.address,
+        defaultTotalSupply,
         await getDefaultStartTime(),
         defaultFundingTimeout,
         defaultActivationTimeout,
@@ -206,6 +214,7 @@ describe('when initializing PoaTokenConcept', () => {
         broker,
         null,
         reg.address,
+        defaultTotalSupply,
         await getDefaultStartTime(),
         defaultFundingTimeout,
         defaultActivationTimeout,
@@ -232,6 +241,7 @@ describe('when initializing PoaTokenConcept', () => {
         broker,
         custodian,
         addressZero,
+        defaultTotalSupply,
         await getDefaultStartTime(),
         defaultFundingTimeout,
         defaultActivationTimeout,
@@ -244,6 +254,48 @@ describe('when initializing PoaTokenConcept', () => {
         defaultFiatCurrency,
         broker,
         custodian,
+        null,
+        defaultTotalSupply,
+        await getDefaultStartTime(),
+        defaultFundingTimeout,
+        defaultActivationTimeout,
+        defaultFundingGoal
+      ])
+    })
+
+    it('should NOT initialize with totalSupply < 1e18 or null', async () => {
+      await testSetCurrencyRate(
+        exr,
+        exp,
+        defaultFiatCurrency,
+        defaultFiatRate,
+        {
+          from: owner,
+          value: 1e18
+        }
+      )
+
+      await testWillThrow(poac.setupContract, [
+        defaultName,
+        defaultSymbol,
+        defaultFiatCurrency,
+        broker,
+        custodian,
+        reg.address,
+        9e17,
+        await getDefaultStartTime(),
+        defaultFundingTimeout,
+        defaultActivationTimeout,
+        defaultFundingGoal
+      ])
+
+      await testWillThrow(poac.setupContract, [
+        defaultName,
+        defaultSymbol,
+        defaultFiatCurrency,
+        broker,
+        custodian,
+        reg.address,
         null,
         await getDefaultStartTime(),
         defaultFundingTimeout,
@@ -271,6 +323,7 @@ describe('when initializing PoaTokenConcept', () => {
         broker,
         custodian,
         reg.address,
+        defaultTotalSupply,
         // simulate day before
         new BigNumber(Date.now()).div(1000).sub(60 * 60 * 24),
         defaultFundingTimeout,
@@ -298,6 +351,7 @@ describe('when initializing PoaTokenConcept', () => {
         broker,
         custodian,
         reg.address,
+        defaultTotalSupply,
         await getDefaultStartTime(),
         // simulate 1 second less than a day
         new BigNumber(60)
@@ -328,6 +382,7 @@ describe('when initializing PoaTokenConcept', () => {
         broker,
         custodian,
         reg.address,
+        defaultTotalSupply,
         await getDefaultStartTime(),
         // simulate 1 second less than a day
         new BigNumber(60)
@@ -363,6 +418,7 @@ describe('when initializing PoaTokenConcept', () => {
         broker,
         custodian,
         reg.address,
+        defaultTotalSupply,
         await getDefaultStartTime(),
         defaultFundingTimeout,
         defaultActivationTimeout,
