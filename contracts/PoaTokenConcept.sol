@@ -96,9 +96,9 @@ contract PoaTokenConcept is PausableToken {
   // due to fluctuating fiat rates
   mapping(address => uint256) public investmentAmountPerUserInWei;
   // used to calculate balanceOf by deducting spent balances
-  mapping(address => uint256) public spentBalances;
+  mapping(address => uint256) private spentBalances;
   // used to calculate balanceOf by adding received balances
-  mapping(address => uint256) public receivedBalances;
+  mapping(address => uint256) private receivedBalances;
   // hide balances to ensure that only balanceOf is being used
   mapping(address => uint256) private balances;
 
@@ -154,7 +154,7 @@ contract PoaTokenConcept is PausableToken {
   }
 
   // enforce whitelisting if is not transfer OR
-  // if is transfer and whitelistTransfers is enables
+  // if is transfer and whitelistTransfers is enabled
   modifier isBuyWhitelisted() {
     require(
       Whitelist(registry.getContractAddress("Whitelist"))
