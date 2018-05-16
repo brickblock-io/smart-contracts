@@ -1,44 +1,12 @@
 pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-
-
-contract ExRates {
-  mapping (bytes32 => bytes8) public queryTypes;
-  bool public ratesActive;
-
-  function setRate(bytes32 _queryId, uint256 _rate)
-    external
-    returns (bool)
-  {}
-
-  function setQueryId(
-    bytes32 _queryId,
-    bytes8 _queryType
-  )
-    external
-    returns (bool)
-  {}
-
-  function getCurrencySettings(bytes8 _queryType)
-    view
-    external
-    returns (uint256, uint256, bytes32[5])
-  {}
-}
-
-
-contract Registry {
-  function getContractAddress(string _name)
-    public
-    view
-    returns (address)
-  {}
-}
+import "../interfaces/BrickblockContractRegistryInterface.sol";
+import "../interfaces/ExchangeRatesInterface.sol";
 
 
 contract ExchangeRateProviderStub {
-  Registry private registry;
+  RegistryInterface private registry;
   // used to check on if the contract has self destructed
   bool public isAlive = true;
   // used for testing simulated pending query
@@ -74,7 +42,7 @@ contract ExchangeRateProviderStub {
     public
   {
     require(_registryAddress != address(0));
-    registry = Registry(_registryAddress);
+    registry = RegistryInterface(_registryAddress);
   }
 
   // SIMULATE: set callbackGasPrice
@@ -121,7 +89,7 @@ contract ExchangeRateProviderStub {
     returns (bool)
   {
     // get current address of ExchangeRates
-    ExRates _exchangeRates = ExRates(
+    ExchangeRatesInterface _exchangeRates = ExchangeRatesInterface(
       registry.getContractAddress("ExchangeRates")
     );
     pendingTestQueryId = _identifier;
@@ -134,7 +102,7 @@ contract ExchangeRateProviderStub {
     public
   {
     // make sure that the caller is oraclize
-    ExRates _exchangeRates = ExRates(
+    ExchangeRatesInterface _exchangeRates = ExchangeRatesInterface(
       registry.getContractAddress("ExchangeRates")
     );
 

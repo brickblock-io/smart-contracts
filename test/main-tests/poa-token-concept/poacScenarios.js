@@ -20,8 +20,8 @@ const {
   testTransferFrom,
   testBuyTokensMulti,
   getAccountInformation,
-  testResetCurrencyRate,
-  testActiveBalances
+  testActiveBalances,
+  testResetCurrencyRate
 } = require('../../helpers/poac')
 const {
   timeTravel,

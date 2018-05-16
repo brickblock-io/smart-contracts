@@ -1,45 +1,10 @@
 pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-
-
-// limited BrickblockContractRegistry definition
-contract Registry {
-  function getContractAddress(string _name)
-    public
-    view
-    returns (address)
-  {}
-}
-
-
-// limited BrickblockAccessToken definition
-contract AccessToken {
-  function distribute(
-    uint256 _amount
-  )
-    public
-    returns (bool)
-  {}
-
-  function burn(
-    address _address,
-    uint256 _value
-  )
-    public
-    returns (bool)
-  {}
-}
-
-
-// limited ExchangeRates definition
-contract ExR {
-  function getRate(bytes8 _queryTypeBytes)
-    public
-    view
-    returns (uint256)
-  {}
-}
+import "./interfaces/BrickblockAccessTokenInterface.sol";
+import "./interfaces/BrickblockContractRegistryInterface.sol";
+import "./interfaces/BrickblockAccessTokenInterface.sol";
+import "./interfaces/ExchangeRatesInterface.sol";
 
 
 contract BrickblockFeeManager {
@@ -47,7 +12,7 @@ contract BrickblockFeeManager {
   using SafeMath for uint256;
   uint8 public constant version = 1;
 
-  Registry private registry;
+  RegistryInterface private registry;
 
   constructor(
     address _registryAddress
@@ -55,7 +20,7 @@ contract BrickblockFeeManager {
     public
   {
     require(_registryAddress != address(0));
-    registry = Registry(_registryAddress);
+    registry = RegistryInterface(_registryAddress);
   }
 
   function weiToAct(uint256 _wei)
@@ -63,7 +28,7 @@ contract BrickblockFeeManager {
     public
     returns (uint256)
   {
-    ExR exr = ExR(
+    ExchangeRatesInterface exr = ExchangeRatesInterface(
       registry.getContractAddress("ExchangeRates")
     );
     uint256 _rate = exr.getRate("ACT");
@@ -75,7 +40,7 @@ contract BrickblockFeeManager {
     public
     returns (uint256)
   {
-    ExR exr = ExR(
+    ExchangeRatesInterface exr = ExchangeRatesInterface(
       registry.getContractAddress("ExchangeRates")
     );
     uint256 _rate = exr.getRate("ACT");
@@ -87,7 +52,7 @@ contract BrickblockFeeManager {
     payable
     returns (bool)
   {
-    AccessToken act = AccessToken(
+    AccessTokenInterface act = AccessTokenInterface(
       registry.getContractAddress("AccessToken")
     );
     require(act.distribute(weiToAct(msg.value)));
@@ -100,7 +65,7 @@ contract BrickblockFeeManager {
     public
     returns (bool)
   {
-    AccessToken act = AccessToken(
+    AccessTokenInterface act = AccessTokenInterface(
       registry.getContractAddress("AccessToken")
     );
     require(act.burn(msg.sender, _value));

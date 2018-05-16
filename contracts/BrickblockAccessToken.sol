@@ -1,53 +1,8 @@
 pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/token/ERC20/PausableToken.sol";
-
-
-// limited BrickblockContractRegistry definintion
-contract Registry {
-  address public owner;
-  mapping (bytes => address) contractAddresses;
-
-  function updateContractAddress(string _name, address _address)
-    public
-    returns (address)
-  {}
-
-  function getContractAddress(string _name)
-    public
-    view
-    returns (address)
-  {}
-}
-
-
-// limited BrickblockToken definition
-contract BrickblockToken {
-  function transfer(
-    address _to,
-    uint256 _value
-  )
-    public
-    returns (bool)
-  {}
-
-  function transferFrom(
-    address from,
-    address to,
-    uint256 value
-  )
-    public
-    returns (bool)
-  {}
-
-  function balanceOf(
-    address _address
-  )
-    public
-    view
-    returns (uint256)
-  {}
-}
+import "./interfaces/BrickblockContractRegistryInterface.sol";
+import "./interfaces/BrickblockTokenInterface.sol";
 
 
 contract BrickblockAccessToken is PausableToken {
@@ -101,7 +56,7 @@ contract BrickblockAccessToken is PausableToken {
 
   uint8 public constant version = 1;
 
-  Registry private registry;
+  RegistryInterface private registry;
   string public constant name = "BrickblockAccessToken";
   string public constant symbol = "ACT";
   uint8 public constant decimals = 18;
@@ -148,7 +103,7 @@ contract BrickblockAccessToken is PausableToken {
     public
   {
     require(_registryAddress != address(0));
-    registry = Registry(_registryAddress);
+    registry = RegistryInterface(_registryAddress);
   }
 
   // check an address for amount of currently locked BBK
@@ -172,7 +127,7 @@ contract BrickblockAccessToken is PausableToken {
     external
     returns (bool)
   {
-    BrickblockToken _bbk = BrickblockToken(
+    BrickblockTokenInterface _bbk = BrickblockTokenInterface(
       registry.getContractAddress("BrickblockToken")
     );
 
@@ -192,7 +147,7 @@ contract BrickblockAccessToken is PausableToken {
     external
     returns (bool)
   {
-    BrickblockToken _bbk = BrickblockToken(
+    BrickblockTokenInterface _bbk = BrickblockTokenInterface(
       registry.getContractAddress("BrickblockToken")
     );
     require(_amount <= lockedBBK[msg.sender]);

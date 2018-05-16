@@ -13,8 +13,8 @@ const {
   getDefaultStartTime,
   setupEcosystem,
   testSetCurrencyRate,
-  testInitialization,
-  defaultTotalSupply
+  defaultTotalSupply,
+  testInitialization
 } = require('../../helpers/poac')
 const { testWillThrow, addressZero } = require('../../helpers/general.js')
 const BigNumber = require('bignumber.js')

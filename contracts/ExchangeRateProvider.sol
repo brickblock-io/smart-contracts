@@ -1,49 +1,15 @@
 pragma solidity ^0.4.23;
 
 import "./OraclizeAPI.sol";
-
-
-// minimal definition of ExchangeRates
-contract ExRates {
-  mapping (bytes32 => bytes8) public queryTypes;
-  bool public ratesActive;
-
-  function setRate(bytes32 _queryId, uint256 _rate)
-    external
-    returns (bool)
-  {}
-
-  function setQueryId(
-    bytes32 _queryId,
-    bytes8 _queryType
-  )
-    external
-    returns (bool)
-  {}
-
-  function getCurrencySettings(bytes8 _queryType)
-    view
-    external
-    returns (uint256, uint256, bytes32[5])
-  {}
-}
-
-
-// minimal definition of BrickblockContractRegistry
-contract Registry {
-  function getContractAddress(string _name)
-    public
-    view
-    returns (address)
-  {}
-}
+import "./interfaces/BrickblockContractRegistryInterface.sol";
+import "./interfaces/ExchangeRatesInterface.sol";
 
 
 contract ExchangeRateProvider is usingOraclize {
 
   uint8 public constant version = 1;
 
-  Registry private registry;
+  RegistryInterface private registry;
   // used to check on if the contract has self destructed
   bool public isAlive = true;
 
@@ -69,7 +35,7 @@ contract ExchangeRateProvider is usingOraclize {
     public
   {
     require(_registryAddress != address(0));
-    registry = Registry(_registryAddress);
+    registry = RegistryInterface(_registryAddress);
   }
 
   // set gas price used for oraclize callbacks
@@ -120,7 +86,7 @@ contract ExchangeRateProvider is usingOraclize {
     returns (bool)
   {
     // get current address of ExchangeRates
-    ExRates _exchangeRates = ExRates(
+    ExchangeRatesInterface _exchangeRates = ExchangeRatesInterface(
       registry.getContractAddress("ExchangeRates")
     );
     // run setQueryId on ExchangeRates
@@ -134,7 +100,7 @@ contract ExchangeRateProvider is usingOraclize {
     // make sure that the caller is oraclize
     require(msg.sender == oraclize_cbAddress());
     // get currency address of BrickblockContractRegistry
-    ExRates _exchangeRates = ExRates(
+    ExchangeRatesInterface _exchangeRates = ExchangeRatesInterface(
       registry.getContractAddress("ExchangeRates")
     );
     // get settings data from ExchangeRates

@@ -23,7 +23,6 @@ const {
 } = require('../../helpers/poac')
 const {
   testWillThrow,
-
   timeTravel,
   gasPrice
 } = require('../../helpers/general.js')
