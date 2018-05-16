@@ -15,9 +15,9 @@ const getContributorsBalanceSum = (bbk, contributors) =>
       )
   )
 
-async function distributeTokensToMany(contract, accounts) {
+async function distributeTokensToMany(contract, accountList) {
   const distributeAmount = new BigNumber(1e24)
-  const addresses = accounts.slice(4)
+  const addresses = accountList
   await Promise.all(
     addresses.map(address =>
       contract.distributeTokens(address, distributeAmount)
@@ -55,6 +55,80 @@ function pauseIfUnpaused(contract) {
       .then(resolve)
       .catch(reject)
   })
+}
+
+const chaosTransferMonkey = async (BBK, accountsWithBBK) => {
+  // eslint-disable-next-line no-console
+  console.log('chaosTransferMonkey: BEGIN')
+
+  const randomIntegerInRange = (min, max) =>
+    Math.floor(min + Math.random() * (max - min + 1))
+
+  const randomAccount = () =>
+    accountsWithBBK[randomIntegerInRange(0, accountsWithBBK.length - 1)]
+
+  const chooseAccounts = () => {
+    const sender = randomAccount()
+    let receiver = null
+    let transferFromReceiver = null
+    while (receiver === null) {
+      const maybeReceiver = randomAccount()
+      if (maybeReceiver !== sender) receiver = maybeReceiver
+    }
+
+    while (transferFromReceiver === null) {
+      const maybeReceiver = randomAccount()
+      if (maybeReceiver !== sender && maybeReceiver !== receiver)
+        transferFromReceiver = maybeReceiver
+    }
+
+    return { receiver, sender, transferFromReceiver }
+  }
+
+  let epoch = 0
+  while (epoch < 100) {
+    const transferScenario = Math.random() >= 0.5
+    const { sender, receiver, transferFromReceiver } = chooseAccounts()
+    const senderBalance = await BBK.balanceOf(sender)
+
+    if (transferScenario) {
+      // transfer scenario
+      const amountToTransfer = senderBalance.times(
+        randomIntegerInRange(10, 30) / 100
+      )
+      await BBK.transfer.sendTransaction(receiver, amountToTransfer, {
+        from: sender
+      })
+    } else {
+      // approve and transferFrom scenario
+      const approvalAmount = senderBalance.times(
+        randomIntegerInRange(10, 30) / 100
+      )
+      const transferAmount = approvalAmount.times(
+        randomIntegerInRange(50, 100) / 100
+      )
+
+      await BBK.approve.sendTransaction(receiver, approvalAmount, {
+        from: sender
+      })
+      await BBK.transferFrom.sendTransaction(
+        sender,
+        transferFromReceiver,
+        transferAmount,
+        {
+          from: receiver
+        }
+      )
+    }
+
+    // update to next round
+    epoch += 1
+    // eslint-disable-next-line no-console
+    if (epoch % 10 === 0) console.log('chaosTransferMonkey: epoch', epoch)
+  }
+
+  // eslint-disable-next-line no-console
+  console.log('chaosTransferMonkey: END')
 }
 
 // constants
@@ -473,14 +547,16 @@ describe('at the end of the ico when fountainAddress has been set', () => {
     before('setup contract and relevant accounts', async () => {
       bbk = await BrickblockToken.new(bonusAddress)
       bbf = await BrickblockFountainStub.new(bbk.address)
-      fountainAddress = bbf.address
+      await distributeTokensToMany(bbk, accounts.slice(4))
+      await bbk.changeFountainContractAddress(bbf.address)
+
       bbkAddress = bbk.address
-      await distributeTokensToMany(bbk, accounts)
-      await bbk.changeFountainContractAddress(fountainAddress)
+      fountainAddress = bbf.address
     })
 
     it('should set the correct values when running finalizeTokenSale', async () => {
       const preBonusBalance = await bbk.balanceOf(bonusAddress)
+      const prePaused = await bbk.paused()
       const contributors = accounts.slice(4)
       const contributorShare = new BigNumber(51)
 
@@ -535,7 +611,11 @@ describe('at the end of the ico when fountainAddress has been set', () => {
         preContributorTotalDistributed.toString(),
         'the contribution amounts should NOT change after finalizing token sale'
       )
-      assert(postPaused, 'the token contract should still be paused')
+      assert.equal(
+        prePaused,
+        postPaused,
+        'the token contract should be in same paused state'
+      )
       assert(!postTokenSaleActive, 'the token sale should be over')
       assert.equal(
         postContractFountainAllowance.toString(),
@@ -561,19 +641,19 @@ describe('at the end of the ico when fountainAddress has been set', () => {
 
 describe('after the ico', () => {
   contract('BrickblockToken', accounts => {
-    let bbk
-    let bbf
+    const testAmount = new BigNumber(1e24)
     const owner = accounts[0]
     const bonusAddress = accounts[1]
+    let bbk
+    let bbf
     let fountainAddress
-    const testAmount = new BigNumber(1e24)
 
     before('setup bbk BrickblockToken', async () => {
       bbk = await BrickblockToken.new(bonusAddress)
       bbf = await BrickblockFountainStub.new(bbk.address)
       fountainAddress = bbf.address
       await bbk.changeFountainContractAddress(fountainAddress)
-      await distributeTokensToMany(bbk, accounts)
+      await distributeTokensToMany(bbk, accounts.slice(4))
       await bbk.finalizeTokenSale()
     })
 
@@ -968,6 +1048,112 @@ describe('after the ico', () => {
           )
         }
       })
+    })
+  })
+})
+
+describe('when we unpause the contract before calling finalizeTokenSale', () => {
+  contract('BrickblockToken', accounts => {
+    const bonusAddress = accounts[1]
+    const tokenHolderList = accounts.slice(4)
+    let bbk
+    let bbf
+    let bbkAddress
+    let fountainAddress
+
+    before('setup contract state', async () => {
+      bbk = await BrickblockToken.new(bonusAddress)
+      bbf = await BrickblockFountainStub.new(bbk.address)
+      bbkAddress = bbk.address
+      fountainAddress = bbf.address
+
+      await bbk.changeFountainContractAddress(bbf.address)
+      await distributeTokensToMany(bbk, tokenHolderList)
+      await bbk.unpause()
+      await chaosTransferMonkey(bbk, tokenHolderList)
+    })
+
+    it('should set the correct values when running finalizeTokenSale', async () => {
+      const prePaused = await bbk.paused()
+      const preBonusBalance = await bbk.balanceOf(bonusAddress)
+      const contributors = accounts.slice(4)
+      const contributorShare = new BigNumber(51)
+
+      const preContributorTotalDistributed = await getContributorsBalanceSum(
+        bbk,
+        contributors
+      )
+      await bbk.finalizeTokenSale()
+      const postContributorTotalDistributed = await getContributorsBalanceSum(
+        bbk,
+        contributors
+      )
+
+      const postBonusBalance = await bbk.balanceOf(bonusAddress)
+      const postContractBalance = await bbk.balanceOf(bbkAddress)
+      const postContractFountainAllowance = await bbk.allowance(
+        bbkAddress,
+        fountainAddress
+      )
+      const postTotalSupply = await bbk.totalSupply()
+      const totalCheck = postBonusBalance.add(
+        postContractBalance.add(preContributorTotalDistributed)
+      )
+      const postTokenSaleActive = await bbk.tokenSaleActive()
+      const postPaused = await bbk.paused()
+      const contributorsDiff = preContributorTotalDistributed.minus(
+        postTotalSupply.times(contributorShare).div(100)
+      )
+      const companyDiff = postContractBalance.minus(
+        postTotalSupply.times(companyShare).div(100)
+      )
+      assert.equal(
+        preBonusBalance.minus(postBonusBalance).toString(),
+        '0',
+        'the bonus amount should not change'
+      )
+      assert(
+        contributorsDiff <= 1 || contributorsDiff >= 1,
+        'the contributors share of the total tokens should be 51%'
+      )
+      assert(
+        companyDiff <= 1 || companyDiff >= 1,
+        'the company share of the total tokens should be 35%'
+      )
+      assert.equal(
+        totalCheck.toString(),
+        postTotalSupply.toString(),
+        'the totals should add up'
+      )
+      assert.equal(
+        postContributorTotalDistributed.toString(),
+        preContributorTotalDistributed.toString(),
+        'the contribution amounts should NOT change after finalizing token sale'
+      )
+      assert.equal(
+        prePaused,
+        postPaused,
+        'the token contract should be in same paused state'
+      )
+      assert(!postTokenSaleActive, 'the token sale should be over')
+      assert.equal(
+        postContractFountainAllowance.toString(),
+        postContractBalance.toString(),
+        'the remaining contract balance should be approved to be spent by the fountain contract address'
+      )
+    })
+
+    it('should NOT be able to call finalizeTokenSale again', async () => {
+      try {
+        await bbk.finalizeTokenSale()
+        assert(false, 'this should throw an error')
+      } catch (error) {
+        assert(
+          true,
+          /invalid opcode/.test(error),
+          'the error message should contain invalid opcode'
+        )
+      }
     })
   })
 })
