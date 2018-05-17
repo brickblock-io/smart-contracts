@@ -132,8 +132,9 @@ const chaosTransferMonkey = async (BBK, accountsWithBBK) => {
 }
 
 // constants
-const bonusShare = 14
-const companyShare = 35
+const bonusShare = new BigNumber(14)
+const companyShare = new BigNumber(35)
+const contributorShare = new BigNumber(51)
 const tokenTotal = new BigNumber(5e26)
 const bonusTokens = tokenTotal.mul(bonusShare).div(100)
 const companyTokens = tokenTotal.mul(companyShare).div(100)
@@ -555,21 +556,24 @@ describe('at the end of the ico when fountainAddress has been set', () => {
     })
 
     it('should set the correct values when running finalizeTokenSale', async () => {
-      const preBonusBalance = await bbk.balanceOf(bonusAddress)
-      const prePaused = await bbk.paused()
       const contributors = accounts.slice(4)
-      const contributorShare = new BigNumber(51)
 
+      // pre state
+      const prePaused = await bbk.paused()
+      const preBonusBalance = await bbk.balanceOf(bonusAddress)
       const preContributorTotalDistributed = await getContributorsBalanceSum(
         bbk,
         contributors
       )
+
+      // finalize
       await bbk.finalizeTokenSale()
+
+      // post state
       const postContributorTotalDistributed = await getContributorsBalanceSum(
         bbk,
         contributors
       )
-
       const postBonusBalance = await bbk.balanceOf(bonusAddress)
       const postContractBalance = await bbk.balanceOf(bbkAddress)
       const postContractFountainAllowance = await bbk.allowance(
@@ -582,24 +586,31 @@ describe('at the end of the ico when fountainAddress has been set', () => {
       )
       const postTokenSaleActive = await bbk.tokenSaleActive()
       const postPaused = await bbk.paused()
+
       const contributorsDiff = preContributorTotalDistributed.minus(
         postTotalSupply.times(contributorShare).div(100)
       )
       const companyDiff = postContractBalance.minus(
         postTotalSupply.times(companyShare).div(100)
       )
+
+      // invariant checks
       assert.equal(
         preBonusBalance.minus(postBonusBalance).toString(),
         '0',
         'the bonus amount should not change'
       )
       assert(
-        contributorsDiff <= 1 || contributorsDiff >= 1,
-        'the contributors share of the total tokens should be 51%'
+        postTotalSupply
+          .div(contributorsDiff)
+          .lessThanOrEqualTo(contributorShare.div(100)),
+        'the contributors share of the total tokens is at most 51% after burning'
       )
       assert(
-        companyDiff <= 1 || companyDiff >= 1,
-        'the company share of the total tokens should be 35%'
+        postTotalSupply
+          .div(companyDiff)
+          .greaterThanOrEqualTo(companyShare.div(100)),
+        'the company share of the total tokens is at least 35% after burning'
       )
       assert.equal(
         totalCheck.toString(),
@@ -622,6 +633,19 @@ describe('at the end of the ico when fountainAddress has been set', () => {
         postContractBalance.toString(),
         'the remaining contract balance should be approved to be spent by the fountain contract address'
       )
+    })
+
+    it('should NOT be able to call finalizeTokenSale again', async () => {
+      try {
+        await bbk.finalizeTokenSale()
+        assert(false, 'this should throw an error')
+      } catch (error) {
+        assert(
+          true,
+          /invalid opcode/.test(error),
+          'the error message should contain invalid opcode'
+        )
+      }
     })
 
     it('should NOT be able to call finalizeTokenSale again', async () => {
@@ -1074,21 +1098,24 @@ describe('when we unpause the contract before calling finalizeTokenSale', () => 
     })
 
     it('should set the correct values when running finalizeTokenSale', async () => {
+      const contributors = accounts.slice(4)
+
+      // pre state
       const prePaused = await bbk.paused()
       const preBonusBalance = await bbk.balanceOf(bonusAddress)
-      const contributors = accounts.slice(4)
-      const contributorShare = new BigNumber(51)
-
       const preContributorTotalDistributed = await getContributorsBalanceSum(
         bbk,
         contributors
       )
+
+      // finalize
       await bbk.finalizeTokenSale()
+
+      // post state
       const postContributorTotalDistributed = await getContributorsBalanceSum(
         bbk,
         contributors
       )
-
       const postBonusBalance = await bbk.balanceOf(bonusAddress)
       const postContractBalance = await bbk.balanceOf(bbkAddress)
       const postContractFountainAllowance = await bbk.allowance(
@@ -1101,24 +1128,31 @@ describe('when we unpause the contract before calling finalizeTokenSale', () => 
       )
       const postTokenSaleActive = await bbk.tokenSaleActive()
       const postPaused = await bbk.paused()
+
       const contributorsDiff = preContributorTotalDistributed.minus(
         postTotalSupply.times(contributorShare).div(100)
       )
       const companyDiff = postContractBalance.minus(
         postTotalSupply.times(companyShare).div(100)
       )
+
+      // invariant checks
       assert.equal(
         preBonusBalance.minus(postBonusBalance).toString(),
         '0',
         'the bonus amount should not change'
       )
       assert(
-        contributorsDiff <= 1 || contributorsDiff >= 1,
-        'the contributors share of the total tokens should be 51%'
+        postTotalSupply
+          .div(contributorsDiff)
+          .lessThanOrEqualTo(contributorShare.div(100)),
+        'the contributors share of the total tokens is at most 51% after burning'
       )
       assert(
-        companyDiff <= 1 || companyDiff >= 1,
-        'the company share of the total tokens should be 35%'
+        postTotalSupply
+          .div(companyDiff)
+          .greaterThanOrEqualTo(companyShare.div(100)),
+        'the company share of the total tokens is at least 35% after burning'
       )
       assert.equal(
         totalCheck.toString(),
