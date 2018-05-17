@@ -96,6 +96,7 @@
     "eslint-plugin-prettier": "^2.6.0",
     "eslint-plugin-promise": "^3.6.0",
     "eslint-plugin-security": "^1.4.0",
+    "eth-gas-reporter": "^0.1.5",
     "ethereumjs-testrpc": "^6.0.1",
     "ethereumjs-util": "^5.1.5",
     "husky": "^0.14.3",
