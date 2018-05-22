@@ -1,47 +1,47 @@
 const {
   custodian,
   whitelistedPoaBuyers,
-  setupPoaAndEcosystem,
+  setupPoaProxyAndEcosystem,
   testWeiToFiatCents,
   testFiatCentsToWei,
   testCalculateFee,
   testFallback,
   testChangeCustodianAddress
-} = require('../../helpers/poac')
+} = require('../../helpers/poa')
 const { testWillThrow } = require('../../helpers/general.js')
 const BigNumber = require('bignumber.js')
 
 describe('when testing stage independent functions', () => {
-  contract('PoaTokenConcept', () => {
-    let poac
+  contract('PoaToken', () => {
+    let poa
 
     before('setup contracts', async () => {
-      const contracts = await setupPoaAndEcosystem()
-      poac = contracts.poac
+      const contracts = await setupPoaProxyAndEcosystem()
+      poa = contracts.poa
     })
 
     it('should use weiToFiatCents to return correct value', async () => {
-      await testWeiToFiatCents(poac, new BigNumber('1e18'))
+      await testWeiToFiatCents(poa, new BigNumber('1e18'))
     })
 
     it('should use fiatCentsToWei to return correct value', async () => {
-      await testFiatCentsToWei(poac, new BigNumber('3e4'))
+      await testFiatCentsToWei(poa, new BigNumber('3e4'))
     })
 
     it('should calculate correct fee', async () => {
-      await testCalculateFee(poac, new BigNumber('1e18'))
+      await testCalculateFee(poa, new BigNumber('1e18'))
     })
 
     it('should NOT changeCustodianAddress when NOT custodian', async () => {
       await testWillThrow(testChangeCustodianAddress, [
-        poac,
+        poa,
         whitelistedPoaBuyers[1],
         { from: whitelistedPoaBuyers[2] }
       ])
     })
 
     it('should change changeCustodianAddress', async () => {
-      await testChangeCustodianAddress(poac, whitelistedPoaBuyers[2], {
+      await testChangeCustodianAddress(poa, whitelistedPoaBuyers[2], {
         from: custodian
       })
     })
@@ -50,7 +50,7 @@ describe('when testing stage independent functions', () => {
       await testFallback({
         from: whitelistedPoaBuyers[0],
         value: 3e17,
-        to: poac.address
+        to: poa.address
       })
     })
   })

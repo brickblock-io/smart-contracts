@@ -1,8 +1,49 @@
 pragma solidity ^0.4.23;
 
-import "./PoaToken.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./Proxy.sol";
+
+
+interface PoaTokenInterface {
+  function setupContract
+  (
+    string _name,
+    string _symbol,
+    // fiat symbol used in ExchangeRates
+    string _fiatCurrency,
+    address _broker,
+    address _custodian,
+    uint256 _totalSupply,
+    // given as unix time (seconds since 01.01.1970)
+    uint256 _startTime,
+    // given as seconds
+    uint256 _fundingTimeout,
+    uint256 _activationTimeout,
+    // given as fiat cents
+    uint256 _fundingGoalInCents
+  )
+    external
+    returns (bool);
+
+  function pause()
+    external;
+  
+  function unpause()
+    external;
+  
+  function terminate()
+    external
+    returns (bool);
+}
+
+// limited BrickblockContractRegistry definintion
+interface RegistryInterface {
+  function getContractAddress(string _name)
+    external
+    view
+    returns (address);
+}
 
 
 contract PoaManager is Ownable {
@@ -10,7 +51,7 @@ contract PoaManager is Ownable {
 
   uint256 constant version = 1;
 
-  address private registryAddress;
+  RegistryInterface public registry;
 
   struct EntityState {
     uint256 index;
@@ -45,8 +86,8 @@ contract PoaManager is Ownable {
     _;
   }
 
-  modifier onlyActiveBroker(address _brokerAddress) {
-    EntityState memory entity = brokerMap[_brokerAddress];
+  modifier onlyActiveBroker() {
+    EntityState memory entity = brokerMap[msg.sender];
     require(entity.active);
     _;
   }
@@ -57,7 +98,7 @@ contract PoaManager is Ownable {
     public
   {
     require(_registryAddress != address(0));
-    registryAddress = _registryAddress;
+    registry = RegistryInterface(_registryAddress);
   }
 
   //
@@ -148,7 +189,9 @@ contract PoaManager is Ownable {
     onlyOwner
     doesEntityExist(_brokerAddress, brokerMap[_brokerAddress])
   {
-    var (addressToUpdate, indexUpdate) = removeEntity(brokerMap[_brokerAddress], brokerAddressList);
+    address addressToUpdate;
+    uint256 indexUpdate;
+    (addressToUpdate, indexUpdate) = removeEntity(brokerMap[_brokerAddress], brokerAddressList);
     brokerMap[addressToUpdate].index = indexUpdate;
     delete brokerMap[_brokerAddress];
 
@@ -197,27 +240,49 @@ contract PoaManager is Ownable {
     return tokenAddressList;
   }
 
+  function createProxy(address _target)
+    private
+    returns (address _proxyContract)
+  {
+    _proxyContract = new Proxy(_target);
+  }
+
   // Create a PoaToken contract with given parameters, and set active value to true
   function addToken
   (
     string _name,
     string _symbol,
+    // fiat symbol used in ExchangeRates
+    string _fiatCurrency,
     address _custodian,
-    uint256 _timeout,
-    uint256 _supply
+    uint256 _totalSupply,
+    // given as unix time (seconds since 01.01.1970)
+    uint256 _startTime,
+    // given as seconds offset from startTime
+    uint256 _fundingTimeout,
+    // given as seconds offset from fundingTimeout
+    uint256 _activationTimeout,
+    // given as fiat cents
+    uint256 _fundingGoalInCents
   )
     public
-    onlyActiveBroker(msg.sender)
+    onlyActiveBroker
     returns (address)
   {
-    address _tokenAddress = new PoaToken(
+    address _poaTokenMaster = registry.getContractAddress("PoaTokenMaster");
+    address _tokenAddress = createProxy(_poaTokenMaster);
+
+    PoaTokenInterface(_tokenAddress).setupContract(
       _name,
       _symbol,
+      _fiatCurrency,
       msg.sender,
       _custodian,
-      registryAddress,
-      _timeout,
-      _supply
+      _totalSupply,
+      _startTime,
+      _fundingTimeout,
+      _activationTimeout,
+      _fundingGoalInCents
     );
 
     tokenMap[_tokenAddress] = addEntity(
@@ -237,7 +302,9 @@ contract PoaManager is Ownable {
     onlyOwner
     doesEntityExist(_tokenAddress, tokenMap[_tokenAddress])
   {
-    var (addressToUpdate, indexUpdate) = removeEntity(tokenMap[_tokenAddress], tokenAddressList);
+    address addressToUpdate;
+    uint256 indexUpdate;
+    (addressToUpdate, indexUpdate) = removeEntity(tokenMap[_tokenAddress], tokenAddressList);
     tokenMap[addressToUpdate].index = indexUpdate;
     delete tokenMap[_tokenAddress];
 
@@ -274,19 +341,19 @@ contract PoaManager is Ownable {
   }
 
   //
-  // Token ownerOnly functions as PoaManger is `owner` of all PoaToken
+  // Token onlyOwner functions as PoaManger is `owner` of all PoaToken
   //
 
   // Allow unpausing a listed PoaToken
-  function pauseToken(PoaToken _tokenAddress)
+  function pauseToken(address _tokenAddress)
     public
     onlyOwner
   {
-    _tokenAddress.pause();
+    PoaTokenInterface(_tokenAddress).pause();
   }
 
   // Allow unpausing a listed PoaToken
-  function unpauseToken(PoaToken _tokenAddress)
+  function unpauseToken(PoaTokenInterface _tokenAddress)
     public
     onlyOwner
   {
@@ -294,11 +361,48 @@ contract PoaManager is Ownable {
   }
 
   // Allow terminating a listed PoaToken
-  function terminateToken(PoaToken _tokenAddress)
+  function terminateToken(PoaTokenInterface _tokenAddress)
     public
     onlyOwner
   {
     _tokenAddress.terminate();
+  }
+
+  function setupPoaToken(
+    address _tokenAddress,
+    string _name,
+    string _symbol,
+    // fiat symbol used in ExchangeRates
+    string _fiatCurrency,
+    address _broker,
+    address _custodian,
+    uint256 _totalSupply,
+    // given as unix time (seconds since 01.01.1970)
+    uint256 _startTime,
+    // given as seconds
+    uint256 _fundingTimeout,
+    uint256 _activationTimeout,
+    // given as fiat cents
+    uint256 _fundingGoalInCents
+  )
+    public
+    onlyOwner
+    returns (bool)
+  {
+    PoaTokenInterface(_tokenAddress).setupContract(
+      _name,
+      _symbol,
+      _fiatCurrency,
+      _broker,
+      _custodian,
+      _totalSupply,
+      _startTime,
+      _fundingTimeout,
+      _activationTimeout,
+      _fundingGoalInCents
+    );
+
+    return true;
   }
 
   //

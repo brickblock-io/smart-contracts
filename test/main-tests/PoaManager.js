@@ -1,11 +1,13 @@
-const PoaManager = artifacts.require('PoaManager.sol')
 const PoaToken = artifacts.require('PoaToken.sol')
+const { checkForEvent, testWillThrow } = require('../helpers/general')
 const {
-  checkForEvent,
-  setupRegistry,
-  testWillThrow
-} = require('../helpers/general')
-const { addToken } = require('../helpers/pmr')
+  addToken,
+  setupPoaManager,
+  moveTokenToActive,
+  testPauseToken,
+  testUnpauseToken,
+  testTerminateToken
+} = require('../helpers/pmr')
 
 describe('when creating a new instance of the contract', () => {
   contract('PoaManager', accounts => {
@@ -13,8 +15,8 @@ describe('when creating a new instance of the contract', () => {
     const owner = accounts[0]
 
     before('setup contract state', async () => {
-      const { registry } = await setupRegistry()
-      pmr = await PoaManager.new(registry.address)
+      const contracts = await setupPoaManager()
+      pmr = contracts.pmr
     })
 
     it('should set the owner as msg.sender on creation', async () => {
@@ -37,8 +39,8 @@ describe('when calling broker functions', () => {
     const notOwner = accounts[9]
 
     before('setup contract state', async () => {
-      const { registry } = await setupRegistry()
-      pmr = await PoaManager.new(registry.address)
+      const contracts = await setupPoaManager()
+      pmr = contracts.pmr
     })
 
     it('should be created with an empty brokerAddressList', async () => {
@@ -51,7 +53,9 @@ describe('when calling broker functions', () => {
       it('should emit BrokerAddedEvent', async () => {
         checkForEvent(
           'BrokerAddedEvent',
-          { broker: addedBroker },
+          {
+            broker: addedBroker
+          },
           await pmr.addBroker(addedBroker)
         )
       })
@@ -73,7 +77,12 @@ describe('when calling broker functions', () => {
       })
 
       it('should error when trying to add a broker from notOwner address', async () => {
-        await testWillThrow(pmr.addBroker, [anotherBroker, { from: notOwner }])
+        await testWillThrow(pmr.addBroker, [
+          anotherBroker,
+          {
+            from: notOwner
+          }
+        ])
       })
 
       it('should allow for more brokers to be added', async () => {
@@ -122,7 +131,9 @@ describe('when calling broker functions', () => {
       it('should error when trying to delist a broker from notOwner address', async () => {
         await testWillThrow(pmr.delistBroker, [
           anotherBroker,
-          { from: notOwner }
+          {
+            from: notOwner
+          }
         ])
       })
     })
@@ -154,7 +165,12 @@ describe('when calling broker functions', () => {
       })
 
       it('should error when trying to list a broker from notOwner address', async () => {
-        await testWillThrow(pmr.listBroker, [anotherBroker, { from: notOwner }])
+        await testWillThrow(pmr.listBroker, [
+          anotherBroker,
+          {
+            from: notOwner
+          }
+        ])
       })
     })
 
@@ -162,7 +178,9 @@ describe('when calling broker functions', () => {
       it('should emit BrokerRemovedEvent', async () => {
         checkForEvent(
           'BrokerRemovedEvent',
-          { broker: addedBroker },
+          {
+            broker: addedBroker
+          },
           await pmr.removeBroker(addedBroker)
         )
       })
@@ -184,7 +202,9 @@ describe('when calling broker functions', () => {
       it('should error when trying to remove a broker from notOwner address', async () => {
         await testWillThrow(pmr.removeBroker, [
           anotherBroker,
-          { from: notOwner }
+          {
+            from: notOwner
+          }
         ])
       })
 
@@ -209,6 +229,7 @@ describe('when calling broker functions', () => {
 
 describe('when calling token functions', () => {
   contract('PoaManager', accounts => {
+    // PoaManager
     let pmr
     // used for testing happy path (paired with owner address)
     let addedToken
@@ -216,13 +237,12 @@ describe('when calling token functions', () => {
     let anotherToken
     const listedBroker = accounts[1]
     const delistedBroker = accounts[2]
-    const custodian = accounts[5]
     const notBroker = accounts[8]
     const notOwner = accounts[9]
 
     before('setup contract state', async () => {
-      const { registry } = await setupRegistry()
-      pmr = await PoaManager.new(registry.address)
+      const contracts = await setupPoaManager()
+      pmr = contracts.pmr
       await pmr.addBroker(listedBroker)
       await pmr.addBroker(delistedBroker)
       await pmr.delistBroker(delistedBroker)
@@ -236,16 +256,20 @@ describe('when calling token functions', () => {
 
     describe('when adding a token', () => {
       it('should emit TokenAddedEvent', async () => {
-        const { txReceipt, tokenAddress } = await addToken(
-          pmr,
-          custodian,
-          listedBroker
-        )
+        const { txReceipt, tokenAddress } = await addToken(pmr, {
+          from: listedBroker
+        })
 
         // setting this here for use in following tests in this contract block
         addedToken = tokenAddress
 
-        checkForEvent('TokenAddedEvent', { token: addedToken }, txReceipt)
+        checkForEvent(
+          'TokenAddedEvent',
+          {
+            token: addedToken
+          },
+          txReceipt
+        )
       })
 
       it('should have the PoaManager as the owner', async () => {
@@ -275,7 +299,9 @@ describe('when calling token functions', () => {
       })
 
       it('should allow for more tokens to be added', async () => {
-        const { tokenAddress } = await addToken(pmr, custodian, listedBroker)
+        const { tokenAddress } = await addToken(pmr, {
+          from: listedBroker
+        })
 
         // setting this here for use in following tests in this contract block
         anotherToken = tokenAddress
@@ -290,12 +316,8 @@ describe('when calling token functions', () => {
       })
 
       it('should error when trying to add a token from a delisted broker address', async () => {
-        await testWillThrow(pmr.addToken, [
-          'test-another',
-          'ANT',
-          custodian,
-          1000,
-          1e18,
+        await testWillThrow(addToken, [
+          pmr,
           {
             from: delistedBroker
           }
@@ -303,12 +325,8 @@ describe('when calling token functions', () => {
       })
 
       it('should error when trying to add a token from a non broker address', async () => {
-        await testWillThrow(pmr.addToken, [
-          'test-another',
-          'ANT',
-          custodian,
-          1000,
-          1e18,
+        await testWillThrow(addToken, [
+          pmr,
           {
             from: notBroker
           }
@@ -320,7 +338,10 @@ describe('when calling token functions', () => {
       it('should emit TokenStatusChangedEvent', async () => {
         checkForEvent(
           'TokenStatusChangedEvent',
-          { token: addedToken, active: true },
+          {
+            token: addedToken,
+            active: true
+          },
           await pmr.listToken(addedToken)
         )
       })
@@ -340,7 +361,12 @@ describe('when calling token functions', () => {
       })
 
       it('should error when trying to list a token from notOwner address', async () => {
-        await testWillThrow(pmr.listToken, [anotherToken, { from: notOwner }])
+        await testWillThrow(pmr.listToken, [
+          anotherToken,
+          {
+            from: notOwner
+          }
+        ])
       })
     })
 
@@ -348,7 +374,10 @@ describe('when calling token functions', () => {
       it('should emit TokenStatusChangedEvent', async () => {
         checkForEvent(
           'TokenStatusChangedEvent',
-          { token: addedToken, active: false },
+          {
+            token: addedToken,
+            active: false
+          },
           await pmr.delistToken(addedToken)
         )
       })
@@ -368,7 +397,12 @@ describe('when calling token functions', () => {
       })
 
       it('should error when trying to delist a token from notOwner address', async () => {
-        await testWillThrow(pmr.delistToken, [anotherToken, { from: notOwner }])
+        await testWillThrow(pmr.delistToken, [
+          anotherToken,
+          {
+            from: notOwner
+          }
+        ])
       })
     })
 
@@ -376,7 +410,9 @@ describe('when calling token functions', () => {
       it('should emit TokenRemovedEvent', async () => {
         checkForEvent(
           'TokenRemovedEvent',
-          { token: addedToken },
+          {
+            token: addedToken
+          },
           await pmr.removeToken(addedToken)
         )
       })
@@ -396,7 +432,12 @@ describe('when calling token functions', () => {
       })
 
       it('should error when trying to remove a token from notOwner address', async () => {
-        await testWillThrow(pmr.removeToken, [anotherToken, { from: notOwner }])
+        await testWillThrow(pmr.removeToken, [
+          anotherToken,
+          {
+            from: notOwner
+          }
+        ])
       })
 
       it('should allow for all tokens to be removed', async () => {
@@ -421,74 +462,78 @@ describe('when calling token functions', () => {
 describe('when calling token convenience functions', () => {
   contract('PoaManager', accounts => {
     let pmr
+    let fmr
     const owner = accounts[0]
-    const notOwner = accounts[1]
-    const broker = accounts[2]
-    const custodian = accounts[3]
+    // must be accounts[1] in order to work with poa helpers
+    const broker = accounts[1]
+    const notOwner = accounts[2]
     let addedToken
 
     before('setup contract state', async () => {
-      const { registry } = await setupRegistry()
-      pmr = await PoaManager.new(registry.address, { from: owner })
+      const contracts = await setupPoaManager()
+      pmr = contracts.pmr
+      fmr = contracts.fmr
 
       await pmr.addBroker(broker)
-
-      const { tokenAddress: addedTokenAddress } = await addToken(
-        pmr,
-        custodian,
-        broker
-      )
-      pmr.listToken(addedTokenAddress, { from: owner })
-      addedToken = PoaToken.at(addedTokenAddress)
+      const { tokenAddress: addedTokenAddress } = await addToken(pmr, {
+        from: broker
+      })
+      await pmr.listToken(addedTokenAddress, {
+        from: owner
+      })
+      addedToken = await PoaToken.at(addedTokenAddress)
+      await moveTokenToActive(addedToken, fmr)
     })
 
     describe('when pausing a token', () => {
       it('should error when caller is notOwner', async () => {
-        await testWillThrow(pmr.pauseToken, [
-          addedToken.address,
-          { from: notOwner }
+        await testWillThrow(testPauseToken, [
+          pmr,
+          addedToken,
+          {
+            from: notOwner
+          }
         ])
       })
 
       it('should pause the addedToken', async () => {
-        assert.equal(
-          await addedToken.paused(),
-          false,
-          'token should begin unpaused'
-        )
-
-        await pmr.pauseToken(addedToken.address, { from: owner })
-
-        assert.equal(
-          await addedToken.paused(),
-          true,
-          'token should then become paused'
-        )
+        await testPauseToken(pmr, addedToken, {
+          from: owner
+        })
       })
     })
 
     describe('when unpausing a token', () => {
       it('should error when caller is notOwner', async () => {
-        await testWillThrow(pmr.unpauseToken, [
-          addedToken.address,
-          { from: notOwner }
+        await testWillThrow(testUnpauseToken, [
+          pmr,
+          addedToken,
+          {
+            from: notOwner
+          }
         ])
       })
 
       it('should unpause the addedToken', async () => {
-        assert.equal(
-          await addedToken.paused(),
-          true,
-          'token should begin paused'
-        )
+        await testUnpauseToken(pmr, addedToken, {
+          from: owner
+        })
+      })
+    })
 
-        await pmr.unpauseToken(addedToken.address, { from: owner })
+    describe('when terminating a token', () => {
+      it('should NOT when caller is notOwner', async () => {
+        await testWillThrow(testTerminateToken, [
+          pmr,
+          addedToken,
+          {
+            from: notOwner
+          }
+        ])
+      })
 
-        assert.equal(
-          await addedToken.paused(),
-          false,
-          'token should then become unpaused'
-        )
+      it('should terminate the addedToken when owner', async () => {
+        await testTerminateToken(pmr, addedToken)
       })
     })
   })

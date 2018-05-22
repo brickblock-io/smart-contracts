@@ -2,7 +2,7 @@ const {
   custodian,
   whitelistedPoaBuyers,
   defaultIpfsHash,
-  setupPoaAndEcosystem,
+  setupPoaProxyAndEcosystem,
   testStartSale,
   testBuyTokens,
   determineNeededTimeTravel,
@@ -11,28 +11,28 @@ const {
   testBrokerClaim,
   testPayout,
   testClaimAllPayouts
-} = require('../../helpers/poac')
+} = require('../../helpers/poa')
 const { timeTravel, gasPrice } = require('../../helpers/general.js')
 
 describe("when going through Poa's normal flow", async () => {
-  contract('PoaTokenConcept', () => {
+  contract('PoaToken', () => {
     let fmr
-    let poac
+    let poa
 
     before('setup contracts', async () => {
-      const contracts = await setupPoaAndEcosystem()
-      poac = contracts.poac
+      const contracts = await setupPoaProxyAndEcosystem()
+      poa = contracts.poa
       fmr = contracts.fmr
     })
 
     it('should move from PreFunding to Funding after startTime', async () => {
-      const neededTime = await determineNeededTimeTravel(poac)
+      const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
-      await testStartSale(poac)
+      await testStartSale(poa)
     })
 
     it('should allow buying', async () => {
-      await testBuyTokens(poac, {
+      await testBuyTokens(poa, {
         from: whitelistedPoaBuyers[0],
         value: 5e17,
         gasPrice
@@ -40,24 +40,24 @@ describe("when going through Poa's normal flow", async () => {
     })
 
     it('should buy all remaining tokens, moving to Pending', async () => {
-      await testBuyRemainingTokens(poac, {
+      await testBuyRemainingTokens(poa, {
         from: whitelistedPoaBuyers[1],
         gasPrice
       })
     })
 
     it('should activate with ipfs hash from custodian', async () => {
-      await testActivate(poac, fmr, defaultIpfsHash, {
+      await testActivate(poa, fmr, defaultIpfsHash, {
         from: custodian
       })
     })
 
     it('should claim contract funding as broker', async () => {
-      await testBrokerClaim(poac)
+      await testBrokerClaim(poa)
     })
 
     it('should payout from custodian', async () => {
-      await testPayout(poac, fmr, {
+      await testPayout(poa, fmr, {
         from: custodian,
         value: 2e18,
         gasPrice
@@ -65,7 +65,7 @@ describe("when going through Poa's normal flow", async () => {
     })
 
     it('should allow all token holders to claim', async () => {
-      await testClaimAllPayouts(poac, whitelistedPoaBuyers)
+      await testClaimAllPayouts(poa, whitelistedPoaBuyers)
     })
   })
 })
