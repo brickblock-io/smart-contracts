@@ -3,7 +3,6 @@ pragma solidity ^0.4.23;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./interfaces/BrickblockAccessTokenInterface.sol";
 import "./interfaces/BrickblockContractRegistryInterface.sol";
-import "./interfaces/BrickblockAccessTokenInterface.sol";
 import "./interfaces/ExchangeRatesInterface.sol";
 
 

@@ -8,11 +8,7 @@ const {
   testFetchRate,
   testSetRate,
   testToggleRatesActive,
-  testStringToBytes8,
   testToUpperCase,
-  testToBytes32Array,
-  testToLongString,
-  testToShortString,
   testSelfDestruct,
   testGetRate,
   testToggleClearRateIntervals,
@@ -67,12 +63,7 @@ describe('when performing owner only functions', () => {
     })
 
     it('should NOT getRate when rate is 0 (uninitialized or error)', async () => {
-      const queryTypeBytes = await exr.toBytes8('USD')
-      await testWillThrow(exr.getRate, [queryTypeBytes])
-    })
-
-    it('should NOT getRateReadable when rate is 0 (uninitialized or error)', async () => {
-      await testWillThrow(exr.getRateReadable, [queryType])
+      await testWillThrow(exr.getRate, [queryType])
     })
 
     it('should NOT fetchRate when NOT owner', async () => {
@@ -150,47 +141,12 @@ describe('when using utility functions', () => {
       exr = contracts.exr
     })
 
-    it('should turn a string into bytes8', async () => {
-      await testStringToBytes8(exr, 'USD')
-    })
-
-    it('should NOT turn a string longer than 8 characters to bytes8', async () => {
-      await testWillThrow(testStringToBytes8, [
-        exr,
-        'usd plus some more characters'
-      ])
-    })
-
     it('should return a string to uppercase', async () => {
       await testToUpperCase(exr, 'usd')
     })
 
     it('should return a string to uppercase, even if already uppercase', async () => {
       await testToUpperCase(exr, 'USD')
-    })
-
-    it('should turn a string into a bytes32 array with a length of 5', async () => {
-      await testToBytes32Array(
-        exr,
-        'some long query string that is more than 32 characters long'
-      )
-    })
-
-    it('should NOT turn a string longer than 160 characters into a bytes32 array', async () => {
-      await testWillThrow(exr.toBytes32Array, [
-        "Now this is a story all about how\nMy life got flipped-turned upside down\nAnd I'd like to take a minute\nJust sit right there\nI'll tell you how I became the prince of a town called Bel-Air"
-      ])
-    })
-
-    it('should turn a bytes32 array with a length of 5 into a string', async () => {
-      await testToLongString(
-        exr,
-        'some long query string that is more than 32 characters long'
-      )
-    })
-
-    it('should turn a bytes8 into a string', async () => {
-      await testToShortString(exr, 'test')
     })
 
     it('should get previously set currency settings', async () => {

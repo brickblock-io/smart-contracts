@@ -2,48 +2,9 @@ pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./interfaces/BrickblockContractRegistryInterface.sol";
+import "./interfaces/PoaTokenInterface.sol";
 import "./Proxy.sol";
-
-
-interface PoaTokenInterface {
-  function setupContract
-  (
-    string _name,
-    string _symbol,
-    // fiat symbol used in ExchangeRates
-    string _fiatCurrency,
-    address _broker,
-    address _custodian,
-    uint256 _totalSupply,
-    // given as unix time (seconds since 01.01.1970)
-    uint256 _startTime,
-    // given as seconds
-    uint256 _fundingTimeout,
-    uint256 _activationTimeout,
-    // given as fiat cents
-    uint256 _fundingGoalInCents
-  )
-    external
-    returns (bool);
-
-  function pause()
-    external;
-  
-  function unpause()
-    external;
-  
-  function terminate()
-    external
-    returns (bool);
-}
-
-// limited BrickblockContractRegistry definintion
-interface RegistryInterface {
-  function getContractAddress(string _name)
-    external
-    view
-    returns (address);
-}
 
 
 contract PoaManager is Ownable {

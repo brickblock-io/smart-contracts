@@ -51,7 +51,7 @@ const setFiatRate = async (exr, exp, queryType, rate, config) => {
       from: config.from
     }
   )
-  await exr.getCurrencySettingsReadable(queryType)
+  await exr.getCurrencySettings(queryType)
   await exr.fetchRate(queryType, config)
   const pendingQueryId = await exp.pendingTestQueryId()
   await exp.simulate__callback(pendingQueryId, '50000', {

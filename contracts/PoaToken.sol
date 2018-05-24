@@ -1,47 +1,12 @@
 pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/token/ERC20/PausableToken.sol";
+import "./interfaces/BrickblockFeeManagerInterface.sol";
+import "./interfaces/ExchangeRatesInterface.sol";
+import "./interfaces/PoaManagerInterface.sol";
+import "./interfaces/BrickblockWhitelistInterface.sol";
 
 /* solium-disable security/no-block-members */
-
-// limited BrickblockFeeManager definition
-interface FeeManager {
-  function payFee()
-    external
-    payable
-    returns (bool);
-}
-
-
-// limited BrickblockWhitelist
-interface Whitelist {
-  function whitelisted(address _address)
-    external
-    returns (bool);
-}
-
-
-// limited ExchangeRates definition
-interface ExR {
-  function getRate(bytes8 _queryTypeBytes)
-    external
-    view
-    returns (uint256);
-
-  // temp used to get rate... will use getRate later when updated to use string
-  // relates 0.4.22
-  function getRateReadable(string _queryTypeString)
-    external
-    view
-    returns (uint256);
-}
-
-interface PoaManagerInterface {
-  function registry()
-    external
-    view
-    returns (address);
-}
 
 
 contract PoaToken is PausableToken {
@@ -146,7 +111,7 @@ contract PoaToken is PausableToken {
   
   modifier isBuyWhitelisted() {
     require(
-      Whitelist(getContractAddress("Whitelist"))
+      WhitelistInterface(getContractAddress("Whitelist"))
         .whitelisted(msg.sender)
     );
 
@@ -156,7 +121,7 @@ contract PoaToken is PausableToken {
   modifier isTransferWhitelisted(address _to) {
     if (whitelistTransfers) {
       require(
-        Whitelist(getContractAddress("Whitelist"))
+        WhitelistInterface(getContractAddress("Whitelist"))
           .whitelisted(_to)
       );
     }
@@ -262,8 +227,8 @@ contract PoaToken is PausableToken {
 
     owner = getContractAddress("PoaManager");
     // run getRate once in order to see if rate is initialized, throws if not
-    ExR(getContractAddress("ExchangeRates"))
-      .getRateReadable(fiatCurrency);
+    ExchangeRatesInterface(getContractAddress("ExchangeRates"))
+      .getRate(fiatCurrency);
 
     return true;
   }
@@ -315,8 +280,8 @@ contract PoaToken is PausableToken {
     // get eth to fiat rate in cents from ExchangeRates
     return _wei
       .mul(
-        ExR(getContractAddress("ExchangeRates"))
-          .getRateReadable(fiatCurrency)
+        ExchangeRatesInterface(getContractAddress("ExchangeRates"))
+          .getRate(fiatCurrency)
       )
       .div(1e18);
   }
@@ -329,8 +294,8 @@ contract PoaToken is PausableToken {
     return _cents
       .mul(1e18)
       .div(
-        ExR(getContractAddress("ExchangeRates"))
-          .getRateReadable(fiatCurrency)
+        ExchangeRatesInterface(getContractAddress("ExchangeRates"))
+          .getRate(fiatCurrency)
       );
   }
 
@@ -365,7 +330,7 @@ contract PoaToken is PausableToken {
     private
     returns (bool)
   {
-    FeeManager feeManager = FeeManager(
+    FeeManagerInterface feeManager = FeeManagerInterface(
       getContractAddress("FeeManager")
     );
     require(feeManager.payFee.value(_value)());

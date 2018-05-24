@@ -28,7 +28,7 @@ const testUninitializedSettings = async exr => {
     preCallInterval,
     preCallbackGasLimit,
     preQueryString
-  ] = await exr.getCurrencySettingsReadable('USD')
+  ] = await exr.getCurrencySettings('USD')
 
   assert.equal(
     preCallInterval.toString(),
@@ -55,7 +55,7 @@ const testSetCurrencySettings = async (
     preCallInterval,
     preCallbackGasLimit,
     preQueryString
-  ] = await exr.getCurrencySettingsReadable(queryType)
+  ] = await exr.getCurrencySettings(queryType)
 
   await exr.setCurrencySettings(
     queryType,
@@ -69,7 +69,7 @@ const testSetCurrencySettings = async (
     postCallInterval,
     postCallbackGasLimit,
     postQueryString
-  ] = await exr.getCurrencySettingsReadable(queryType)
+  ] = await exr.getCurrencySettings(queryType)
 
   assert(
     preCallInterval.toString() != postCallInterval.toString(),
@@ -106,7 +106,7 @@ const testSettingsExists = async (exr, queryType) => {
     callInterval,
     callbackGasLimit,
     queryString
-  ] = await exr.getCurrencySettingsReadable(queryType)
+  ] = await exr.getCurrencySettings(queryType)
   assert(callbackGasLimit.greaterThan(0), 'callbackGasLimit uninitialized')
   assert(queryString !== '', 'queryString uninitialized')
   if (callInterval.equals(0)) {
@@ -119,30 +119,28 @@ const testFetchRate = async (exr, exp, queryType, config) => {
   await testSettingsExists(exr, queryType)
   await exr.fetchRate(queryType, config)
   const pendingQueryId = await exp.pendingTestQueryId()
-  const queryType8 = await exr.queryTypes(pendingQueryId)
-  const queryStringConverted = trimBytes(web3.toAscii(queryType8))
+  const queryTypeByPendingQueryId = await exr.queryTypes(pendingQueryId)
 
   assert.equal(
     queryType,
-    queryStringConverted,
-    'the converted querystring converted from bytes8 found by pendingQueryId should match'
+    queryTypeByPendingQueryId,
+    'the queryType found by pendingQueryId should match given queryType'
   )
 }
 
 const testSetRate = async (exr, exp, rate, isAfterClearRateIntervals) => {
   const bigRate = new BigNumber(rate)
   const prePendingQueryId = await exp.pendingTestQueryId()
-  const queryTypeBytes = await exr.queryTypes(prePendingQueryId)
-  const queryType = trimBytes(web3.toAscii(queryTypeBytes))
+  const queryType = await exr.queryTypes(prePendingQueryId)
   await exp.simulate__callback(prePendingQueryId, bigRate.toString())
   const postPendingQueryId = await exp.pendingTestQueryId()
-  const actualRate = await exr.getRateReadable(queryType)
+  const actualRate = await exr.getRate(queryType)
   // check on recursive callback settings
   const [
     callInterval,
     callbackGasLimit,
     queryString
-  ] = await exr.getCurrencySettingsReadable(queryType)
+  ] = await exr.getCurrencySettings(queryType)
 
   const shouldCallAgainWithQuery = await exp.shouldCallAgainWithQuery()
   const shouldCallAgainIn = await exp.shouldCallAgainIn()
@@ -183,11 +181,6 @@ const testSetRate = async (exr, exp, rate, isAfterClearRateIntervals) => {
     )
   }
 
-  assert(
-    queryTypeBytes != '0x' + '00'.repeat(8),
-    'queryTypeBytes should not be empty'
-  )
-
   if (shouldCallAgainIn.greaterThan(0)) {
     assert(
       postPendingQueryId != prePendingQueryId,
@@ -210,7 +203,7 @@ const testSetRate = async (exr, exp, rate, isAfterClearRateIntervals) => {
 
 const testGetRate = async (exr, rate, queryType) => {
   const bigRate = new BigNumber(rate)
-  const actualRate = await exr.getRateReadable(queryType)
+  const actualRate = await exr.getRate(queryType)
   assert.equal(
     bigRate.toString(),
     actualRate.toString(),
@@ -251,17 +244,6 @@ const testToggleClearRateIntervals = async (exr, shouldClear, config) => {
   )
 }
 
-const testStringToBytes8 = async (exr, stringInput) => {
-  const bytes8 = await exr.toBytes8(stringInput)
-  const bytes8ToString = web3.toAscii(bytes8)
-  const bytes8StringTrimmed = trimBytes(bytes8ToString)
-  assert.equal(
-    stringInput,
-    bytes8StringTrimmed,
-    'the bytes8 returned should convert back to the same string'
-  )
-}
-
 const testToUpperCase = async (exr, stringInput) => {
   const uppercase = await exr.toUpperCase(stringInput)
 
@@ -283,28 +265,6 @@ const testToBytes32Array = async (exr, stringInput) => {
     stringInput,
     bytesArrayToString,
     'the bytes32 array returned should convert back to the same string'
-  )
-}
-
-const testToLongString = async (exr, stringToBeConverted) => {
-  const bytes32Array = await exr.toBytes32Array(stringToBeConverted)
-  const convertedString = await exr.toLongString(bytes32Array)
-
-  assert.equal(
-    stringToBeConverted,
-    convertedString,
-    'the string converted back from bytes32 array should match the string originally given'
-  )
-}
-
-const testToShortString = async (exr, stringToBeConverted) => {
-  const bytes8 = await exr.toBytes8(stringToBeConverted)
-  const convertedString = await exr.toShortString(bytes8)
-
-  assert.equal(
-    stringToBeConverted,
-    convertedString,
-    'the string converted back from byets8 array should match the original string given'
   )
 }
 
@@ -355,26 +315,25 @@ const testSelfDestruct = async (exr, exp, caller) => {
 const testSetRateClearIntervals = async (exr, exp, rate) => {
   const bigRate = new BigNumber(rate)
   const prePendingQueryId = await exp.pendingTestQueryId()
-  const queryTypeBytes = await exr.queryTypes(prePendingQueryId)
-  const queryType = trimBytes(web3.toAscii(queryTypeBytes))
+  const queryType = await exr.queryTypes(prePendingQueryId)
 
   const [
     // eslint-disable-next-line no-unused-vars
     preCallInterval,
     preCallbackGasLimit,
     preQueryString
-  ] = await exr.getCurrencySettingsReadable(queryType)
+  ] = await exr.getCurrencySettings(queryType)
 
   await exp.simulate__callback(prePendingQueryId, bigRate.toString())
   const postPendingQueryId = await exp.pendingTestQueryId()
-  const actualRate = await exr.getRateReadable(queryType)
+  const actualRate = await exr.getRate(queryType)
 
   // check on recursive callback settings
   const [
     postCallInterval,
     postCallbackGasLimit,
     postQueryString
-  ] = await exr.getCurrencySettingsReadable(queryType)
+  ] = await exr.getCurrencySettings(queryType)
 
   const shouldCallAgainWithQuery = await exp.shouldCallAgainWithQuery()
   const shouldCallAgainIn = await exp.shouldCallAgainIn()
@@ -410,10 +369,7 @@ const testSetRateClearIntervals = async (exr, exp, rate) => {
     new BigNumber(0).toString(),
     'shouldCallAgainWithGas be 0'
   )
-  assert(
-    queryTypeBytes != '0x' + '00'.repeat(8),
-    'queryTypeBytes should not be empty'
-  )
+  assert(queryType !== '', 'queryTypeBytes should not be empty')
   assert.equal(
     postPendingQueryId,
     '0x' + '00'.repeat(32),
@@ -429,12 +385,11 @@ const testSetRateClearIntervals = async (exr, exp, rate) => {
 const testSetQueryId = async (exr, exp, queryType) => {
   // create a dummy queryId
   const queryId = web3.sha3(web3.toHex(Date.now()), { encoding: 'hex' })
-  const queryTypeBytes8 = await exr.toBytes8(queryType)
-  await exp.setQueryId(queryId, queryTypeBytes8)
-  const postQueryTypeBytes8 = await exr.queryTypes(queryId)
+  await exp.setQueryId(queryId, queryType)
+  const postQueryType = await exr.queryTypes(queryId)
   assert.equal(
-    queryTypeBytes8,
-    postQueryTypeBytes8,
+    queryType,
+    postQueryType,
     'the queryType should match the value set through queryId'
   )
   return queryId
@@ -443,26 +398,25 @@ const testSetQueryId = async (exr, exp, queryType) => {
 const testSetRateRatesActiveFalse = async (exr, exp, rate) => {
   const bigRate = new BigNumber(rate)
   const prePendingQueryId = await exp.pendingTestQueryId()
-  const queryTypeBytes = await exr.queryTypes(prePendingQueryId)
-  const queryType = trimBytes(web3.toAscii(queryTypeBytes))
+  const queryType = await exr.queryTypes(prePendingQueryId)
 
   const [
     // eslint-disable-next-line no-unused-vars
     preCallInterval,
     preCallbackGasLimit,
     preQueryString
-  ] = await exr.getCurrencySettingsReadable(queryType)
+  ] = await exr.getCurrencySettings(queryType)
 
   await exp.simulate__callback(prePendingQueryId, bigRate.toString())
   const postPendingQueryId = await exp.pendingTestQueryId()
-  const actualRate = await exr.getRateReadable(queryType)
+  const actualRate = await exr.getRate(queryType)
 
   // check on recursive callback settings
   const [
     postCallInterval,
     postCallbackGasLimit,
     postQueryString
-  ] = await exr.getCurrencySettingsReadable(queryType)
+  ] = await exr.getCurrencySettings(queryType)
 
   const shouldCallAgainWithQuery = await exp.shouldCallAgainWithQuery()
   const shouldCallAgainIn = await exp.shouldCallAgainIn()
@@ -498,10 +452,8 @@ const testSetRateRatesActiveFalse = async (exr, exp, rate) => {
     new BigNumber(0).toString(),
     'shouldCallAgainWithGas be 0'
   )
-  assert(
-    queryTypeBytes != '0x' + '00'.repeat(8),
-    'queryTypeBytes should not be empty'
-  )
+  assert(queryType !== '', 'queryTypeBytes should not be empty')
+
   assert.equal(
     postPendingQueryId,
     '0x' + '00'.repeat(32),
@@ -558,15 +510,12 @@ const testGetCurrencySettings = async (
     queryString,
     config
   )
-  const queryTypeBytes = await exr.toBytes8(queryTypeString)
 
   const [
     actualCallInterval,
     actualCallbackGasLimit,
-    actualQueryStringBytes
-  ] = await exr.getCurrencySettings(queryTypeBytes)
-
-  const actualQueryString = await exr.toLongString(actualQueryStringBytes)
+    actualQueryString
+  ] = await exr.getCurrencySettings(queryTypeString)
 
   assert.equal(
     callInterval.toString(),
@@ -593,11 +542,8 @@ module.exports = {
   testSettingsExists,
   testSetRate,
   testToggleRatesActive,
-  testStringToBytes8,
   testToUpperCase,
   testToBytes32Array,
-  testToLongString,
-  testToShortString,
   testSelfDestruct,
   testGetRate,
   testToggleClearRateIntervals,

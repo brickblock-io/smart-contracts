@@ -12,7 +12,7 @@ contract ExchangeRateProviderStub {
   // used for testing simulated pending query
   bytes32 public pendingTestQueryId;
   // used for tetsing simulated testing recursion
-  bytes8 public pendingQueryType;
+  string public pendingQueryType;
   // used to check if should call again when testing recurision
   uint256 public shouldCallAgainIn;
   // used to check callback gas when testing recursion
@@ -59,10 +59,10 @@ contract ExchangeRateProviderStub {
   // money can be forwarded on from ExchangeRates
   // leave out modifier as shown in
   function sendQuery(
-    bytes32[5] _queryString,
-    uint256 _callInterval,
+    string _queryString,
+    uint256 _callInterval, //not used in stub so will do a dummy check to get rid of compiler warnings
     uint256 _callbackGasLimit,
-    bytes8 _queryType
+    string _queryType
   )
     onlyAllowed
     payable
@@ -72,19 +72,19 @@ contract ExchangeRateProviderStub {
     // simulate price of 2 000 000 000
     uint256 _simulatedPrice = 2e9;
     if (_simulatedPrice > address(this).balance) {
-      // set to empty if not enought ether
-      setQueryId(0x0, 0x0);
+      // set to empty if not enough ether
+      setQueryId(0x0, "");
       return false;
     } else {
       // simulate _queryId by hashing first element of bytes32 array
-      pendingTestQueryId = keccak256(_queryString[0]);
+      pendingTestQueryId = keccak256(_queryString);
       setQueryId(pendingTestQueryId, _queryType);
       return true;
     }
   }
 
   // set queryIds on ExchangeRates for later validation when __callback happens
-  function setQueryId(bytes32 _identifier, bytes8 _queryType)
+  function setQueryId(bytes32 _identifier, string _queryType)
     public
     returns (bool)
   {
@@ -107,10 +107,10 @@ contract ExchangeRateProviderStub {
     );
 
     bool _ratesActive = _exchangeRates.ratesActive();
-    bytes8 _queryType = _exchangeRates.queryTypes(_queryId);
+    string memory _queryType = _exchangeRates.queryTypes(_queryId);
     uint256 _callInterval;
     uint256 _callbackGasLimit;
-    bytes32[5] memory _queryString;
+    string memory _queryString;
     (
       _callInterval,
       _callbackGasLimit,
@@ -123,7 +123,7 @@ contract ExchangeRateProviderStub {
     if (_callInterval > 0 && _ratesActive) {
       pendingTestQueryId = keccak256(_result);
       pendingQueryType = _queryType;
-      shouldCallAgainWithQuery = toLongString(_queryString);
+      shouldCallAgainWithQuery = _queryString;
       shouldCallAgainIn = _callInterval;
       shouldCallAgainWithGas = _callbackGasLimit;
     } else {
@@ -133,56 +133,6 @@ contract ExchangeRateProviderStub {
       shouldCallAgainIn = 0;
       shouldCallAgainWithGas = 0;
     }
-  }
-
-  // takes a fixed length array of 5 bytes32. needed for contract communication
-  function toLongString(bytes32[5] _data)
-    pure
-    public
-    returns (string)
-  {
-    // ensure array length is correct length
-    require(_data.length == 5);
-    // create new empty bytes array with same length as input
-    bytes memory _bytesString = new bytes(5 * 32);
-    // keep track of string length for later usage in trimming
-    uint256 _stringLength;
-
-    // loop through each bytes32 in array
-    for (uint _arrayCounter = 0; _arrayCounter < _data.length; _arrayCounter++) {
-      // loop through each byte in bytes32
-      for (uint _bytesCounter = 0; _bytesCounter < 32; _bytesCounter++) {
-        /*
-        convert bytes32 data to uint in order to increase the number enough to
-        shift bytes further left while pushing out leftmost bytes
-        then convert uint256 data back to bytes32
-        then convert to bytes1 where everything but the leftmost hex value (byte)
-        is cutoff leaving only the leftmost byte
-
-        TLDR: takes a single character from bytes based on counter
-        */
-        bytes1 _char = bytes1(
-          bytes32(
-            uint(_data[_arrayCounter]) * 2 ** (8 * _bytesCounter)
-          )
-        );
-        // add the character if not empty
-        if (_char != 0) {
-          _bytesString[_stringLength] = _char;
-          _stringLength += 1;
-        }
-      }
-    }
-
-    // new bytes with correct matching string length
-    bytes memory _bytesStringTrimmed = new bytes(_stringLength);
-    // loop through _bytesStringTrimmed throwing in
-    // non empty data from _bytesString
-    for (_bytesCounter = 0; _bytesCounter < _stringLength; _bytesCounter++) {
-      _bytesStringTrimmed[_bytesCounter] = _bytesString[_bytesCounter];
-    }
-    // return trimmed bytes array converted to string
-    return string(_bytesStringTrimmed);
   }
 
   // taken from oraclize in order to parseInts during testing

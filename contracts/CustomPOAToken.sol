@@ -1,10 +1,10 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/token/ERC20/PausableToken.sol";
 
 
 contract CustomPOAToken is PausableToken {
-
+  uint8 public constant version = 1;
   string public name;
   string public symbol;
 

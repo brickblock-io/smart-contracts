@@ -5,14 +5,14 @@ interface ExchangeRatesInterface {
     bytes32
   ) 
     external 
-    returns (bytes8);
+    returns (string);
 
   function ratesActive()
     external
     returns (bool);
 
   function getRate(
-    bytes8 _queryTypeBytes
+    string _queryType
   )
     external
     view
@@ -27,15 +27,15 @@ interface ExchangeRatesInterface {
 
   function setQueryId(
     bytes32 _queryId,
-    bytes8 _queryType
+    string _queryType
   )
     external
     returns (bool);
 
   function getCurrencySettings(
-    bytes8 _queryType
+    string _queryType
   )
     view
     external
-    returns (uint256, uint256, bytes32[5]);
+    returns (uint256, uint256, string);
 }

@@ -84,7 +84,7 @@ const setupEcosystem = async () => {
 
   if (actRate.greaterThan(0)) {
     await exr.setActRate(actRate)
-    const postActRate = await exr.getRateReadable('ACT')
+    const postActRate = await exr.getRate('ACT')
 
     assert.equal(
       postActRate.toString(),

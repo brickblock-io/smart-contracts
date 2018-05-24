@@ -6,5 +6,10 @@ interface FeeManagerInterface {
   )
     external
     returns (bool);
+
+  function payFee()
+    external
+    payable
+    returns (bool);
 }
 
