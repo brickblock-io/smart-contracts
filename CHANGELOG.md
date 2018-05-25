@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="2.6.0"></a>
+# [2.6.0](https://git.brickblock-dev.io/platform/smart-contracts/compare/v2.5.5...v2.6.0) (2018-05-25)
+
+
+### Bug Fixes
+
+* bad test in BrickblockToken ([5b121b5](https://git.brickblock-dev.io/platform/smart-contracts/commits/5b121b5))
+* frozen-tests will exit with error when suite fails ([08c9f2a](https://git.brickblock-dev.io/platform/smart-contracts/commits/08c9f2a))
+
+
+### Features
+
+* additional checks in BrickblockToken for finalize ([4eb1084](https://git.brickblock-dev.io/platform/smart-contracts/commits/4eb1084))
+* testing for BrickblockToken post-ico when it has been unpaused and transfers have occured ([4305882](https://git.brickblock-dev.io/platform/smart-contracts/commits/4305882))
+
+
+
 <a name="2.5.5"></a>
 ## [2.5.5](https://git.brickblock-dev.io/platform/smart-contracts/compare/v2.5.4...v2.5.5) (2018-05-25)
 
