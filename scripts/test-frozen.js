@@ -48,4 +48,7 @@ const runTruffleCommand = truffleCommand => () =>
 prepare()
   .then(runTruffleCommand('compile'))
   .then(runTruffleCommand('test test/main-tests/*'))
-  .catch(error => console.log('ERROR:', error.message))
+  .catch(error => {
+    console.log('ERROR:', error.message)
+    process.exit(1)
+  })
