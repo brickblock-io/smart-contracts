@@ -30,12 +30,12 @@ lint:
   script:
     - yarn lint
 
-test:
-  stage: test
-  cache:
-    policy: pull
-  script:
-    - yarn test
+# test:
+#   stage: test
+#   cache:
+#     policy: pull
+#   script:
+#     - yarn test
 
 # mythril:
 #   stage: test
