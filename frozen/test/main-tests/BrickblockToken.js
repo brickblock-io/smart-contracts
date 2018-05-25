@@ -565,6 +565,8 @@ describe('at the end of the ico when fountainAddress has been set', () => {
         bbk,
         contributors
       )
+      const preTotalSupply = await bbk.totalSupply()
+      const preCompanyBalance = preTotalSupply.times(companyShare).div(100)
 
       // finalize
       await bbk.finalizeTokenSale()
@@ -595,6 +597,20 @@ describe('at the end of the ico when fountainAddress has been set', () => {
       )
 
       // invariant checks
+      assert(
+        postTotalSupply.lessThanOrEqualTo(preTotalSupply),
+        'after burning there will be the same or less totalSupply for BBK'
+      )
+      assert.equal(
+        preCompanyBalance.toString(),
+        postContractBalance.toString(),
+        'after burning the company balance will be whats left in the token contract'
+      )
+      assert.equal(
+        postContractBalance.toString(),
+        postContractFountainAllowance.toString(),
+        'the remaining balance of the contract should match the fountain allowance'
+      )
       assert.equal(
         preBonusBalance.minus(postBonusBalance).toString(),
         '0',
@@ -1107,6 +1123,8 @@ describe('when we unpause the contract before calling finalizeTokenSale', () => 
         bbk,
         contributors
       )
+      const preTotalSupply = await bbk.totalSupply()
+      const preCompanyBalance = preTotalSupply.times(companyShare).div(100)
 
       // finalize
       await bbk.finalizeTokenSale()
@@ -1137,6 +1155,20 @@ describe('when we unpause the contract before calling finalizeTokenSale', () => 
       )
 
       // invariant checks
+      assert(
+        postTotalSupply.lessThanOrEqualTo(preTotalSupply),
+        'after burning there will be the same or less totalSupply for BBK'
+      )
+      assert.equal(
+        preCompanyBalance.toString(),
+        postContractBalance.toString(),
+        'after burning the company balance will be whats left in the token contract'
+      )
+      assert.equal(
+        postContractBalance.toString(),
+        postContractFountainAllowance.toString(),
+        'the remaining balance of the contract should match the fountain allowance'
+      )
       assert.equal(
         preBonusBalance.minus(postBonusBalance).toString(),
         '0',
