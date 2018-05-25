@@ -23,8 +23,15 @@ yarn test
 ```
 
 ### Stress Tests
+Since running all the stress tests at once is not recommended (local testrpc can crash), it can run via:
+
 ```
 yarn test:stress-test
+```
+
+To run them separately (recommended):
+```
+yarn truffle test test/stress-tests/[testname].js
 ```
 
 ### Security Analysis
@@ -95,12 +102,12 @@ Company tokens are locked in by assigning the value to the contract itself. The 
 
 The `BrickblockAccessToken` contract will later be called to lock the company funds into the fountain. See below for more details.
 
-## BrickblockAccessToken (Work in Progress)
-`BrickblockAccessToken` allows for `BrickblockToken` holders to lock in their BBK in order to receive ACT whenever a fee is paid on the Brickblock network. When a fee is paid, users who have locked in their BBK receive an ACT reward proportional to their locked tokens relative to the entire locked BBK balance of the contract.
+## BrickblockAccessToken
+`BrickblockAccessToken` allows for `BrickblockToken` holders to lock in their BBK in order to receive ACT whenever a fee is paid on the Brickblock network. When a fee is paid (as Ethereum), the contract gets the ACT-ETH rate from `ExchangeRates` contract and produces new `AccessTokens` by the given Eth value according to the rate. Users who have locked in their BBK receive an ACT reward  proportional to their locked tokens relative to the entire locked BBK balance of the contract.
 
 `BrickblockAccessToken` is an ERC20 compliant token contract.
 
-## BrickblockFeeManager (Work in Progress)
+## BrickblockFeeManager
 
 `BrickblockFeeManager` allows for other smart contracts or accounts to pay a fee to the contract. When a fee is paid, ACT (BrickblockAccessTokens) are created and given proportionally to lockedBBK holders.
 
@@ -129,20 +136,33 @@ function withdrawBbkFunds(
 
 The rest of this functionality allows Brickblock to interact with the ecosystem as any other participant.
 
-## BrickblockContractRegistry (Work in Progress)
-This contract allows for the communication between other smart contracts in our ecosystem.
+## BrickblockContractRegistry
+This contract allows for the communication between other smart contracts in our ecosystem. Contracts can be registered via `updateContractAddress()` function.
 
 ## BrickblockWhitelist
 
 This contract stores whitelisted addresses. This will allow users to buy POA tokens after being whitelisted.
 
-## Brickblock (Work in Progress)
-The Brickblock contract will allow brokers to be added and removed. It is also responsible for deploying new POATokens on behalf of the brokers. It will be able to:
+## ExchangeRates, Provider & OraclizeAPI
+ExchangeRate ecosystem is based on 3 smart contracts:
 
-* add a broker
-* remove a broker
-* list brokers
-* create new tokens
+### ExchangeRates
+This contract is used to store and access exchange rates for FIAT to ETH and Access Token(ACT) to ETH. It uses ExchangeRateProvider to fetch rates. Using `setCurrencySettings()` function, owner can add as many FIAT currencies as needed. When adding a new FIAT currency through, if interval property is set higher than 0 second, it automatically fetches the new rate on every interval amount. 
+
+### ExchangeRatesProvider (inherits OraclizeAPI)
+The purpose of this contract is to create a bridge between ExchangeRates and Oraclize. The reason behind separating this from `ExchangeRates` is to make testing possible. Note that test suite uses `/contracts/stubs/ExchangeRateProviderStub.sol` contract to mock requests.   
+**Note: This contract needs ethereum to execute fetching.**
+
+### OraclizeAPI
+The Oracle provider for `ExchageRates` ecosystem.
+[click here for details](https://github.com/oraclize/ethereum-api)
+
+## POA Manager (Work in Progress)
+POA Manager contract will allow brokers to be added and removed. It is also responsible for deploying new POATokens on behalf of the brokers. It will be able to:
+
+* add/remove broker
+* list/delist broker
+* deploy new POA tokens
 
 ## POAToken (Proof of Asset Token) (Work in Progress)
 
@@ -173,11 +193,12 @@ In the active stage, a token will produce monthly payouts and will be sent to ow
 A contract enters the terminated stage when a poa contract needs to end. This could be because the building is sold, or some other "act of god" occurs. When in terminated stage, users will not be able to trade the tokens any longer. Payouts from custodian are still possible. This should allow sending money from insurance to token holders if a building is destroyed.
 
 ## Built With
-* [Truffle v4.0.1](https://github.com/trufflesuite/truffle/releases/tag/v4.0.1)
-* [zeppelin-solidity v1.3.0](https://github.com/OpenZeppelin/zeppelin-solidity/releases)
+* [Truffle v4.1.8](https://github.com/trufflesuite/truffle/releases/tag/v4.1.8)
+* [openzeppelin-solidity v1.9.0](https://github.com/OpenZeppelin/openzeppelin-solidity/releases)
 
 ## Authors
 * **Cody Lamson** - [TovarishFin](https://github.com/TovarishFin)
 * **Matt Stevens**  - [mattgstevens](https://github.com/mattgstevens)
+* **Volkan Bilici**  - [vbilici](https://github.com/vbilici)
 * **Adrian Kizlauskas**  - [dissaranged](https://github.com/dissaranged)
 * **Marius Hanne** - [mhanne](https://github.com/mhanne)
