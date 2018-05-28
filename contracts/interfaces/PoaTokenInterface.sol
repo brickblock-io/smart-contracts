@@ -30,4 +30,9 @@ interface PoaTokenInterface {
   function terminate()
     external
     returns (bool);
+  
+  function proofOfCustody()
+    external
+    view
+    returns (string);
 }

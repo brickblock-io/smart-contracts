@@ -5,4 +5,11 @@ interface PoaManagerInterface {
     external
     view
     returns (address);
+  
+  function getTokenStatus(
+    address _tokenAddress
+  )
+    external
+    view
+    returns (bool);
 }

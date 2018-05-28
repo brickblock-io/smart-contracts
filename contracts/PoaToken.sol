@@ -3,10 +3,9 @@ pragma solidity ^0.4.23;
 import "openzeppelin-solidity/contracts/token/ERC20/PausableToken.sol";
 import "./interfaces/BrickblockFeeManagerInterface.sol";
 import "./interfaces/ExchangeRatesInterface.sol";
-import "./interfaces/PoaManagerInterface.sol";
-import "./interfaces/BrickblockWhitelistInterface.sol";
 
 /* solium-disable security/no-block-members */
+/* solium-disable security/no-low-level-calls */
 
 
 contract PoaToken is PausableToken {
@@ -77,7 +76,7 @@ contract PoaToken is PausableToken {
   event TerminatedEvent();
   event ProofOfCustodyUpdatedEvent(string ipfsHash);
   event ReclaimEvent(address indexed reclaimer, uint256 amount);
-  event CustodianChangedEvent(address newAddress);
+  event CustodianChangedEvent(address indexed oldAddress, address indexed newAddress);
 
   modifier eitherCustodianOrOwner() {
     owner = getContractAddress("PoaManager");
@@ -108,22 +107,15 @@ contract PoaToken is PausableToken {
     require(stage == _stage || stage == _orStage);
     _;
   }
-  
-  modifier isBuyWhitelisted() {
-    require(
-      WhitelistInterface(getContractAddress("Whitelist"))
-        .whitelisted(msg.sender)
-    );
 
+  modifier isBuyWhitelisted() {
+    require(checkIsWhitelisted(msg.sender));
     _;
   }
 
   modifier isTransferWhitelisted(address _to) {
     if (whitelistTransfers) {
-      require(
-        WhitelistInterface(getContractAddress("Whitelist"))
-          .whitelisted(_to)
-      );
+      require(checkIsWhitelisted(_to));
     }
 
     _;
@@ -152,10 +144,10 @@ contract PoaToken is PausableToken {
     require(bytes(_ipfsHash).length == 46);
     require(bytes(_ipfsHash)[0] == 0x51);
     require(bytes(_ipfsHash)[1] == 0x6D);
-    require(keccak256(_ipfsHash) != keccak256(proofOfCustody));
+    require(keccak256(bytes(_ipfsHash)) != keccak256(bytes(proofOfCustody)));
     _;
   }
-  
+
   // token totalSupply must be more than fundingGoalInCents!
   function setupContract
   (
@@ -190,6 +182,7 @@ contract PoaToken is PausableToken {
 
     // ensure totalSupply is at least 1 whole token
     require(_totalSupply >= 1e18);
+    require(_totalSupply > fundingGoalInCents);
     // ensure all uints are valid
     require(_startTime > block.timestamp);
     // ensure that fundingTimeout is at least 24 hours
@@ -212,20 +205,49 @@ contract PoaToken is PausableToken {
     fundingTimeout = _fundingTimeout;
     activationTimeout = _activationTimeout;
 
-    // set funding goal in cents
-    fundingGoalInCents = _fundingGoalInCents;
 
-    // set totalSupply
+    fundingGoalInCents = _fundingGoalInCents;
     totalSupply_ = _totalSupply;
 
-    // start paused
+    // assign bools
     paused = true;
     whitelistTransfers = false;
 
     // get registry address from PoaManager which should be msg.sender
-    registry = PoaManagerInterface(msg.sender).registry();
+    // need to use assembly here due to gas limitations
+    address _tempReg;
+    bytes4 _sig = bytes4(keccak256("registry()"));
+    assembly {
+      let _call := mload(0x40) // set _call to free memory pointer
+      mstore(_call, _sig) // store _sig at _call pointer
+
+      // staticcall(g, a, in, insize, out, outsize) => 0 on error 1 on success
+      let success := staticcall(
+        gas, // g = gas: whatever was passed already
+        caller, // a = address: caller = msg.sender
+        _call, // in = mem in  mem[in..(in+insize): set to _call pointer
+        0x04, // insize = mem insize mem[in..(in+insize): size of _sig (bytes4) = 0x04
+        0xf0, // out = mem out  mem[out..(out+outsize): output assigned to this storage address
+        0x20 // outsize = mem outsize  mem[out..(out+outsize): output should be 32byte slot (address size = 0x14 <  slot size 0x20)
+      )
+
+      // revert if not successful
+      if iszero(success) {
+        revert(
+          0xf0,
+          0x20
+        )
+      }
+
+      _tempReg := mload(0xf0) // assign result in mem pointer to previously declared _tempReg
+      mstore(0x40, 0x100) // clear out free memory pointer
+    }
+
+    // assign _tempReg gotten from assembly call to PoaManager.registry() to registry
+    registry = _tempReg;
 
     owner = getContractAddress("PoaManager");
+
     // run getRate once in order to see if rate is initialized, throws if not
     ExchangeRatesInterface(getContractAddress("ExchangeRates"))
       .getRate(fiatCurrency);
@@ -233,7 +255,10 @@ contract PoaToken is PausableToken {
     return true;
   }
 
+  //
   // start utility functions
+  //
+
   function getContractAddress(string _name)
     public
     view
@@ -247,17 +272,17 @@ contract PoaToken is PausableToken {
       let _name32 := mload(add(_name, 0x20)) // load _name from stack offset by 32 bytes to strip out array length
       mstore(_call, _sig) // store _sig at _call pointer
       mstore(add(_call, 0x04), _name32) // store _name32 at _call offset by 4 bytes for pre-existing _sig
-      
+
       // staticcall(g, a, in, insize, out, outsize) => 0 on error 1 on success
       let success := staticcall(
-        gas,    // g = gas: whatever was passed already 
+        gas,    // g = gas: whatever was passed already
         _addr,  // a = address: address is already on stack
         _call,  // in = mem in  mem[in..(in+insize): set to free memory pointer
         0x24,   // insize = mem insize  mem[in..(in+insize): size of sig (bytes4) + bytes32 = 0x24
         0xf0,   // out = mem out  mem[out..(out+outsize): output assigned to this storage address
         0x20    // outsize = mem outsize  mem[out..(out+outsize): output should be 32byte slot (address size = 0x14 <  slot size 0x20)
       )
-      
+
       // revert if not successful
       if iszero(success) {
         revert(
@@ -265,9 +290,48 @@ contract PoaToken is PausableToken {
           0x20
         )
       }
-      
+
       mstore(0x40, 0x100) // clear out the free memory pointer
       _contractAddress := mload(0xf0) // assign result to return value
+    }
+  }
+
+  // use assembly in order to avoid gas gas usage which is too high
+  // used to check if whitelisted at Whitelist contract
+  function checkIsWhitelisted(address _address)
+    public
+    view
+    returns (bool _isWhitelisted)
+  {
+    bytes4 _sig = bytes4(keccak256("whitelisted(address)"));
+    address _whitelistContract = getContractAddress("Whitelist");
+    address _arg = _address;
+
+    assembly {
+      let _call := mload(0x40) // set _call to free memory pointer
+      mstore(_call, _sig) // store _sig at _call pointer
+      mstore(add(_call, 0x04), _arg) // store _arg at _call offset by 4 bytes for pre-existing _sig
+
+      // staticcall(g, a, in, insize, out, outsize) => 0 on error 1 on success
+      let success := staticcall(
+        gas,    // g = gas: whatever was passed already
+        _whitelistContract,  // a = address: _whitelist address assigned from getContractAddress()
+        _call,  // in = mem in  mem[in..(in+insize): set to _call pointer
+        0x24,   // insize = mem insize  mem[in..(in+insize): size of sig (bytes4) + bytes32 = 0x24
+        0xf0,   // out = mem out  mem[out..(out+outsize): output assigned to this storage address
+        0x20    // outsize = mem outsize  mem[out..(out+outsize): output should be 32byte slot (bool size = 0x01 < slot size 0x20)
+      )
+
+      // revert if not successful
+      if iszero(success) {
+        revert(
+          0xf0,
+          0x20
+        )
+      }
+
+      mstore(0x40, 0x100) // clear out the free memory pointer
+      _isWhitelisted := mload(0xf0) // assign result to returned value
     }
   }
 
@@ -286,6 +350,7 @@ contract PoaToken is PausableToken {
       .div(1e18);
   }
 
+  // returns wei value from fiat cents
   function fiatCentsToWei(uint256 _cents)
     public
     view
@@ -299,6 +364,7 @@ contract PoaToken is PausableToken {
       );
   }
 
+  // get funded amount in cents
   function fundedAmountInCents()
     public
     view
@@ -307,6 +373,7 @@ contract PoaToken is PausableToken {
     return weiToFiatCents(fundedAmountInWei);
   }
 
+  // get fundingGoal in wei
   function fundingGoalInWei()
     public
     view
@@ -336,7 +403,9 @@ contract PoaToken is PausableToken {
     require(feeManager.payFee.value(_value)());
   }
 
+  //
   // end utility functions
+  //
 
   // pause override
   function unpause()
@@ -349,15 +418,31 @@ contract PoaToken is PausableToken {
     return super.unpause();
   }
 
-  // stage related functions
+  // enables whitelisted transfers/transferFroms
+  function toggleWhitelistTransfers()
+    public
+    onlyOwner
+    returns (bool)
+  {
+    whitelistTransfers = !whitelistTransfers;
+    return whitelistTransfers;
+  }
+
+  //
+  // start lifecycle functions
+  //
+
+  // used to enter a new stage of the contract
   function enterStage(Stages _stage)
     private
   {
     stage = _stage;
     emit StageEvent(_stage);
+    getContractAddress("Logger").call(
+      bytes4(keccak256("logStageEvent(uint256)")),
+      _stage
+    );
   }
-
-  // start lifecycle functions
 
   // used to start the sale as long as startTime has passed
   function startSale()
@@ -370,6 +455,7 @@ contract PoaToken is PausableToken {
     return true;
   }
 
+  // buy tokens
   function buy()
     public
     payable
@@ -409,6 +495,7 @@ contract PoaToken is PausableToken {
     }
   }
 
+  // buy and continue funding process (when funding goal not met)
   function buyAndContinueFunding(uint256 _payAmount)
     private
     returns (bool)
@@ -418,10 +505,16 @@ contract PoaToken is PausableToken {
       .add(_payAmount);
     // increment the funded amount
     fundedAmountInWei = fundedAmountInWei.add(_payAmount);
+
     emit BuyEvent(msg.sender, _payAmount);
+    getContractAddress("Logger").call(
+      bytes4(keccak256("logBuyEvent(address,uint256)")), msg.sender, _payAmount
+    );
+
     return true;
   }
 
+  // buy and finish funding process (when funding goal met)
   function buyAndEndFunding(bool _shouldRefund)
     private
     returns (bool)
@@ -436,7 +529,7 @@ contract PoaToken is PausableToken {
     // actual Ξ amount to buy after refund
     uint256 _payAmount = msg.value.sub(_refundAmount);
     buyAndContinueFunding(_payAmount);
-    
+
     return true;
   }
 
@@ -456,6 +549,7 @@ contract PoaToken is PausableToken {
     return true;
   }
 
+  // function to change custodianship of poa
   function changeCustodianAddress(address _newCustodian)
     public
     onlyCustodian
@@ -463,11 +557,19 @@ contract PoaToken is PausableToken {
   {
     require(_newCustodian != address(0));
     require(_newCustodian != custodian);
+    address _oldCustodian = custodian;
     custodian = _newCustodian;
-    emit CustodianChangedEvent(_newCustodian);
+    emit CustodianChangedEvent(_oldCustodian, _newCustodian);
+    getContractAddress("Logger").call(
+      bytes4(keccak256("logCustodianChangedEvent(address,address)")),
+      _oldCustodian,
+      _newCustodian
+    );
     return true;
   }
 
+  // activate token with proofOfCustody fee is taken from contract balance
+  // brokers must work this into their funding goals
   function activate(string _ipfsHash)
     external
     checkTimeout
@@ -486,6 +588,8 @@ contract PoaToken is PausableToken {
     proofOfCustody = _ipfsHash;
     // event showing that proofOfCustody has been updated.
     emit ProofOfCustodyUpdatedEvent(_ipfsHash);
+    getContractAddress("Logger")
+      .call(bytes4(keccak256("logProofOfCustodyUpdatedEvent()")));
     // balance of contract (fundingGoalInCents) set to claimable by broker.
     // can now be claimed by broker via claim function
     // should only be buy()s - fee. this ensures buy() dust is cleared
@@ -513,12 +617,18 @@ contract PoaToken is PausableToken {
     paused = true;
     // let the world know this token is in Terminated Stage
     emit TerminatedEvent();
+    getContractAddress("Logger")
+      .call(bytes4(keccak256("logTerminatedEvent()")));
     return true;
   }
 
+  //
   // end lifecycle functions
+  //
 
+  //
   // start payout related functions
+  //
 
   // get current payout for perTokenPayout and unclaimed
   function currentPayout(address _address, bool _includeUnclaimed)
@@ -584,6 +694,12 @@ contract PoaToken is PausableToken {
     require(_refundAmount > 0);
     fundedAmountInWei = fundedAmountInWei.sub(_refundAmount);
     msg.sender.transfer(_refundAmount);
+    emit ReclaimEvent(msg.sender, _refundAmount);
+    getContractAddress("Logger").call(
+      bytes4(keccak256("logReclaimEvent(address,uint256)")),
+      msg.sender,
+      _refundAmount
+    );
     return true;
   }
 
@@ -619,6 +735,10 @@ contract PoaToken is PausableToken {
     payFee(_fee.add(_delta));
     // let the world know that a payout has happened for this token
     emit PayoutEvent(_payoutAmount.sub(_delta));
+    getContractAddress("Logger").call(
+      bytes4(keccak256("logPayoutEvent(uint256)")),
+      _payoutAmount.sub(_delta)
+    );
     return true;
   }
 
@@ -641,10 +761,15 @@ contract PoaToken is PausableToken {
     claimedPerTokenPayouts[msg.sender] = totalPerTokenPayout;
     // 0 out unclaimedPayoutTotals for user
     unclaimedPayoutTotals[msg.sender] = 0;
-    // let the world know that a payout for sender has been claimed
-    emit ClaimEvent(msg.sender, _payoutAmount);
     // transfer Ξ payable amount to sender
     msg.sender.transfer(_payoutAmount);
+    // let the world know that a payout for sender has been claimed
+    emit ClaimEvent(msg.sender, _payoutAmount);
+    getContractAddress("Logger").call(
+      bytes4(keccak256("logClaimEvent(address,uint256)")),
+      msg.sender,
+      _payoutAmount
+    );
     return _payoutAmount;
   }
 
@@ -658,12 +783,24 @@ contract PoaToken is PausableToken {
   {
     proofOfCustody = _ipfsHash;
     emit ProofOfCustodyUpdatedEvent(_ipfsHash);
+    getContractAddress("Logger").call(
+      bytes4(keccak256("logProofOfCustodyUpdatedEvent(string)")),
+      _ipfsHash
+    );
     return true;
   }
 
+  //
   // end payout related functions
+  //
+
+  //
+  // start ERC20 overrides
+  //
+
+  // used for calculating starting balance once activated
   function startingBalance(address _address)
-    public
+    private
     view
     returns (uint256)
   {
@@ -674,19 +811,7 @@ contract PoaToken is PausableToken {
       : 0;
   }
 
-  // enables whitelisted transfers/transferFroms
-  function toggleWhitelistTransfers()
-    public
-    onlyOwner
-    returns (bool)
-  {
-    whitelistTransfers = !whitelistTransfers;
-    return whitelistTransfers;
-  }
-
-  // start ERC20 overrides
-
-  // ERC20 override
+  // ERC20 override uses NoobCoin pattern
   function balanceOf(address _address)
     public
     view
@@ -697,7 +822,10 @@ contract PoaToken is PausableToken {
       .sub(spentBalances[_address]);
   }
 
-  // same as ERC20 transfer other than settling unclaimed payouts
+  /*
+    ERC20 transfer override:
+      uses NoobCoin pattern combined with settling payout balances each time run
+  */
   function transfer
   (
     address _to,
@@ -719,7 +847,10 @@ contract PoaToken is PausableToken {
     return true;
   }
 
-  // same as ERC20 transfer other than settling unclaimed payouts
+  /*
+    ERC20 transfer override:
+      uses NoobCoin pattern combined with settling payout balances each time run
+  */
   function transferFrom
   (
     address _from,
@@ -744,10 +875,12 @@ contract PoaToken is PausableToken {
     return true;
   }
 
+  //
   // end ERC20 overrides
+  //
 
-  // check if there is a way to get around gas issue when no gas limit calculated...
-  // fallback function defaulting to buy
+
+  // dont allow any money to come into the contract other than through buy/payout
   function()
     public
     payable

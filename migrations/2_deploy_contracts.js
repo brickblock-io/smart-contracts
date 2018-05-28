@@ -1,13 +1,14 @@
 /* eslint-disable no-console */
 
+const BrickblockAccessToken = artifacts.require('BrickblockAccessToken')
+const BrickblockAccount = artifacts.require('BrickblockAccount')
 const BrickblockContractRegistry = artifacts.require(
   'BrickblockContractRegistry'
 )
-const BrickblockAccessToken = artifacts.require('BrickblockAccessToken')
-const BrickblockAccount = artifacts.require('BrickblockAccount')
 const BrickblockToken = artifacts.require('BrickblockToken')
 const ExchangeRates = artifacts.require('ExchangeRates')
 const FeeManager = artifacts.require('BrickblockFeeManager')
+const Logger = artifacts.require('BrickblockLogger')
 const PoaManager = artifacts.require('PoaManager')
 const PoaToken = artifacts.require('PoaToken')
 const Whitelist = artifacts.require('BrickblockWhitelist')
@@ -77,22 +78,29 @@ module.exports = (deployer, network, accounts) => {
         from: owner
       })
       const exp = await ExchangeRateProvider.deployed()
+
       // PoaToken master
       const poa = await deployer.deploy(PoaToken)
+
+      // Logger
+      await deployer.deploy(Logger, reg.address, { from: owner })
+      const log = await Logger.deployed()
+
       // eslint-disable-next-line no-console
       console.log('adding contracts to the registry')
       await addContractsToRegistry({
-        owner,
-        reg,
-        bbk,
         act,
         bat,
-        fmr,
-        exr,
+        bbk,
         exp,
-        wht,
+        exr,
+        fmr,
+        log,
+        owner,
         pmr,
-        poa
+        poa,
+        reg,
+        wht
       })
 
       console.log('setting ACT rate')

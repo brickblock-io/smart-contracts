@@ -19,12 +19,11 @@
     "start:dev": "truffle develop",
     "---SECTION:BUILD---": "-------------------- HOW TO BUILD THE SMART CONTRACTS --------------------",
     "build:comment": "Compile smart contracts and output into the build/ dir",
-    "build": "yarn clean:contracts && truffle compile && yarn build:inject-deployed-contracts",
+    "build": "truffle compile --reset && yarn build:inject-deployed-contracts",
     "build:inject-deployed-contracts:comment": "making the deployed chainid:address pair as configured in .env available to build/contract/Brickblock.json",
     "build:inject-deployed-contracts": "cross-env node scripts/injectDeployedContracts.js",
     "---SECTION:CLEAN---": "-------------------- HOW TO CLEAN OLD BUILD OUTPUT --------------------",
     "clean:comment": "Clean up old contracts and build files",
-    "clean:contracts": "rimraf build/contracts",
     "clean:install:comment": "In case there are some dependency issues, a clean install often helps",
     "clean:install": "rimraf node_modules && yarn install",
     "---SECTION:MIGRATE---": "-------------------- HOW TO MIGRATE AND SYNC THE SMART CONTRACTS --------------------",
@@ -40,7 +39,8 @@
     "seed": "cross-env NODE_PATH=build NODE_ENV=development node scripts/seed.js",
     "seed:ropsten": "cross-env NODE_PATH=build NODE_ENV=development node scripts/seed.ropsten.js",
     "---SECTION:TEST---": "-------------------- HOW TO TEST THE SMART CONTRACTS --------------------",
-    "test": "yarn run clean:contracts && truffle test test/main-tests/**/* && truffle test test/main-tests/* && truffle test test/unit-tests/*",
+    "test": "yarn run build && yarn test:run-suite",
+    "test:run-suite": "truffle test test/main-tests/**/* && truffle test test/main-tests/* && truffle test test/unit-tests/*",
     "test:stress-test": "truffle test test/stress-tests/*",
     "test:frozen": "node scripts/test-frozen.js",
     "test:coverage:comment": "Because solidity-coverage is still experimental we won't fail CI if it fails for now",
@@ -111,5 +111,8 @@
     "truffle": "4.1.8",
     "truffle-contract": "^3.0.1",
     "web3": "^0.18.4"
+  },
+  "dependencies": {
+    "solc": "^0.4.24"
   }
 }
