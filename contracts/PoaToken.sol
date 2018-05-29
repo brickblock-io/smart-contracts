@@ -1,14 +1,13 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
 import "openzeppelin-solidity/contracts/token/ERC20/PausableToken.sol";
-import "./interfaces/BrickblockFeeManagerInterface.sol";
-import "./interfaces/ExchangeRatesInterface.sol";
 
 /* solium-disable security/no-block-members */
 /* solium-disable security/no-low-level-calls */
 
 
 contract PoaToken is PausableToken {
+  uint256 public constant version = 1;
   // instance of registry to call other contracts
   address public registry;
   // ERC20 name of the token
@@ -219,28 +218,28 @@ contract PoaToken is PausableToken {
     bytes4 _sig = bytes4(keccak256("registry()"));
     assembly {
       let _call := mload(0x40) // set _call to free memory pointer
-      mstore(_call, _sig) // store _sig at _call pointer
+      mstore(_call, _sig)      // store _sig at _call pointer
 
       // staticcall(g, a, in, insize, out, outsize) => 0 on error 1 on success
       let success := staticcall(
-        gas, // g = gas: whatever was passed already
+        gas,    // g = gas: whatever was passed already
         caller, // a = address: caller = msg.sender
-        _call, // in = mem in  mem[in..(in+insize): set to _call pointer
-        0x04, // insize = mem insize mem[in..(in+insize): size of _sig (bytes4) = 0x04
-        0xf0, // out = mem out  mem[out..(out+outsize): output assigned to this storage address
-        0x20 // outsize = mem outsize  mem[out..(out+outsize): output should be 32byte slot (address size = 0x14 <  slot size 0x20)
+        _call,  // in = mem in  mem[in..(in+insize): set to _call pointer
+        0x04,   // insize = mem insize mem[in..(in+insize): size of _sig (bytes4) = 0x04
+        _call,   // out = mem out  mem[out..(out+outsize): output assigned to this storage address
+        0x20    // outsize = mem outsize  mem[out..(out+outsize): output should be 32byte slot (address size = 0x14 <  slot size 0x20)
       )
 
       // revert if not successful
       if iszero(success) {
         revert(
-          0xf0,
+          _call,
           0x20
         )
       }
 
-      _tempReg := mload(0xf0) // assign result in mem pointer to previously declared _tempReg
-      mstore(0x40, 0x100) // clear out free memory pointer
+      _tempReg := mload(_call) // assign result in mem pointer to previously declared _tempReg
+      mstore(0x40, add(_call, 0x20)) // advance free memory pointer by largest _call size
     }
 
     // assign _tempReg gotten from assembly call to PoaManager.registry() to registry
@@ -249,8 +248,7 @@ contract PoaToken is PausableToken {
     owner = getContractAddress("PoaManager");
 
     // run getRate once in order to see if rate is initialized, throws if not
-    ExchangeRatesInterface(getContractAddress("ExchangeRates"))
-      .getRate(fiatCurrency);
+    require(getFiatRate() > 0);
 
     return true;
   }
@@ -259,44 +257,84 @@ contract PoaToken is PausableToken {
   // start utility functions
   //
 
-  function getContractAddress(string _name)
+  // gets a given contract address by bytes32 saving gas
+  function getContractAddress(
+    string _name
+  )
     public
     view
     returns (address _contractAddress)
   {
     bytes4 _sig = bytes4(keccak256("getContractAddress32(bytes32)"));
-    address _addr = address(registry);
+    bytes32 _name32 = keccak256(_name);
 
     assembly {
-      let _call := mload(0x40) // set _call to free memory pointer
-      let _name32 := mload(add(_name, 0x20)) // load _name from stack offset by 32 bytes to strip out array length
-      mstore(_call, _sig) // store _sig at _call pointer
+      let _call := mload(0x40)          // set _call to free memory pointer
+      mstore(_call, _sig)               // store _sig at _call pointer
       mstore(add(_call, 0x04), _name32) // store _name32 at _call offset by 4 bytes for pre-existing _sig
 
       // staticcall(g, a, in, insize, out, outsize) => 0 on error 1 on success
       let success := staticcall(
         gas,    // g = gas: whatever was passed already
-        _addr,  // a = address: address is already on stack
+        sload(registry_slot),  // a = address: address in storage
         _call,  // in = mem in  mem[in..(in+insize): set to free memory pointer
         0x24,   // insize = mem insize  mem[in..(in+insize): size of sig (bytes4) + bytes32 = 0x24
-        0xf0,   // out = mem out  mem[out..(out+outsize): output assigned to this storage address
+        _call,   // out = mem out  mem[out..(out+outsize): output assigned to this storage address
         0x20    // outsize = mem outsize  mem[out..(out+outsize): output should be 32byte slot (address size = 0x14 <  slot size 0x20)
       )
 
       // revert if not successful
       if iszero(success) {
         revert(
-          0xf0,
+          _call,
           0x20
         )
       }
 
-      mstore(0x40, 0x100) // clear out the free memory pointer
-      _contractAddress := mload(0xf0) // assign result to return value
+      _contractAddress := mload(_call) // assign result to return value
+      mstore(0x40, add(_call, 0x24)) // advance free memory pointer by largest _call size
     }
   }
 
-  // use assembly in order to avoid gas gas usage which is too high
+  // gas saving call to get fiat rate without interface
+  function getFiatRate()
+    public
+    view
+    returns (uint256 _fiatRate)
+  {
+    bytes4 _sig = bytes4(keccak256("getRate32(bytes32)"));
+    address _exchangeRates = getContractAddress("ExchangeRates");
+    bytes32 _fiatCurrency = keccak256(fiatCurrency);
+
+    assembly {
+      let _call := mload(0x40) // set _call to free memory pointer
+      mstore(_call, _sig) // store _sig at _call pointer
+      mstore(add(_call, 0x04), _fiatCurrency) // store _fiatCurrency at _call offset by 4 bytes for pre-existing _sig
+
+      // staticcall(g, a, in, insize, out, outsize) => 0 on error 1 on success
+      let success := staticcall(
+        gas,             // g = gas: whatever was passed already
+        _exchangeRates,  // a = address: address from getContractAddress
+        _call,           // in = mem in  mem[in..(in+insize): set to free memory pointer
+        0x24,            // insize = mem insize  mem[in..(in+insize): size of sig (bytes4) + bytes32 = 0x24
+        _call,           // out = mem out  mem[out..(out+outsize): output assigned to this storage address
+        0x20             // outsize = mem outsize  mem[out..(out+outsize): output should be 32byte slot (uint256 size = 0x20 = slot size 0x20)
+      )
+
+      // revert if not successful
+      if iszero(success) {
+        revert(
+          _call,
+          0x20
+        )
+      }
+
+      _fiatRate := mload(_call) // assign result to return value
+      mstore(0x40, add(_call, 0x24)) // advance free memory pointer by largest _call size
+    }
+  }
+
+  // use assembly in order to avoid gas usage which is too high
   // used to check if whitelisted at Whitelist contract
   function checkIsWhitelisted(address _address)
     public
@@ -318,20 +356,20 @@ contract PoaToken is PausableToken {
         _whitelistContract,  // a = address: _whitelist address assigned from getContractAddress()
         _call,  // in = mem in  mem[in..(in+insize): set to _call pointer
         0x24,   // insize = mem insize  mem[in..(in+insize): size of sig (bytes4) + bytes32 = 0x24
-        0xf0,   // out = mem out  mem[out..(out+outsize): output assigned to this storage address
+        _call,   // out = mem out  mem[out..(out+outsize): output assigned to this storage address
         0x20    // outsize = mem outsize  mem[out..(out+outsize): output should be 32byte slot (bool size = 0x01 < slot size 0x20)
       )
 
       // revert if not successful
       if iszero(success) {
         revert(
-          0xf0,
+          _call,
           0x20
         )
       }
 
-      mstore(0x40, 0x100) // clear out the free memory pointer
-      _isWhitelisted := mload(0xf0) // assign result to returned value
+      _isWhitelisted := mload(_call) // assign result to returned value
+      mstore(0x40, add(_call, 0x24)) // advance free memory pointer by largest _call size
     }
   }
 
@@ -342,12 +380,7 @@ contract PoaToken is PausableToken {
     returns (uint256)
   {
     // get eth to fiat rate in cents from ExchangeRates
-    return _wei
-      .mul(
-        ExchangeRatesInterface(getContractAddress("ExchangeRates"))
-          .getRate(fiatCurrency)
-      )
-      .div(1e18);
+    return _wei.mul(getFiatRate()).div(1e18);
   }
 
   // returns wei value from fiat cents
@@ -356,12 +389,7 @@ contract PoaToken is PausableToken {
     view
     returns (uint256)
   {
-    return _cents
-      .mul(1e18)
-      .div(
-        ExchangeRatesInterface(getContractAddress("ExchangeRates"))
-          .getRate(fiatCurrency)
-      );
+    return _cents.mul(1e18).div(getFiatRate());
   }
 
   // get funded amount in cents
@@ -397,10 +425,11 @@ contract PoaToken is PausableToken {
     private
     returns (bool)
   {
-    FeeManagerInterface feeManager = FeeManagerInterface(
+    require(
+      // solium-disable-next-line security/no-call-value
       getContractAddress("FeeManager")
+        .call.value(_value)(bytes4(keccak256("payFee()")))
     );
-    require(feeManager.payFee.value(_value)());
   }
 
   //
@@ -880,7 +909,7 @@ contract PoaToken is PausableToken {
   //
 
 
-  // dont allow any money to come into the contract other than through buy/payout
+  // prevent anyone from sending funds other than selfdestructs of course :)
   function()
     public
     payable

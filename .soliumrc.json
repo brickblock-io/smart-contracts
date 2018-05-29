@@ -9,6 +9,7 @@
     "comma-whitespace": "error",
     "deprecated-suicide": "error",
     "function-whitespace": "error",
+    "function-order": "off",
     "imports-on-top": "error",
     "indentation": ["error", 2],
     "lbrace": "error",

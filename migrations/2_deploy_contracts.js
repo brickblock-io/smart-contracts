@@ -1,17 +1,15 @@
 /* eslint-disable no-console */
 
-const BrickblockAccessToken = artifacts.require('BrickblockAccessToken')
+const AccessToken = artifacts.require('AccessToken')
 const BrickblockAccount = artifacts.require('BrickblockAccount')
-const BrickblockContractRegistry = artifacts.require(
-  'BrickblockContractRegistry'
-)
+const ContractRegistry = artifacts.require('ContractRegistry')
 const BrickblockToken = artifacts.require('BrickblockToken')
 const ExchangeRates = artifacts.require('ExchangeRates')
-const FeeManager = artifacts.require('BrickblockFeeManager')
-const Logger = artifacts.require('BrickblockLogger')
+const FeeManager = artifacts.require('FeeManager')
+const Logger = artifacts.require('CentralLogger')
 const PoaManager = artifacts.require('PoaManager')
 const PoaToken = artifacts.require('PoaToken')
-const Whitelist = artifacts.require('BrickblockWhitelist')
+const Whitelist = artifacts.require('Whitelist')
 let ExchangeRateProvider
 
 const { addContractsToRegistry, setFiatRate } = require('./helpers/general')
@@ -30,8 +28,8 @@ module.exports = (deployer, network, accounts) => {
       const owner = accounts[0]
       const bonusAddress = accounts[1]
 
-      await deployer.deploy(BrickblockContractRegistry, { from: owner })
-      const reg = await BrickblockContractRegistry.deployed()
+      await deployer.deploy(ContractRegistry, { from: owner })
+      const reg = await ContractRegistry.deployed()
 
       //Brickblock Token
       await deployer.deploy(BrickblockToken, bonusAddress, {
@@ -39,11 +37,11 @@ module.exports = (deployer, network, accounts) => {
       })
       const bbk = await BrickblockToken.deployed()
 
-      //BrickblockAccessToken
-      await deployer.deploy(BrickblockAccessToken, reg.address, {
+      //AccessToken
+      await deployer.deploy(AccessToken, reg.address, {
         from: owner
       })
-      const act = await BrickblockAccessToken.deployed()
+      const act = await AccessToken.deployed()
 
       //BrickblockAccount
       await deployer.deploy(BrickblockAccount, reg.address, 100, {

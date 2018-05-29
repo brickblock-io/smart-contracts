@@ -1,6 +1,6 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
-interface AccessTokenInterface {
+interface IAccessToken {
   function lockBBK(
     uint256 _value
   )

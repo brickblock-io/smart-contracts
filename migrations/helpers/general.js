@@ -1,10 +1,10 @@
 const addContractsToRegistry = async ({
-  act, // BrickblockAccessToken
+  act, // AccessToken
   bat, // BrickbloackAccount
   bbk, // BrickblockToken
   exp, // ExchangeRateProvider
   exr, // ExchangeRates
-  fmr, // BrickblockFeeManager
+  fmr, // FeeManager
   log, // Logger
   owner,
   pmr, // PoaManager

@@ -1,6 +1,4 @@
-const BrickblockContractRegistry = artifacts.require(
-  'BrickblockContractRegistry'
-)
+const ContractRegistry = artifacts.require('ContractRegistry')
 const RemoteContractStub = artifacts.require('stubs/RemoteContractStub')
 const BrokenRemoteContractStub = artifacts.require(
   'stubs/BrokenRemoteContractStub'
@@ -12,7 +10,7 @@ const assert = require('assert')
 const BigNumber = require('bignumber.js')
 
 describe('when using the contract registry', () => {
-  contract('BrickblockContractRegistry', accounts => {
+  contract('ContractRegistry', accounts => {
     const initialTestNumber = new BigNumber(123)
     const owner = accounts[0]
     const notOwner = accounts[1]
@@ -22,7 +20,7 @@ describe('when using the contract registry', () => {
     let grcu
 
     before('setup Registry', async () => {
-      reg = await BrickblockContractRegistry.new()
+      reg = await ContractRegistry.new()
       brokenGrc = await BrokenRemoteContractStub.new(initialTestNumber)
       grcu = await RemoteContractUserStub.new(reg.address)
     })

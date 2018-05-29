@@ -1,6 +1,6 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
-interface ExchangeRateProviderInterface {
+interface IExchangeRateProvider {
   function sendQuery(
     string _queryString,
     uint256 _callInterval,

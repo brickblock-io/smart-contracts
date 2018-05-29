@@ -12,7 +12,7 @@ const {
 const { setupPoaProxyAndEcosystem } = require('../helpers/poa')
 
 describe('when using Brickblock logger to log PoaToken events', () => {
-  contract('BrickblockLogger/PoaToken', () => {
+  contract('CentralLogger/PoaToken', () => {
     let poa
     let log
     let pmr

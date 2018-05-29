@@ -1,10 +1,9 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
-contract BrickblockWhitelist is Ownable {
-
+contract Whitelist is Ownable {
   uint8 public constant version = 1;
 
   mapping (address => bool) public whitelisted;
@@ -27,5 +26,13 @@ contract BrickblockWhitelist is Ownable {
     require(whitelisted[_address] != false);
     whitelisted[_address] = false;
     emit WhitelistedEvent(_address, false);
+  }
+
+  // prevent anyone from sending funds other than selfdestructs of course :)
+  function()
+    public
+    payable
+  {
+    revert();
   }
 }

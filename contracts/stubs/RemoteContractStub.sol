@@ -1,11 +1,11 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
 
 contract RemoteContractStub {
   uint256 public testNumber;
   address public testAddress;
 
-  function RemoteContractStub(
+  constructor(
     uint256 _testNumber
   )
     public

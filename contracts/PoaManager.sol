@@ -1,9 +1,9 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./interfaces/BrickblockContractRegistryInterface.sol";
-import "./interfaces/PoaTokenInterface.sol";
+import "./interfaces/IRegistry.sol";
+import "./interfaces/IPoaToken.sol";
 import "./Proxy.sol";
 
 
@@ -12,7 +12,7 @@ contract PoaManager is Ownable {
 
   uint256 constant version = 1;
 
-  RegistryInterface public registry;
+  IRegistry public registry;
 
   struct EntityState {
     uint256 index;
@@ -59,7 +59,7 @@ contract PoaManager is Ownable {
     public
   {
     require(_registryAddress != address(0));
-    registry = RegistryInterface(_registryAddress);
+    registry = IRegistry(_registryAddress);
   }
 
   //
@@ -233,7 +233,7 @@ contract PoaManager is Ownable {
     address _poaTokenMaster = registry.getContractAddress("PoaTokenMaster");
     address _tokenAddress = createProxy(_poaTokenMaster);
 
-    PoaTokenInterface(_tokenAddress).setupContract(
+    IPoaToken(_tokenAddress).setupContract(
       _name,
       _symbol,
       _fiatCurrency,
@@ -310,11 +310,11 @@ contract PoaManager is Ownable {
     public
     onlyOwner
   {
-    PoaTokenInterface(_tokenAddress).pause();
+    IPoaToken(_tokenAddress).pause();
   }
 
   // Allow unpausing a listed PoaToken
-  function unpauseToken(PoaTokenInterface _tokenAddress)
+  function unpauseToken(IPoaToken _tokenAddress)
     public
     onlyOwner
   {
@@ -322,7 +322,7 @@ contract PoaManager is Ownable {
   }
 
   // Allow terminating a listed PoaToken
-  function terminateToken(PoaTokenInterface _tokenAddress)
+  function terminateToken(IPoaToken _tokenAddress)
     public
     onlyOwner
   {
@@ -350,7 +350,7 @@ contract PoaManager is Ownable {
     onlyOwner
     returns (bool)
   {
-    PoaTokenInterface(_tokenAddress).setupContract(
+    IPoaToken(_tokenAddress).setupContract(
       _name,
       _symbol,
       _fiatCurrency,
@@ -366,7 +366,10 @@ contract PoaManager is Ownable {
     return true;
   }
 
-  function upgradeToken(address _proxyTokenAddress, address _masterUpgrade)
+  function upgradeToken(
+    address _proxyTokenAddress, 
+    address _masterUpgrade
+  )
     public
     onlyOwner
     returns (bool)
@@ -374,14 +377,26 @@ contract PoaManager is Ownable {
     Proxy(_proxyTokenAddress).proxyChangeMaster(_masterUpgrade);
   }
 
+  // toggle whitelisting required on transfer & transferFrom for a token
+  function toggleTokenWhitelistTransfers(
+    address _tokenAddress
+  )
+    public
+    onlyOwner
+    returns (bool)
+  {
+    return IPoaToken(_tokenAddress).toggleWhitelistTransfers();
+  }
+
   //
   // Fallback
   //
 
+  // prevent anyone from sending funds other than selfdestructs of course :)
   function()
     public
+    payable
   {
     revert();
   }
-
 }

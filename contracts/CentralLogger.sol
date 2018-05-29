@@ -1,11 +1,12 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
 import "./interfaces/IRegistry.sol";
 import "./interfaces/IPoaManager.sol";
 import "./interfaces/IPoaToken.sol";
 
 
-contract BrickblockLogger {
+contract CentralLogger {
+  uint8 public constant version = 1;
   // registry instance to get other contract addresses
   IRegistry public registry;
 

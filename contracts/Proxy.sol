@@ -1,7 +1,8 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
 
 contract Proxy {
+  uint8 public constant version = 1;
   bytes32 public constant masterContractSlot = keccak256("masterAddress");
   bytes32 public constant proxyRegistrySlot = keccak256("registry");
 
@@ -63,12 +64,13 @@ contract Proxy {
   {
     address _addr = proxyRegistry(); // contract address to call
     bytes4 _sig = bytes4(keccak256("getContractAddress32(bytes32)")); // function signature we are using
-    bytes32 _name = bytes32("PoaManager"); // function argument we are using
+    string memory _name = "PoaManager"; // function argument we are using
+    bytes32 _name32 = keccak256(_name);
 
     assembly {
       let _call := mload(0x40) // set _call to free memory pointer
       mstore(_call, _sig) // store _sig at _call pointer
-      mstore(add(_call, 0x04), _name) // store _name32 at _call offset by 4 bytes for pre-existing _sig
+      mstore(add(_call, 0x04), _name32) // store _name32 at _call offset by 4 bytes for pre-existing _sig
       
       // staticcall(g, a, in, insize, out, outsize) => 0 on error 1 on success
       let success := staticcall(
@@ -76,7 +78,7 @@ contract Proxy {
         _addr,  // a = address: address is already on stack
         _call,  // in = mem in  mem[in..(in+insize): set to free memory pointer
         0x24,   // insize = mem insize  mem[in..(in+insize): size of sig (bytes4) + bytes32 = 0x24
-        0xf0,   // out = mem out  mem[out..(out+outsize): output assigned to this storage address
+        _call,   // out = mem out  mem[out..(out+outsize): output assigned to this storage address
         0x20    // outsize = mem outsize  mem[out..(out+outsize): output should be 32byte slot (address size = 0x14 <  slot size 0x20)
       )
       
@@ -88,8 +90,8 @@ contract Proxy {
         )
       }
       
-      mstore(0x40, 0x100) // clear out the free memory pointer
-      _registryAddress := mload(0xf0) // assign result to return value
+      _registryAddress := mload(_call) // assign result to return value
+      mstore(0x40, add(_call, 0x24)) // advance free memory pointer by largest _call size
     }
   }
 

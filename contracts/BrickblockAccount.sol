@@ -1,17 +1,16 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "./interfaces/BrickblockContractRegistryInterface.sol";
-import "./interfaces/BrickblockTokenInterface.sol";
-import "./interfaces/BrickblockFeeManagerInterface.sol";
-import "./interfaces/BrickblockAccessTokenInterface.sol";
+import "./interfaces/IRegistry.sol";
+import "./interfaces/IBrickblockToken.sol";
+import "./interfaces/IFeeManager.sol";
+import "./interfaces/IAccessToken.sol";
 
 
 contract BrickblockAccount is Ownable {
-
   uint8 public constant version = 1;
   uint256 public fundsReleaseBlock;
-  RegistryInterface private registry;
+  IRegistry private registry;
 
   constructor
   (
@@ -20,7 +19,7 @@ contract BrickblockAccount is Ownable {
   )
     public
   {
-    registry = RegistryInterface(_registryAddress);
+    registry = IRegistry(_registryAddress);
     fundsReleaseBlock = _fundsReleaseBlock;
   }
 
@@ -29,7 +28,7 @@ contract BrickblockAccount is Ownable {
     onlyOwner
     returns (bool)
   {
-    BrickblockTokenInterface bbk = BrickblockTokenInterface(
+    IBrickblockToken bbk = IBrickblockToken(
       registry.getContractAddress("BrickblockToken")
     );
     uint256 _companyFunds = bbk.balanceOf(address(bbk));
@@ -44,10 +43,10 @@ contract BrickblockAccount is Ownable {
     onlyOwner
     returns (bool)
   {
-    AccessTokenInterface act = AccessTokenInterface(
+    IAccessToken act = IAccessToken(
       registry.getContractAddress("AccessToken")
     );
-    BrickblockTokenInterface bbk = BrickblockTokenInterface(
+    IBrickblockToken bbk = IBrickblockToken(
       registry.getContractAddress("BrickblockToken")
     );
 
@@ -63,7 +62,7 @@ contract BrickblockAccount is Ownable {
     onlyOwner
     returns (bool)
   {
-    AccessTokenInterface act = AccessTokenInterface(
+    IAccessToken act = IAccessToken(
       registry.getContractAddress("AccessToken")
     );
     return act.unlockBBK(_value);
@@ -76,7 +75,7 @@ contract BrickblockAccount is Ownable {
     onlyOwner
     returns (bool)
   {
-    FeeManagerInterface fmr = FeeManagerInterface(
+    IFeeManager fmr = IFeeManager(
       registry.getContractAddress("FeeManager")
     );
     return fmr.claimFee(_value);
@@ -103,7 +102,7 @@ contract BrickblockAccount is Ownable {
     onlyOwner
     returns (bool)
   {
-    AccessTokenInterface act = AccessTokenInterface(
+    IAccessToken act = IAccessToken(
       registry.getContractAddress("AccessToken")
     );
     return act.transfer(_address, _value);
@@ -118,7 +117,7 @@ contract BrickblockAccount is Ownable {
     returns (bool)
   {
     require(fundsReleaseBlock < block.number);
-    BrickblockTokenInterface bbk = BrickblockTokenInterface(
+    IBrickblockToken bbk = IBrickblockToken(
       registry.getContractAddress("BrickblockToken")
     );
     return bbk.transfer(_address, _value);

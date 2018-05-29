@@ -1,12 +1,12 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "../interfaces/BrickblockContractRegistryInterface.sol";
-import "../interfaces/ExchangeRatesInterface.sol";
+import "../interfaces/IRegistry.sol";
+import "../interfaces/IExchangeRates.sol";
 
 
 contract ExchangeRateProviderStub {
-  RegistryInterface private registry;
+  IRegistry private registry;
   // used to check on if the contract has self destructed
   bool public isAlive = true;
   // used for testing simulated pending query
@@ -37,12 +37,13 @@ contract ExchangeRateProviderStub {
     _;
   }
 
-  // constructor: set registry address
-  function ExchangeRateProviderStub(address _registryAddress)
+  constructor(
+    address _registryAddress
+  )
     public
   {
     require(_registryAddress != address(0));
-    registry = RegistryInterface(_registryAddress);
+    registry = IRegistry(_registryAddress);
   }
 
   // SIMULATE: set callbackGasPrice
@@ -89,7 +90,7 @@ contract ExchangeRateProviderStub {
     returns (bool)
   {
     // get current address of ExchangeRates
-    ExchangeRatesInterface _exchangeRates = ExchangeRatesInterface(
+    IExchangeRates _exchangeRates = IExchangeRates(
       registry.getContractAddress("ExchangeRates")
     );
     pendingTestQueryId = _identifier;
@@ -98,19 +99,20 @@ contract ExchangeRateProviderStub {
   }
 
   // SIMULATE: callback function to get results of oraclize call
+  // solium-disable-next-line mixedcase
   function simulate__callback(bytes32 _queryId, string _result)
     public
   {
     // make sure that the caller is oraclize
-    ExchangeRatesInterface _exchangeRates = ExchangeRatesInterface(
+    IExchangeRates _exchangeRates = IExchangeRates(
       registry.getContractAddress("ExchangeRates")
     );
 
     bool _ratesActive = _exchangeRates.ratesActive();
-    string memory _queryType = _exchangeRates.queryTypes(_queryId);
     uint256 _callInterval;
     uint256 _callbackGasLimit;
     string memory _queryString;
+    string memory _queryType = _exchangeRates.queryTypes(_queryId);
     (
       _callInterval,
       _callbackGasLimit,

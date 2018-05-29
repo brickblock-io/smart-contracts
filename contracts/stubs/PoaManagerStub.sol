@@ -1,6 +1,6 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
-interface PoaTokenInterface {
+interface IPoaToken {
   function setupContract
   (
     string _name,
@@ -58,7 +58,7 @@ contract PoaManagerStub {
     public
     returns (bool)
   {
-    PoaTokenInterface(_tokenAddress).setupContract(
+    IPoaToken(_tokenAddress).setupContract(
       _name,
       _symbol,
       _fiatCurrency,

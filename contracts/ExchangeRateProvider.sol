@@ -1,17 +1,14 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
 import "./OraclizeAPI.sol";
-import "./interfaces/BrickblockContractRegistryInterface.sol";
-import "./interfaces/ExchangeRatesInterface.sol";
+import "./interfaces/IRegistry.sol";
+import "./interfaces/IExchangeRates.sol";
 
 
 contract ExchangeRateProvider is usingOraclize {
-
   uint8 public constant version = 1;
 
-  RegistryInterface private registry;
-  // used to check on if the contract has self destructed
-  bool public isAlive = true;
+  IRegistry private registry;
 
   // ensure that only the oracle or ExchangeRates contract are allowed
   modifier onlyAllowed()
@@ -35,7 +32,7 @@ contract ExchangeRateProvider is usingOraclize {
     public
   {
     require(_registryAddress != address(0));
-    registry = RegistryInterface(_registryAddress);
+    registry = IRegistry(_registryAddress);
   }
 
   // set gas price used for oraclize callbacks
@@ -50,6 +47,7 @@ contract ExchangeRateProvider is usingOraclize {
 
   // send query to oraclize, results sent to __callback
   // money can be forwarded on from ExchangeRates
+  // current implementation requires > 1e5 & < 2e5 callbackGasLimit
   function sendQuery(
     string _queryString,
     uint256 _callInterval,
@@ -86,7 +84,7 @@ contract ExchangeRateProvider is usingOraclize {
     returns (bool)
   {
     // get current address of ExchangeRates
-    ExchangeRatesInterface _exchangeRates = ExchangeRatesInterface(
+    IExchangeRates _exchangeRates = IExchangeRates(
       registry.getContractAddress("ExchangeRates")
     );
     // run setQueryId on ExchangeRates
@@ -94,30 +92,30 @@ contract ExchangeRateProvider is usingOraclize {
   }
 
   // callback function for returned results of oraclize call
+  // solium-disable-next-line mixedcase
   function __callback(bytes32 _queryId, string _result)
     public
   {
     // make sure that the caller is oraclize
     require(msg.sender == oraclize_cbAddress());
-    // get currency address of BrickblockContractRegistry
-    ExchangeRatesInterface _exchangeRates = ExchangeRatesInterface(
+    // get currency address of ContractRegistry
+    IExchangeRates _exchangeRates = IExchangeRates(
       registry.getContractAddress("ExchangeRates")
     );
     // get settings data from ExchangeRates
     bool _ratesActive = _exchangeRates.ratesActive();
     uint256 _callInterval;
     uint256 _callbackGasLimit;
-    string memory queryType = _exchangeRates.queryTypes(_queryId);
     string memory _queryString;
+    string memory _queryType = _exchangeRates.queryTypes(_queryId);
     (
       _callInterval,
       _callbackGasLimit,
       _queryString
-    ) = _exchangeRates.getCurrencySettings(queryType);
+    ) = _exchangeRates.getCurrencySettings(_queryType);
 
     // set rate on ExchangeRates contract giving queryId for validation
     // rate is set in cents api returns float string which is parsed as int
-    /* TODO: make sure that tests are all fine with this */
     require(_exchangeRates.setRate(_queryId, parseInt(_result, 2)));
 
     // check if call interval has been set and that _ratesActive is still true
@@ -127,7 +125,7 @@ contract ExchangeRateProvider is usingOraclize {
         _queryString,
         _callInterval,
         _callbackGasLimit,
-        queryType
+        _queryType
       );
     }
   }

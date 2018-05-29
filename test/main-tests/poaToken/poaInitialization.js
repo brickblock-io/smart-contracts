@@ -1,4 +1,5 @@
 const PoaToken = artifacts.require('PoaToken')
+const PoaManager = artifacts.require('PoaManager')
 const {
   owner,
   broker,
@@ -25,14 +26,17 @@ describe('when initializing PoaToken', () => {
     let exr
     let exp
     let poa
+    let pmr
 
     beforeEach('setup contracts', async () => {
       const contracts = await setupEcosystem()
-      poa = await PoaToken.new()
 
       reg = contracts.reg
       exr = contracts.exr
       exp = contracts.exp
+
+      pmr = await PoaManager.new(reg.address)
+      poa = await PoaToken.new()
 
       // we change the PoaManager to owner address in registry in order to "trick"
       // the only owner function so that testing is easier
@@ -40,12 +44,13 @@ describe('when initializing PoaToken', () => {
     })
 
     it('should start with the right values', async () => {
-      await testInitialization(exr, exp, reg)
+      await testInitialization(exr, exp, reg, pmr)
     })
 
     it('should NOT setup more than once', async () => {
-      const setupPoa = await testInitialization(exr, exp, reg)
-      await testWillThrow(setupPoa.setupContract, [
+      const setupPoa = await testInitialization(exr, exp, reg, pmr)
+      await testWillThrow(pmr.setupPoaToken, [
+        setupPoa.address,
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -60,7 +65,8 @@ describe('when initializing PoaToken', () => {
     })
 
     it('should NOT initialize with a NON ready fiatRate', async () => {
-      await testWillThrow(poa.setupContract, [
+      await testWillThrow(pmr.setupPoaToken, [
+        poa.address,
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -86,7 +92,8 @@ describe('when initializing PoaToken', () => {
         }
       )
 
-      await testWillThrow(poa.setupContract, [
+      await testWillThrow(pmr.setupPoaToken, [
+        poa.address,
         'is',
         defaultSymbol,
         defaultFiatCurrency,
@@ -112,7 +119,8 @@ describe('when initializing PoaToken', () => {
         }
       )
 
-      await testWillThrow(poa.setupContract, [
+      await testWillThrow(pmr.setupPoaToken, [
+        poa.address,
         defaultName,
         'US',
         defaultFiatCurrency,
@@ -138,7 +146,8 @@ describe('when initializing PoaToken', () => {
         }
       )
 
-      await testWillThrow(poa.setupContract, [
+      await testWillThrow(pmr.setupPoaToken, [
+        poa.address,
         defaultName,
         defaultSymbol,
         'US',
@@ -164,7 +173,8 @@ describe('when initializing PoaToken', () => {
         }
       )
 
-      await testWillThrow(poa.setupContract, [
+      await testWillThrow(pmr.setupPoaToken, [
+        poa.address,
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -177,7 +187,8 @@ describe('when initializing PoaToken', () => {
         defaultFundingGoal
       ])
 
-      await testWillThrow(poa.setupContract, [
+      await testWillThrow(pmr.setupPoaToken, [
+        poa.address,
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -203,7 +214,8 @@ describe('when initializing PoaToken', () => {
         }
       )
 
-      await testWillThrow(poa.setupContract, [
+      await testWillThrow(pmr.setupPoaToken, [
+        poa.address,
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -216,7 +228,8 @@ describe('when initializing PoaToken', () => {
         defaultFundingGoal
       ])
 
-      await testWillThrow(poa.setupContract, [
+      await testWillThrow(pmr.setupPoaToken, [
+        poa.address,
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -242,7 +255,8 @@ describe('when initializing PoaToken', () => {
         }
       )
 
-      await testWillThrow(poa.setupContract, [
+      await testWillThrow(pmr.setupPoaToken, [
+        poa.address,
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -255,7 +269,8 @@ describe('when initializing PoaToken', () => {
         defaultFundingGoal
       ])
 
-      await testWillThrow(poa.setupContract, [
+      await testWillThrow(pmr.setupPoaToken, [
+        poa.address,
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -281,7 +296,8 @@ describe('when initializing PoaToken', () => {
         }
       )
 
-      await testWillThrow(poa.setupContract, [
+      await testWillThrow(pmr.setupPoaToken, [
+        poa.address,
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -308,7 +324,8 @@ describe('when initializing PoaToken', () => {
         }
       )
 
-      await testWillThrow(poa.setupContract, [
+      await testWillThrow(pmr.setupPoaToken, [
+        poa.address,
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -338,7 +355,8 @@ describe('when initializing PoaToken', () => {
         }
       )
 
-      await testWillThrow(poa.setupContract, [
+      await testWillThrow(pmr.setupPoaToken, [
+        poa.address,
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
@@ -373,7 +391,8 @@ describe('when initializing PoaToken', () => {
         }
       )
 
-      await testWillThrow(poa.setupContract, [
+      await testWillThrow(pmr.setupPoaToken, [
+        poa.address,
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,

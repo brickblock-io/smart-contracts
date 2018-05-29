@@ -410,7 +410,7 @@ const testReclaimEvents = async () => {
   const LoggerStageEvent = log.StageEvent()
   const StageEvent = poa.StageEvent()
   const LoggerReclaimEvent = log.ReclaimEvent()
-  const ReclaimEvent = log.ReclaimEvent()
+  const ReclaimEvent = poa.ReclaimEvent()
 
   await testReclaim(poa, { from }, true)
 

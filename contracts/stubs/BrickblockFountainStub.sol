@@ -1,5 +1,5 @@
 // THIS IS EXAMPLE CODE ONLY AND THE FUNCTIONS MOST LIKELY WILL CHANGE
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
 import "../BrickblockToken.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
@@ -25,7 +25,9 @@ contract BrickblockFountainStub is Ownable {
   event CompanyTokensReleased(address _owner, uint256 _tokenAmount);
   event Placeholder(address _address, uint256 _value);
 
-  function BrickblockFountainStub(address _brickBlockTokenAddress)
+  constructor(
+    address _brickBlockTokenAddress
+  )
     public
   {
     require(_brickBlockTokenAddress != address(0));

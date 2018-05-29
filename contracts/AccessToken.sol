@@ -1,63 +1,58 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
 import "openzeppelin-solidity/contracts/token/ERC20/PausableToken.sol";
-import "./interfaces/BrickblockContractRegistryInterface.sol";
-import "./interfaces/BrickblockTokenInterface.sol";
+import "./interfaces/IRegistry.sol";
+import "./interfaces/IBrickblockToken.sol";
 
 
-contract BrickblockAccessToken is PausableToken {
+/*
+  glossary:
+    dividendParadigm: the way of handling dividends, and the per token data structures
+      * totalLockedBBK * (totalMintedPerToken - distributedPerBBK) / 1e18
+      * this is the typical way of handling dividends.
+      * per token data structures are stored * 1e18 (for more accuracy)
+      * this works fine until BBK is locked or unlocked.
+        * need to still know the amount they HAD locked before a change.
+        * securedFundsParadigm solves this (read below)
+      * when BBK is locked or unlocked, current funds for the relevant
+        account are bumped to a new paradigm for balance tracking.
+      * when bumped to new paradigm, dividendParadigm is essentially zeroed out
+        by setting distributedPerBBK to totalMintedPerToken
+          * (100 * (100 - 100) === 0)
+      * all minting activity related balance increments are tracked through this
 
-  /*
-    glossary:
-      dividendParadigm: the way of handling dividends, and the per token data structures
-        * totalLockedBBK * (totalMintedPerToken - distributedPerBBK) / 1e18
-        * this is the typical way of handling dividends.
-        * per token data structures are stored * 1e18 (for more accuracy)
-        * this works fine until BBK is locked or unlocked.
-          * need to still know the amount they HAD locked before a change.
-          * securedFundsParadigm solves this (read below)
-        * when BBK is locked or unlocked, current funds for the relevant
-          account are bumped to a new paradigm for balance tracking.
-        * when bumped to new paradigm, dividendParadigm is essentially zeroed out
-          by setting distributedPerBBK to totalMintedPerToken
-            * (100 * (100 - 100) === 0)
-        * all minting activity related balance increments are tracked through this
+    securedFundsParadigm: funds that are bumped out of dividends during lock / unlock
+      * securedTokenDistributions (mapping)
+      * needed in order to track ACT balance after lock/unlockBBK
+      * tracks funds that have been bumped from dividendParadigm
+      * works as a regular balance (not per token)
 
-      TODO: clarify this phrase somehow
-      securedFundsParadigm: the funds that are bumped dividends out during lock / unlock
-        * securedTokenDistributions (mapping)
-        * needed in order to track ACT balance after lock/unlockBBK
-        * tracks funds that have been bumped from dividendParadigm
-        * works as a regular balance (not per token)
+    doubleEntryParadigm: taking care of transfer and transferFroms
+      * receivedBalances[adr] - spentBalances[adr]
+      * needed in order to track correct balance after transfer/transferFrom
+      * receivedBalances used to increment any transfers to an account
+        * increments balanceOf
+        * needed to accurately track balanceOf after transfers and transferFroms
+      * spentBalances
+        * decrements balanceOf
+        * needed to accurately track balanceOf after transfers and transferFroms
 
-      doubleEntryParadigm: taking care of transfer and transferFroms
-        * receivedBalances[adr] - spentBalances[adr]
-        * needed in order to track correct balance after transfer/transferFrom
-        * receivedBalances used to increment any transfers to an account
-          * increments balanceOf
-          * needed to accurately track balanceOf after transfers and transferFroms
-        * spentBalances
-          * decrements balanceOf
-          * needed to accurately track balanceOf after transfers and transferFroms
-
-      dividendParadigm, securedFundsParadigm, doubleEntryParadigm combined
-        * when all combined, should correctly:
-          * show balance using balanceOf
-            * balances is set to private (cannot guarantee accuracy of this)
-            * balances not updated to correct values unless a
-              transfer/transferFrom happens
-        * dividendParadigm + securedFundsParadigm + doubleEntryParadigm
-          * totalLockedBBK * (totalMintedPerToken - distributedPerBBK[adr]) / 1e18
-            + securedTokenDistributions[adr]
-            + receivedBalances[adr] - spentBalances[adr]
-  */
-
-  // instance of registry contract to get contract addresses
-
+    dividendParadigm, securedFundsParadigm, doubleEntryParadigm combined
+      * when all combined, should correctly:
+        * show balance using balanceOf
+          * balances is set to private (cannot guarantee accuracy of this)
+          * balances not updated to correct values unless a
+            transfer/transferFrom happens
+      * dividendParadigm + securedFundsParadigm + doubleEntryParadigm
+        * totalLockedBBK * (totalMintedPerToken - distributedPerBBK[adr]) / 1e18
+          + securedTokenDistributions[adr]
+          + receivedBalances[adr] - spentBalances[adr]
+*/
+contract AccessToken is PausableToken {
   uint8 public constant version = 1;
-
-  RegistryInterface private registry;
-  string public constant name = "BrickblockAccessToken";
+  // instance of registry contract to get contract addresses
+  IRegistry private registry;
+  string public constant name = "AccessToken";
   string public constant symbol = "ACT";
   uint8 public constant decimals = 18;
 
@@ -103,7 +98,7 @@ contract BrickblockAccessToken is PausableToken {
     public
   {
     require(_registryAddress != address(0));
-    registry = RegistryInterface(_registryAddress);
+    registry = IRegistry(_registryAddress);
   }
 
   // check an address for amount of currently locked BBK
@@ -127,7 +122,7 @@ contract BrickblockAccessToken is PausableToken {
     external
     returns (bool)
   {
-    BrickblockTokenInterface _bbk = BrickblockTokenInterface(
+    IBrickblockToken _bbk = IBrickblockToken(
       registry.getContractAddress("BrickblockToken")
     );
 
@@ -147,7 +142,7 @@ contract BrickblockAccessToken is PausableToken {
     external
     returns (bool)
   {
-    BrickblockTokenInterface _bbk = BrickblockTokenInterface(
+    IBrickblockToken _bbk = IBrickblockToken(
       registry.getContractAddress("BrickblockToken")
     );
     require(_amount <= lockedBBK[msg.sender]);
@@ -202,7 +197,9 @@ contract BrickblockAccessToken is PausableToken {
     return true;
   }
 
+  //
   // start ERC20 overrides
+  //
 
   // combines dividendParadigm, securedFundsParadigm, and doubleEntryParadigm
   // in order to give a correct balance
@@ -224,22 +221,6 @@ contract BrickblockAccessToken is PausableToken {
       .sub(spentBalances[_address]);
   }
 
-  // used to set balances[adr] to correct value
-  // balances is not really used anywhere... might be best to just let them be
-  // inaccurate?
-  // this at least keeps them accurate when a transfer happens. Is not accurate
-  // after a distribution or transfer... this is why balanceOf is used and
-  // balances[adr] is private
-  function injectCustomBalances(
-    address _address,
-    address  _address2
-  )
-    private
-  {
-    balances[_address] = balanceOf(_address);
-    balances[_address2] = balanceOf(_address2);
-  }
-
   // does the same thing as ERC20 transfer but...
   // uses balanceOf rather than balances[adr] (balances is inaccurate see above)
   // sets correct values for doubleEntryParadigm (see glossary)
@@ -255,7 +236,6 @@ contract BrickblockAccessToken is PausableToken {
     require(_value <= balanceOf(msg.sender));
     spentBalances[msg.sender] = spentBalances[msg.sender].add(_value);
     receivedBalances[_to] = receivedBalances[_to].add(_value);
-    injectCustomBalances(msg.sender, _to);
     emit Transfer(msg.sender, _to, _value);
     return true;
   }
@@ -278,12 +258,13 @@ contract BrickblockAccessToken is PausableToken {
     spentBalances[_from] = spentBalances[_from].add(_value);
     receivedBalances[_to] = receivedBalances[_to].add(_value);
     allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
-    injectCustomBalances(_from, _to);
     emit Transfer(_from, _to, _value);
     return true;
   }
 
+  //
   // end ERC20 overrides
+  //
 
   // callable only by FeeManager contract
   // burns tokens through incrementing spentBalances[adr] and decrements totalSupply
@@ -303,4 +284,11 @@ contract BrickblockAccessToken is PausableToken {
     return true;
   }
 
+  // prevent anyone from sending funds other than selfdestructs of course :)
+  function()
+    public
+    payable
+  {
+    revert();
+  }
 }

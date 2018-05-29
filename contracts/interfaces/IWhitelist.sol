@@ -1,6 +1,6 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
-interface WhitelistInterface {
+interface IWhitelist {
   function whitelisted(address _address)
     external
     returns (bool);

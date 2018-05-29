@@ -1,15 +1,15 @@
-const BrickblockWhitelist = artifacts.require('./BrickblockWhitelist.sol')
+const Whitelist = artifacts.require('./Whitelist.sol')
 
 const { testWillThrow } = require('../helpers/general')
 
 describe('when deployed', () => {
-  contract('BrickblockWhitelist', accounts => {
+  contract('Whitelist', accounts => {
     const ownerAddress = accounts[0]
     const investor1Address = accounts[1]
     let wht
 
     before('setup contract and relevant accounts', async () => {
-      wht = await BrickblockWhitelist.new()
+      wht = await Whitelist.new()
     })
 
     it('should have the owner set to contract creator', async () => {

@@ -287,8 +287,6 @@ const checkPostActiveStorage = async (poa, reg) => {
 
 const checkPostIsUpgradedStorage = async (poa, reg) => {
   const storage = await getAllSimpleStorage(poa.address)
-  // eslint-disable-next-line no-console
-  console.log(storage)
   const balances = storage[0].data
   const totalSupply = new BigNumber(storage[1].data)
   const allowance = storage[2].data

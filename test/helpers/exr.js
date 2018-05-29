@@ -4,7 +4,7 @@ const ExchangeRates = artifacts.require('ExchangeRates')
 const ExchangeRateProvider = artifacts.require(
   './stubs/ExchangeRateProviderStub'
 )
-const Registry = artifacts.require('BrickblockContractRegistry')
+const Registry = artifacts.require('ContractRegistry')
 const { sendTransaction, getEtherBalance, getGasUsed } = require('./general')
 
 const trimBytes = string => string.replace(/\0/g, '')
@@ -223,25 +223,6 @@ const testToggleRatesActive = async (exr, shouldBeActive, config) => {
   }
 
   assert(preRatesActive != postRatesActive, 'preRatesActive should be toggled')
-}
-
-const testToggleClearRateIntervals = async (exr, shouldClear, config) => {
-  const preShouldClearIntervals = await exr.shouldClearRateIntervals()
-
-  await exr.toggleClearRateIntervals(config)
-
-  const postShouldClearIntervals = await exr.shouldClearRateIntervals()
-
-  if (shouldClear) {
-    assert(shouldClear, 'shouldClearRateIntervals should be true')
-  } else {
-    assert(!shouldClear, 'shouldClearRateIntervals should NOT be true')
-  }
-
-  assert(
-    preShouldClearIntervals != postShouldClearIntervals,
-    'preShouldClearIntervals should be toggled'
-  )
 }
 
 const testToUpperCase = async (exr, stringInput) => {
@@ -546,7 +527,6 @@ module.exports = {
   testToBytes32Array,
   testSelfDestruct,
   testGetRate,
-  testToggleClearRateIntervals,
   testSetRateClearIntervals,
   testSetQueryId,
   testSetRateRatesActiveFalse,

@@ -11,8 +11,6 @@ const {
   testToUpperCase,
   testSelfDestruct,
   testGetRate,
-  testToggleClearRateIntervals,
-  testSetRateClearIntervals,
   testSetQueryId,
   testSetRateRatesActiveFalse,
   testUpdatedCurrencySettings,
@@ -93,18 +91,6 @@ describe('when performing owner only functions', () => {
 
     it('should NOT toggle rates when NOT owner', async () => {
       await testWillThrow(testToggleRatesActive, [
-        exr,
-        true,
-        { from: notOwner }
-      ])
-    })
-
-    it('should toggle clear rate intervals when owner', async () => {
-      await testToggleClearRateIntervals(exr, true, { from: owner })
-    })
-
-    it('should NOT toggle clear rate intervals when NOT owner', async () => {
-      await testWillThrow(testToggleClearRateIntervals, [
         exr,
         true,
         { from: notOwner }
@@ -266,7 +252,7 @@ describe('when testing events', async () => {
   })
 })
 
-describe('when setting rate settings, fetching, and clearing intervals', async () => {
+describe('when setting rate settings and fetching', async () => {
   contract('ExchangeRates/ExchangeRatesProviderStub', accounts => {
     const owner = accounts[0]
     const callInterval = new BigNumber(60)
@@ -303,25 +289,6 @@ describe('when setting rate settings, fetching, and clearing intervals', async (
     it('should get the correct rate', async () => {
       await testGetRate(exr, defaultRate, queryType)
       defaultRate++
-    })
-
-    it('should toggle clearRateIntervals', async () => {
-      await testToggleClearRateIntervals(exr, true, { from: owner })
-    })
-
-    it('should simulate a recurisve call where clearRateIntervals is true', async () => {
-      await testSetQueryId(exr, exp, queryType)
-      await testSetRate(exr, exp, defaultRate, true)
-    })
-
-    it('should get the correct rate', async () => {
-      await testGetRate(exr, defaultRate, queryType)
-      defaultRate++
-    })
-
-    it('should simulate recursive callback where clearRateIntervals is true', async () => {
-      await testSetQueryId(exr, exp, queryType)
-      await testSetRateClearIntervals(exr, exp, defaultRate)
     })
   })
 })

@@ -1,10 +1,8 @@
 const WarpTool = artifacts.require('tools/WarpTool')
-const BrickblockContractRegistry = artifacts.require(
-  'BrickblockContractRegistry'
-)
-const BrickblockWhitelist = artifacts.require('BrickblockWhitelist')
-const BrickblockFeeManager = artifacts.require('BrickblockFeeManager')
-const BrickblockAccessToken = artifacts.require('BrickblockAccessToken')
+const ContractRegistry = artifacts.require('ContractRegistry')
+const Whitelist = artifacts.require('Whitelist')
+const FeeManager = artifacts.require('FeeManager')
+const AccessToken = artifacts.require('AccessToken')
 const BrickblockToken = artifacts.require('BrickblockToken')
 const BrickblockAccount = artifacts.require('BrickblockAccount')
 
@@ -40,10 +38,10 @@ const timeTravel = async seconds => {
 }
 
 const setupRegistry = async () => {
-  const reg = await BrickblockContractRegistry.new()
-  const wht = await BrickblockWhitelist.new()
-  const fmr = await BrickblockFeeManager.new(reg.address)
-  const act = await BrickblockAccessToken.new(reg.address)
+  const reg = await ContractRegistry.new()
+  const wht = await Whitelist.new()
+  const fmr = await FeeManager.new(reg.address)
+  const act = await AccessToken.new(reg.address)
   const bbk = await BrickblockToken.new(web3.eth.accounts[0])
   const bat = await BrickblockAccount.new(reg.address, 1000)
   await reg.updateContractAddress('Whitelist', wht.address)
@@ -86,7 +84,7 @@ const lockAllBbk = async reg => {
   const bbkAddress = await reg.getContractAddress('BrickblockToken')
   const actAddress = await reg.getContractAddress('AccessToken')
   const bbk = BrickblockToken.at(bbkAddress)
-  const act = BrickblockAccessToken.at(actAddress)
+  const act = AccessToken.at(actAddress)
   const accounts = web3.eth.accounts
   for (const account of accounts) {
     const balance = await bbk.balanceOf(account)

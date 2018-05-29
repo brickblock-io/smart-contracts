@@ -1,6 +1,6 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
-interface PoaTokenInterface {
+interface IPoaToken {
   function setupContract
   (
     string _name,
@@ -35,4 +35,8 @@ interface PoaTokenInterface {
     external
     view
     returns (string);
+  
+  function toggleWhitelistTransfers()
+    external
+    returns (bool);
 }

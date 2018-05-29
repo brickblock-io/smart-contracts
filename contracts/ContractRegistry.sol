@@ -1,13 +1,13 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
-contract BrickblockContractRegistry is Ownable {
+contract ContractRegistry is Ownable {
 
   uint8 public constant version = 1;
   address public owner;
-  mapping (bytes32 => address) contractAddresses;
+  mapping (bytes32 => address) private contractAddresses;
 
   event UpdateContractEvent(string name, address indexed contractAddress);
 
@@ -16,7 +16,7 @@ contract BrickblockContractRegistry is Ownable {
     onlyOwner
     returns (address)
   {
-    contractAddresses[stringToBytes32(_name)] = _address;
+    contractAddresses[keccak256(_name)] = _address;
     emit UpdateContractEvent(_name, _address);
   }
 
@@ -25,8 +25,8 @@ contract BrickblockContractRegistry is Ownable {
     view
     returns (address)
   {
-    require(contractAddresses[stringToBytes32(_name)] != address(0));
-    return contractAddresses[stringToBytes32(_name)];
+    require(contractAddresses[keccak256(_name)] != address(0));
+    return contractAddresses[keccak256(_name)];
   }
 
   function getContractAddress32(bytes32 _name32)
@@ -38,13 +38,11 @@ contract BrickblockContractRegistry is Ownable {
     return contractAddresses[_name32];
   }
 
-  function stringToBytes32(string _string)
+  // prevent anyone from sending funds other than selfdestructs of course :)
+  function()
     public
-    pure
-    returns (bytes32 _bytes32)
+    payable
   {
-    assembly {
-      _bytes32 := mload(add(_string, 0x20))
-    }
+    revert();
   }
 }

@@ -1,6 +1,6 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
-interface FeeManagerInterface {
+interface IFeeManager {
   function claimFee(
     uint256 _value
   )

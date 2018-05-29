@@ -40,13 +40,14 @@
     "seed:ropsten": "cross-env NODE_PATH=build NODE_ENV=development node scripts/seed.ropsten.js",
     "---SECTION:TEST---": "-------------------- HOW TO TEST THE SMART CONTRACTS --------------------",
     "test": "yarn run build && yarn test:run-suite",
-    "test:run-suite": "truffle test test/main-tests/**/* && truffle test test/main-tests/* && truffle test test/unit-tests/*",
+    "test:run-suite": "truffle test test/main-tests/**/* && truffle test test/main-tests/*",
     "test:stress-test": "truffle test test/stress-tests/*",
     "test:frozen": "node scripts/test-frozen.js",
     "test:coverage:comment": "Because solidity-coverage is still experimental we won't fail CI if it fails for now",
     "test:coverage": "( yarn solidity-coverage || true ) && open coverage/contracts/index.html",
     "test:mythril:comment": "ConsenSys' security vulnerability scanner for smart contracts",
     "test:mythril": "yarn truffle compile && myth --truffle",
+    "test:exr-gas": "yarn truffle test test/misc/ExchangeRateGasCosts.js",
     "---SECTION:LINT---": "-------------------- HOW TO LINT --------------------",
     "lint": "yarn lint:sol && yarn lint:js",
     "lint:sol": "solium --dir ./contracts",
@@ -110,9 +111,7 @@
     "table": "^4.0.3",
     "truffle": "4.1.8",
     "truffle-contract": "^3.0.1",
-    "web3": "^0.18.4"
-  },
-  "dependencies": {
-    "solc": "^0.4.24"
+    "web3": "^0.18.4",
+    "solc": "0.4.23"
   }
 }

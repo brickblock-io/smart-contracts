@@ -1,10 +1,10 @@
 const assert = require('assert')
 const BigNumber = require('bignumber.js')
 const { finalizedBBK } = require('./bbk')
-const ContractRegistry = artifacts.require('./BrickblockContractRegistry')
-const AccessToken = artifacts.require('./BrickblockAccessToken')
+const ContractRegistry = artifacts.require('./ContractRegistry')
+const AccessToken = artifacts.require('./AccessToken')
 const ExchangeRates = artifacts.require('./ExchangeRates')
-const FeeManager = artifacts.require('./BrickblockFeeManager')
+const FeeManager = artifacts.require('./FeeManager')
 const BrickblockAccount = artifacts.require('./BrickblockAccount')
 
 const { getEtherBalance, gasPrice, getReceipt } = require('./general')

@@ -1,17 +1,17 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./interfaces/BrickblockAccessTokenInterface.sol";
-import "./interfaces/BrickblockContractRegistryInterface.sol";
-import "./interfaces/ExchangeRatesInterface.sol";
+import "./interfaces/IAccessToken.sol";
+import "./interfaces/IRegistry.sol";
+import "./interfaces/IExchangeRates.sol";
 
 
-contract BrickblockFeeManager {
-
+contract FeeManager {
   using SafeMath for uint256;
+
   uint8 public constant version = 1;
 
-  RegistryInterface private registry;
+  IRegistry private registry;
 
   constructor(
     address _registryAddress
@@ -19,7 +19,7 @@ contract BrickblockFeeManager {
     public
   {
     require(_registryAddress != address(0));
-    registry = RegistryInterface(_registryAddress);
+    registry = IRegistry(_registryAddress);
   }
 
   function weiToAct(uint256 _wei)
@@ -27,7 +27,7 @@ contract BrickblockFeeManager {
     public
     returns (uint256)
   {
-    ExchangeRatesInterface exr = ExchangeRatesInterface(
+    IExchangeRates exr = IExchangeRates(
       registry.getContractAddress("ExchangeRates")
     );
     uint256 _rate = exr.getRate("ACT");
@@ -39,7 +39,7 @@ contract BrickblockFeeManager {
     public
     returns (uint256)
   {
-    ExchangeRatesInterface exr = ExchangeRatesInterface(
+    IExchangeRates exr = IExchangeRates(
       registry.getContractAddress("ExchangeRates")
     );
     uint256 _rate = exr.getRate("ACT");
@@ -51,7 +51,7 @@ contract BrickblockFeeManager {
     payable
     returns (bool)
   {
-    AccessTokenInterface act = AccessTokenInterface(
+    IAccessToken act = IAccessToken(
       registry.getContractAddress("AccessToken")
     );
     require(act.distribute(weiToAct(msg.value)));
@@ -64,7 +64,7 @@ contract BrickblockFeeManager {
     public
     returns (bool)
   {
-    AccessTokenInterface act = AccessTokenInterface(
+    IAccessToken act = IAccessToken(
       registry.getContractAddress("AccessToken")
     );
     require(act.burn(msg.sender, _value));
@@ -72,6 +72,7 @@ contract BrickblockFeeManager {
     return true;
   }
 
+  // prevent anyone from sending funds other than selfdestructs of course :)
   function()
     public
     payable

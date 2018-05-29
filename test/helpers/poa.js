@@ -1,13 +1,12 @@
-const AccessToken = artifacts.require('BrickblockAccessToken')
-const ContractRegistry = artifacts.require('BrickblockContractRegistry')
+const AccessToken = artifacts.require('AccessToken')
+const ContractRegistry = artifacts.require('ContractRegistry')
 const ExchangeRateProvider = artifacts.require('ExchangeRateProviderStub')
 const ExchangeRates = artifacts.require('ExchangeRates')
-const FeeManager = artifacts.require('BrickblockFeeManager')
-const Logger = artifacts.require('BrickblockLogger')
+const FeeManager = artifacts.require('FeeManager')
+const Logger = artifacts.require('CentralLogger')
 const PoaManager = artifacts.require('PoaManager')
-const PoaManagerStub = artifacts.require('PoaManagerStub')
 const PoaToken = artifacts.require('PoaToken')
-const Whitelist = artifacts.require('BrickblockWhitelist')
+const Whitelist = artifacts.require('Whitelist')
 
 const assert = require('assert')
 const {
@@ -374,7 +373,7 @@ const testProxyInitialization = async (reg, pmr, args) => {
   return poa
 }
 
-const testInitialization = async (exr, exp, reg) => {
+const testInitialization = async (exr, exp, reg, pmr) => {
   await testSetCurrencyRate(exr, exp, defaultFiatCurrency, defaultFiatRate, {
     from: owner,
     value: 1e18
@@ -382,14 +381,11 @@ const testInitialization = async (exr, exp, reg) => {
 
   const defaultStartTime = await getDefaultStartTime()
 
-  // poa needs registry returned from creating contract
-  // this stub allows for that without having to deploy through proxy
-  const pmrs = await PoaManagerStub.new(reg.address)
-  reg.updateContractAddress('PoaManager', pmrs.address)
-
   const poa = await PoaToken.new()
 
-  await pmrs.setupPoaToken(
+  await reg.updateContractAddress('PoaManager', pmr.address)
+
+  await pmr.setupPoaToken(
     poa.address,
     defaultName,
     defaultSymbol,
@@ -501,11 +497,7 @@ const testInitialization = async (exr, exp, reg) => {
     registry,
     'registry should match actual registry address'
   )
-  assert.equal(
-    contractOwner,
-    pmrs.address,
-    'the owner should be PoaManagerStub'
-  )
+  assert.equal(contractOwner, pmr.address, 'the owner should be PoaManagerStub')
   assert(paused, 'contract should start paused')
   assert(
     !whitelistTransfers,

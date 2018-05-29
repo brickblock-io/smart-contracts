@@ -1,7 +1,7 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
 // limited BrickblockToken definition
-interface BrickblockTokenInterface {
+interface IBrickblockToken {
   function transfer(
     address _to,
     uint256 _value

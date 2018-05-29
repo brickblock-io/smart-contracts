@@ -80,7 +80,7 @@ HDWALLET_PATH=/path/to/your/MetaMask\ Seed\ Words yarn migrate:ropsten
 These are the smart contracts which will power the Ethereum side of our platform. The following are included:
 
 1. BrickblockToken
-1. BrickblockAccessToken
+1. AccessToken
 1. BrickblockFountain
 1. Brickblock
 1. POAToken
@@ -98,18 +98,18 @@ BrickblockToken is an ERC20 Token with added features enabling the Brickblock co
 * be tradable on exchanges
 * be upgradeable
 
-Company tokens are locked in by assigning the value to the contract itself. The owner never starts with any token balance. This way there is no way to move the tokens without predetermined functions. The tokens are approved to be locked into the `BrickblockAccessToken` contract when `finalizeTokenSale` is called. Once when the tokens are locked into the `BrickblockAccessToken`, there will be no way to move them until November 30, 2020.
+Company tokens are locked in by assigning the value to the contract itself. The owner never starts with any token balance. This way there is no way to move the tokens without predetermined functions. The tokens are approved to be locked into the `AccessToken` contract when `finalizeTokenSale` is called. Once when the tokens are locked into the `AccessToken`, there will be no way to move them until November 30, 2020.
 
-The `BrickblockAccessToken` contract will later be called to lock the company funds into the fountain. See below for more details.
+The `AccessToken` contract will later be called to lock the company funds into the fountain. See below for more details.
 
-## BrickblockAccessToken
-`BrickblockAccessToken` allows for `BrickblockToken` holders to lock in their BBK in order to receive ACT whenever a fee is paid on the Brickblock network. When a fee is paid (as Ethereum), the contract gets the ACT-ETH rate from `ExchangeRates` contract and produces new `AccessTokens` by the given Eth value according to the rate. Users who have locked in their BBK receive an ACT reward  proportional to their locked tokens relative to the entire locked BBK balance of the contract.
+## AccessToken
+`AccessToken` allows for `BrickblockToken` holders to lock in their BBK in order to receive ACT whenever a fee is paid on the Brickblock network. When a fee is paid (as Ethereum), the contract gets the ACT-ETH rate from `ExchangeRates` contract and produces new `AccessTokens` by the given Eth value according to the rate. Users who have locked in their BBK receive an ACT reward  proportional to their locked tokens relative to the entire locked BBK balance of the contract.
 
-`BrickblockAccessToken` is an ERC20 compliant token contract.
+`AccessToken` is an ERC20 compliant token contract.
 
-## BrickblockFeeManager
+## FeeManager
 
-`BrickblockFeeManager` allows for other smart contracts or accounts to pay a fee to the contract. When a fee is paid, ACT (BrickblockAccessTokens) are created and given proportionally to lockedBBK holders.
+`FeeManager` allows for other smart contracts or accounts to pay a fee to the contract. When a fee is paid, ACT (AccessTokens) are created and given proportionally to lockedBBK holders.
 
 Owners of ACT can claim Ether by running `claimFee`. When claiming, ACT is burnt in return for Ether.
 
@@ -136,10 +136,10 @@ function withdrawBbkFunds(
 
 The rest of this functionality allows Brickblock to interact with the ecosystem as any other participant.
 
-## BrickblockContractRegistry
+## ContractRegistry
 This contract allows for the communication between other smart contracts in our ecosystem. Contracts can be registered via `updateContractAddress()` function.
 
-## BrickblockWhitelist
+## Whitelist
 
 This contract stores whitelisted addresses. This will allow users to buy POA tokens after being whitelisted.
 
