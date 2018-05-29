@@ -4,7 +4,7 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./interfaces/IRegistry.sol";
 import "./interfaces/IPoaToken.sol";
-import "./Proxy.sol";
+import "./PoaProxy.sol";
 
 
 contract PoaManager is Ownable {
@@ -205,7 +205,7 @@ contract PoaManager is Ownable {
     private
     returns (address _proxyContract)
   {
-    _proxyContract = new Proxy(_target, address(registry));
+    _proxyContract = new PoaProxy(_target, address(registry));
   }
 
   // Create a PoaToken contract with given parameters, and set active value to true
@@ -374,7 +374,7 @@ contract PoaManager is Ownable {
     onlyOwner
     returns (bool)
   {
-    Proxy(_proxyTokenAddress).proxyChangeMaster(_masterUpgrade);
+    PoaProxy(_proxyTokenAddress).proxyChangeMaster(_masterUpgrade);
   }
 
   // toggle whitelisting required on transfer & transferFrom for a token

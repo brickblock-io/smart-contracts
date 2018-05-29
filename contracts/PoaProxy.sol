@@ -1,7 +1,7 @@
 pragma solidity 0.4.23;
 
 
-contract Proxy {
+contract PoaProxy {
   uint8 public constant version = 1;
   bytes32 public constant masterContractSlot = keccak256("masterAddress");
   bytes32 public constant proxyRegistrySlot = keccak256("registry");

@@ -1,5 +1,4 @@
 const PoaToken = artifacts.require('PoaToken')
-const Proxy = artifacts.require('Proxy')
 const BigNumber = require('bignumber.js')
 const {
   owner,
@@ -7,7 +6,6 @@ const {
   setupPoaProxyAndEcosystem,
   testProxyUnchanged
 } = require('../../helpers/poa')
-const { getAllSimpleStorage } = require('../../helpers/storage')
 const { addToken } = require('../../helpers/pmr')
 
 describe('when using PoaToken as a master for proxies', () => {

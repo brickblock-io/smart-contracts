@@ -212,7 +212,7 @@ const setupPoaProxyAndEcosystem = async () => {
   // add broker to allow for adding a new token from PoaManager
   await pmr.addBroker(broker)
 
-  // Poa Proxy contract
+  // Poa PoaProxy contract
   const poaTx = await pmr.addToken(
     defaultName,
     defaultSymbol,
@@ -260,7 +260,7 @@ const testProxyInitialization = async (reg, pmr, args) => {
 
   const defaultStartTime = await getDefaultStartTime()
 
-  // Poa Proxy contract tx
+  // Poa PoaProxy contract tx
   const poaTx = await pmr.addToken.apply(null, args)
 
   // wrap the proxied PoA in PoaToken ABI to call as if regular PoA

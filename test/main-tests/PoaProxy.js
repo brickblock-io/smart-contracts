@@ -1,5 +1,5 @@
 const assert = require('assert')
-const Proxy = artifacts.require('Proxy')
+const PoaProxy = artifacts.require('PoaProxy')
 const PoaToken = artifacts.require('PoaToken')
 const UpgradedPoa = artifacts.require('UpgradedPoa')
 const { testWillThrow } = require('../helpers/general')
@@ -17,8 +17,8 @@ const {
   setupPoaAndEcosystem
 } = require('../helpers/poa')
 
-describe('when using Proxy contract to proxy a PoaToken', () => {
-  contract('Proxy/PoaToken', accounts => {
+describe('when using PoaProxy contract to proxy a PoaToken', () => {
+  contract('PoaProxy/PoaToken', accounts => {
     let poam
     let upoam
     let pmr
@@ -35,7 +35,7 @@ describe('when using Proxy contract to proxy a PoaToken', () => {
       fmr = contracts.fmr
       poam = await PoaToken.new()
       upoam = await UpgradedPoa.new()
-      pxy = await Proxy.new(poam.address, reg.address)
+      pxy = await PoaProxy.new(poam.address, reg.address)
       poa = await PoaToken.at(pxy.address)
       assert.equal(
         poa.address,
