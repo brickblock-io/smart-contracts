@@ -367,7 +367,7 @@ contract PoaManager is Ownable {
   }
 
   function upgradeToken(
-    address _proxyTokenAddress, 
+    address _proxyTokenAddress,
     address _masterUpgrade
   )
     public

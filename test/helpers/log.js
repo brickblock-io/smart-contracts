@@ -64,6 +64,7 @@ const testPreFundingToFundingEvent = async (poa, reg, pmr, log) => {
   )
   checkLoggerEventsEqualsPoaEvents(triggeredLoggerEvent, triggeredEvent)
 }
+
 const testBuyTokensEvents = async (poa, reg, pmr, log) => {
   const from = whitelistedPoaBuyers[0]
   const value = new BigNumber(1e18)

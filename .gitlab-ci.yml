@@ -30,12 +30,23 @@ lint:
   script:
     - yarn lint
 
-# test:
-#   stage: test
-#   cache:
-#     policy: pull
-#   script:
-#     - yarn test
+test:
+  stage: test
+  cache:
+    policy: pull
+  script:
+    - cp .env.example .env
+    - yarn test:ci
+
+test-poa-proxy:
+  stage: test
+  cache:
+    policy: pull
+  only:
+    - master
+  script:
+    - cp .env.example .env
+    - yarn test:ci:poa-proxy
 
 # test-frozen:
 #   stage: test
