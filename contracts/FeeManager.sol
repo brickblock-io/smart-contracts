@@ -3,13 +3,13 @@ pragma solidity 0.4.23;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./interfaces/IAccessToken.sol";
 import "./interfaces/IRegistry.sol";
-import "./interfaces/IExchangeRates.sol";
 
 
 contract FeeManager {
   using SafeMath for uint256;
 
   uint8 public constant version = 1;
+  uint256 actRate = 1000;
 
   IRegistry private registry;
 
@@ -27,11 +27,8 @@ contract FeeManager {
     public
     returns (uint256)
   {
-    IExchangeRates exr = IExchangeRates(
-      registry.getContractAddress("ExchangeRates")
-    );
-    uint256 _rate = exr.getRate("ACT");
-    return _wei.mul(_rate);
+
+    return _wei.mul(actRate);
   }
 
   function actToWei(uint256 _act)
@@ -39,11 +36,7 @@ contract FeeManager {
     public
     returns (uint256)
   {
-    IExchangeRates exr = IExchangeRates(
-      registry.getContractAddress("ExchangeRates")
-    );
-    uint256 _rate = exr.getRate("ACT");
-    return _act.div(_rate);
+    return _act.div(actRate);
   }
 
   function payFee()

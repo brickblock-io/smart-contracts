@@ -25,7 +25,6 @@ describe('when interacting with BBK', () => {
     const contributors = accounts.slice(2)
     const contributor = contributors[0]
     const tokenDistAmount = new BigNumber(1e24)
-    const actRate = new BigNumber(1000)
     let bbk
     let act
 
@@ -34,8 +33,7 @@ describe('when interacting with BBK', () => {
         owner,
         bonusAddress,
         contributors,
-        tokenDistAmount,
-        actRate
+        tokenDistAmount
       )
       bbk = contracts.bbk
       act = contracts.act

@@ -169,24 +169,6 @@ contract ExchangeRates is Ownable {
   // end exchange rate provider only settings
   //
 
-  //
-  // start setter functions
-  //
-
-  // special function to set ACT price for use with FeeManager
-  function setActRate(uint256 _actRate)
-    onlyOwner
-    external
-    returns (bool)
-  {
-    require(_actRate > 0);
-    string memory _act = "ACT";
-    rates[keccak256(_act)] = _actRate;
-    emit RateUpdatedEvent("ACT", _actRate);
-
-    return true;
-  }
-
   /*
   set setting for a given currency:
   currencyName: used as identifier to store settings (stored as bytes8)

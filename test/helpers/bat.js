@@ -14,8 +14,7 @@ const setupContracts = async (
   bonusAddress,
   contributors,
   tokenDistAmount,
-  unlockBlock,
-  actRate
+  unlockBlock
 ) => {
   const reg = await ContractRegistry.new()
   const act = await AccessToken.new(reg.address)
@@ -29,10 +28,6 @@ const setupContracts = async (
     tokenDistAmount
   )
   const fmr = await FeeManager.new(reg.address)
-
-  if (actRate.greaterThan(0)) {
-    await exr.setActRate(actRate)
-  }
 
   await reg.updateContractAddress('BrickblockToken', bbk.address)
   await reg.updateContractAddress('AccessToken', act.address)

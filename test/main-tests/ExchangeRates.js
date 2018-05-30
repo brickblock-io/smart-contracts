@@ -96,24 +96,6 @@ describe('when performing owner only functions', () => {
         { from: notOwner }
       ])
     })
-
-    it('should NOT set ACT rate when NOT owner', async () => {
-      await testWillThrow(exr.setActRate, [1000, { from: notOwner }])
-    })
-
-    it('should set ACT rate', async () => {
-      const newRate = new BigNumber(1000)
-
-      await exr.setActRate(newRate, { from: owner })
-
-      const setRate = await exr.getRate('ACT')
-
-      assert.equal(
-        setRate.toString(),
-        newRate.toString(),
-        'ACT rate should be set to expected rate'
-      )
-    })
   })
 })
 

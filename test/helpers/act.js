@@ -23,8 +23,7 @@ const setupContracts = async (
   owner,
   bonusAddress,
   contributors,
-  tokenDistAmount,
-  actRate
+  tokenDistAmount
 ) => {
   const reg = await ContractRegistry.new()
   const act = await AccessToken.new(reg.address)
@@ -36,9 +35,6 @@ const setupContracts = async (
     tokenDistAmount
   )
   const exr = await ExchangeRates.new(reg.address)
-  if (actRate.greaterThan(0)) {
-    await exr.setActRate(actRate)
-  }
 
   const fmr = await FeeManager.new(reg.address)
 
@@ -49,8 +45,6 @@ const setupContracts = async (
 
   const balanceCheck = await bbk.balanceOf(contributors[0])
   const bbkPaused = await bbk.paused()
-
-  exr.setActRate(actRate)
 
   assert(balanceCheck.greaterThan(0), 'the balance should be more than 0')
   assert(!bbkPaused, 'the contract should not be paused')

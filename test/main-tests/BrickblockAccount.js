@@ -35,8 +35,7 @@ describe('when interacting with BBK, ACT, and BFM', () => {
         bonusAddress,
         contributors,
         tokenDistAmount,
-        1000,
-        actRate
+        1000
       )
       bbk = contracts.bbk
       act = contracts.act

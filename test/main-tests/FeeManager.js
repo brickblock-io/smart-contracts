@@ -13,7 +13,6 @@ describe('when using utility functions', () => {
     const tokenDistAmount = new BigNumber(1e24)
     const actRate = new BigNumber(1e3)
     let fmr
-    let exr
 
     before('setup contracts', async () => {
       const contracts = await setupContracts(
@@ -24,19 +23,9 @@ describe('when using utility functions', () => {
         new BigNumber(0)
       )
       fmr = contracts.fmr
-      exr = contracts.exr
-    })
-
-    it('weiToAct should THROW when rate is actRate is 0', async () => {
-      await testWillThrow(fmr.weiToAct, [1e15])
-    })
-
-    it('actToWei should THROW when rate is actRate is 0', async () => {
-      await testWillThrow(fmr.actToWei, [1e21])
     })
 
     it('should return the correct weiToAct value', async () => {
-      await exr.setActRate(actRate)
       const weiValue = new BigNumber(1e15)
       const expectedAct = weiValue.mul(actRate)
       const actualAct = await fmr.weiToAct(weiValue)

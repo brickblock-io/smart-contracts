@@ -82,18 +82,6 @@ const setupEcosystem = async () => {
     bbkTokenDistAmount
   )
   const exr = await ExchangeRates.new(reg.address)
-
-  if (actRate.greaterThan(0)) {
-    await exr.setActRate(actRate)
-    const postActRate = await exr.getRate('ACT')
-
-    assert.equal(
-      postActRate.toString(),
-      actRate.toString(),
-      'ACT rate should be set'
-    )
-  }
-
   const exp = await ExchangeRateProvider.new(reg.address)
   const fmr = await FeeManager.new(reg.address)
   const wht = await Whitelist.new(reg.address)
