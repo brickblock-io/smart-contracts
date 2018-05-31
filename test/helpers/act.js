@@ -2,6 +2,8 @@ const ContractRegistry = artifacts.require('ContractRegistry')
 const AccessToken = artifacts.require('AccessToken')
 const ExchangeRates = artifacts.require('ExchangeRates')
 const FeeManager = artifacts.require('FeeManager')
+const AccessTokenUpgradeExample = artifacts.require('AccessTokenUpgradeExample')
+
 const assert = require('assert')
 const chalk = require('chalk')
 const { finalizedBBK } = require('./bbk')
@@ -495,6 +497,64 @@ const testRandomLockAndUnlock = async (
   }
 }
 
+const testUpgradeAct = async (
+  bbk,
+  act,
+  fmr,
+  reg,
+  contributors,
+  claimers,
+  feePayer,
+  feeValue,
+  actRate
+) => {
+  /*
+   * SETUP:
+   * 1. Pause old contract
+   * 2. Set old contract to OldAccessToken
+   * 3. Deploy new upgraded contract
+   * 4. Set new upgraded contract to point to old contract's state
+   * 5. Test lock & unlock
+   * 6. Test paying some fees
+   * 7. Test claiming some fees
+   */
+
+  await act.pause()
+  const paused = await act.paused()
+  assert(paused, 'the contract should be paused here')
+
+  const actu = await AccessTokenUpgradeExample.new(reg.address)
+
+  await reg.updateContractAddress('AccessToken', actu.address)
+  await reg.updateContractAddress('AccessTokenOld', act.address)
+
+  for (const address of contributors) {
+    const preBalance = await act.balanceOf(address)
+    const postBalance = await actu.balanceOf(address)
+    assert.deepEqual(
+      preBalance,
+      postBalance,
+      'balances for both old and new contracts should match'
+    )
+    const oldLockedAmount = await act.lockedBbkOf(address)
+    await testUnlockBBK(bbk, act, address, oldLockedAmount)
+    const newLockedAmount = await testApproveAndLockBBK(
+      bbk,
+      actu,
+      address,
+      oldLockedAmount
+    )
+    assert.deepEqual(
+      oldLockedAmount,
+      newLockedAmount,
+      'locked BBK should be the same as old contract'
+    )
+  }
+
+  await testPayFee(actu, fmr, feePayer, contributors, feeValue, actRate)
+  await testClaimFeeMany(actu, fmr, claimers, actRate)
+}
+
 module.exports = {
   setupContracts,
   testApproveAndLockBBK,
@@ -512,5 +572,6 @@ module.exports = {
   testApproveAndLockManyWithIndividualAmounts,
   testTransferActManyWithIndividualAmounts,
   generateRandomLockAmounts,
-  testRandomLockAndUnlock
+  testRandomLockAndUnlock,
+  testUpgradeAct
 }

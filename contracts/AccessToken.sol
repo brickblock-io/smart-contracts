@@ -51,28 +51,28 @@ import "./interfaces/IBrickblockToken.sol";
 contract AccessToken is PausableToken {
   uint8 public constant version = 1;
   // instance of registry contract to get contract addresses
-  IRegistry private registry;
+  IRegistry internal registry;
   string public constant name = "AccessToken";
   string public constant symbol = "ACT";
   uint8 public constant decimals = 18;
 
   // total amount of minted ACT that a single BBK token is entitled to
-  uint256 private totalMintedPerToken;
+  uint256 internal totalMintedPerToken;
   // total amount of BBK that is currently locked into ACT contract
   // used to calculate how much to increment totalMintedPerToken during minting
   uint256 public totalLockedBBK;
 
   // used to save information on who has how much BBK locked in
   // used in dividendParadigm (see glossary)
-  mapping(address => uint256) private lockedBBK;
+  mapping(address => uint256) internal lockedBBK;
   // used to decrement totalMintedPerToken by amounts that have already been moved to securedTokenDistributions
   // used in dividendParadigm (see glossary)
-  mapping(address => uint256) private distributedPerBBK;
+  mapping(address => uint256) internal distributedPerBBK;
   // used to store ACT balances that have been moved off of:
   // dividendParadigm (see glossary) to securedFundsParadigm
-  mapping(address => uint256) private securedTokenDistributions;
+  mapping(address => uint256) internal securedTokenDistributions;
   // ERC20 override... keep private and only use balanceOf instead
-  mapping(address => uint256) private balances;
+  mapping(address => uint256) internal balances;
   // mapping tracking incoming balances in order to have correct balanceOf
   // used in doubleEntryParadigm (see glossary)
   mapping(address => uint256) public receivedBalances;

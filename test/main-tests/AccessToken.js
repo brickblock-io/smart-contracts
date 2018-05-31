@@ -14,7 +14,8 @@ const {
   testApproveAct,
   testApproveActMany,
   testTransferFromAct,
-  testTransferFromActMany
+  testTransferFromActMany,
+  testUpgradeAct
 } = require('../helpers/act')
 
 describe('when interacting with BBK', () => {
@@ -201,11 +202,12 @@ describe('when testing different scenarios...', () => {
     const nonContributor = accounts[9]
     const tokenDistAmount = new BigNumber(1e24)
     const tokenLockAmount = new BigNumber(1e24)
-    const feeValue = new BigNumber(10e18)
+    const feeValue = new BigNumber(1e18)
     const actRate = new BigNumber(1000)
     let bbk
     let act
     let fmr
+    let reg
 
     beforeEach('setup contracts', async () => {
       const contracts = await setupContracts(
@@ -218,6 +220,7 @@ describe('when testing different scenarios...', () => {
       bbk = contracts.bbk
       act = contracts.act
       fmr = contracts.fmr
+      reg = contracts.reg
     })
 
     it('lock -> payFee -> transfer -> claim', async () => {
@@ -229,6 +232,17 @@ describe('when testing different scenarios...', () => {
       // all ACT should be owned by recipient and owner after transfers
       const claimers = [recipient, owner]
       await testClaimFeeMany(act, fmr, claimers, actRate)
+      await testUpgradeAct(
+        bbk,
+        act,
+        fmr,
+        reg,
+        contributors,
+        claimers.concat(contributors),
+        feePayer,
+        feeValue,
+        actRate
+      )
     })
 
     it('lock -> payFee -> transferFrom -> claim', async () => {
@@ -247,6 +261,17 @@ describe('when testing different scenarios...', () => {
       // all ACT should be owned by recipient and owner after transfers
       const claimers = [recipient, owner]
       await testClaimFeeMany(act, fmr, claimers, actRate)
+      await testUpgradeAct(
+        bbk,
+        act,
+        fmr,
+        reg,
+        contributors,
+        claimers.concat(contributors),
+        feePayer,
+        feeValue,
+        actRate
+      )
     })
 
     it('lock -> 50% payFee -> transfer -> claim', async () => {
@@ -258,6 +283,17 @@ describe('when testing different scenarios...', () => {
       // all ACT should be owned by recipient and owner after transfers
       const claimers = [...contributors, recipient, owner]
       await testClaimFeeMany(act, fmr, claimers, actRate)
+      await testUpgradeAct(
+        bbk,
+        act,
+        fmr,
+        reg,
+        contributors,
+        claimers,
+        feePayer,
+        feeValue,
+        actRate
+      )
     })
 
     it('lock -> 50% payFee -> transferFrom -> claim', async () => {
@@ -281,6 +317,17 @@ describe('when testing different scenarios...', () => {
       // all ACT should be owned by recipient and owner after transfers
       const claimers = [...contributors, recipient, owner]
       await testClaimFeeMany(act, fmr, claimers, actRate)
+      await testUpgradeAct(
+        bbk,
+        act,
+        fmr,
+        reg,
+        contributors,
+        claimers,
+        feePayer,
+        feeValue,
+        actRate
+      )
     })
 
     it('lock -> payFee -> 1 50% transfer -> claim', async () => {
@@ -290,6 +337,17 @@ describe('when testing different scenarios...', () => {
       await testTransferAct(act, contributor, recipient, actBalance.div(2))
       const claimers = [...contributors, recipient, owner]
       await testClaimFeeMany(act, fmr, claimers, actRate)
+      await testUpgradeAct(
+        bbk,
+        act,
+        fmr,
+        reg,
+        contributors,
+        claimers,
+        feePayer,
+        feeValue,
+        actRate
+      )
     })
 
     it('lock -> payFee -> 1 50% transferFrom -> claim', async () => {
@@ -300,6 +358,17 @@ describe('when testing different scenarios...', () => {
       await testTransferAct(act, contributor, recipient, actBalance.div(2))
       const claimers = [...contributors, recipient, owner]
       await testClaimFeeMany(act, fmr, claimers, actRate)
+      await testUpgradeAct(
+        bbk,
+        act,
+        fmr,
+        reg,
+        contributors,
+        claimers,
+        feePayer,
+        feeValue,
+        actRate
+      )
     })
 
     it('lock -> 1 unlock -> payFee -> claim', async () => {
@@ -319,6 +388,17 @@ describe('when testing different scenarios...', () => {
         owner
       ]
       await testClaimFeeMany(act, fmr, claimers, actRate)
+      await testUpgradeAct(
+        bbk,
+        act,
+        fmr,
+        reg,
+        contributors,
+        [...contributors, owner],
+        feePayer,
+        feeValue,
+        actRate
+      )
     })
 
     it('lock -> 1 50% unlock -> 1 payFee -> claim', async () => {
@@ -328,6 +408,17 @@ describe('when testing different scenarios...', () => {
       await testPayFee(act, fmr, feePayer, contributors, feeValue, actRate)
       const claimers = [...contributors, owner]
       await testClaimFeeMany(act, fmr, claimers, actRate)
+      await testUpgradeAct(
+        bbk,
+        act,
+        fmr,
+        reg,
+        contributors,
+        claimers,
+        feePayer,
+        feeValue,
+        actRate
+      )
     })
 
     it('lock -> 1 unlock -> payFee -> 1 transfer -> claim', async () => {
@@ -348,6 +439,17 @@ describe('when testing different scenarios...', () => {
       // claim
       const claimers = [...contributors, recipient, owner]
       await testClaimFeeMany(act, fmr, claimers, actRate)
+      await testUpgradeAct(
+        bbk,
+        act,
+        fmr,
+        reg,
+        contributors,
+        claimers,
+        feePayer,
+        feeValue,
+        actRate
+      )
     })
   })
 })
