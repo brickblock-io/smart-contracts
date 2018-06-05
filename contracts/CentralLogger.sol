@@ -18,7 +18,7 @@ contract CentralLogger {
     require(_registryAddress != address(0));
     registry = IRegistry(_registryAddress);
   }
-  
+
   // only allow listed poa tokens to trigger events
   modifier onlyActivePoaToken() {
     require(
@@ -31,25 +31,25 @@ contract CentralLogger {
 
   // possible events from a PoaToken
   event StageEvent(
-    address indexed tokenAddress, 
+    address indexed tokenAddress,
     uint256 stage
   );
   event BuyEvent(
-    address indexed tokenAddress, 
-    address indexed buyer, 
+    address indexed tokenAddress,
+    address indexed buyer,
     uint256 amount
   );
   event ProofOfCustodyUpdatedEvent(
-    address indexed tokenAddress, 
+    address indexed tokenAddress,
     string ipfsHash
   );
   event PayoutEvent(
-    address indexed tokenAddress, 
+    address indexed tokenAddress,
     uint256 amount
   );
   event ClaimEvent(
-    address indexed tokenAddress, 
-    address indexed claimer, 
+    address indexed tokenAddress,
+    address indexed claimer,
     uint256 payout
   );
   event TerminatedEvent(
@@ -61,9 +61,16 @@ contract CentralLogger {
     address newAddress
   );
   event ReclaimEvent(
-    address indexed tokenAddress, 
-    address indexed reclaimer, 
+    address indexed tokenAddress,
+    address indexed reclaimer,
     uint256 amount
+  );
+
+  // possible events from PoaProxy
+  event ProxyUpgradedEvent(
+    address indexed tokenAddress,
+    address upgradedFrom,
+    address upgradedTo
   );
 
   // event triggers for each event
@@ -77,7 +84,7 @@ contract CentralLogger {
   }
 
   function logBuyEvent(
-    address buyer, 
+    address buyer,
     uint256 amount
   )
     external
@@ -133,7 +140,7 @@ contract CentralLogger {
   }
 
   function logCustodianChangedEvent(
-    address _oldAddress, 
+    address _oldAddress,
     address _newAddress
   )
     external
@@ -157,6 +164,20 @@ contract CentralLogger {
       msg.sender,
       _reclaimer,
       _amount
+    );
+  }
+
+  function logProxyUpgradedEvent(
+    address _upgradedFrom,
+    address _upgradedTo
+  )
+    external
+    onlyActivePoaToken
+  {
+    emit ProxyUpgradedEvent(
+      msg.sender,
+      _upgradedFrom,
+      _upgradedTo
     );
   }
 

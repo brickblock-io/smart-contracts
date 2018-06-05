@@ -3,25 +3,25 @@ pragma solidity 0.4.23;
 
 contract PoaProxy {
   uint8 public constant version = 1;
-  bytes32 public constant masterContractSlot = keccak256("masterAddress");
+  bytes32 public constant proxyMasterContractSlot = keccak256("masterAddress");
   bytes32 public constant proxyRegistrySlot = keccak256("registry");
 
   event ProxyUpgradedEvent(address upgradedFrom, address upgradedTo);
 
   constructor(
-    address _master, 
+    address _master,
     address _registry
-  ) 
+  )
     public
   {
     require(_master != address(0));
     require(_registry != address(0));
-    bytes32 _masterContractSlot = masterContractSlot;
+    bytes32 _proxyMasterContractSlot = proxyMasterContractSlot;
     bytes32 _proxyRegistrySlot = proxyRegistrySlot;
 
     // all storage locations are pre-calculated using hashes of names
     assembly {
-      sstore(_masterContractSlot, _master) // store master address in master slot
+      sstore(_proxyMasterContractSlot, _master) // store master address in master slot
       sstore(_proxyRegistrySlot, _registry) // store registry address in registry slot
     }
   }
@@ -35,9 +35,9 @@ contract PoaProxy {
     view
     returns (address _masterContract)
   {
-    bytes32 _masterContractSlot = masterContractSlot;
+    bytes32 _proxyMasterContractSlot = proxyMasterContractSlot;
     assembly {
-      _masterContract := sload(_masterContractSlot)
+      _masterContract := sload(_proxyMasterContractSlot)
     }
   }
 
@@ -48,7 +48,7 @@ contract PoaProxy {
   {
     bytes32 _proxyRegistrySlot = proxyRegistrySlot;
     assembly {
-      _proxyRegistry :=sload(_proxyRegistrySlot)
+      _proxyRegistry := sload(_proxyRegistrySlot)
     }
   }
 
@@ -56,41 +56,38 @@ contract PoaProxy {
   // proxy state helpers
   //
 
-  // gets PoaManager address from registry
-  function proxyPoaManagerAddress()
-    private
+  function getContractAddress(
+    string _name
+  )
+    public
     view
-    returns (address _registryAddress)
+    returns (address _contractAddress)
   {
-    address _addr = proxyRegistry(); // contract address to call
-    bytes4 _sig = bytes4(keccak256("getContractAddress32(bytes32)")); // function signature we are using
-    string memory _name = "PoaManager"; // function argument we are using
+    bytes4 _sig = bytes4(keccak256("getContractAddress32(bytes32)"));
     bytes32 _name32 = keccak256(_name);
+    bytes32 _proxyRegistrySlot = proxyRegistrySlot;
 
     assembly {
-      let _call := mload(0x40) // set _call to free memory pointer
-      mstore(_call, _sig) // store _sig at _call pointer
+      let _call := mload(0x40)          // set _call to free memory pointer
+      mstore(_call, _sig)               // store _sig at _call pointer
       mstore(add(_call, 0x04), _name32) // store _name32 at _call offset by 4 bytes for pre-existing _sig
-      
+
       // staticcall(g, a, in, insize, out, outsize) => 0 on error 1 on success
       let success := staticcall(
-        gas,    // g = gas: whatever was passed already 
-        _addr,  // a = address: address is already on stack
+        gas,    // g = gas: whatever was passed already
+        sload(_proxyRegistrySlot),  // a = address: address in storage
         _call,  // in = mem in  mem[in..(in+insize): set to free memory pointer
         0x24,   // insize = mem insize  mem[in..(in+insize): size of sig (bytes4) + bytes32 = 0x24
         _call,   // out = mem out  mem[out..(out+outsize): output assigned to this storage address
         0x20    // outsize = mem outsize  mem[out..(out+outsize): output should be 32byte slot (address size = 0x14 <  slot size 0x20)
       )
-      
+
       // revert if not successful
       if iszero(success) {
-        revert(
-          0xf0,
-          0x20
-        )
+        revert(0, 0)
       }
-      
-      _registryAddress := mload(_call) // assign result to return value
+
+      _contractAddress := mload(_call) // assign result to return value
       mstore(0x40, add(_call, 0x24)) // advance free memory pointer by largest _call size
     }
   }
@@ -110,22 +107,26 @@ contract PoaProxy {
   // proxy state setters
   //
 
-  function proxyChangeMaster(address _master)
+  function proxyChangeMaster(address _newMaster)
     public
     returns (bool)
   {
-    require(msg.sender == proxyPoaManagerAddress());
-    require(_master != address(0));
-    require(proxyMasterContract() != _master);
-    require(proxyIsContract(_master));
+    require(msg.sender == getContractAddress("PoaManager"));
+    require(_newMaster != address(0));
+    require(proxyMasterContract() != _newMaster);
+    require(proxyIsContract(_newMaster));
     address _oldMaster = proxyMasterContract();
-    bytes32 _masterContractSlot = masterContractSlot;
+    bytes32 _proxyMasterContractSlot = proxyMasterContractSlot;
     assembly {
-      sstore(_masterContractSlot, _master)
+      sstore(_proxyMasterContractSlot, _newMaster)
     }
 
-    emit ProxyUpgradedEvent(_oldMaster, _master);
-  
+    emit ProxyUpgradedEvent(_oldMaster, _newMaster);
+    getContractAddress("Logger").call(
+      bytes4(keccak256("logProxyUpgradedEvent(address,address)")),
+      _oldMaster, _newMaster
+    );
+
     return true;
   }
 
@@ -137,10 +138,10 @@ contract PoaProxy {
     external
     payable
   {
-    bytes32 _masterContractSlot = masterContractSlot;
+    bytes32 _proxyMasterContractSlot = proxyMasterContractSlot;
     assembly {
       // load address from first storage pointer
-      let _master := sload(_masterContractSlot)
+      let _master := sload(_proxyMasterContractSlot)
 
       // calldatacopy(t, f, s)
       calldatacopy(
@@ -151,7 +152,7 @@ contract PoaProxy {
 
       // delegatecall(g, a, in, insize, out, outsize) => 0 on error 1 on success
       let success := delegatecall(
-        gas, // g = gas 
+        gas, // g = gas
         _master, // a = address
         0x0, // in = mem in  mem[in..(in+insize)
         calldatasize, // insize = mem insize  mem[in..(in+insize)
@@ -168,13 +169,10 @@ contract PoaProxy {
 
       // check if call was a success and return if no errors & revert if errors
       if iszero(success) {
-        revert(
-          0x0, 
-          returndatasize
-        )
+        revert(0, 0)
       }
         return(
-          0x0, 
+          0x0,
           returndatasize
         )
     }

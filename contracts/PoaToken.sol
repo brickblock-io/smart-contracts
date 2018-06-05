@@ -232,10 +232,7 @@ contract PoaToken is PausableToken {
 
       // revert if not successful
       if iszero(success) {
-        revert(
-          _call,
-          0x20
-        )
+        revert(0, 0)
       }
 
       _tempReg := mload(_call) // assign result in mem pointer to previously declared _tempReg
@@ -285,10 +282,7 @@ contract PoaToken is PausableToken {
 
       // revert if not successful
       if iszero(success) {
-        revert(
-          _call,
-          0x20
-        )
+        revert(0, 0)
       }
 
       _contractAddress := mload(_call) // assign result to return value
@@ -323,10 +317,7 @@ contract PoaToken is PausableToken {
 
       // revert if not successful
       if iszero(success) {
-        revert(
-          _call,
-          0x20
-        )
+        revert(0, 0)
       }
 
       _fiatRate := mload(_call) // assign result to return value
@@ -362,10 +353,7 @@ contract PoaToken is PausableToken {
 
       // revert if not successful
       if iszero(success) {
-        revert(
-          _call,
-          0x20
-        )
+        revert(0, 0)
       }
 
       _isWhitelisted := mload(_call) // assign result to returned value
