@@ -56,9 +56,38 @@ yarn lint:js
 ```
 
 ## Deployment
-Mainnet deployment is done through offline signing of transactions. But testnet deployments can be done through truffle.
+### Mainnet
+Mainnet deployment is done through offline signing of transactions. See our [cold-store](https://git.brickblock-dev.io/core/cold-store) repo.
 
-TODO: add instructions for deployment to testnet once migration file is done!
+### Testnet
+Deploying with truffle will execute the [migrations/2_deploy_contracts.js](https://git.brickblock-dev.io/platform/smart-contracts/blob/master/migrations/2_deploy_contracts.js) which does the following:   
+
+1. Choose the right network configuration according to `network` argument
+1. Deploy registry
+1. Deploy other contracts
+1. Add all contracts to registry
+1. Set ETH/EUR exchange rate (only for local testnet deploys)
+1. Run `finalizeTokenSale` on BBK contract in order to activate the BBK/ACT/FMR ecosystem
+1. Distribute BBK tokens to accounts[2-5]
+
+**Note: Make sure you have at least 6 accounts on your node setup**
+
+* `account[0]` is the owner  
+* `account[1]` is the bonus address for BBK
+* `account[2-5]` are BBK token holders
+
+#### To deploy in a local truffle session
+1. Run `yarn truffle develop --network dev`
+2. In the truffle console, run `migrate --reset`
+3. Play around with the contract, e.g. add a broker via `PoaManager.deployed().then(poaManager => poaManager.addBroker(web3.eth.accounts[3]))
+
+#### To deploy on a local testnet
+1. Start the [Ganache app](http://truffleframework.com/ganache/) (make sure it's running on `8545`in the settings!) or run `yarn ganache-cli -p 8545`
+1. Run `yarn truffle migrate --reset --network dev`
+
+#### To deploy on Rinkeby or Kovan
+Run `yarn truffle migrate --reset --network [network name]`.
+The network name can be `rinkeby` or `kovan`
 
 ## General Overview
 
