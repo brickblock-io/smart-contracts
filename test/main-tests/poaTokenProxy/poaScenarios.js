@@ -21,15 +21,102 @@ const {
   testBuyTokensMulti,
   getAccountInformation,
   testResetCurrencyRate,
-  testActiveBalances
+  testActiveBalances,
+  testToggleWhitelistTransfers
 } = require('../../helpers/poa')
 const {
   timeTravel,
   gasPrice,
   areInRange,
-  getEtherBalance
+  getEtherBalance,
+  testWillThrow
 } = require('../../helpers/general.js')
 const BigNumber = require('bignumber.js')
+
+describe('De-whitelisted POA holders', () => {
+  const defaultBuyAmount = new BigNumber(1.802384753e16)
+  let poa
+  let fmr
+  let wht
+  let sender
+  let receiver
+  let senderBalance
+
+  contract('PoaToken', accounts => {
+    beforeEach('setup contracts', async () => {
+      const owner = accounts[0]
+      const contracts = await setupPoaProxyAndEcosystem()
+      sender = whitelistedPoaBuyers[0]
+      receiver = whitelistedPoaBuyers[1]
+      poa = contracts.poa
+      fmr = contracts.fmr
+      wht = contracts.wht
+
+      // move into Funding
+      const neededTime = await determineNeededTimeTravel(poa)
+      await timeTravel(neededTime)
+      await testStartSale(poa)
+
+      await testBuyTokensMulti(poa, defaultBuyAmount)
+
+      await testBuyRemainingTokens(poa, {
+        from:
+          whitelistedPoaBuyers[
+            Math.floor(Math.random() * whitelistedPoaBuyers.length)
+          ],
+        gasPrice
+      })
+
+      await testToggleWhitelistTransfers(poa, {
+        from: owner
+      })
+
+      // move into Active
+      await testActivate(poa, fmr, defaultIpfsHash, {
+        from: custodian
+      })
+
+      senderBalance = await poa.balanceOf(sender)
+    })
+
+    it('should NOT transfer POA when sender de-whitelisted', async () => {
+      await wht.removeAddress(sender)
+      await testWillThrow(testTransfer, [
+        poa,
+        receiver,
+        senderBalance,
+        {
+          from: sender
+        }
+      ])
+    })
+
+    it('should NOT transfer POA when receiver de-whitelisted', async () => {
+      await wht.removeAddress(receiver)
+      await testWillThrow(testTransfer, [
+        poa,
+        receiver,
+        senderBalance,
+        {
+          from: sender
+        }
+      ])
+    })
+
+    it('should NOT transfer POA when sender & receiver de-whitelisted', async () => {
+      await wht.removeAddress(sender)
+      await wht.removeAddress(receiver)
+      await testWillThrow(testTransfer, [
+        poa,
+        receiver,
+        senderBalance,
+        {
+          from: sender
+        }
+      ])
+    })
+  })
+})
 
 describe('when handling unhappy paths', async () => {
   contract('PoaToken', () => {

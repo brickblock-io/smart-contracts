@@ -863,6 +863,7 @@ contract PoaToken is PausableToken {
     public
     whenNotPaused
     isTransferWhitelisted(_to)
+    isTransferWhitelisted(msg.sender)
     returns (bool)
   {
     // move perToken payout balance to unclaimedPayoutTotals
@@ -889,6 +890,7 @@ contract PoaToken is PausableToken {
     public
     whenNotPaused
     isTransferWhitelisted(_to)
+    isTransferWhitelisted(_from)
     returns (bool)
   {
     // move perToken payout balance to unclaimedPayoutTotals
