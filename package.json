@@ -74,7 +74,10 @@
     "health:comment": "Runs all checks (linters, tests etc) to gauge the overall code health",
     "health": "$(pwd)/scripts/healthcheck.sh",
     "todo:comment": "Prints out all code comments that begin with `TODO:` or `FIXME:`",
-    "todo": "leasot '**/*.js' --ignore 'node_modules/**/*','build/**/*','.git/**/*' || true"
+    "todo": "leasot '**/*.js' --ignore 'node_modules/**/*','build/**/*','.git/**/*' || true",
+    "---SECTION:REPL---": "--- INTERACT WITH DEPLOYED CONTRACTS IN A LOCAL REPL ---",
+    "repl:comment": "Useful for quickly interacting with deployed contracts, likely through an INFURA node",
+    "repl": "truffle console --network hdwallet"
   },
   "lint-staged": {
     "*.sol": [
@@ -122,6 +125,7 @@
     "table": "^4.0.3",
     "truffle": "4.1.8",
     "truffle-contract": "^3.0.1",
+    "truffle-hdwallet-provider": "^0.0.5",
     "web3": "^0.18.4"
   }
 }

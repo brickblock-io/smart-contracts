@@ -324,7 +324,7 @@ There are getters for a given currency's `Settings` as well as two different get
 Both of these getters will `revert()` if the `rate` is 0.
 
 ## ExchangeRateProvider
-Where [ExchangeRates](#exchangerates)' job is to manage the rates and the `Settings`, `ExchangeRateProvider` inherits from the [OraclizeAPI](https://github.com/oraclize/ETHeum-api/blob/aeea37a5232c981884e6f4c5be55d58a252a01f6/oraclizeAPI_0.5.sol) contract and makes use of the Oraclize API. To be clear, *this* is the contract interacting with Oraclize and getting the off-chain data. It stores this data in [ExchangeRates](#exchangerates) after receiving a successful callback from Oraclize. Queries are triggered by [ExchangeRates](#exchangerates) and cannot be started any other way.
+Where [ExchangeRates](#exchangerates)' job is to manage the rates and the `Settings`, `ExchangeRateProvider` inherits from the [OraclizeAPI](https://github.com/oraclize/ethereum-api/blob/aeea37a5232c981884e6f4c5be55d58a252a01f6/oraclizeAPI_0.5.sol) contract and makes use of the Oraclize API. To be clear, *this* is the contract interacting with Oraclize and getting the off-chain data. It stores this data in [ExchangeRates](#exchangerates) after receiving a successful callback from Oraclize. Queries are triggered by [ExchangeRates](#exchangerates) and cannot be started any other way.
 
 `ExchangeRatesProvider` does not store any data itself. It only makes the calls and gets the callback.
 
@@ -338,7 +338,7 @@ This function is pretty standard for most Oraclize related contracts. The differ
 This is for the inevitable day when an upgrade will be needed. This will destroy the contract and send the funds back to the designated address. It can only be called through `killProvider()` on [ExchangeRates](#exchangerates) which is only callable by `owner`.
 
 ## OraclizeAPI
-This is a contract from [Oraclize](https://github.com/oraclize/ETHeum-api/blob/aeea37a5232c981884e6f4c5be55d58a252a01f6/oraclizeAPI_0.5.sol). To learn more about Oraclize check the [documentation](https://docs.oraclize.it/)
+This is a contract from [Oraclize](https://github.com/oraclize/ethereum-api/blob/aeea37a5232c981884e6f4c5be55d58a252a01f6/oraclizeAPI_0.5.sol). To learn more about Oraclize check the [documentation](https://docs.oraclize.it/)
 
 ## CentralLogger
 `CentralLogger` mirrors events from each [PoaToken](#poatoken). One additional event parameter named `tokenAddress` is added for each event to keep track of different token's events. Having a central logging contract for all [PoaToken](#poatoken)'s greatly simplifies the tracking of events. For example, this allows us to more easily implement email notifications to investors on `BuyEvent`s.

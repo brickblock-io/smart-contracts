@@ -1,3 +1,4 @@
+const HDWalletProvider = require('truffle-hdwallet-provider')
 /*
  * Our CI runners often run multiple smart contract test jobs in parallel which can lead
  * to port conflicts. That's why we're defining a range of 100 ports here that the CI
@@ -45,6 +46,18 @@ module.exports = {
       network_id: 4,
       gas: 7e6,
       gasPrice: 1e9
+    },
+    // to be used when we want to interact in a local truffle console session
+    hdwallet: {
+      provider: new HDWalletProvider(
+        // NOTE: this can be any valid mnemonic, as long as you are making `calls` and not `transactions`
+        process.env.HDWALLET_MNEMONIC,
+        // NOTE: this is the network you want to connect to; if you are running a local network you
+        // can connect to that instead of infura but then you probably want to use:
+        // `truffle console --network dev`
+        process.env.INFURA_URL
+      ),
+      network_id: '*'
     }
   },
   mocha: {
