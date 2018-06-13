@@ -17,6 +17,7 @@
     "start:dev:testrpc:comment": "no need for '--deterministic' see update: https://github.com/trufflesuite/truffle/releases",
     "start": "concurrently --prefix '[{name}: {time}]' -n 'yarn start:dev, seed' -c 'bgBlue.bold.white,bgGreen.bold.white' 'yarn start:dev' 'yarn migrate:dev && yarn seed'",
     "start:dev": "truffle develop",
+    "start:geth": "./scripts/geth/start-geth.sh",
     "---SECTION:BUILD---": "-------------------- HOW TO BUILD THE SMART CONTRACTS --------------------",
     "build:comment": "Compile smart contracts and output into the build/ dir",
     "build": "truffle compile --reset && yarn build:inject-deployed-contracts",

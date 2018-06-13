@@ -39,6 +39,7 @@ module.exports = (deployer, network, accounts) => {
   deployer
     .then(async () => {
       switch (network) {
+        case 'devGeth':
         case 'test':
           return true
         case 'dev':

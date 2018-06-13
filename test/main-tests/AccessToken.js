@@ -101,7 +101,7 @@ describe('when interacting with Fee manager', () => {
     })
 
     it('should NOT distribute ACT tokens if NOT FeeManager contract', async () => {
-      await testWillThrow(act.distribute, [10e18, { from: contributors[2] }])
+      await testWillThrow(act.distribute, [10e18, { from: contributors[0] }])
     })
 
     it('should distribute ACT tokens to locked BBK contributors when paying FeeManager', async () => {
@@ -110,7 +110,7 @@ describe('when interacting with Fee manager', () => {
     })
 
     it('should allow ACT holders to burn ACT for ETH', async () => {
-      const claimers = [...contributors, owner]
+      const claimers = contributors
       await testClaimFeeMany(act, fmr, claimers, actRate)
     })
   })
@@ -227,8 +227,8 @@ describe('when testing different scenarios...', () => {
       // this should work for all contributors since they have the same balance
       const actBalance = await act.balanceOf(contributors[0])
       await testTransferActMany(act, contributors, recipient, actBalance)
-      // all ACT should be owned by recipient and owner after transfers
-      const claimers = [recipient, owner]
+      // all ACT should be owned by recipient after transfers
+      const claimers = [recipient]
       await testClaimFeeMany(act, fmr, claimers, actRate)
       await testUpgradeAct(
         bbk,
@@ -257,7 +257,7 @@ describe('when testing different scenarios...', () => {
         actBalance
       )
       // all ACT should be owned by recipient and owner after transfers
-      const claimers = [recipient, owner]
+      const claimers = [recipient]
       await testClaimFeeMany(act, fmr, claimers, actRate)
       await testUpgradeAct(
         bbk,
@@ -279,7 +279,7 @@ describe('when testing different scenarios...', () => {
       const actBalance = await act.balanceOf(contributors[0])
       await testTransferActMany(act, contributors, recipient, actBalance.div(2))
       // all ACT should be owned by recipient and owner after transfers
-      const claimers = [...contributors, recipient, owner]
+      const claimers = [...contributors, recipient]
       await testClaimFeeMany(act, fmr, claimers, actRate)
       await testUpgradeAct(
         bbk,
@@ -312,8 +312,8 @@ describe('when testing different scenarios...', () => {
         nonContributor,
         actBalance.div(2)
       )
-      // all ACT should be owned by recipient and owner after transfers
-      const claimers = [...contributors, recipient, owner]
+      // all ACT should be owned by recipient after transfers
+      const claimers = [...contributors, recipient]
       await testClaimFeeMany(act, fmr, claimers, actRate)
       await testUpgradeAct(
         bbk,
@@ -333,7 +333,7 @@ describe('when testing different scenarios...', () => {
       await testPayFee(act, fmr, feePayer, contributors, feeValue, actRate)
       const actBalance = await act.balanceOf(contributor)
       await testTransferAct(act, contributor, recipient, actBalance.div(2))
-      const claimers = [...contributors, recipient, owner]
+      const claimers = [...contributors, recipient]
       await testClaimFeeMany(act, fmr, claimers, actRate)
       await testUpgradeAct(
         bbk,
@@ -354,7 +354,7 @@ describe('when testing different scenarios...', () => {
       const actBalance = await act.balanceOf(contributor)
       await testApproveAct(act, contributor, nonContributor, actBalance.div(2))
       await testTransferAct(act, contributor, recipient, actBalance.div(2))
-      const claimers = [...contributors, recipient, owner]
+      const claimers = [...contributors, recipient]
       await testClaimFeeMany(act, fmr, claimers, actRate)
       await testUpgradeAct(
         bbk,
@@ -382,8 +382,7 @@ describe('when testing different scenarios...', () => {
         actRate
       )
       const claimers = [
-        ...contributors.filter(account => account != contributor),
-        owner
+        ...contributors.filter(account => account != contributor)
       ]
       await testClaimFeeMany(act, fmr, claimers, actRate)
       await testUpgradeAct(
@@ -392,7 +391,7 @@ describe('when testing different scenarios...', () => {
         fmr,
         reg,
         contributors,
-        [...contributors, owner],
+        [...contributors],
         feePayer,
         feeValue,
         actRate
@@ -404,7 +403,7 @@ describe('when testing different scenarios...', () => {
       const lockedBalance = await act.lockedBbkOf(contributor)
       await testUnlockBBK(bbk, act, contributor, lockedBalance.div(2))
       await testPayFee(act, fmr, feePayer, contributors, feeValue, actRate)
-      const claimers = [...contributors, owner]
+      const claimers = [...contributors]
       await testClaimFeeMany(act, fmr, claimers, actRate)
       await testUpgradeAct(
         bbk,
@@ -435,7 +434,7 @@ describe('when testing different scenarios...', () => {
       await testTransferAct(act, contributor, recipient, actBalance.div(2))
 
       // claim
-      const claimers = [...contributors, recipient, owner]
+      const claimers = [...contributors, recipient]
       await testClaimFeeMany(act, fmr, claimers, actRate)
       await testUpgradeAct(
         bbk,

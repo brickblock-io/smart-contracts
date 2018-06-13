@@ -25,6 +25,13 @@ module.exports = {
       network_id: 4447,
       gasPrice: 1e9
     },
+    devGeth: {
+      host: 'localhost',
+      port: 8545,
+      network_id: 4447,
+      // Values below 6000000 fail often because of the required minimum block gas amount.
+      gas: 6300000
+    },
     ...ciNetworks,
     ropsten: {
       host: 'localhost',

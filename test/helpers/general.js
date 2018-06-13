@@ -132,11 +132,23 @@ const sendTransaction = (web3, args) => {
 
 const testWillThrow = async (fn, args) => {
   try {
-    await fn.apply(null, args)
+    const txHash = await fn.apply(null, args)
+    /* Geth compatibility
+      Geth does not return error when revert happens. 
+      First we need to wait for 1 extra block to be mined then we have to check receipt.status field.  
+    */
+    await warpBlocks(1)
+    const receipt = await getReceipt(txHash)
+    if (receipt.status === '0x0') {
+      throw new Error('revert')
+    }
+    //End of Geth compatibility //
+
     assert(false, 'the contract should throw here')
   } catch (error) {
     assert(
-      /invalid opcode/.test(error) || /revert/.test(error),
+      /invalid opcode/.test(error.message || error) ||
+        /revert/.test(error.message || error),
       `the error message should be invalid opcode or revert, the error was ${error}`
     )
   }

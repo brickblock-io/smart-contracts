@@ -21,3 +21,7 @@ build
 ~*
 .#*
 .editorconfig
+
+# Local geth folders
+private-chain-data/geth
+private-chain-data/history

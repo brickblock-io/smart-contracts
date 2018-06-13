@@ -1,6 +1,9 @@
 # Brickblock Smart Contracts
 
-This README shows how to work with our smart contracts. For an architectural overview, check the [Smart Contract Ecosystem doc](./ECOSYSTEM.md)
+## Overview
+* This README shows how to work with our smart contracts.
+* [ECOSYSTEM.md](./ECOSYSTEM.md) gives an architectural overview and detailed information about the individual contracts
+* [TEST-AGAINST-GETH.md](./TEST-AGAINST-GETH.md) explains how to run the tests against `geth` instead of truffle's `ganache`
 
 ## Prerequisites
 * [Node.js](https://nodejs.org/en/) (we always work with the [latest LTS release](https://github.com/nodejs/Release#release-schedule))
@@ -22,7 +25,7 @@ This README shows how to work with our smart contracts. For an architectural ove
     ```
 
 ## Testing
-Tests are split in three categories:
+Tests are split in three categories: Main tests, Stress tests and Frozen Contract tests. In development mode we run all tests against truffle's [ganache](http://truffleframework.com/ganache/). Before submitting contracts to auditors or deploying contracts to Mainnet we always run the tests against `geth`, too. [TEST-AGAINST-GETH.md](./TEST-AGAINST-GETH.md) explains how this works. It is a heck of a lot slower _but_ it is closer to the production environment in which our contracts will eventually run so it gives as a higher degree of certainty that everything really works as expected.
 
 #### Main Tests
 Unit tests, testing the general functionality of our contracts.
