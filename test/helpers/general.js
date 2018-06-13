@@ -134,8 +134,8 @@ const testWillThrow = async (fn, args) => {
   try {
     const txHash = await fn.apply(null, args)
     /* Geth compatibility
-      Geth does not return error when revert happens. 
-      First we need to wait for 1 extra block to be mined then we have to check receipt.status field.  
+      Geth does not return error when revert happens.
+      First we need to wait for 1 extra block to be mined then we have to check receipt.status field.
     */
     await warpBlocks(1)
     const receipt = await getReceipt(txHash)
@@ -148,8 +148,9 @@ const testWillThrow = async (fn, args) => {
   } catch (error) {
     assert(
       /invalid opcode/.test(error.message || error) ||
+      /invalid argument/.test(error.message || error) || // needed for geth compatibility
         /revert/.test(error.message || error),
-      `the error message should be invalid opcode or revert, the error was ${error}`
+      `the error message should be "invalid opcode", "invalid argument" or "revert", the error was ${error}`
     )
   }
 }

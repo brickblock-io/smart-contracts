@@ -12,7 +12,6 @@ const BigNumber = require('bignumber.js')
 describe('when using the contract registry', () => {
   contract('ContractRegistry', accounts => {
     const initialTestNumber = new BigNumber(123)
-    const owner = accounts[0]
     const notOwner = accounts[1]
     let reg
     let brokenGrc
@@ -26,7 +25,7 @@ describe('when using the contract registry', () => {
     })
 
     it('should error when no address for string key', async () => {
-      await testWillThrow(reg.getContractAddress, ['TestName', { from: owner }])
+      await testWillThrow(reg.getContractAddress, ['TestName'])
     })
 
     it('should NOT set an address if NOT owner', async () => {
