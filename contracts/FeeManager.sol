@@ -12,7 +12,6 @@ contract FeeManager {
   uint256 actRate = 1000;
 
   IRegistry private registry;
-
   constructor(
     address _registryAddress
   )

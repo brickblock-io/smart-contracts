@@ -112,9 +112,9 @@ contract PoaToken is PausableToken {
     _;
   }
 
-  modifier isTransferWhitelisted(address _to) {
+  modifier isTransferWhitelisted(address _address) {
     if (whitelistTransfers) {
-      require(checkIsWhitelisted(_to));
+      require(checkIsWhitelisted(_address));
     }
 
     _;
