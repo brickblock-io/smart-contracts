@@ -23,4 +23,5 @@ geth --datadir "$GETH_DATA_DIR" \
   --rpc \
   --rpcapi eth,net,web3,personal,miner,debug,txpool \
   --rpccorsdomain "*" \
-  --targetgaslimit 94000000
+  --targetgaslimit 94000000 \
+  --etherbase=0x0000000000000000000000000000000000000000
