@@ -4,7 +4,7 @@ const BrickblockToken = artifacts.require('./BrickblockToken.sol')
 const BrickblockFountainStub = artifacts.require(
   './stubs/BrickblockFountainStub.sol'
 )
-const { testWillThrow } = require('../helpers/general')
+const { testWillThrow, waitForTxToBeMined } = require('../helpers/general')
 
 const getContributorsBalanceSum = (bbk, contributors) =>
   Promise.all(contributors.map(contributor => bbk.balanceOf(contributor))).then(
@@ -147,9 +147,10 @@ describe('during the ico', () => {
       it('should toggle dead when owner', async () => {
         const preDead = await bbk.dead()
 
-        await bbk.toggleDead.sendTransaction({
+        const txHash = await bbk.toggleDead.sendTransaction({
           from: ownerAddress
         })
+        await waitForTxToBeMined(txHash)
 
         const postDead = await bbk.dead()
 
@@ -159,9 +160,10 @@ describe('during the ico', () => {
       it('should toggle back dead when owner', async () => {
         const preDead = await bbk.dead()
 
-        await bbk.toggleDead.sendTransaction({
+        const txHash = await bbk.toggleDead.sendTransaction({
           from: ownerAddress
         })
+        await waitForTxToBeMined(txHash)
 
         const postDead = await bbk.dead()
 
@@ -208,13 +210,14 @@ describe('during the ico', () => {
           const preBonusBalance = await bbk.balanceOf(bonusAddress)
           const distributeAmount = bonusTokens
 
-          await bbk.distributeBonusTokens.sendTransaction(
+          const txHash = await bbk.distributeBonusTokens.sendTransaction(
             bonusRecipientAddress,
             distributeAmount,
             {
               from: ownerAddress
             }
           )
+          await waitForTxToBeMined(txHash)
 
           const postRecipientBalance = await bbk.balanceOf(
             bonusRecipientAddress
@@ -332,12 +335,13 @@ describe('during the ico', () => {
             const bbf = await BrickblockFountainStub.new(bbk.address)
             const fountainAddress = bbf.address
             const preAddress = await bbk.fountainContractAddress()
-            await bbk.changeFountainContractAddress.sendTransaction(
+            const txHash = await bbk.changeFountainContractAddress.sendTransaction(
               fountainAddress,
               {
                 from: ownerAddress
               }
             )
+            await waitForTxToBeMined(txHash)
             const postAddress = await bbk.fountainContractAddress()
             assert.equal(
               true,
@@ -560,9 +564,14 @@ describe('after the ico', () => {
       const preSenderBalance = await bbk.balanceOf(recipient)
       const preRecipientBalance = await bbk.balanceOf(recipient)
       const transferAmount = new BigNumber(1e18)
-      await bbk.transfer.sendTransaction(recipient, transferAmount, {
-        from: sender
-      })
+      const txHash = await bbk.transfer.sendTransaction(
+        recipient,
+        transferAmount,
+        {
+          from: sender
+        }
+      )
+      await waitForTxToBeMined(txHash)
       const postSenderBalance = await bbk.balanceOf(recipient)
       const postRecipientBalance = await bbk.balanceOf(recipient)
       assert.equal(
@@ -587,9 +596,14 @@ describe('after the ico', () => {
 
     it('should set allowances for other addresses', async () => {
       const preAllowance = await bbk.allowance(accounts[4], accounts[5])
-      await bbk.approve.sendTransaction(accounts[5], testAmount, {
-        from: accounts[4]
-      })
+      const txHash = await bbk.approve.sendTransaction(
+        accounts[5],
+        testAmount,
+        {
+          from: accounts[4]
+        }
+      )
+      await waitForTxToBeMined(txHash)
       const postAllowance = await bbk.allowance(accounts[4], accounts[5])
       assert.equal(
         postAllowance.minus(preAllowance).toString(),
@@ -674,10 +688,15 @@ describe('after the ico', () => {
       const preRecipientBalance = await bbk.balanceOf(accounts[3])
       const approveAmount = testAmount
       const approveTransferAmount = approveAmount.div(2)
-      await bbk.approve.sendTransaction(accounts[5], approveAmount, {
-        from: accounts[4]
-      })
-      await bbk.transferFrom.sendTransaction(
+      const approveTxHash = await bbk.approve.sendTransaction(
+        accounts[5],
+        approveAmount,
+        {
+          from: accounts[4]
+        }
+      )
+      await waitForTxToBeMined(approveTxHash)
+      const transferFromTxHash = await bbk.transferFrom.sendTransaction(
         accounts[4],
         accounts[3],
         approveTransferAmount,
@@ -685,6 +704,7 @@ describe('after the ico', () => {
           from: accounts[5]
         }
       )
+      await waitForTxToBeMined(transferFromTxHash)
       const postApproval = await bbk.allowance(accounts[4], accounts[5])
       const postApproverBalance = await bbk.balanceOf(accounts[4])
       const postRecipientBalance = await bbk.balanceOf(accounts[3])
@@ -740,13 +760,14 @@ describe('after the ico', () => {
           const preBonusBalance = await bbk.balanceOf(bonusAddress)
           const distributeAmount = bonusTokens
 
-          await bbk.distributeBonusTokens.sendTransaction(
+          const txHash = await bbk.distributeBonusTokens.sendTransaction(
             bonusRecipientAddress,
             distributeAmount,
             {
               from: owner
             }
           )
+          await waitForTxToBeMined(txHash)
 
           const postRecipientBalance = await bbk.balanceOf(
             bonusRecipientAddress
@@ -786,9 +807,10 @@ describe('after the ico', () => {
       it('should toggle dead when owner', async () => {
         const preDead = await bbk.dead()
 
-        await bbk.toggleDead.sendTransaction({
+        const txHash = await bbk.toggleDead.sendTransaction({
           from: owner
         })
+        await waitForTxToBeMined(txHash)
 
         const postDead = await bbk.dead()
 
@@ -798,9 +820,10 @@ describe('after the ico', () => {
       it('should toggle back dead when owner', async () => {
         const preDead = await bbk.dead()
 
-        await bbk.toggleDead.sendTransaction({
+        const txHash = await bbk.toggleDead.sendTransaction({
           from: owner
         })
+        await waitForTxToBeMined(txHash)
 
         const postDead = await bbk.dead()
 
