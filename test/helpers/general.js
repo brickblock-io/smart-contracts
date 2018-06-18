@@ -133,16 +133,7 @@ const sendTransaction = (web3, args) => {
 const testWillThrow = async (fn, args) => {
   try {
     const txHash = await fn.apply(null, args)
-    /* Geth compatibility
-      Geth does not return error when revert happens.
-      First we need to wait for 1 extra block to be mined then we have to check receipt.status field.
-    */
-    await warpBlocks(1)
-    const receipt = await getReceipt(txHash)
-    if (receipt.status === '0x0') {
-      throw new Error('revert')
-    }
-    //End of Geth compatibility //
+    await waitForReceiptStatusSuccessOrThrow(txHash)
 
     assert(false, 'the contract should throw here')
   } catch (error) {
@@ -245,6 +236,45 @@ const waitForEvent = (event, optTimeout) =>
     })
   })
 
+const waitForReceiptStatusSuccessOrThrow = async txHash => {
+  // Geth does not return error when revert happens.
+
+  const receipt = await getReceipt(txHash)
+  if (receipt.status === '0x0') {
+    throw new Error('revert')
+  }
+
+  return receipt
+}
+
+const sleep = sleepTime =>
+  new Promise(resolve => setTimeout(resolve, sleepTime))
+
+const waitForTxToBeMined = txHash =>
+  // waiting for a transaction to be mined into a block
+  // required for geth compatibility
+  new Promise(async (resolve, reject) => {
+    const timeout = Date.now() + 5 * 1000 // 5 seconds to get a receipt
+    let done = false
+
+    while (timeout > Date.now() && !done) {
+      web3.eth.getTransactionReceipt(txHash, (err, res) => {
+        if (err || res === null) {
+          // eslint-disable-next-line no-console
+          console.log('Waiting for tx to be Mined.', `txHash: ${txHash}`)
+          return
+        }
+
+        done = true
+        resolve(true)
+      })
+
+      await sleep(1000)
+    }
+
+    if (!done) reject(false)
+  })
+
 module.exports = {
   addressZero,
   areInRange,
@@ -265,5 +295,7 @@ module.exports = {
   testWillThrow,
   timeTravel,
   warpBlocks,
-  waitForEvent
+  waitForEvent,
+  waitForReceiptStatusSuccessOrThrow,
+  waitForTxToBeMined
 }
