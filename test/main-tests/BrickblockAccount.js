@@ -12,8 +12,27 @@ const {
   testWithdrawBbkFunds
 } = require('../helpers/bat')
 
-const { warpBlocks } = require('../helpers/general')
+const { timeTravel } = require('../helpers/general')
 const { testPayFee } = require('../helpers/act')
+
+// 2 years defaultTimeLock
+const defaultTimeLock = 60 * 60 * 24 * 365 * 2
+
+// given an offset in second, returns seconds since unix epoch
+const unixTimeWithOffset = offset => Math.floor(Date.now() / 1000) + offset
+
+// needed for tests that will use `timeTravel`
+//
+// accumulating the offset since this is changing the time for the ganache blockchain, and in the
+// constructor of BrickblockAccount `releaseTime` is tested against `block.timestamp`
+const unixTimeInContext = (function() {
+  let contextOffset = 0
+
+  return offset => {
+    contextOffset += offset
+    return unixTimeWithOffset(contextOffset)
+  }
+})()
 
 describe('when interacting with BBK, ACT, and BFM', () => {
   contract('AccountManager/AccessToken', accounts => {
@@ -35,7 +54,7 @@ describe('when interacting with BBK, ACT, and BFM', () => {
         bonusAddress,
         contributors,
         tokenDistAmount,
-        1000
+        unixTimeWithOffset(defaultTimeLock)
       )
       bbk = contracts.bbk
       act = contracts.act
@@ -107,8 +126,7 @@ describe('when interacting with BBK, ACT, and BFM as NOT owner', () => {
         bonusAddress,
         contributors,
         tokenDistAmount,
-        1000,
-        actRate
+        unixTimeWithOffset(defaultTimeLock)
       )
       bbk = contracts.bbk
       act = contracts.act
@@ -163,8 +181,7 @@ describe('when withdrawing funds BEFORE BBK unlock block', () => {
         bonusAddress,
         contributors,
         tokenDistAmount,
-        1000,
-        actRate
+        unixTimeWithOffset(defaultTimeLock)
       )
       bbk = contracts.bbk
       act = contracts.act
@@ -248,8 +265,7 @@ describe('when withdrawing funds AFTER BBK unlock block', () => {
         bonusAddress,
         contributors,
         tokenDistAmount,
-        20,
-        actRate
+        unixTimeInContext(defaultTimeLock)
       )
       bbk = contracts.bbk
       act = contracts.act
@@ -262,7 +278,7 @@ describe('when withdrawing funds AFTER BBK unlock block', () => {
       await testPayFee(act, fmr, feePayer, [bat.address], feeValue, actRate)
       const claimAmount = await act.balanceOf(bat.address)
       await testClaimFee(bbk, act, fmr, bat, claimAmount, actRate)
-      await warpBlocks(20)
+      await timeTravel(defaultTimeLock)
     })
 
     it('should withdraw SOME BBK funds to owner account', async () => {
@@ -313,8 +329,7 @@ describe('when trying to withdraw more than available balance', () => {
         bonusAddress,
         contributors,
         tokenDistAmount,
-        20,
-        actRate
+        unixTimeInContext(defaultTimeLock)
       )
       bbk = contracts.bbk
       act = contracts.act
@@ -327,7 +342,7 @@ describe('when trying to withdraw more than available balance', () => {
       await testPayFee(act, fmr, feePayer, [bat.address], feeValue, actRate)
       const claimAmount = await act.balanceOf(bat.address)
       await testClaimFee(bbk, act, fmr, bat, claimAmount, actRate)
-      await warpBlocks(20)
+      await timeTravel(defaultTimeLock)
     })
 
     it('should NOT withdraw more ETH than available', async () => {
@@ -373,8 +388,7 @@ describe('when trying to withdraw as NOT owner', () => {
         bonusAddress,
         contributors,
         tokenDistAmount,
-        20,
-        actRate
+        unixTimeInContext(defaultTimeLock)
       )
       bbk = contracts.bbk
       act = contracts.act
@@ -387,7 +401,7 @@ describe('when trying to withdraw as NOT owner', () => {
       await testPayFee(act, fmr, feePayer, [bat.address], feeValue, actRate)
       const claimAmount = await act.balanceOf(bat.address)
       await testClaimFee(bbk, act, fmr, bat, claimAmount, actRate)
-      await warpBlocks(20)
+      await timeTravel(defaultTimeLock)
     })
 
     it('should NOT withdraw ETH when NOT owner', async () => {

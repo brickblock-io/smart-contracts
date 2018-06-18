@@ -21,14 +21,15 @@ const send = (method, params = []) =>
 // increases time through ganache evm command
 const timeTravel = async seconds => {
   if (seconds > 0) {
+    const startBlock = await web3.eth.getBlock(web3.eth.blockNumber)
+
     await send('evm_increaseTime', [seconds])
     await send('evm_mine')
 
-    const previousBlock = await web3.eth.getBlock(web3.eth.blockNumber - 1)
     const currentBlock = await web3.eth.getBlock(web3.eth.blockNumber)
     /* eslint-disable no-console */
     console.log(`💫  Warped ${seconds} seconds on new block`)
-    console.log(`⏪  previous block timestamp: ${previousBlock.timestamp}`)
+    console.log(`⏪  previous block timestamp: ${startBlock.timestamp}`)
     console.log(`✅  current block timestamp: ${currentBlock.timestamp}`)
     /* eslint-enable no-console */
   } else {
@@ -99,8 +100,8 @@ const lockAllBbk = async reg => {
   }
 }
 
-const warpBlocks = blocks => {
-  return new Promise(async resolve => {
+const warpBlocks = blocks =>
+  new Promise(async resolve => {
     const warpTool = await WarpTool.new()
     for (let i = 0; i < blocks - 1; i++) {
       // log every fifth block
@@ -116,7 +117,6 @@ const warpBlocks = blocks => {
     console.log('✅  warp complete')
     resolve(true)
   })
-}
 
 const sendTransaction = (web3, args) => {
   return new Promise(function(resolve, reject) {

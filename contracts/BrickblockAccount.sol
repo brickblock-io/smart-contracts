@@ -9,18 +9,19 @@ import "./interfaces/IAccessToken.sol";
 
 contract BrickblockAccount is Ownable {
   uint8 public constant version = 1;
-  uint256 public fundsReleaseBlock;
+  uint256 public releaseTimeOfCompanyBBKs;
   IRegistry private registry;
 
   constructor
   (
     address _registryAddress,
-    uint256 _fundsReleaseBlock
+    uint256 _releaseTimeOfCompanyBBKs
   )
     public
   {
+    require(_releaseTimeOfCompanyBBKs > block.timestamp);
+    releaseTimeOfCompanyBBKs = _releaseTimeOfCompanyBBKs;
     registry = IRegistry(_registryAddress);
-    fundsReleaseBlock = _fundsReleaseBlock;
   }
 
   function pullFunds()
@@ -116,7 +117,7 @@ contract BrickblockAccount is Ownable {
     onlyOwner
     returns (bool)
   {
-    require(fundsReleaseBlock < block.number);
+    require(block.timestamp >= releaseTimeOfCompanyBBKs);
     IBrickblockToken bbk = IBrickblockToken(
       registry.getContractAddress("BrickblockToken")
     );

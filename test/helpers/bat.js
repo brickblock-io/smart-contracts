@@ -14,12 +14,12 @@ const setupContracts = async (
   bonusAddress,
   contributors,
   tokenDistAmount,
-  unlockBlock
+  releaseTime
 ) => {
   const reg = await ContractRegistry.new()
   const act = await AccessToken.new(reg.address)
   const exr = await ExchangeRates.new(reg.address)
-  const bat = await BrickblockAccount.new(reg.address, unlockBlock)
+  const bat = await BrickblockAccount.new(reg.address, releaseTime)
   const bbk = await finalizedBBK(
     owner,
     bonusAddress,
