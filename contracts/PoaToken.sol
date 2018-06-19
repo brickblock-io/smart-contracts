@@ -156,6 +156,7 @@ contract PoaToken is PausableToken {
     string _fiatCurrency,
     address _broker,
     address _custodian,
+    address _registry,
     uint256 _totalSupply,
     // given as unix time (seconds since 01.01.1970)
     uint256 _startTime,
@@ -198,12 +199,12 @@ contract PoaToken is PausableToken {
     // assign addresses
     broker = _broker;
     custodian = _custodian;
+    registry = _registry;
 
     // assign times
     startTime = _startTime;
     fundingTimeout = _fundingTimeout;
     activationTimeout = _activationTimeout;
-
 
     fundingGoalInCents = _fundingGoalInCents;
     totalSupply_ = _totalSupply;
@@ -211,36 +212,6 @@ contract PoaToken is PausableToken {
     // assign bools
     paused = true;
     whitelistTransfers = false;
-
-    // get registry address from PoaManager which should be msg.sender
-    // need to use assembly here due to gas limitations
-    address _tempReg;
-    bytes4 _sig = bytes4(keccak256("registry()"));
-    assembly {
-      let _call := mload(0x40) // set _call to free memory pointer
-      mstore(_call, _sig)      // store _sig at _call pointer
-
-      // staticcall(g, a, in, insize, out, outsize) => 0 on error 1 on success
-      let success := staticcall(
-        gas,    // g = gas: whatever was passed already
-        caller, // a = address: caller = msg.sender
-        _call,  // in = mem in  mem[in..(in+insize): set to _call pointer
-        0x04,   // insize = mem insize mem[in..(in+insize): size of _sig (bytes4) = 0x04
-        _call,   // out = mem out  mem[out..(out+outsize): output assigned to this storage address
-        0x20    // outsize = mem outsize  mem[out..(out+outsize): output should be 32byte slot (address size = 0x14 <  slot size 0x20)
-      )
-
-      // revert if not successful
-      if iszero(success) {
-        revert(0, 0)
-      }
-
-      _tempReg := mload(_call) // assign result in mem pointer to previously declared _tempReg
-      mstore(0x40, add(_call, 0x20)) // advance free memory pointer by largest _call size
-    }
-
-    // assign _tempReg gotten from assembly call to PoaManager.registry() to registry
-    registry = _tempReg;
 
     owner = getContractAddress("PoaManager");
 

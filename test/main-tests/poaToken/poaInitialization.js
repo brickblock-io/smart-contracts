@@ -48,14 +48,14 @@ describe('when initializing PoaToken', () => {
     })
 
     it('should NOT setup more than once', async () => {
-      const setupPoa = await testInitialization(exr, exp, reg, pmr)
-      await testWillThrow(pmr.setupPoaToken, [
-        setupPoa.address,
+      const freshPoa = await testInitialization(exr, exp, reg, pmr)
+      await testWillThrow(freshPoa.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
         broker,
         custodian,
+        reg.address,
         defaultTotalSupply,
         await getDefaultStartTime(),
         defaultFundingTimeout,
@@ -65,13 +65,13 @@ describe('when initializing PoaToken', () => {
     })
 
     it('should NOT initialize with a NON ready fiatRate', async () => {
-      await testWillThrow(pmr.setupPoaToken, [
-        poa.address,
+      await testWillThrow(poa.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
         broker,
         custodian,
+        reg.address,
         defaultTotalSupply,
         await getDefaultStartTime(),
         defaultFundingTimeout,
@@ -92,13 +92,13 @@ describe('when initializing PoaToken', () => {
         }
       )
 
-      await testWillThrow(pmr.setupPoaToken, [
-        poa.address,
+      await testWillThrow(poa.setupContract, [
         'is',
         defaultSymbol,
         defaultFiatCurrency,
         broker,
         custodian,
+        reg.address,
         defaultTotalSupply,
         await getDefaultStartTime(),
         defaultFundingTimeout,
@@ -119,13 +119,13 @@ describe('when initializing PoaToken', () => {
         }
       )
 
-      await testWillThrow(pmr.setupPoaToken, [
-        poa.address,
+      await testWillThrow(poa.setupContract, [
         defaultName,
         'US',
         defaultFiatCurrency,
         broker,
         custodian,
+        reg.address,
         defaultTotalSupply,
         await getDefaultStartTime(),
         defaultFundingTimeout,
@@ -146,13 +146,13 @@ describe('when initializing PoaToken', () => {
         }
       )
 
-      await testWillThrow(pmr.setupPoaToken, [
-        poa.address,
+      await testWillThrow(poa.setupContract, [
         defaultName,
         defaultSymbol,
         'US',
         broker,
         custodian,
+        reg.address,
         defaultTotalSupply,
         await getDefaultStartTime(),
         defaultFundingTimeout,
@@ -173,13 +173,13 @@ describe('when initializing PoaToken', () => {
         }
       )
 
-      await testWillThrow(pmr.setupPoaToken, [
-        poa.address,
+      await testWillThrow(poa.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
         addressZero,
         custodian,
+        reg.address,
         defaultTotalSupply,
         await getDefaultStartTime(),
         defaultFundingTimeout,
@@ -187,13 +187,13 @@ describe('when initializing PoaToken', () => {
         defaultFundingGoal
       ])
 
-      await testWillThrow(pmr.setupPoaToken, [
-        poa.address,
+      await testWillThrow(poa.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
         null,
         custodian,
+        reg.address,
         defaultTotalSupply,
         await getDefaultStartTime(),
         defaultFundingTimeout,
@@ -214,13 +214,13 @@ describe('when initializing PoaToken', () => {
         }
       )
 
-      await testWillThrow(pmr.setupPoaToken, [
-        poa.address,
+      await testWillThrow(poa.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
         broker,
         addressZero,
+        reg.address,
         defaultTotalSupply,
         await getDefaultStartTime(),
         defaultFundingTimeout,
@@ -228,13 +228,13 @@ describe('when initializing PoaToken', () => {
         defaultFundingGoal
       ])
 
-      await testWillThrow(pmr.setupPoaToken, [
-        poa.address,
+      await testWillThrow(poa.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
         broker,
         null,
+        reg.address,
         defaultTotalSupply,
         await getDefaultStartTime(),
         defaultFundingTimeout,
@@ -255,13 +255,13 @@ describe('when initializing PoaToken', () => {
         }
       )
 
-      await testWillThrow(pmr.setupPoaToken, [
-        poa.address,
+      await testWillThrow(poa.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
         broker,
         custodian,
+        reg.address,
         9e17,
         await getDefaultStartTime(),
         defaultFundingTimeout,
@@ -269,13 +269,13 @@ describe('when initializing PoaToken', () => {
         defaultFundingGoal
       ])
 
-      await testWillThrow(pmr.setupPoaToken, [
-        poa.address,
+      await testWillThrow(poa.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
         broker,
         custodian,
+        reg.address,
         null,
         await getDefaultStartTime(),
         defaultFundingTimeout,
@@ -296,13 +296,13 @@ describe('when initializing PoaToken', () => {
         }
       )
 
-      await testWillThrow(pmr.setupPoaToken, [
-        poa.address,
+      await testWillThrow(poa.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
         broker,
         custodian,
+        reg.address,
         defaultTotalSupply,
         // simulate day before
         new BigNumber(Date.now()).div(1000).sub(60 * 60 * 24),
@@ -324,13 +324,13 @@ describe('when initializing PoaToken', () => {
         }
       )
 
-      await testWillThrow(pmr.setupPoaToken, [
-        poa.address,
+      await testWillThrow(poa.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
         broker,
         custodian,
+        reg.address,
         defaultTotalSupply,
         await getDefaultStartTime(),
         // simulate 1 second less than a day
@@ -355,13 +355,13 @@ describe('when initializing PoaToken', () => {
         }
       )
 
-      await testWillThrow(pmr.setupPoaToken, [
-        poa.address,
+      await testWillThrow(poa.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
         broker,
         custodian,
+        reg.address,
         defaultTotalSupply,
         await getDefaultStartTime(),
         // simulate 1 second less than a day
@@ -391,13 +391,13 @@ describe('when initializing PoaToken', () => {
         }
       )
 
-      await testWillThrow(pmr.setupPoaToken, [
-        poa.address,
+      await testWillThrow(poa.setupContract, [
         defaultName,
         defaultSymbol,
         defaultFiatCurrency,
         broker,
         custodian,
+        reg.address,
         defaultTotalSupply,
         await getDefaultStartTime(),
         defaultFundingTimeout,

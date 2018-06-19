@@ -41,14 +41,14 @@ const checkPreSetupStorage = async poa => {
   }
 }
 
-const setupContract = async (pmr, poa) => {
-  await pmr.setupPoaToken(
-    poa.address,
+const setupContract = async (poa, reg) => {
+  await poa.setupContract(
     defaultName,
     defaultSymbol,
     defaultFiatCurrency,
     broker,
     custodian,
+    reg.address,
     defaultTotalSupply,
     await getDefaultStartTime(),
     defaultFundingTimeout,

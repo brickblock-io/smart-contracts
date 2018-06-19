@@ -21,7 +21,6 @@ describe('when using PoaProxy contract to proxy a PoaToken', () => {
   contract('PoaProxy/PoaToken', accounts => {
     let poam
     let upoam
-    let pmr
     let pxy
     let poa
     let reg
@@ -31,7 +30,6 @@ describe('when using PoaProxy contract to proxy a PoaToken', () => {
       // this sets PoaManager contract as owner in registry... storage will reflect that
       const contracts = await setupPoaAndEcosystem()
       reg = contracts.reg
-      pmr = contracts.pmr
       fmr = contracts.fmr
       poam = await PoaToken.new()
       upoam = await UpgradedPoa.new()
@@ -49,10 +47,10 @@ describe('when using PoaProxy contract to proxy a PoaToken', () => {
     })
 
     it('should setupContract', async () => {
-      await setupContract(pmr, poa)
+      await setupContract(poa, reg)
     })
 
-    it('should have new storage after setupPoaToken', async () => {
+    it('should have new storage after poa.setupContract', async () => {
       await checkPostSetupStorage(poa, reg)
     })
 

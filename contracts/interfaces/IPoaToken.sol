@@ -9,6 +9,7 @@ interface IPoaToken {
     string _fiatCurrency,
     address _broker,
     address _custodian,
+    address _registry,
     uint256 _totalSupply,
     // given as unix time (seconds since 01.01.1970)
     uint256 _startTime,
@@ -23,19 +24,19 @@ interface IPoaToken {
 
   function pause()
     external;
-  
+
   function unpause()
     external;
-  
+
   function terminate()
     external
     returns (bool);
-  
+
   function proofOfCustody()
     external
     view
     returns (string);
-  
+
   function toggleWhitelistTransfers()
     external
     returns (bool);

@@ -201,11 +201,12 @@ contract PoaManager is Ownable {
     return tokenAddressList;
   }
 
-  function createProxy(address _target)
+  function createPoaTokenProxy()
     private
     returns (address _proxyContract)
   {
-    _proxyContract = new PoaProxy(_target, address(registry));
+    address _poaTokenMaster = registry.getContractAddress("PoaTokenMaster");
+    _proxyContract = new PoaProxy(_poaTokenMaster, address(registry));
   }
 
   // Create a PoaToken contract with given parameters, and set active value to true
@@ -230,8 +231,7 @@ contract PoaManager is Ownable {
     onlyActiveBroker
     returns (address)
   {
-    address _poaTokenMaster = registry.getContractAddress("PoaTokenMaster");
-    address _tokenAddress = createProxy(_poaTokenMaster);
+    address _tokenAddress = createPoaTokenProxy();
 
     IPoaToken(_tokenAddress).setupContract(
       _name,
@@ -239,6 +239,7 @@ contract PoaManager is Ownable {
       _fiatCurrency,
       msg.sender,
       _custodian,
+      registry,
       _totalSupply,
       _startTime,
       _fundingTimeout,
@@ -329,52 +330,17 @@ contract PoaManager is Ownable {
     _tokenAddress.terminate();
   }
 
-  function setupPoaToken(
-    address _tokenAddress,
-    string _name,
-    string _symbol,
-    // fiat symbol used in ExchangeRates
-    string _fiatCurrency,
-    address _broker,
-    address _custodian,
-    uint256 _totalSupply,
-    // given as unix time (seconds since 01.01.1970)
-    uint256 _startTime,
-    // given as seconds
-    uint256 _fundingTimeout,
-    uint256 _activationTimeout,
-    // given as fiat cents
-    uint256 _fundingGoalInCents
-  )
-    public
-    onlyOwner
-    returns (bool)
-  {
-    IPoaToken(_tokenAddress).setupContract(
-      _name,
-      _symbol,
-      _fiatCurrency,
-      _broker,
-      _custodian,
-      _totalSupply,
-      _startTime,
-      _fundingTimeout,
-      _activationTimeout,
-      _fundingGoalInCents
-    );
-
-    return true;
-  }
-
+  // Upgrade an existing PoaToken proxy to what is stored in ContractRegistry
   function upgradeToken(
-    address _proxyTokenAddress,
-    address _masterUpgrade
+    PoaProxy _proxyToken
   )
     public
     onlyOwner
     returns (bool)
   {
-    PoaProxy(_proxyTokenAddress).proxyChangeMaster(_masterUpgrade);
+    _proxyToken.proxyChangeMaster(
+      registry.getContractAddress("PoaTokenMaster")
+    );
   }
 
   // toggle whitelisting required on transfer & transferFrom for a token
