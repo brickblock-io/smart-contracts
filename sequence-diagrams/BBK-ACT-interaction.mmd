@@ -1,0 +1,32 @@
+sequenceDiagram
+  participant User as BBK Token Holder
+  participant ACT as AccessToken
+  participant BBK as BrickblockToken
+  participant FMR as FeeManager
+
+  Note over User,FMR: User decides to lock BBK in order to participate in ACT distributions
+
+  alt BBK Token Holder locks BBK
+    User->>BBK: approve(act-address, act-allowance)
+    User->>+ACT: lockBBK(act-allowance-or-less)
+    ACT->>-ACT: update total-locked-BBK
+  end
+
+  Note over User,FMR: A fee is paid into FeeManager and ACT is minted
+
+  alt BBK Token Holder claims ACT
+    User->>+ACT: balanceOf(user-address)
+    ACT-->>User: user-balance
+    User->>+FMR: claimFee(user-balance-or-less)
+    FMR->>ACT: burn(user-balance-or-less)
+    FMR->>-User: transfer(user-balance-or-less / act-to-eth-rate)
+  end
+
+  Note over User,FMR: User decides to unlock BBK, possibly to transfer those tokens
+
+  alt BBK Token Holder unlocks BBK
+    User->>+ACT: lockedBbkOf(user-address)
+    ACT-->>User: user-balance-locked-BBK
+    User->>+ACT: unlockBBK(act-address, user-balance-locked-BBK-or-less)
+    ACT->>-ACT: update total-locked-BBK
+  end

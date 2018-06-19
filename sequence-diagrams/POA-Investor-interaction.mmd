@@ -1,0 +1,66 @@
+sequenceDiagram
+  participant Investor as POA Token Holder
+  participant Custodian
+  participant POA as PoaToken
+
+  Note over Investor,POA: Precondition: the PoaToken is in Funding stage
+  Note over Investor,POA: Precondition: Investor is whitelisted to participate in funding
+
+  alt Investor participates in funding
+    Investor->>+POA: buy().value(wei-amount)
+    POA->>Investor: transaction rejected
+    POA->>POA: check if funding target has been met
+
+    alt PoaToken funding goal reached
+      POA->>POA: enterStage(Pending)
+      POA-->>Investor: return any extra ETH
+    end
+  end
+
+  Note over Investor,POA: PoaToken has reached Funding goal
+
+  alt Custodian activates the contract
+    Custodian->>+POA: activate()
+    POA->>POA: enterStage(Terminated)
+  end
+
+  note over Investor,POA: After PoaToken is Activated, the balances of every token holder<br/>can be shown
+
+  alt Investor wants to see their balance
+    Investor->>+POA: balanceOf(token-holder-address)
+    POA-->>Investor: token-holder-balance
+  end
+
+  Note over Investor,POA: The underlying asset has a scheduled payout
+
+  alt Investor wants to claim ETH from PoaToken
+    Investor->>+POA: claim()
+    POA->>POA: update unclaimed balance to 0
+    POA->>Investor: transfer all ETH accumulated from payouts
+  end
+
+  note over Investor,POA: PoaToken is ERC20 which allows for token holders to transfer to<br/>other addresses
+
+  alt Investor wants to transfer tokens to another address
+    Investor->>+POA: transfer(to-address, token-amount)
+
+    alt transfer whitelisting is enabled AND to-address is not whitelisted
+      POA-->>Investor: transaction rejected
+    else transfer whitelist is not enabled OR to-address is whitelisted
+      POA->>POA: update token balances
+    end
+  end
+
+  Note over Investor,POA: The underlying asset is no longer tokenized
+
+  alt Custodian terminates the PoaToken
+    Custodian->>+POA: terminate()
+    POA->>POA: enterStage(Terminated)
+  end
+
+  Note over Investor,POA: Even when Terminated claiming can still happen, however payouts<br/>are expected to stop occuring
+
+  alt Investor wants to claim final ETH from PoaToken
+    Investor->>+POA: claim()
+    POA->>Investor: all ETH accumulated in payouts
+  end

@@ -25,3 +25,6 @@ build
 # Local geth folders
 private-chain-data/geth
 private-chain-data/history
+
+## generated diagrams
+sequence-diagrams/*.svg

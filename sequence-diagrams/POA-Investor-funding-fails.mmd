@@ -1,0 +1,29 @@
+sequenceDiagram
+  participant Investor as POA Token Holder
+  participant Custodian
+  participant POA as PoaToken
+
+  Note over Investor,POA: Precondition: Investor is whitelisted to participate in funding a<br/>PoaToken
+  Note over Investor,POA: Precondition: the PoaToken is in Funding stage
+
+  alt Investor participates in funding
+    Investor->>POA: buy().value(wei-amount)
+  end
+
+  Note over Investor,POA: Scenario 1: PoaToken has not reached funding goal by funding-timeout
+
+  alt Investor wants their ETH returned
+    Investor->>+POA: reclaim()
+    POA->>POA: sets total-supply to 0 to show that reclaiming has started
+    POA->>Investor: transfer all ETH from funding for this investor-address
+  end
+
+
+  Note over Investor,POA: Scenario 2: PoaToken reaches funding goal, but Custodian does not activate by activation-timeout
+
+  alt Investor wants their ETH returned
+    Investor->>+POA: reclaim()
+    POA->>POA: sets total-supply to 0 to show that reclaiming has started
+    POA->>Investor: transfer all ETH from funding for this investor-address
+  end
+

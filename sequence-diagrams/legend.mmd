@@ -1,0 +1,20 @@
+sequenceDiagram
+  participant ActorNickname as Actor Display
+  participant AnotherContract
+  participant SmartContract
+
+  Note over ActorNickname,SmartContract: this is a note, it will describe things that are preconditions as well<br/>as other transactions that occur between scenarios
+
+  alt this "alt" block contains one scenario
+    ActorNickname->>+SmartContract: straight line into a smart contract represents a transaction
+    SmartContract->>SmartContract: a contract may cause effects on itself
+    SmartContract->>AnotherContract: there can be many effects in one transaction
+    SmartContract->>SmartContract:  an effect is: sending ETH, updating contract storage, calling other contracts
+    SmartContract->>SmartContract: this grey bar represents the sequence of effects in one transaction
+    SmartContract-->>-ActorNickname: a dotted line represents data returned
+  end
+
+alt sometimes the call is simple and no data is returned
+    ActorNickname->>+SmartContract: simple transaction
+end
+

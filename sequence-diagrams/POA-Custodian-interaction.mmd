@@ -1,0 +1,37 @@
+sequenceDiagram
+  participant Custodian
+  participant POA as PoaToken
+  participant FMR as FeeManager
+
+  Note over Custodian,FMR: PoaToken has reached Funding goal
+
+  alt Custodian is ready to activate the PoaToken
+    Custodian->>+POA: activate(ipfsHash-proof-of-custody-document)
+    POA->>POA: validIpfs(ipfsHash-proof-of-custody-document)
+    POA->>FMR: payFee(0.5% * funding-goal)
+    POA->>POA: update claim balance for broker address with remaining funding-goal ETH
+    POA->>-POA: enterStage(Active)
+  end
+
+  Note over Custodian,FMR: The underlying asset has a scheduled payout
+
+  alt Custodian makes a payout
+    Custodian->>+POA: payout().value(payout-amount)
+    POA->>FMR: payFee(0.5% * payout-amount)
+    POA->>-POA: update total-payout-per-token
+  end
+
+  Note over Custodian,FMR: The underlying asset is no longer tokenized and the PoaToken<br/>contract must close
+
+  alt Custodian terminates the PoaToken
+    Custodian->>+POA: terminate()
+    POA->>-POA: enterStage(Terminated)
+  end
+
+  Note over Custodian,FMR: Even when Terminated payouts can still happen, however they are<br/>expected to stop occuring
+
+  alt Custodian performs the final payout
+    Custodian->>+POA: payout().value(payout-amount)
+    POA->>FMR: payFee(0.5% * payout-amount)
+    POA->>-POA: update total-payout-per-token
+  end
