@@ -5,7 +5,12 @@ const ExchangeRateProvider = artifacts.require(
   './stubs/ExchangeRateProviderStub'
 )
 const Registry = artifacts.require('ContractRegistry')
-const { sendTransaction, getEtherBalance, getGasUsed } = require('./general')
+const {
+  sendTransaction,
+  getEtherBalance,
+  getGasUsed,
+  waitForTxToBeMined
+} = require('./general')
 
 const trimBytes = string => string.replace(/\0/g, '')
 
@@ -257,27 +262,27 @@ const testSelfDestruct = async (exr, exp, caller) => {
   const funder = web3.eth.accounts[9]
   const preCallerBalance = await getEtherBalance(caller)
   const preCode = await web3.eth.getCode(exp.address)
-  await sendTransaction(web3, {
+  const gasPrice = web3.eth.gasPrice
+  const initialTxHash = await sendTransaction(web3, {
     from: funder,
     to: exp.address,
     value: 1e18
   })
+  await waitForTxToBeMined(initialTxHash)
   const preKillContractBalance = await getEtherBalance(exp.address)
-  const tx = await exr.killProvider(caller, { from: caller, gasPrice: 1e9 })
+  const tx = await exr.killProvider(caller, { from: caller, gasPrice })
   const gasUsed = await getGasUsed(tx)
-  const expectedOwnerBalance = preCallerBalance
-    .add(1e18)
-    .sub(new BigNumber(gasUsed).mul(1e9))
+  const gasPaid = new BigNumber(gasUsed).mul(gasPrice)
+  const expectedOwnerBalance = preCallerBalance.add(1e18).sub(gasPaid)
   const postCallerBalance = await getEtherBalance(caller)
   const postCode = await web3.eth.getCode(exp.address)
 
   assert(
-    preCode != '0x0',
+    preCode !== '0x0' && preCode !== '0x',
     'the contract should have code at address before selfdestruct'
   )
-  assert.equal(
-    postCode,
-    '0x0',
+  assert(
+    postCode === '0x0' || postCode === '0x',
     'the contract should NOT have any code after selfDestruct'
   )
 

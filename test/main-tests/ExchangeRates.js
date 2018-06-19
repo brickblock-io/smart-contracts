@@ -149,7 +149,7 @@ describe('when self destructing', async () => {
       await testSelfDestruct(exr, exp, owner)
     })
 
-    it('should NOT selfDestruct ExchangeRateProvicer if NOT owner', async () => {
+    it('should NOT selfDestruct ExchangeRateProvider if NOT owner', async () => {
       await testWillThrow(testSelfDestruct, [exr, exp, notOwner])
     })
   })

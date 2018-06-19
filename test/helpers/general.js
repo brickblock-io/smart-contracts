@@ -158,7 +158,7 @@ const getEtherBalance = address => {
 
 const getReceipt = txHash => {
   // seems that sometimes actual transaction is returned instead of txHash
-  if (typeof txHash === 'object') {
+  if (typeof txHash === 'object' && txHash.receipt) {
     return txHash.receipt
   }
 
@@ -254,7 +254,7 @@ const waitForTxToBeMined = txHash =>
   // waiting for a transaction to be mined into a block
   // required for geth compatibility
   new Promise(async (resolve, reject) => {
-    const timeout = Date.now() + 5 * 1000 // 5 seconds to get a receipt
+    const timeout = Date.now() + 10 * 1000 // 10 seconds to get a receipt
     let done = false
 
     while (timeout > Date.now() && !done) {
@@ -269,7 +269,7 @@ const waitForTxToBeMined = txHash =>
         resolve(true)
       })
 
-      await sleep(1000)
+      await sleep(1 * 1000) // 1 second interval
     }
 
     if (!done) reject(false)
