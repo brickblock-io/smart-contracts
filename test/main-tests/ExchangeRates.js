@@ -206,31 +206,6 @@ describe('when testing events', async () => {
         'event log even should match QueryNoMinBalanceEvent'
       )
     })
-    // TODO: find a better way to get logs while keeping async/await working...
-    // this will not work with tx due to internal tx nature of the tx...
-
-    // it('should trigger RateUpdated when a currency rate is updated', async () => {
-    //   await testSetCurrencySettings(
-    //     exr,
-    //     queryType,
-    //     callInterval,
-    //     callbackGasLimit,
-    //     queryString,
-    //     { from: owner }
-    //   )
-    //   await testSettingsExists(exr, queryType)
-    //   const queryId = web3.sha3(web3.toHex(Date.now()), { encoding: 'hex' })
-    //   const queryTypeBytes8 = await exr.toBytes8(queryType)
-    //   await exp.setQueryId(queryId, queryTypeBytes8)
-    //   const tx = await exp.simulate__callback(queryId, defaultRate)
-    //   await getReceipt(tx.receipt.logs[0].topics[0])
-    //
-    //   assert.equal(
-    //     tx.event,
-    //     'RateUpdated',
-    //     'event log even should match RateUpdate'
-    //   )
-    // })
   })
 })
 
