@@ -3,7 +3,7 @@ const {
   custodian,
   bbkContributors,
   whitelistedPoaBuyers,
-  defaultIpfsHash,
+  defaultIpfsHashArray32,
   setupPoaProxyAndEcosystem,
   testStartSale,
   testBuyTokens,
@@ -30,8 +30,12 @@ const {
 } = require('../../helpers/general.js')
 
 describe('when in Terminated (stage 5)', () => {
-  contract('PoaToken', () => {
+  contract('PoaTokenProxy', () => {
     const newIpfsHash = 'Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u'
+    const newIpfsHashArray32 = [
+      web3.toHex(newIpfsHash.slice(0, 32)),
+      web3.toHex(newIpfsHash.slice(32))
+    ]
     let poa
     let fmr
 
@@ -58,7 +62,7 @@ describe('when in Terminated (stage 5)', () => {
       })
 
       // move into Active
-      await testActivate(poa, fmr, defaultIpfsHash, {
+      await testActivate(poa, fmr, defaultIpfsHashArray32, {
         from: custodian
       })
 
@@ -97,7 +101,7 @@ describe('when in Terminated (stage 5)', () => {
       await testWillThrow(testActivate, [
         poa,
         fmr,
-        defaultIpfsHash,
+        defaultIpfsHashArray32,
         { from: custodian }
       ])
     })
@@ -184,13 +188,15 @@ describe('when in Terminated (stage 5)', () => {
     })
 
     it('should update proofOfCustody if custodian', async () => {
-      await testUpdateProofOfCustody(poa, newIpfsHash, { from: custodian })
+      await testUpdateProofOfCustody(poa, newIpfsHashArray32, {
+        from: custodian
+      })
     })
 
     it('should NOT update proofOfCustody if NOT custodian', async () => {
       await testWillThrow(testUpdateProofOfCustody, [
         poa,
-        newIpfsHash,
+        newIpfsHashArray32,
         { from: owner }
       ])
     })
@@ -199,14 +205,14 @@ describe('when in Terminated (stage 5)', () => {
       // invalid length
       await testWillThrow(testUpdateProofOfCustody, [
         poa,
-        newIpfsHash.slice(0, newIpfsHash.length - 2),
+        [newIpfsHashArray32[0], newIpfsHashArray32[1] + 'invalidExtraStuff'],
         { from: owner }
       ])
 
       // wrong hashing algo
       await testWillThrow(testUpdateProofOfCustody, [
         poa,
-        'Zr' + newIpfsHash.slice(2),
+        [newIpfsHashArray32[0], 'Zr' + newIpfsHashArray32[1].slice(2)],
         { from: owner }
       ])
     })

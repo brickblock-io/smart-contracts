@@ -3,7 +3,7 @@ const {
   custodian,
   bbkContributors,
   whitelistedPoaBuyers,
-  defaultIpfsHash,
+  defaultIpfsHashArray32,
   setupPoaAndEcosystem,
   testStartSale,
   testBuyTokens,
@@ -96,7 +96,7 @@ describe('when in Pending (stage 2)', () => {
     it('should NOT updateProofOfCustody, even if valid and from custodian', async () => {
       await testWillThrow(testUpdateProofOfCustody, [
         poa,
-        defaultIpfsHash,
+        defaultIpfsHashArray32,
         { from: custodian }
       ])
     })
@@ -148,7 +148,7 @@ describe('when in Pending (stage 2)', () => {
     // start core stage functionality
 
     it('should move into Active when activated', async () => {
-      await testActivate(poa, fmr, defaultIpfsHash, {
+      await testActivate(poa, fmr, defaultIpfsHashArray32, {
         from: custodian
       })
     })

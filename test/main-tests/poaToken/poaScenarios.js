@@ -1,7 +1,7 @@
 const {
   custodian,
   whitelistedPoaBuyers,
-  defaultIpfsHash,
+  defaultIpfsHashArray32,
   setupPoaAndEcosystem,
   testStartSale,
   testBuyTokens,
@@ -22,7 +22,8 @@ const {
   getAccountInformation,
   testResetCurrencyRate,
   testActiveBalances,
-  testToggleWhitelistTransfers
+  testToggleWhitelistTransfers,
+  stages
 } = require('../../helpers/poa')
 const {
   timeTravel,
@@ -72,7 +73,7 @@ describe('De-whitelisted POA holders', () => {
       })
 
       // move into Active
-      await testActivate(poa, fmr, defaultIpfsHash, {
+      await testActivate(poa, fmr, defaultIpfsHashArray32, {
         from: custodian
       })
 
@@ -207,7 +208,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
       })
 
       // move into Active
-      await testActivate(poa, fmr, defaultIpfsHash, {
+      await testActivate(poa, fmr, defaultIpfsHashArray32, {
         from: custodian
       })
 
@@ -922,7 +923,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       // this matches the first buyer's first purchase (whitelistedPoaBuers[0])
       commitments[0].amount = purchase
 
-      await testActivate(poa, fmr, defaultIpfsHash, {
+      await testActivate(poa, fmr, defaultIpfsHashArray32, {
         from: custodian,
         gasPrice
       })
@@ -964,7 +965,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       // this matches the first buyer's first purchase (whitelistedPoaBuers[0])
       commitments[0].amount = purchase
 
-      await testActivate(poa, fmr, defaultIpfsHash, {
+      await testActivate(poa, fmr, defaultIpfsHashArray32, {
         from: custodian,
         gasPrice
       })
@@ -990,8 +991,8 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
 
       assert.equal(
         postStage.toString(),
-        new BigNumber(1).toString(),
-        'contract should still be in stage 1, Funding'
+        stages.Funding,
+        'contract should still be in stage Funding'
       )
       assert(
         areInRange(postFundedAmountCents, fundingGoalFiatCents.div(2), 1e2),
@@ -1036,13 +1037,13 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
 
       assert.equal(
         interimStage.toString(),
-        new BigNumber(1).toString(),
-        'stage should still be 1, Funding'
+        stages.Funding,
+        'stage should still be Funding'
       )
       assert.equal(
         postStage.toString(),
-        new BigNumber(2).toString(),
-        'stage should now be 2, Pending'
+        stages.Pending,
+        'stage should now be Pending'
       )
       assert.equal(
         postSecondTokenBalance.toString(),

@@ -370,7 +370,11 @@ const testSetRateClearIntervals = async (exr, exp, rate) => {
 
 const testSetQueryId = async (exr, exp, queryType) => {
   // create a dummy queryId
-  const queryId = web3.sha3(web3.toHex(Date.now()), { encoding: 'hex' })
+  // this test has been giving us random trouble for a long time...
+  // trying different Date method and crossing fingers...
+  const now = new Date().getTime().toString()
+  const queryId = web3.sha3(web3.toHex(now), { encoding: 'hex' })
+
   await exp.setQueryId(queryId, queryType)
   const postQueryType = await exr.queryTypes(queryId)
   assert.equal(

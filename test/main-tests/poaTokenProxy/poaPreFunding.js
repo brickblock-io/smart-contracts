@@ -18,7 +18,7 @@ const {
   testApprove,
   testTransferFrom,
   testTerminate,
-  defaultIpfsHash,
+  defaultIpfsHashArray32,
   setupPoaProxyAndEcosystem
 } = require('../../helpers/poa')
 const {
@@ -28,7 +28,7 @@ const {
 } = require('../../helpers/general.js')
 
 describe('when in PreFunding (stage 0)', async () => {
-  contract('PoaToken', () => {
+  contract('PoaTokenProxy', () => {
     let poa
     let fmr
 
@@ -61,7 +61,7 @@ describe('when in PreFunding (stage 0)', async () => {
       await testWillThrow(testActivate, [
         poa,
         fmr,
-        defaultIpfsHash,
+        defaultIpfsHashArray32,
         { from: custodian }
       ])
     })
@@ -89,7 +89,7 @@ describe('when in PreFunding (stage 0)', async () => {
     it('should NOT updateProofOfCustody, even if valid and from custodian', async () => {
       await testWillThrow(testUpdateProofOfCustody, [
         poa,
-        defaultIpfsHash,
+        defaultIpfsHashArray32,
         { from: custodian }
       ])
     })

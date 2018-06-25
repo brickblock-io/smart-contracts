@@ -10,6 +10,7 @@ const {
   testBuyRemainingTokens,
   testActivate,
   custodian,
+  defaultIpfsHashArray32,
   defaultIpfsHash,
   testPayout,
   testClaim,
@@ -17,7 +18,8 @@ const {
   testChangeCustodianAddress,
   setupPoaProxyAndEcosystem,
   fundingTimeoutContract,
-  testReclaim
+  testReclaim,
+  stages
 } = require('./poa')
 
 // change PoaManager reg entry to owner for easier testing...
@@ -52,8 +54,8 @@ const testPreFundingToFundingEvent = async (poa, reg, pmr, log) => {
   )
   assert.equal(
     triggeredLoggerEvent.stage.toString(),
-    new BigNumber(1).toString(),
-    'stage event stage should be 1 (Funding)'
+    stages.Funding,
+    'stage event stage should be in Funding Stage'
   )
 }
 
@@ -132,11 +134,10 @@ const testBuyRemainingTokensEvents = async (poa, reg, pmr, log) => {
 const testActivateEvents = async (poa, reg, pmr, fmr, log) => {
   // change to actual PoaManager contract so that logger validation works...
   await poaManagerToPoaManager(reg, pmr.address)
-
   const LoggerStageEvent = log.StageEvent()
   const LoggerProofOfCustodyUpdatedEvent = log.ProofOfCustodyUpdatedEvent()
 
-  await testActivate(poa, fmr, defaultIpfsHash, {
+  await testActivate(poa, fmr, defaultIpfsHashArray32, {
     from: custodian,
     gasPrice
   })
@@ -159,8 +160,8 @@ const testActivateEvents = async (poa, reg, pmr, fmr, log) => {
   )
   assert.equal(
     triggeredLoggerStageEvent.stage.toString(),
-    new BigNumber(4).toString(),
-    'stage event should match 4 (Active)'
+    stages.Active,
+    'stage event should match Active stage'
   )
   assert.equal(
     triggeredLoggerProofEvent.tokenAddress,
@@ -170,7 +171,7 @@ const testActivateEvents = async (poa, reg, pmr, fmr, log) => {
   assert.equal(
     triggeredLoggerProofEvent.ipfsHash,
     defaultIpfsHash,
-    'logger proof of custody updated even ipfs hash should match defaultIpfsHash'
+    'logger proof of custody updated event ipfsHash should match defaultIpfsHash'
   )
 }
 
@@ -333,7 +334,6 @@ const testReclaimEvents = async () => {
   const { args: triggeredLoggerReclaimEvent } = await waitForEvent(
     LoggerReclaimEvent
   )
-
   // change back so that other testing functions will work with owner...
   await poaManagerToOwner(reg)
 
@@ -344,8 +344,8 @@ const testReclaimEvents = async () => {
   )
   assert.equal(
     triggeredLoggerStageEvent.stage.toString(),
-    new BigNumber(3).toString(),
-    'logger stage event stage should match 3, Failed'
+    stages.Failed,
+    'logger stage event stage should match Failed'
   )
   assert.equal(
     triggeredLoggerReclaimEvent.tokenAddress,

@@ -11,13 +11,13 @@ contract PoaToken is PausableToken {
   // instance of registry to call other contracts
   address public registry;
   // ERC20 name of the token
-  string public name;
+  bytes32 private name32;
   // ERC20 symbol
-  string public symbol;
+  bytes32 private symbol32;
   // ipfs hash for proof of custody by custodian
-  string public proofOfCustody;
+  bytes32[2] private proofOfCustody32;
   // fiat currency symbol used to get rate
-  string public fiatCurrency;
+  bytes32 private fiatCurrency32;
   // broker who is selling property, whitelisted on PoaManager
   address public broker;
   // custodian in charge of taking care of asset and payouts
@@ -38,44 +38,43 @@ contract PoaToken is PausableToken {
   uint256 public fundingGoalInCents;
   // the total per token payout rate: accumulates as payouts are received
   uint256 public totalPerTokenPayout;
+  // used to keep track of actual funded amount in fiat during FiatFunding stage
+  uint256 public fundedAmountInCentsDuringFiatFunding;
+   // used to keep track of actual funded amount in POA token during FiatFunding stage
+  uint256 public fundedAmountInTokensDuringFiatFunding;
   // used to keep track of of actual fundedAmount in eth
   uint256 public fundedAmountInWei;
   // used to enable/disable whitelist required transfers/transferFroms
   bool public whitelistTransfers;
 
   // used to deduct already claimed payouts on a per token basis
-  mapping(address => uint256) public claimedPerTokenPayouts;
+  mapping(address => uint256) private claimedPerTokenPayouts;
   // fallback for when a transfer happens with payouts remaining
   mapping(address => uint256) public unclaimedPayoutTotals;
   // needs to be used due to tokens not directly correlating to fundingGoal
   // due to fluctuating fiat rates
   mapping(address => uint256) public investmentAmountPerUserInWei;
+  // Used to track fiat pre sale contributors
+  mapping(address => uint256) public fiatInvestmentPerUserInTokens;
   // used to calculate balanceOf by deducting spent balances
-  mapping(address => uint256) public spentBalances;
+  mapping(address => uint256) private spentBalances;
   // used to calculate balanceOf by adding received balances
-  mapping(address => uint256) public receivedBalances;
+  mapping(address => uint256) private receivedBalances;
   // hide balances to ensure that only balanceOf is being used
   mapping(address => uint256) private balances;
 
   enum Stages {
-    PreFunding,
-    Funding,
-    Pending,
-    Failed,
-    Active,
-    Terminated
+    PreFunding, // 0
+    FiatFunding, // 1
+    EthFunding, // 2
+    Pending, // 3
+    Failed,  // 4
+    Active, // 5
+    Terminated, // 6
+    Cancelled // 7
   }
 
   Stages public stage = Stages.PreFunding;
-
-  event StageEvent(Stages stage);
-  event BuyEvent(address indexed buyer, uint256 amount);
-  event PayoutEvent(uint256 amount);
-  event ClaimEvent(address indexed claimer, uint256 payout);
-  event TerminatedEvent();
-  event ProofOfCustodyUpdatedEvent(string ipfsHash);
-  event ReclaimEvent(address indexed reclaimer, uint256 amount);
-  event CustodianChangedEvent(address indexed oldAddress, address indexed newAddress);
 
   modifier eitherCustodianOrOwner() {
     owner = getContractAddress("PoaManager");
@@ -127,33 +126,35 @@ contract PoaToken is PausableToken {
       .add(activationTimeout);
 
     if (
-      (stage == Stages.Funding && block.timestamp >= fundingTimeoutDeadline) ||
+      (uint256(stage) < 3 && block.timestamp >= fundingTimeoutDeadline) ||
       (stage == Stages.Pending && block.timestamp >= activationTimeoutDeadline)
     ) {
       enterStage(Stages.Failed);
     }
+    
     _;
   }
 
-  modifier validIpfs(string _ipfsHash) {
+  modifier validIpfsHash(bytes32[2] _ipfsHash) {
     // check that the most common hashing algo is used sha256
     // and that the length is correct. In theory it could be different
     // but use of this functionality is limited to only custodian
     // so this validation should suffice
-    require(bytes(_ipfsHash).length == 46);
-    require(bytes(_ipfsHash)[0] == 0x51);
-    require(bytes(_ipfsHash)[1] == 0x6D);
-    require(keccak256(bytes(_ipfsHash)) != keccak256(bytes(proofOfCustody)));
+    bytes memory _ipfsHashBytes = bytes(to64LengthString(_ipfsHash));
+    require(_ipfsHashBytes.length == 46);
+    require(_ipfsHashBytes[0] == 0x51);
+    require(_ipfsHashBytes[1] == 0x6D);
+    require(keccak256(_ipfsHashBytes) != keccak256(bytes(proofOfCustody())));
     _;
   }
 
   // token totalSupply must be more than fundingGoalInCents!
   function setupContract
   (
-    string _name,
-    string _symbol,
+    bytes32 _name,
+    bytes32 _symbol,
     // fiat symbol used in ExchangeRates
-    string _fiatCurrency,
+    bytes32 _fiatCurrency,
     address _broker,
     address _custodian,
     address _registry,
@@ -166,15 +167,15 @@ contract PoaToken is PausableToken {
     // given as fiat cents
     uint256 _fundingGoalInCents
   )
-    public
+    external
     returns (bool)
   {
     // ensure that setup has not been called
     require(startTime == 0);
     // ensure all strings are valid
-    require(bytes(_name).length >= 3);
-    require(bytes(_symbol).length >= 3);
-    require(bytes(_fiatCurrency).length >= 3);
+    require(_name != 0);
+    require(_symbol != 0);
+    require(_fiatCurrency != 0);
 
     // ensure all addresses given are valid
     require(_broker != address(0));
@@ -192,9 +193,9 @@ contract PoaToken is PausableToken {
     require(_fundingGoalInCents > 0);
 
     // assign strings
-    name = _name;
-    symbol = _symbol;
-    fiatCurrency = _fiatCurrency;
+    name32 = _name;
+    symbol32 = _symbol;
+    fiatCurrency32 = _fiatCurrency;
 
     // assign addresses
     broker = _broker;
@@ -221,9 +222,162 @@ contract PoaToken is PausableToken {
     return true;
   }
 
+  // public utility function to allow checking of required fee for a given amount
+  function calculateFee(uint256 _value)
+    public
+    pure
+    returns (uint256)
+  {
+    // divide by 1000 because feeRate permille
+    return feeRate.mul(_value).div(1000);
+  }
+
+  // takes a single bytes32 and returns a max 32 char long string
+  function to32LengthString(bytes32 _data)
+    pure
+    private
+    returns (string)
+  {
+    // create new empty bytes array with same length as input
+    bytes memory _bytesString = new bytes(32);
+    // keep track of string length for later usage in trimming
+    uint256 _stringLength;
+
+    // loop through each byte in bytes32
+    for (uint _bytesCounter = 0; _bytesCounter < 32; _bytesCounter++) {
+      /*
+      convert bytes32 data to uint in order to increase the number enough to
+      shift bytes further left while pushing out leftmost bytes
+      then convert uint256 data back to bytes32
+      then convert to bytes1 where everything but the leftmost hex value (byte)
+      is cutoff leaving only the leftmost byte
+
+      TLDR: takes a single character from bytes based on counter
+      */
+      bytes1 _char = bytes1(
+        bytes32(
+          uint(_data) * 2 ** (8 * _bytesCounter)
+        )
+      );
+      // add the character if not empty
+      if (_char != 0) {
+        _bytesString[_stringLength] = _char;
+        _stringLength += 1;
+      }
+    }
+
+    // new bytes with correct matching string length
+    bytes memory _bytesStringTrimmed = new bytes(_stringLength);
+    // loop through _bytesStringTrimmed throwing in
+    // non empty data from _bytesString
+    for (_bytesCounter = 0; _bytesCounter < _stringLength; _bytesCounter++) {
+      _bytesStringTrimmed[_bytesCounter] = _bytesString[_bytesCounter];
+    }
+    // return trimmed bytes array converted to string
+    return string(_bytesStringTrimmed);
+  }
+
+  // takes a dynamically sized array of bytes32. needed for longer strings
+  function to64LengthString(bytes32[2] _data)
+    pure
+    private
+    returns (string)
+  {
+    // create new empty bytes array with same length as input
+    bytes memory _bytesString = new bytes(_data.length * 32);
+    // keep track of string length for later usage in trimming
+    uint256 _stringLength;
+
+    // loop through each bytes32 in array
+    for (uint _arrayCounter = 0; _arrayCounter < _data.length; _arrayCounter++) {
+      // loop through each byte in bytes32
+      for (uint _bytesCounter = 0; _bytesCounter < 32; _bytesCounter++) {
+        /*
+        convert bytes32 data to uint in order to increase the number enough to
+        shift bytes further left while pushing out leftmost bytes
+        then convert uint256 data back to bytes32
+        then convert to bytes1 where everything but the leftmost hex value (byte)
+        is cutoff leaving only the leftmost byte
+
+        TLDR: takes a single character from bytes based on counter
+        */
+        bytes1 _char = bytes1(
+          bytes32(
+            uint(_data[_arrayCounter]) * 2 ** (8 * _bytesCounter)
+          )
+        );
+        // add the character if not empty
+        if (_char != 0) {
+          _bytesString[_stringLength] = _char;
+          _stringLength += 1;
+        }
+      }
+    }
+
+    // new bytes with correct matching string length
+    bytes memory _bytesStringTrimmed = new bytes(_stringLength);
+    // loop through _bytesStringTrimmed throwing in
+    // non empty data from _bytesString
+    for (_bytesCounter = 0; _bytesCounter < _stringLength; _bytesCounter++) {
+      _bytesStringTrimmed[_bytesCounter] = _bytesString[_bytesCounter];
+    }
+    // return trimmed bytes array converted to string
+    return string(_bytesStringTrimmed);
+  }
+
+  //
+  // start getter functions
+  //
+
+  function name()
+    external
+    view
+    returns (string)
+  {
+    return to32LengthString(name32);
+  }
+
+  function symbol()
+    external
+    view
+    returns (string)
+  {
+    return to32LengthString(symbol32);
+  }
+
+  function fiatCurrency()
+    public
+    view
+    returns (string)
+  {
+    return to32LengthString(fiatCurrency32);
+  }
+
+  function proofOfCustody()
+    public
+    view
+    returns (string)
+  {
+    return to64LengthString(proofOfCustody32);
+  }
+
+  //
+  // end getter functions
+  //
+
   //
   // start utility functions
   //
+
+  function isFiatInvestor(
+    address _buyer
+  )
+    internal
+    view
+    returns(bool)
+  {
+    return fiatInvestmentPerUserInTokens[_buyer] != 0;
+  }
 
   // gets a given contract address by bytes32 saving gas
   function getContractAddress(
@@ -269,7 +423,7 @@ contract PoaToken is PausableToken {
   {
     bytes4 _sig = bytes4(keccak256("getRate32(bytes32)"));
     address _exchangeRates = getContractAddress("ExchangeRates");
-    bytes32 _fiatCurrency = keccak256(fiatCurrency);
+    bytes32 _fiatCurrency = keccak256(fiatCurrency());
 
     assembly {
       let _call := mload(0x40) // set _call to free memory pointer
@@ -353,7 +507,7 @@ contract PoaToken is PausableToken {
 
   // get funded amount in cents
   function fundedAmountInCents()
-    public
+    external
     view
     returns (uint256)
   {
@@ -362,26 +516,16 @@ contract PoaToken is PausableToken {
 
   // get fundingGoal in wei
   function fundingGoalInWei()
-    public
+    external
     view
     returns (uint256)
   {
     return fiatCentsToWei(fundingGoalInCents);
   }
 
-  // public utility function to allow checking of required fee for a given amount
-  function calculateFee(uint256 _value)
-    public
-    pure
-    returns (uint256)
-  {
-    // divide by 1000 because feeRate permille
-    return feeRate.mul(_value).div(1000);
-  }
-
   // pay fee to FeeManager
   function payFee(uint256 _value)
-    private
+    internal
     returns (bool)
   {
     require(
@@ -408,7 +552,7 @@ contract PoaToken is PausableToken {
 
   // enables whitelisted transfers/transferFroms
   function toggleWhitelistTransfers()
-    public
+    external
     onlyOwner
     returns (bool)
   {
@@ -422,36 +566,78 @@ contract PoaToken is PausableToken {
 
   // used to enter a new stage of the contract
   function enterStage(Stages _stage)
-    private
+    internal
   {
     stage = _stage;
-    emit StageEvent(_stage);
     getContractAddress("Logger").call(
       bytes4(keccak256("logStageEvent(uint256)")),
       _stage
     );
   }
 
-  // used to start the sale as long as startTime has passed
-  function startSale()
-    public
+  // used to start the FIAT preSale funding
+  function startFiatPreSale()
+    external
     atStage(Stages.PreFunding)
     returns (bool)
   {
-    require(block.timestamp >= startTime);
-    enterStage(Stages.Funding);
+    enterStage(Stages.FiatFunding);
     return true;
+  }
+
+  // used to start the sale as long as startTime has passed
+  function startEthSale()
+    external
+    atEitherStage(Stages.PreFunding, Stages.FiatFunding)
+    returns (bool)
+  {
+    require(block.timestamp >= startTime);
+    enterStage(Stages.EthFunding);
+    return true;
+  }
+
+  // Buy with FIAT
+  function buyFiat(address contributor, uint256 amountInCents)
+    external
+    atStage(Stages.FiatFunding)
+    onlyCustodian
+    returns (bool)
+  {
+    //if the amount is bigger than funding goal, reject the transaction
+    if (fundedAmountInCentsDuringFiatFunding >= fundingGoalInCents) {
+      return false;
+    } else {
+      uint256 _newFundedAmount = fundedAmountInCentsDuringFiatFunding.add(amountInCents);
+
+      if (fundingGoalInCents.sub(_newFundedAmount) > 0) {
+        fundedAmountInCentsDuringFiatFunding = fundedAmountInCentsDuringFiatFunding.add(amountInCents);
+        uint256 _percentOfFundingGoal = fundingGoalInCents.mul(100).div(amountInCents);
+        uint256 _tokenAmount = totalSupply().mul(_percentOfFundingGoal).div(100);
+        fundedAmountInTokensDuringFiatFunding = fundedAmountInTokensDuringFiatFunding.add(_tokenAmount);
+        fiatInvestmentPerUserInTokens[contributor] = fiatInvestmentPerUserInTokens[contributor].add(_tokenAmount);
+
+        return true;
+      } else {
+        return false;
+      } 
+
+    }
   }
 
   // buy tokens
   function buy()
-    public
+    external
     payable
     checkTimeout
-    atStage(Stages.Funding)
+    atStage(Stages.EthFunding)
     isBuyWhitelisted
     returns (bool)
   {
+    // Prevent FiatFunding addresses from contributing to funding to keep total supply legit
+    if (isFiatInvestor(msg.sender)) {
+      return false;
+    }
+
     // prevent case where buying after reaching fundingGoal results in buyer
     // earning money on a buy
     if (weiToFiatCents(fundedAmountInWei) > fundingGoalInCents) {
@@ -464,7 +650,8 @@ contract PoaToken is PausableToken {
 
     // get current funded amount + sent value in cents
     // with most current rate available
-    uint256 _currentFundedCents = weiToFiatCents(fundedAmountInWei.add(msg.value));
+    uint256 _currentFundedCents = weiToFiatCents(fundedAmountInWei.add(msg.value))
+      .add(fundedAmountInCentsDuringFiatFunding);
     // check if balance has met funding goal to move on to Pending
     if (_currentFundedCents < fundingGoalInCents) {
       // give a range due to fun fun integer division
@@ -485,7 +672,7 @@ contract PoaToken is PausableToken {
 
   // buy and continue funding process (when funding goal not met)
   function buyAndContinueFunding(uint256 _payAmount)
-    private
+    internal
     returns (bool)
   {
     // save this for later in case needing to reclaim
@@ -494,7 +681,6 @@ contract PoaToken is PausableToken {
     // increment the funded amount
     fundedAmountInWei = fundedAmountInWei.add(_payAmount);
 
-    emit BuyEvent(msg.sender, _payAmount);
     getContractAddress("Logger").call(
       bytes4(keccak256("logBuyEvent(address,uint256)")), msg.sender, _payAmount
     );
@@ -504,7 +690,7 @@ contract PoaToken is PausableToken {
 
   // buy and finish funding process (when funding goal met)
   function buyAndEndFunding(bool _shouldRefund)
-    private
+    internal
     returns (bool)
   {
     // let the world know that the token is in Pending Stage
@@ -527,7 +713,7 @@ contract PoaToken is PausableToken {
   // lastly can also be used when no one else has called reclaim.
   function setFailed()
     external
-    atEitherStage(Stages.Funding, Stages.Pending)
+    atEitherStage(Stages.EthFunding, Stages.Pending)
     checkTimeout
     returns (bool)
   {
@@ -537,9 +723,20 @@ contract PoaToken is PausableToken {
     return true;
   }
 
+  function setCancelled()
+    external
+    onlyCustodian
+    atEitherStage(Stages.PreFunding, Stages.FiatFunding)
+    returns (bool)
+  {
+    enterStage(Stages.Cancelled);
+    
+    return true;
+  }
+
   // function to change custodianship of poa
   function changeCustodianAddress(address _newCustodian)
-    public
+    external
     onlyCustodian
     returns (bool)
   {
@@ -547,7 +744,6 @@ contract PoaToken is PausableToken {
     require(_newCustodian != custodian);
     address _oldCustodian = custodian;
     custodian = _newCustodian;
-    emit CustodianChangedEvent(_oldCustodian, _newCustodian);
     getContractAddress("Logger").call(
       bytes4(keccak256("logCustodianChangedEvent(address,address)")),
       _oldCustodian,
@@ -558,12 +754,12 @@ contract PoaToken is PausableToken {
 
   // activate token with proofOfCustody fee is taken from contract balance
   // brokers must work this into their funding goals
-  function activate(string _ipfsHash)
+  function activate(bytes32[2] _ipfsHash)
     external
     checkTimeout
     onlyCustodian
     atStage(Stages.Pending)
-    validIpfs(_ipfsHash)
+    validIpfsHash(_ipfsHash)
     returns (bool)
   {
     // calculate company fee charged for activation
@@ -573,9 +769,7 @@ contract PoaToken is PausableToken {
     // fee sent to FeeManager where fee gets
     // turned into ACT for lockedBBK holders
     payFee(_fee);
-    proofOfCustody = _ipfsHash;
-    // event showing that proofOfCustody has been updated.
-    emit ProofOfCustodyUpdatedEvent(_ipfsHash);
+    proofOfCustody32 = _ipfsHash;
     getContractAddress("Logger")
       .call(bytes4(keccak256("logProofOfCustodyUpdatedEvent()")));
     // balance of contract (fundingGoalInCents) set to claimable by broker.
@@ -603,8 +797,6 @@ contract PoaToken is PausableToken {
     enterStage(Stages.Terminated);
     // pause. Cannot be unpaused now that in Stages.Terminated
     paused = true;
-    // let the world know this token is in Terminated Stage
-    emit TerminatedEvent();
     getContractAddress("Logger")
       .call(bytes4(keccak256("logTerminatedEvent()")));
     return true;
@@ -655,7 +847,7 @@ contract PoaToken is PausableToken {
   // settle up perToken balances and move into unclaimedPayoutTotals in order
   // to ensure that token transfers will not result in inaccurate balances
   function settleUnclaimedPerTokenPayouts(address _from, address _to)
-    private
+    internal
     returns (bool)
   {
     // add perToken balance to unclaimedPayoutTotals which will not be affected by transfers
@@ -676,13 +868,13 @@ contract PoaToken is PausableToken {
     atStage(Stages.Failed)
     returns (bool)
   {
+    require(!isFiatInvestor(msg.sender));
     totalSupply_ = 0;
     uint256 _refundAmount = investmentAmountPerUserInWei[msg.sender];
     investmentAmountPerUserInWei[msg.sender] = 0;
     require(_refundAmount > 0);
     fundedAmountInWei = fundedAmountInWei.sub(_refundAmount);
     msg.sender.transfer(_refundAmount);
-    emit ReclaimEvent(msg.sender, _refundAmount);
     getContractAddress("Logger").call(
       bytes4(keccak256("logReclaimEvent(address,uint256)")),
       msg.sender,
@@ -721,8 +913,6 @@ contract PoaToken is PausableToken {
     uint256 _delta = (_payoutAmount.mul(1e18) % totalSupply()).div(1e18);
     // pay fee along with any dust to FeeManager
     payFee(_fee.add(_delta));
-    // let the world know that a payout has happened for this token
-    emit PayoutEvent(_payoutAmount.sub(_delta));
     getContractAddress("Logger").call(
       bytes4(keccak256("logPayoutEvent(uint256)")),
       _payoutAmount.sub(_delta)
@@ -751,8 +941,6 @@ contract PoaToken is PausableToken {
     unclaimedPayoutTotals[msg.sender] = 0;
     // transfer Ξ payable amount to sender
     msg.sender.transfer(_payoutAmount);
-    // let the world know that a payout for sender has been claimed
-    emit ClaimEvent(msg.sender, _payoutAmount);
     getContractAddress("Logger").call(
       bytes4(keccak256("logClaimEvent(address,uint256)")),
       msg.sender,
@@ -762,15 +950,14 @@ contract PoaToken is PausableToken {
   }
 
   // allow ipfs hash to be updated when audit etc occurs
-  function updateProofOfCustody(string _ipfsHash)
+  function updateProofOfCustody(bytes32[2] _ipfsHash)
     external
     atEitherStage(Stages.Active, Stages.Terminated)
     onlyCustodian
-    validIpfs(_ipfsHash)
+    validIpfsHash(_ipfsHash)
     returns (bool)
   {
-    proofOfCustody = _ipfsHash;
-    emit ProofOfCustodyUpdatedEvent(_ipfsHash);
+    proofOfCustody32 = _ipfsHash;
     getContractAddress("Logger").call(
       bytes4(keccak256("logProofOfCustodyUpdatedEvent(string)")),
       _ipfsHash
@@ -788,15 +975,23 @@ contract PoaToken is PausableToken {
 
   // used for calculating starting balance once activated
   function startingBalance(address _address)
-    private
+    internal
     view
     returns (uint256)
   {
-    return uint256(stage) > 3
-      ? investmentAmountPerUserInWei[_address]
-        .mul(totalSupply())
-        .div(fundedAmountInWei)
-      : 0;
+    if (isFiatInvestor(_address)) {
+      return uint256(stage) > 4
+        ? fiatInvestmentPerUserInTokens[_address]
+        : 0;
+    } else {
+      return uint256(stage) > 4
+        ? investmentAmountPerUserInWei[_address]
+          .mul(
+            totalSupply().sub(fundedAmountInTokensDuringFiatFunding)
+          )
+          .div(fundedAmountInWei)
+        : 0;
+    }
   }
 
   // ERC20 override uses NoobCoin pattern
@@ -868,7 +1063,6 @@ contract PoaToken is PausableToken {
   //
   // end ERC20 overrides
   //
-
 
   // prevent anyone from sending funds other than selfdestructs of course :)
   function()

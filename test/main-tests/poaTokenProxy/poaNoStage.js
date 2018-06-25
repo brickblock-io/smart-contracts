@@ -12,7 +12,7 @@ const { testWillThrow } = require('../../helpers/general.js')
 const BigNumber = require('bignumber.js')
 
 describe('when testing stage independent functions', () => {
-  contract('PoaToken', () => {
+  contract('PoaTokenProxy', () => {
     let poa
 
     before('setup contracts', async () => {

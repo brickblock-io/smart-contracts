@@ -9,6 +9,17 @@ const PoaToken = artifacts.require('PoaToken')
 const Whitelist = artifacts.require('Whitelist')
 
 const assert = require('assert')
+
+const stages = {
+  PreFunding: '0',
+  FiatFunding: '1',
+  Funding: '2',
+  Pending: '3',
+  Failed: '4',
+  Active: '5',
+  Terminated: '6',
+  Cancelled: '7'
+}
 const {
   areInRange,
   bigZero,
@@ -18,7 +29,7 @@ const {
   sendTransaction,
   testWillThrow,
   timeTravel,
-  waitForEvent
+  toBytes32
 } = require('./general')
 const { finalizedBBK } = require('./bbk')
 const { testApproveAndLockMany } = require('./act')
@@ -41,15 +52,28 @@ const whitelistedPoaBuyers = accounts.slice(4, 9)
 const bbkTokenDistAmount = new BigNumber(1e18)
 const actRate = new BigNumber(1e3)
 const defaultName = 'TestPoa'
+const defaultName32 = web3.toHex('TestPoa')
 const defaultSymbol = 'TPA'
+const defaultSymbol32 = web3.toHex('TPA')
 const defaultFiatCurrency = 'EUR'
+const defaultFiatCurrency32 = web3.toHex('EUR')
 const defaultFundingTimeout = new BigNumber(60 * 60 * 24)
 const defaultActivationTimeout = new BigNumber(60 * 60 * 24 * 7)
 const defaultFundingGoal = new BigNumber(5e5)
 const defaultTotalSupply = new BigNumber(1e23)
 const defaultFiatRate = new BigNumber(33333)
 const defaultIpfsHash = 'QmSUfCtXgb59G9tczrz2WuHNAbecV55KRBGXBbZkou5RtE'
+const newIpfsHash = 'Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u'
+const defaultIpfsHashArray32 = [
+  web3.toHex(defaultIpfsHash.slice(0, 32)),
+  web3.toHex(defaultIpfsHash.slice(32))
+]
+const newIpfsHashArray32 = [
+  web3.toHex(newIpfsHash.slice(0, 32)),
+  web3.toHex(newIpfsHash.slice(32))
+]
 const defaultBuyAmount = new BigNumber(1e18)
+const emptyBytes32 = '0x' + '0'.repeat(64)
 const getDefaultStartTime = async () => {
   const currentBlock = await web3.eth.getBlock(web3.eth.blockNumber)
   const blockTime = new BigNumber(currentBlock.timestamp)
@@ -148,13 +172,12 @@ const setupPoaAndEcosystem = async () => {
     from: owner,
     value: 1e18
   })
-
   const poa = await PoaToken.new()
 
   await poa.setupContract(
-    defaultName,
-    defaultSymbol,
-    defaultFiatCurrency,
+    toBytes32(defaultName),
+    toBytes32(defaultSymbol),
+    toBytes32(defaultFiatCurrency),
     broker,
     custodian,
     reg.address,
@@ -546,22 +569,94 @@ const testCalculateFee = async (poa, taxableValue) => {
   )
 }
 
-const testStartSale = async (poa, config) => {
+const testStartPreSale = async (poa, config) => {
   const preStage = await poa.stage()
 
-  await poa.startSale(config ? config : { from: owner })
+  await poa.startFiatPreSale(config ? config : { from: owner })
 
   const postStage = await poa.stage()
 
   assert.equal(
     preStage.toString(),
-    bigZero.toString(),
-    'stage should start as 0, PreFunding'
+    stages.PreFunding,
+    'stage should start as PreFunding or FiatFunding'
   )
+
   assert.equal(
     postStage.toString(),
-    new BigNumber(1).toString(),
-    'stage should start as 1, Funding'
+    stages.FiatFunding,
+    'stage should start as FiatFunding'
+  )
+}
+
+const testStartSale = async (poa, config) => {
+  const preStage = await poa.stage()
+
+  await poa.startEthSale(config ? config : { from: owner })
+
+  const postStage = await poa.stage()
+
+  assert(
+    preStage.toString() === stages.PreFunding ||
+      preStage.toString() === stages.FiatFunding,
+    'stage should start as PreFunding or FiatFunding'
+  )
+
+  assert.equal(
+    postStage.toString(),
+    stages.Funding,
+    'stage should start as Funding'
+  )
+}
+
+const getExpectedTokenAmount = async (poa, amountInCents) => {
+  const totalSupply = await poa.totalSupply()
+  const fundingGoal = await poa.fundingGoalInCents()
+  const percentOfFundingGoal = fundingGoal.mul(100).div(amountInCents)
+
+  return totalSupply.mul(percentOfFundingGoal).div(100)
+}
+
+const testBuyTokensWithFiat = async (poa, buyer, amountInCents, config) => {
+  assert(!!config.gasPrice, 'gasPrice must be given')
+  assert(!!config.from, 'from must be given')
+
+  const preInvestedTokenAmountPerUser = await poa.fiatInvestmentPerUserInTokens(
+    buyer
+  )
+  const preFundedAmountInTokens = await poa.fundedAmountInTokensDuringFiatFunding()
+  const preFundedAmountInCents = await poa.fundedAmountInCentsDuringFiatFunding()
+  await poa.buyFiat(buyer, amountInCents, config)
+
+  const postInvestedTokenAmountPerUser = await poa.fiatInvestmentPerUserInTokens(
+    buyer
+  )
+  const expectedFundedAmountInCents = preFundedAmountInCents.add(amountInCents)
+  const postFundedAmountInTokens = await poa.fundedAmountInTokensDuringFiatFunding()
+  const postFundedAmountInCents = await poa.fundedAmountInCentsDuringFiatFunding()
+  const expectedUserTokenAmount = await getExpectedTokenAmount(
+    poa,
+    amountInCents
+  )
+
+  assert.equal(
+    expectedFundedAmountInCents.toString(),
+    postFundedAmountInCents.toString(),
+    'Funded Amount In Cents should match expected value'
+  )
+
+  assert.equal(
+    expectedUserTokenAmount.toString(),
+    postFundedAmountInTokens.sub(preFundedAmountInTokens).toString(),
+    'Token amount should match the expected value'
+  )
+
+  assert.equal(
+    postInvestedTokenAmountPerUser
+      .sub(preInvestedTokenAmountPerUser)
+      .toString(),
+    expectedUserTokenAmount.toString(),
+    'Investor token amount should match the expected value'
   )
 }
 
@@ -577,9 +672,7 @@ const testBuyTokens = async (poa, config) => {
   const preTokenBalance = await poa.balanceOf(buyer)
   const preFundedAmount = await poa.fundedAmountInWei()
   const preUserWeiInvested = await poa.investmentAmountPerUserInWei(buyer)
-  const BuyEvent = poa.BuyEvent()
   const tx = await poa.buy(config)
-  const { args: triggeredEvent } = await waitForEvent(BuyEvent)
   const gasUsed = await getGasUsed(tx)
   const gasCost = new BigNumber(gasUsed).mul(config.gasPrice)
 
@@ -590,16 +683,6 @@ const testBuyTokens = async (poa, config) => {
 
   const expectedPostEthBalance = preEthBalance.sub(weiBuyAmount).sub(gasCost)
 
-  assert.equal(
-    triggeredEvent.buyer,
-    config.from,
-    'buy event buyer should be equal to config.from'
-  )
-  assert.equal(
-    triggeredEvent.amount.toString(),
-    config.value.toString(),
-    'buy event amount should be equal to config.value'
-  )
   assert.equal(
     expectedPostEthBalance.toString(),
     postEthBalance.toString(),
@@ -697,21 +780,13 @@ const testBuyRemainingTokens = async (poa, config) => {
     areInRange(fundingGoalInCents, postFundedFiatCents, 1),
     'fundedAmount in fiat cents should be within 1 cent of fundingGoalCents'
   )
-  assert.equal(
-    preStage.toString(),
-    new BigNumber(1).toString(),
-    'stage should be 1, Funding'
-  )
-  assert.equal(
-    postStage.toString(),
-    new BigNumber(2).toString(),
-    'stage should be 2, Pending'
-  )
+  assert.equal(preStage.toString(), stages.Funding, 'stage should be Funding')
+  assert.equal(postStage.toString(), stages.Pending, 'stage should be Pending')
 
   return postUserWeiInvested
 }
 
-const testActivate = async (poa, fmr, ipfsHash, config) => {
+const testActivate = async (poa, fmr, ipfsHash32, config) => {
   const contractBalance = await getEtherBalance(poa.address)
   const calculatedFee = await poa.calculateFee(contractBalance)
 
@@ -720,12 +795,17 @@ const testActivate = async (poa, fmr, ipfsHash, config) => {
   const preCustody = await poa.proofOfCustody()
   const prePaused = await poa.paused()
   const preBrokerPayouts = await poa.currentPayout(broker, true)
-  await poa.activate(ipfsHash, config)
+  await poa.activate(ipfsHash32, config)
   const postFeeManagerBalance = await getEtherBalance(fmr.address)
   const postStage = await poa.stage()
   const postCustody = await poa.proofOfCustody()
   const postPaused = await poa.paused()
   const postBrokerPayouts = await poa.currentPayout(broker, true)
+
+  const expectedHash = ipfsHash32.reduce(
+    (acc, item) => acc.concat(web3.toAscii(item)),
+    ''
+  )
 
   assert.equal(
     postFeeManagerBalance.sub(preFeeManagerBalance).toString(),
@@ -734,19 +814,19 @@ const testActivate = async (poa, fmr, ipfsHash, config) => {
   )
   assert.equal(
     preStage.toString(),
-    new BigNumber(2),
-    'preStage should be 2, Pending'
+    stages.Pending,
+    'preStage should be Pending'
   )
   assert.equal(
     postStage.toString(),
-    new BigNumber(4),
-    'postStage should be 4, Active'
+    stages.Active,
+    'postStage should be Active'
   )
   assert.equal(preCustody, '', 'proofOfCustody should start empty')
   assert.equal(
     postCustody,
-    ipfsHash,
-    'proofOfCustody should be set to ipfsHash'
+    expectedHash,
+    'proofOfCustody should be set to expectedHash'
   )
   assert(prePaused, 'should be paused before activation')
   assert(!postPaused, 'should not be paused after activation')
@@ -885,18 +965,14 @@ const testClaim = async (poa, config, isTerminated) => {
   )
   assert.equal(
     stage.toString(),
-    isTerminated ? new BigNumber(5).toString() : new BigNumber(4).toString(),
-    `stage should be in ${isTerminated ? 5 : 4}, Active`
+    isTerminated ? new BigNumber(6).toString() : new BigNumber(5).toString(),
+    `stage should be in ${isTerminated ? 6 : 5}, Active`
   )
 }
 
 const testClaimAllPayouts = async (poa, poaTokenHolders) => {
   const stage = await poa.stage()
-  assert.equal(
-    stage.toString(),
-    new BigNumber(4).toString(),
-    'stage should be in 4, Active'
-  )
+  assert.equal(stage.toString(), stages.Active, 'stage should be in Active')
 
   let totalClaimAmount = bigZero
 
@@ -956,9 +1032,9 @@ const testFirstReclaim = async (poa, config, shouldBePending) => {
 
   assert.equal(
     preStage.toString(),
-    shouldBePending ? new BigNumber(2).toString() : new BigNumber(1).toString(),
+    shouldBePending ? stages.Pending : stages.Funding,
     `contract should be in stage ${
-      shouldBePending ? '1 (funding)' : ' 2 (pending)'
+      shouldBePending ? 'Funding' : 'Pending'
     } before reclaiming`
   )
 
@@ -968,8 +1044,8 @@ const testFirstReclaim = async (poa, config, shouldBePending) => {
 
   assert.equal(
     postStage.toNumber(),
-    3,
-    'the contract should be in stage 2 (failed) after reclaiming'
+    stages.Failed,
+    'the contract should be in stage Failed after reclaiming'
   )
 }
 
@@ -993,14 +1069,34 @@ const testSetFailed = async (poa, shouldBePending) => {
 
   assert.equal(
     preStage.toString(),
-    shouldBePending ? new BigNumber(2).toString() : new BigNumber(1).toString(),
-    `preStage should be ${shouldBePending ? '2, Pending' : '1 Funding'}`
+    shouldBePending ? stages.Pending : stages.Funding,
+    `preStage should be ${shouldBePending ? 'Pending' : 'Funding'}`
   )
 
   assert.equal(
     postStage.toString(),
-    new BigNumber(3).toString(),
-    'postStage should be 3, Failed'
+    stages.Failed,
+    'postStage should be Failed'
+  )
+}
+
+const testSetCancelled = async (poa, from, shoulBeFiatFunding) => {
+  const preStage = await poa.stage()
+
+  await poa.setCancelled({ from })
+
+  const postStage = await poa.stage()
+
+  assert.equal(
+    preStage.toString(),
+    shoulBeFiatFunding ? stages.FiatFunding : stages.PreFunding,
+    `preStage should be ${shoulBeFiatFunding ? 'FiatFunding' : 'PreFunding'}`
+  )
+
+  assert.equal(
+    postStage.toString(),
+    stages.Cancelled,
+    'Post stage should be Cancelled'
   )
 }
 
@@ -1145,9 +1241,17 @@ const testUpdateProofOfCustody = async (poa, ipfsHash, config) => {
   await poa.updateProofOfCustody(ipfsHash, config)
 
   const postIpfsHash = await poa.proofOfCustody()
+  const expectedHash = ipfsHash.reduce(
+    (acc, item) => acc.concat(web3.toAscii(item)),
+    ''
+  )
 
   assert(preIpfsHash != postIpfsHash, 'should not be same ipfsHash')
-  assert.equal(postIpfsHash, ipfsHash, 'new ifpsHash should be set in contract')
+  assert.equal(
+    postIpfsHash,
+    expectedHash,
+    'new ifpsHash should be set in contract'
+  )
 }
 
 const testTransfer = async (poa, to, value, args) => {
@@ -1241,15 +1345,11 @@ const testTerminate = async (poa, config) => {
 
   const postStage = await poa.stage()
 
-  assert.equal(
-    preStage.toString(),
-    new BigNumber(4).toString(),
-    'preStage should be 4, Active'
-  )
+  assert.equal(preStage.toString(), stages.Active, 'preStage should be Active')
   assert.equal(
     postStage.toString(),
-    new BigNumber(5).toString(),
-    'postStage should be 5, Terminated'
+    stages.Terminated,
+    'postStage should be Terminated'
   )
 }
 
@@ -1394,12 +1494,18 @@ module.exports = {
   defaultActivationTimeout,
   defaultBuyAmount,
   defaultFiatCurrency,
+  defaultFiatCurrency32,
   defaultFiatRate,
   defaultFundingGoal,
   defaultFundingTimeout,
   defaultIpfsHash,
+  newIpfsHash,
+  defaultIpfsHashArray32,
+  newIpfsHashArray32,
   defaultName,
+  defaultName32,
   defaultSymbol,
+  defaultSymbol32,
   defaultTotalSupply,
   determineNeededTimeTravel,
   fundingTimeoutContract,
@@ -1416,6 +1522,7 @@ module.exports = {
   testBuyRemainingTokens,
   testBuyTokens,
   testBuyTokensMulti,
+  testBuyTokensWithFiat,
   testCalculateFee,
   testChangeCustodianAddress,
   testClaim,
@@ -1435,6 +1542,8 @@ module.exports = {
   testResetCurrencyRate,
   testSetCurrencyRate,
   testSetFailed,
+  testSetCancelled,
+  testStartPreSale,
   testStartSale,
   testTerminate,
   testToggleWhitelistTransfers,
@@ -1444,5 +1553,8 @@ module.exports = {
   testUpdateProofOfCustody,
   testWeiToFiatCents,
   timeTravel,
-  whitelistedPoaBuyers
+  whitelistedPoaBuyers,
+  emptyBytes32,
+  stages,
+  getExpectedTokenAmount
 }

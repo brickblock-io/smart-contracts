@@ -3,7 +3,7 @@ const {
   custodian,
   bbkContributors,
   whitelistedPoaBuyers,
-  defaultIpfsHash,
+  defaultIpfsHashArray32,
   setupPoaProxyAndEcosystem,
   testStartSale,
   testBuyTokens,
@@ -31,7 +31,7 @@ const {
 const BigNumber = require('bignumber.js')
 
 describe('when in Failed (stage 3)', () => {
-  contract('PoaToken', () => {
+  contract('PoaTokenProxy', () => {
     const tokenBuyAmount = new BigNumber(5e17)
     let poa
     let fmr
@@ -90,7 +90,7 @@ describe('when in Failed (stage 3)', () => {
       await testWillThrow(testActivate, [
         poa,
         fmr,
-        defaultIpfsHash,
+        defaultIpfsHashArray32,
         { from: custodian }
       ])
     })
@@ -114,7 +114,7 @@ describe('when in Failed (stage 3)', () => {
     it('should NOT updateProofOfCustody, even if valid and from custodian', async () => {
       await testWillThrow(testUpdateProofOfCustody, [
         poa,
-        defaultIpfsHash,
+        defaultIpfsHashArray32,
         { from: custodian }
       ])
     })

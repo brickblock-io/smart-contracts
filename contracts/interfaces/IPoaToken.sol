@@ -3,10 +3,10 @@ pragma solidity 0.4.23;
 interface IPoaToken {
   function setupContract
   (
-    string _name,
-    string _symbol,
+    bytes32 _name,
+    bytes32 _symbol,
     // fiat symbol used in ExchangeRates
-    string _fiatCurrency,
+    bytes32 _fiatCurrency,
     address _broker,
     address _custodian,
     address _registry,

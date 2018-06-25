@@ -212,10 +212,10 @@ contract PoaManager is Ownable {
   // Create a PoaToken contract with given parameters, and set active value to true
   function addToken
   (
-    string _name,
-    string _symbol,
+    bytes32 _name,
+    bytes32 _symbol,
     // fiat symbol used in ExchangeRates
-    string _fiatCurrency,
+    bytes32 _fiatCurrency,
     address _custodian,
     uint256 _totalSupply,
     // given as unix time (seconds since 01.01.1970)

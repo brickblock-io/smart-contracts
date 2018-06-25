@@ -4,11 +4,13 @@ const {
   bbkContributors,
   whitelistedPoaBuyers,
   defaultIpfsHashArray32,
-  setupPoaProxyAndEcosystem,
+  setupPoaAndEcosystem,
   testStartSale,
+  testStartPreSale,
   testBuyTokens,
+  testBuyTokensWithFiat,
   determineNeededTimeTravel,
-  testBuyRemainingTokens,
+  getExpectedTokenAmount,
   testActivate,
   testPayout,
   testClaim,
@@ -28,18 +30,19 @@ const {
   gasPrice
 } = require('../../helpers/general.js')
 
-describe('when in Funding (stage 1)', () => {
-  contract('PoaTokenProxy', () => {
+describe('when in FIAT Funding (stage 1)', () => {
+  contract('PoaToken', accounts => {
     let poa
     let fmr
+    const fiatInvestor = accounts[3]
 
     before('setup contracts', async () => {
-      const contracts = await setupPoaProxyAndEcosystem()
+      const contracts = await setupPoaAndEcosystem()
       poa = contracts.poa
       fmr = contracts.fmr
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
-      await testStartSale(poa)
+      await testStartPreSale(poa)
     })
 
     it('should start paused', async () => {
@@ -50,8 +53,8 @@ describe('when in Funding (stage 1)', () => {
       await testWillThrow(testUnpause, [poa, { from: owner }])
     })
 
-    it('should NOT startSale, even if owner', async () => {
-      await testWillThrow(testStartSale, [poa, { from: owner }])
+    it('should NOT startPreSale, even if owner', async () => {
+      await testWillThrow(testStartPreSale, [poa, { from: owner }])
     })
 
     it('should NOT setFailed', async () => {
@@ -141,19 +144,82 @@ describe('when in Funding (stage 1)', () => {
 
     // start core stage functionality
 
-    it('should allow buying', async () => {
-      await testBuyTokens(poa, {
-        from: whitelistedPoaBuyers[0],
-        value: 5e17,
+    it('should allow FIAT buying', async () => {
+      await testBuyTokensWithFiat(poa, fiatInvestor, 100000, {
+        from: custodian,
         gasPrice
       })
     })
 
-    it('should move into pending when all tokens are bought', async () => {
-      await testBuyRemainingTokens(poa, {
-        from: whitelistedPoaBuyers[1],
+    it('should increment the token amount if the same investor buys again', async () => {
+      const invesmentAmountInCents = 100000
+
+      const preInvestedTokenAmountPerUser = await poa.fiatInvestmentPerUserInTokens(
+        fiatInvestor
+      )
+      const expectedTokenAmount = await getExpectedTokenAmount(
+        poa,
+        invesmentAmountInCents
+      )
+
+      await testBuyTokensWithFiat(poa, fiatInvestor, invesmentAmountInCents, {
+        from: custodian,
         gasPrice
       })
+
+      const postInvestedTokenAmountPerUser = await poa.fiatInvestmentPerUserInTokens(
+        fiatInvestor
+      )
+
+      assert.equal(
+        preInvestedTokenAmountPerUser.add(expectedTokenAmount).toString(),
+        postInvestedTokenAmountPerUser.toString()
+      )
+    })
+
+    it('should NOT allow buying more than funding goal in cents', async () => {
+      const fundingGoal = await poa.fundingGoalInCents()
+      const invesmentAmountInCents = fundingGoal.add(1)
+
+      await testWillThrow(testBuyTokensWithFiat, [
+        poa,
+        fiatInvestor,
+        invesmentAmountInCents,
+        {
+          from: custodian,
+          gasPrice
+        }
+      ])
+    })
+
+    it('should NOT allow FIAT investors to buy tokens during the ETH sale with the same address they used during the FIAT sale', async () => {
+      await testBuyTokensWithFiat(poa, fiatInvestor, 100000, {
+        from: custodian,
+        gasPrice
+      })
+
+      await testWillThrow(testBuyTokens, [
+        poa,
+        {
+          from: fiatInvestor,
+          value: 5e17,
+          gasPrice
+        }
+      ])
+    })
+
+    it('should NOT allow FIAT investment during the ETH sale', async () => {
+      await testStartSale(poa)
+
+      await testWillThrow(testBuyTokensWithFiat, [
+        poa,
+        fiatInvestor,
+        100000,
+        {
+          from: custodian,
+          gasPrice
+        }
+      ])
     })
   })
 })

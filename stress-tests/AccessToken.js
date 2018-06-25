@@ -4,7 +4,7 @@ const {
   getEtherBalance,
   getRandomBigInt,
   getRandomInt
-} = require('../helpers/general')
+} = require('.test/helpers/general')
 const chalk = require('chalk')
 
 const {

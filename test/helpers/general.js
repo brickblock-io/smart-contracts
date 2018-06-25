@@ -236,6 +236,10 @@ const waitForEvent = (event, optTimeout) =>
     })
   })
 
+const toBytes32 = text => {
+  return web3.toHex(text)
+}
+
 const waitForReceiptStatusSuccessOrThrow = async txHash => {
   // Geth does not return error when revert happens.
 
@@ -296,6 +300,7 @@ module.exports = {
   timeTravel,
   warpBlocks,
   waitForEvent,
+  toBytes32,
   waitForReceiptStatusSuccessOrThrow,
   waitForTxToBeMined
 }

@@ -1,6 +1,5 @@
 const PoaManager = artifacts.require('PoaManager.sol')
 const PoaToken = artifacts.require('PoaToken.sol')
-const BigNumber = require('bignumber.js')
 const {
   setupEcosystem,
   testSetCurrencyRate,
@@ -18,7 +17,8 @@ const {
   testStartSale,
   testBuyRemainingTokens,
   testActivate,
-  defaultIpfsHash
+  defaultIpfsHashArray32,
+  stages
 } = require('./poa')
 
 const { gasPrice } = require('./general')
@@ -85,7 +85,7 @@ const moveTokenToActive = async (poa, fmr) => {
   })
 
   // move into Active
-  await testActivate(poa, fmr, defaultIpfsHash, {
+  await testActivate(poa, fmr, defaultIpfsHashArray32, {
     from: custodian
   })
 }
@@ -115,13 +115,13 @@ const testTerminateToken = async (pmr, poa, config) => {
 
   assert.equal(
     preStage.toString(),
-    new BigNumber(4).toString(),
-    'poa should start in stage 4, Active'
+    stages.Active,
+    'poa should start in stage Active'
   )
   assert.equal(
     postStage.toString(),
-    new BigNumber(5).toString(),
-    'poa should be in stage 5, Terminated after terminate'
+    stages.Terminated,
+    'poa should be in stage Terminated after terminate'
   )
 }
 

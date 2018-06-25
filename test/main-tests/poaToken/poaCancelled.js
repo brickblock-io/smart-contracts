@@ -4,23 +4,23 @@ const {
   bbkContributors,
   whitelistedPoaBuyers,
   defaultIpfsHashArray32,
-  setupPoaProxyAndEcosystem,
+  setupPoaAndEcosystem,
   testStartSale,
   testBuyTokens,
   determineNeededTimeTravel,
-  testBuyRemainingTokens,
   testActivate,
   testPayout,
   testClaim,
-  testReclaim,
-  testSetFailed,
   testPaused,
   testUnpause,
   testUpdateProofOfCustody,
   testTransfer,
   testApprove,
   testTransferFrom,
-  testTerminate
+  testTerminate,
+  testStartPreSale,
+  testBuyTokensWithFiat,
+  testSetCancelled
 } = require('../../helpers/poa')
 const {
   testWillThrow,
@@ -28,18 +28,27 @@ const {
   gasPrice
 } = require('../../helpers/general.js')
 
-describe('when in Funding (stage 1)', () => {
-  contract('PoaTokenProxy', () => {
+describe('when in Cancelled', () => {
+  contract('PoaToken', accounts => {
     let poa
     let fmr
+    const fiatInvestor = accounts[3]
 
     before('setup contracts', async () => {
-      const contracts = await setupPoaProxyAndEcosystem()
+      const contracts = await setupPoaAndEcosystem()
       poa = contracts.poa
       fmr = contracts.fmr
+
+      // move into Fiat Funding
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
-      await testStartSale(poa)
+      await testStartPreSale(poa)
+      await testBuyTokensWithFiat(poa, fiatInvestor, 100000, {
+        from: custodian,
+        gasPrice
+      })
+
+      await testSetCancelled(poa, custodian, true)
     })
 
     it('should start paused', async () => {
@@ -54,8 +63,11 @@ describe('when in Funding (stage 1)', () => {
       await testWillThrow(testStartSale, [poa, { from: owner }])
     })
 
-    it('should NOT setFailed', async () => {
-      await testWillThrow(testSetFailed, [poa, { from: owner }])
+    it('should NOT buy, even if whitelisted', async () => {
+      await testWillThrow(testBuyTokens, [
+        poa,
+        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice }
+      ])
     })
 
     it('should NOT activate, even if custodian', async () => {
@@ -69,10 +81,6 @@ describe('when in Funding (stage 1)', () => {
 
     it('should NOT terminate, even if custodian', async () => {
       await testWillThrow(testTerminate, [poa, { from: custodian }])
-    })
-
-    it('should NOT reclaim, even if owning tokens', async () => {
-      await testWillThrow(testReclaim, [poa, { from: whitelistedPoaBuyers[0] }])
     })
 
     it('should NOT payout, even if custodian', async () => {
@@ -141,19 +149,27 @@ describe('when in Funding (stage 1)', () => {
 
     // start core stage functionality
 
-    it('should allow buying', async () => {
-      await testBuyTokens(poa, {
-        from: whitelistedPoaBuyers[0],
-        value: 5e17,
-        gasPrice
-      })
+    it('should Not allow FiatFunding', async () => {
+      await testWillThrow(testBuyTokensWithFiat, [
+        poa,
+        fiatInvestor,
+        100000,
+        {
+          from: custodian,
+          gasPrice
+        }
+      ])
     })
 
-    it('should move into pending when all tokens are bought', async () => {
-      await testBuyRemainingTokens(poa, {
-        from: whitelistedPoaBuyers[1],
-        gasPrice
-      })
+    it('should Not allow EthFunding', async () => {
+      await testWillThrow(testBuyTokens, [
+        poa,
+        {
+          from: whitelistedPoaBuyers[0],
+          value: 5e17,
+          gasPrice
+        }
+      ])
     })
   })
 })

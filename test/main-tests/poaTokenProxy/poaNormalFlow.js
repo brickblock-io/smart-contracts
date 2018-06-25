@@ -1,7 +1,7 @@
 const {
   custodian,
   whitelistedPoaBuyers,
-  defaultIpfsHash,
+  defaultIpfsHashArray32,
   setupPoaProxyAndEcosystem,
   testStartSale,
   testBuyTokens,
@@ -15,7 +15,7 @@ const {
 const { timeTravel, gasPrice } = require('../../helpers/general.js')
 
 describe("when going through Poa's normal flow", async () => {
-  contract('PoaToken', () => {
+  contract('PoaTokenProxy', () => {
     let fmr
     let poa
 
@@ -47,7 +47,7 @@ describe("when going through Poa's normal flow", async () => {
     })
 
     it('should activate with ipfs hash from custodian', async () => {
-      await testActivate(poa, fmr, defaultIpfsHash, {
+      await testActivate(poa, fmr, defaultIpfsHashArray32, {
         from: custodian
       })
     })

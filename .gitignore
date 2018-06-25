@@ -26,5 +26,8 @@ build
 private-chain-data/geth
 private-chain-data/history
 
-## generated diagrams
+# Local Settings
+.vscode
+
+# generated diagrams
 sequence-diagrams/*.svg

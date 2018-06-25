@@ -4,9 +4,10 @@ const {
   owner,
   broker,
   custodian,
-  defaultName,
-  defaultSymbol,
+  defaultName32,
+  defaultSymbol32,
   defaultFiatCurrency,
+  defaultFiatCurrency32,
   defaultFundingTimeout,
   defaultActivationTimeout,
   defaultFundingGoal,
@@ -15,7 +16,8 @@ const {
   setupEcosystem,
   testSetCurrencyRate,
   testInitialization,
-  defaultTotalSupply
+  defaultTotalSupply,
+  emptyBytes32
 } = require('../../helpers/poa')
 const { testWillThrow, addressZero } = require('../../helpers/general.js')
 const BigNumber = require('bignumber.js')
@@ -50,9 +52,9 @@ describe('when initializing PoaToken', () => {
     it('should NOT setup more than once', async () => {
       const freshPoa = await testInitialization(exr, exp, reg, pmr)
       await testWillThrow(freshPoa.setupContract, [
-        defaultName,
-        defaultSymbol,
-        defaultFiatCurrency,
+        defaultName32,
+        defaultSymbol32,
+        defaultFiatCurrency32,
         broker,
         custodian,
         reg.address,
@@ -66,90 +68,9 @@ describe('when initializing PoaToken', () => {
 
     it('should NOT initialize with a NON ready fiatRate', async () => {
       await testWillThrow(poa.setupContract, [
-        defaultName,
-        defaultSymbol,
-        defaultFiatCurrency,
-        broker,
-        custodian,
-        reg.address,
-        defaultTotalSupply,
-        await getDefaultStartTime(),
-        defaultFundingTimeout,
-        defaultActivationTimeout,
-        defaultFundingGoal
-      ])
-    })
-
-    it('should NOT initialize with < 3 character ascii char name', async () => {
-      await testSetCurrencyRate(
-        exr,
-        exp,
-        defaultFiatCurrency,
-        defaultFiatRate,
-        {
-          from: owner,
-          value: 1e18
-        }
-      )
-
-      await testWillThrow(poa.setupContract, [
-        'is',
-        defaultSymbol,
-        defaultFiatCurrency,
-        broker,
-        custodian,
-        reg.address,
-        defaultTotalSupply,
-        await getDefaultStartTime(),
-        defaultFundingTimeout,
-        defaultActivationTimeout,
-        defaultFundingGoal
-      ])
-    })
-
-    it('should NOT initialize with < 3 character ascii char symbol', async () => {
-      await testSetCurrencyRate(
-        exr,
-        exp,
-        defaultFiatCurrency,
-        defaultFiatRate,
-        {
-          from: owner,
-          value: 1e18
-        }
-      )
-
-      await testWillThrow(poa.setupContract, [
-        defaultName,
-        'US',
-        defaultFiatCurrency,
-        broker,
-        custodian,
-        reg.address,
-        defaultTotalSupply,
-        await getDefaultStartTime(),
-        defaultFundingTimeout,
-        defaultActivationTimeout,
-        defaultFundingGoal
-      ])
-    })
-
-    it('should NOT initialize with < 3 character ascii char fiatCurrency', async () => {
-      await testSetCurrencyRate(
-        exr,
-        exp,
-        defaultFiatCurrency,
-        defaultFiatRate,
-        {
-          from: owner,
-          value: 1e18
-        }
-      )
-
-      await testWillThrow(poa.setupContract, [
-        defaultName,
-        defaultSymbol,
-        'US',
+        defaultName32,
+        defaultSymbol32,
+        defaultFiatCurrency32,
         broker,
         custodian,
         reg.address,
@@ -174,9 +95,9 @@ describe('when initializing PoaToken', () => {
       )
 
       await testWillThrow(poa.setupContract, [
-        defaultName,
-        defaultSymbol,
-        defaultFiatCurrency,
+        defaultName32,
+        defaultSymbol32,
+        defaultFiatCurrency32,
         addressZero,
         custodian,
         reg.address,
@@ -188,10 +109,91 @@ describe('when initializing PoaToken', () => {
       ])
 
       await testWillThrow(poa.setupContract, [
-        defaultName,
-        defaultSymbol,
-        defaultFiatCurrency,
+        defaultName32,
+        defaultSymbol32,
+        defaultFiatCurrency32,
         null,
+        custodian,
+        reg.address,
+        defaultTotalSupply,
+        await getDefaultStartTime(),
+        defaultFundingTimeout,
+        defaultActivationTimeout,
+        defaultFundingGoal
+      ])
+    })
+
+    it('should NOT initialize with empty name', async () => {
+      await testSetCurrencyRate(
+        exr,
+        exp,
+        defaultFiatCurrency,
+        defaultFiatRate,
+        {
+          from: owner,
+          value: 1e18
+        }
+      )
+
+      await testWillThrow(poa.setupContract, [
+        emptyBytes32,
+        defaultSymbol32,
+        defaultFiatCurrency32,
+        broker,
+        custodian,
+        reg.address,
+        defaultTotalSupply,
+        await getDefaultStartTime(),
+        defaultFundingTimeout,
+        defaultActivationTimeout,
+        defaultFundingGoal
+      ])
+    })
+
+    it('should NOT initialize with empty symbol', async () => {
+      await testSetCurrencyRate(
+        exr,
+        exp,
+        defaultFiatCurrency,
+        defaultFiatRate,
+        {
+          from: owner,
+          value: 1e18
+        }
+      )
+
+      await testWillThrow(poa.setupContract, [
+        defaultName32,
+        emptyBytes32,
+        defaultFiatCurrency32,
+        broker,
+        custodian,
+        reg.address,
+        defaultTotalSupply,
+        await getDefaultStartTime(),
+        defaultFundingTimeout,
+        defaultActivationTimeout,
+        defaultFundingGoal
+      ])
+    })
+
+    it('should NOT initialize with empty fiat currency', async () => {
+      await testSetCurrencyRate(
+        exr,
+        exp,
+        defaultFiatCurrency,
+        defaultFiatRate,
+        {
+          from: owner,
+          value: 1e18
+        }
+      )
+
+      await testWillThrow(poa.setupContract, [
+        defaultName32,
+        defaultSymbol32,
+        emptyBytes32,
+        broker,
         custodian,
         reg.address,
         defaultTotalSupply,
@@ -215,9 +217,9 @@ describe('when initializing PoaToken', () => {
       )
 
       await testWillThrow(poa.setupContract, [
-        defaultName,
-        defaultSymbol,
-        defaultFiatCurrency,
+        defaultName32,
+        defaultSymbol32,
+        defaultFiatCurrency32,
         broker,
         addressZero,
         reg.address,
@@ -229,9 +231,9 @@ describe('when initializing PoaToken', () => {
       ])
 
       await testWillThrow(poa.setupContract, [
-        defaultName,
-        defaultSymbol,
-        defaultFiatCurrency,
+        defaultName32,
+        defaultSymbol32,
+        defaultFiatCurrency32,
         broker,
         null,
         reg.address,
@@ -256,9 +258,9 @@ describe('when initializing PoaToken', () => {
       )
 
       await testWillThrow(poa.setupContract, [
-        defaultName,
-        defaultSymbol,
-        defaultFiatCurrency,
+        defaultName32,
+        defaultSymbol32,
+        defaultFiatCurrency32,
         broker,
         custodian,
         reg.address,
@@ -270,9 +272,9 @@ describe('when initializing PoaToken', () => {
       ])
 
       await testWillThrow(poa.setupContract, [
-        defaultName,
-        defaultSymbol,
-        defaultFiatCurrency,
+        defaultName32,
+        defaultSymbol32,
+        defaultFiatCurrency32,
         broker,
         custodian,
         reg.address,
@@ -297,9 +299,9 @@ describe('when initializing PoaToken', () => {
       )
 
       await testWillThrow(poa.setupContract, [
-        defaultName,
-        defaultSymbol,
-        defaultFiatCurrency,
+        defaultName32,
+        defaultSymbol32,
+        defaultFiatCurrency32,
         broker,
         custodian,
         reg.address,
@@ -325,9 +327,9 @@ describe('when initializing PoaToken', () => {
       )
 
       await testWillThrow(poa.setupContract, [
-        defaultName,
-        defaultSymbol,
-        defaultFiatCurrency,
+        defaultName32,
+        defaultSymbol32,
+        defaultFiatCurrency32,
         broker,
         custodian,
         reg.address,
@@ -356,9 +358,9 @@ describe('when initializing PoaToken', () => {
       )
 
       await testWillThrow(poa.setupContract, [
-        defaultName,
-        defaultSymbol,
-        defaultFiatCurrency,
+        defaultName32,
+        defaultSymbol32,
+        defaultFiatCurrency32,
         broker,
         custodian,
         reg.address,
@@ -392,9 +394,9 @@ describe('when initializing PoaToken', () => {
       )
 
       await testWillThrow(poa.setupContract, [
-        defaultName,
-        defaultSymbol,
-        defaultFiatCurrency,
+        defaultName32,
+        defaultSymbol32,
+        defaultFiatCurrency32,
         broker,
         custodian,
         reg.address,

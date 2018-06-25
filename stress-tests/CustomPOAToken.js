@@ -1,6 +1,6 @@
 const assert = require('assert')
 const BigNumber = require('bignumber.js')
-const { activeContract, claimAll } = require('../helpers/stress/cpoa')
+const { activeContract, claimAll } = require('./test/helpers/stress/cpoa')
 
 /* eslint-disable no-console */
 
