@@ -35,7 +35,7 @@ module.exports = {
   // the addresses can be defined here since the blockchain being used during cypress test runs
   // will always use the same owner address / nonce and so its deterministic
   '4447': {
-    CustomPOAToken: ['0xe78a0f7e598cc8b0bb87894b0f60dd2a88d6a8ab'],
-    PoaManager: '0xcfeb869f69431e42cdb54a4f4f105c19c080a601'
+    CustomPOAToken: ['0xd3aa556287afe63102e5797bfddd2a1e8dbb3ea5'],
+    PoaManager: '0xd17e1233a03affb9092d5109179b43d6a8828607'
   }
 }
