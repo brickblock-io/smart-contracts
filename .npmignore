@@ -1,4 +1,4 @@
 # ignoring everything except built contract artifacts, and minimal contract for downstream consumers
 *
-!deployed-contracts/
-!build/contract
+!deployed-contracts/*.json
+!build/contracts/*.json
