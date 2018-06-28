@@ -1,6 +1,4 @@
-# all we want to publish are the built contracts
+# ignoring everything except built contract artifacts, and minimal contract for downstream consumers
 *
-!build/contracts/*.json
-
-# custom json for cpoa addresses
-!build/*.json
+!deployed-contracts/
+!build/contract

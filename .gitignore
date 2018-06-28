@@ -10,6 +10,7 @@ coverage.json
 
 # production
 build
+deployed-contracts
 
 # misc
 .DS_Store
