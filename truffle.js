@@ -56,14 +56,16 @@ module.exports = {
     },
     // to be used when we want to interact in a local truffle console session
     hdwallet: {
-      provider: new HDWalletProvider(
-        // NOTE: this can be any valid mnemonic, as long as you are making `calls` and not `transactions`
-        process.env.HDWALLET_MNEMONIC,
-        // NOTE: this is the network you want to connect to; if you are running a local network you
-        // can connect to that instead of infura but then you probably want to use:
-        // `truffle console --network dev`
-        process.env.INFURA_URL
-      ),
+      provider: () => {
+        return new HDWalletProvider(
+          // NOTE: this can be any valid mnemonic, as long as you are making `calls` and not `transactions`
+          process.env.HDWALLET_MNEMONIC,
+          // NOTE: this is the network you want to connect to; if you are running a local network you
+          // can connect to that instead of infura but then you probably want to use:
+          // `truffle console --network dev`
+          process.env.INFURA_URL
+        )
+      },
       network_id: '*'
     }
   },
