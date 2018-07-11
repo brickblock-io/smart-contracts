@@ -4,6 +4,7 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./interfaces/IRegistry.sol";
 import "./interfaces/IPoaToken.sol";
+import "./interfaces/IPoaCrowdsale.sol";
 import "./PoaProxy.sol";
 
 
@@ -206,16 +207,17 @@ contract PoaManager is Ownable {
     returns (address _proxyContract)
   {
     address _poaTokenMaster = registry.getContractAddress("PoaTokenMaster");
-    _proxyContract = new PoaProxy(_poaTokenMaster, address(registry));
+    address _poaCrowdsaleMaster = registry.getContractAddress("PoaCrowdsaleMaster");
+    _proxyContract = new PoaProxy(_poaTokenMaster, _poaCrowdsaleMaster, address(registry));
   }
 
   // Create a PoaToken contract with given parameters, and set active value to true
   function addToken
   (
-    bytes32 _name,
-    bytes32 _symbol,
+    bytes32 _name32,
+    bytes32 _symbol32,
     // fiat symbol used in ExchangeRates
-    bytes32 _fiatCurrency,
+    bytes32 _fiatCurrency32,
     address _custodian,
     uint256 _totalSupply,
     // given as unix time (seconds since 01.01.1970)
@@ -233,14 +235,17 @@ contract PoaManager is Ownable {
   {
     address _tokenAddress = createPoaTokenProxy();
 
-    IPoaToken(_tokenAddress).setupContract(
-      _name,
-      _symbol,
-      _fiatCurrency,
-      msg.sender,
+    IPoaToken(_tokenAddress).initializeToken(
+      _name32,
+      _symbol32,
       _custodian,
       registry,
-      _totalSupply,
+      _totalSupply
+    );
+
+    IPoaCrowdsale(_tokenAddress).initializeCrowdsale(
+      _fiatCurrency32,
+      msg.sender,
       _startTime,
       _fundingTimeout,
       _activationTimeout,
@@ -330,16 +335,29 @@ contract PoaManager is Ownable {
     _tokenAddress.terminate();
   }
 
-  // Upgrade an existing PoaToken proxy to what is stored in ContractRegistry
+  // upgrade an existing PoaToken proxy to what is stored in ContractRegistry
   function upgradeToken(
     PoaProxy _proxyToken
   )
-    public
+    external
     onlyOwner
     returns (bool)
   {
-    _proxyToken.proxyChangeMaster(
+    _proxyToken.proxyChangeTokenMaster(
       registry.getContractAddress("PoaTokenMaster")
+    );
+  }
+
+  // upgrade an existing PoaCrowdsale proxy to what is stored in ContractRegistry
+  function upgradeCrowdsale(
+    PoaProxy _proxyToken
+  )
+    external
+    onlyOwner
+    returns (bool)
+  {
+    _proxyToken.proxyChangeCrowdsaleMaster(
+      registry.getContractAddress("PoaCrowdsaleMaster")
     );
   }
 
@@ -347,7 +365,7 @@ contract PoaManager is Ownable {
   function toggleTokenWhitelistTransfers(
     address _tokenAddress
   )
-    public
+    external
     onlyOwner
     returns (bool)
   {

@@ -1,23 +1,13 @@
 pragma solidity 0.4.23;
 
 interface IPoaToken {
-  function setupContract
+  function initializeToken
   (
-    bytes32 _name,
-    bytes32 _symbol,
-    // fiat symbol used in ExchangeRates
-    bytes32 _fiatCurrency,
-    address _broker,
+    bytes32 _name32, // bytes32 of name string
+    bytes32 _symbol32, // bytes32 of symbol string
     address _custodian,
     address _registry,
-    uint256 _totalSupply,
-    // given as unix time (seconds since 01.01.1970)
-    uint256 _startTime,
-    // given as seconds
-    uint256 _fundingTimeout,
-    uint256 _activationTimeout,
-    // given as fiat cents
-    uint256 _fundingGoalInCents
+    uint256 _totalSupply // token total supply
   )
     external
     returns (bool);

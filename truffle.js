@@ -28,7 +28,7 @@ module.exports = {
     devGeth: {
       host: 'localhost',
       port: 8545,
-      network_id: 4447,
+      network_id: 4448,
       // Values below 6000000 fail often because of the required minimum block gas amount.
       gas: 6300000
     },
@@ -51,8 +51,8 @@ module.exports = {
       host: 'localhost',
       port: 8545,
       network_id: 4,
-      gas: 7e6,
-      gasPrice: 1e9
+      gas: 4.7e6,
+      gasPrice: 1e10
     },
     // to be used when we want to interact in a local truffle console session
     hdwallet: {

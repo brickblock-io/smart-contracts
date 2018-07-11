@@ -22,9 +22,9 @@ Brickblock.setNetwork('local-dev-testrpc')
 
 // This is only dangerous when the filename is derived from user-input which its not here
 // eslint-disable-next-line security/detect-non-literal-require
-const PoAToken = Contract(require(paths.appContracts + '/POAToken.json'))
-PoAToken.setProvider(web3.currentProvider)
-PoAToken.setNetwork('local-dev-testrpc')
+const PoaToken = Contract(require(paths.appContracts + '/POAToken.json'))
+PoaToken.setProvider(web3.currentProvider)
+PoaToken.setNetwork('local-dev-testrpc')
 
 const broker = web3.eth.accounts[0]
 const investor = web3.eth.accounts[9]
@@ -82,7 +82,7 @@ async function createBB() {
 
 async function createToken(aToken) {
   try {
-    console.log(`Creating PoATokenContract for ${aToken.symbol}`)
+    console.log(`Creating PoaTokenContract for ${aToken.symbol}`)
     const bb = await Brickblock.deployed()
     const estimateGas = await bb.addToken.estimateGas(
       aToken.name,
@@ -137,7 +137,7 @@ async function createToken(aToken) {
 async function buyTokens(aToken, amount, investee) {
   console.log(`Buying Tokens ${aToken.symbol}`)
   try {
-    const poa = await PoAToken.at(aToken.addr)
+    const poa = await PoaToken.at(aToken.addr)
     if (!amount) amount = await poa.balanceOf(await poa.owner()) // buy all of it
 
     const args = {
@@ -160,7 +160,7 @@ async function activatePoA(aToken, signee) {
   try {
     if (!signee) signee = broker
 
-    const poa = await PoAToken.at(aToken.addr)
+    const poa = await PoaToken.at(aToken.addr)
     const signature = constructSignature(
       signee,
       await poa.symbol(),
@@ -194,7 +194,7 @@ async function activatePoA(aToken, signee) {
 async function sell(aToken, amount, investee) {
   console.log(`Sell tokens back to the Broker[${aToken.symbol}]`)
   try {
-    const poa = await PoAToken.at(aToken.addr)
+    const poa = await PoaToken.at(aToken.addr)
     if (!amount) amount = await poa.balanceOf(investee) // buy all of it
 
     const estimateGas = await poa.sell.estimateGas(amount, { from: investee })
@@ -213,7 +213,7 @@ async function liquidated(aToken, amount, investee) {
     `call Liquidated to get ether to invostor after sell[${aToken.symbol}]`
   )
   try {
-    const poa = await PoAToken.at(aToken.addr)
+    const poa = await PoaToken.at(aToken.addr)
     const estimateGas = await poa.liquidated.estimateGas(investee, {
       from: broker,
       value: amount
@@ -234,7 +234,7 @@ async function liquidated(aToken, amount, investee) {
 async function payout(aToken, amount) {
   console.log(`payout some dividends [${aToken.symbol}]`)
   try {
-    const poa = await PoAToken.at(aToken.addr)
+    const poa = await PoaToken.at(aToken.addr)
     const estimateGas = await poa.payout.estimateGas({
       from: broker,
       value: amount
@@ -255,7 +255,7 @@ async function payout(aToken, amount) {
 async function claim(aToken, investee) {
   console.log(`claim dividends [${aToken.symbol}]`)
   try {
-    const poa = await PoAToken.at(aToken.addr)
+    const poa = await PoaToken.at(aToken.addr)
     const estimateGas = await poa.claim.estimateGas({ from: investee })
     const txid = await poa.claim.sendTransaction({ from: investee })
     const ret = await awaitReceipt(txid)
@@ -270,7 +270,7 @@ async function claim(aToken, investee) {
 async function transfer(aToken, from, to, amount) {
   console.log(`transfer some tokens [${aToken.symbol}]`)
   try {
-    const poa = await PoAToken.at(aToken.addr)
+    const poa = await PoaToken.at(aToken.addr)
     if (!amount) amount = await poa.balanceOf(from)
 
     const estimateGas = await poa.transfer.estimateGas(to, amount, {
@@ -289,7 +289,7 @@ async function transfer(aToken, from, to, amount) {
 async function reclaim(aToken, investee) {
   console.log(`reclaim funding after failed [${aToken.symbol}]`)
   try {
-    const poa = await PoAToken.at(aToken.addr)
+    const poa = await PoaToken.at(aToken.addr)
     const estimateGas = await poa.reclaim.estimateGas({ from: investee })
     const txid = await poa.reclaim.sendTransaction({ from: investee })
     const ret = await awaitReceipt(txid)

@@ -6,6 +6,8 @@ import "./interfaces/IBrickblockToken.sol";
 import "./interfaces/IFeeManager.sol";
 import "./interfaces/IAccessToken.sol";
 
+/* solium-disable security/no-block-members */
+
 
 contract BrickblockAccount is Ownable {
   uint8 public constant version = 1;

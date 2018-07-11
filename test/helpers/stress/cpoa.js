@@ -1,6 +1,6 @@
 const assert = require('assert')
 const BigNumber = require('bignumber.js')
-const CustomPoaToken = artifacts.require('CustomPoaToken')
+const CustomPoaToken = artifacts.require('CustomPOAToken')
 
 const { getEtherBalance } = require('../cpoa')
 

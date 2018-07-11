@@ -133,7 +133,11 @@ const sendTransaction = (web3, args) => {
 const testWillThrow = async (fn, args) => {
   try {
     const txHash = await fn.apply(null, args)
-    await waitForReceiptStatusSuccessOrThrow(txHash)
+
+    if (web3.version.network === 4448) {
+      // if network is devGeth
+      await waitForReceiptStatusSuccessOrThrow(txHash)
+    }
 
     assert(false, 'the contract should throw here')
   } catch (error) {
@@ -279,6 +283,18 @@ const waitForTxToBeMined = txHash =>
     if (!done) reject(false)
   })
 
+const percentBigInt = (numerator, denominator, precision) => {
+  if (typeof numerator === 'number') {
+    numerator = new BigNumber(numerator)
+  }
+
+  // caution, check safe-to-multiply here
+  const _numerator = numerator.times(new BigNumber(10).pow(precision))
+  // with rounding of last digit
+  const _quotient = _numerator.div(denominator).floor()
+  return _quotient
+}
+
 module.exports = {
   addressZero,
   areInRange,
@@ -302,5 +318,6 @@ module.exports = {
   waitForEvent,
   toBytes32,
   waitForReceiptStatusSuccessOrThrow,
-  waitForTxToBeMined
+  waitForTxToBeMined,
+  percentBigInt
 }

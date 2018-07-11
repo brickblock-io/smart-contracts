@@ -4,7 +4,7 @@ const {
   bbkContributors,
   whitelistedPoaBuyers,
   defaultIpfsHashArray32,
-  setupPoaAndEcosystem,
+  setupPoaProxyAndEcosystem,
   testStartSale,
   testBuyTokens,
   determineNeededTimeTravel,
@@ -35,7 +35,7 @@ describe('when in Cancelled', () => {
     const fiatInvestor = accounts[3]
 
     before('setup contracts', async () => {
-      const contracts = await setupPoaAndEcosystem()
+      const contracts = await setupPoaProxyAndEcosystem()
       poa = contracts.poa
       fmr = contracts.fmr
 

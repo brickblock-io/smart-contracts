@@ -1,11 +1,14 @@
 const PoaManager = artifacts.require('PoaManager.sol')
 const PoaToken = artifacts.require('PoaToken.sol')
+const PoaCrowdsale = artifacts.require('PoaCrowdsale')
+
 const {
   setupEcosystem,
   testSetCurrencyRate,
-  defaultName,
-  defaultSymbol,
+  defaultName32,
+  defaultSymbol32,
   defaultFiatCurrency,
+  defaultFiatCurrency32,
   defaultTotalSupply,
   defaultFundingTimeout,
   defaultActivationTimeout,
@@ -18,7 +21,8 @@ const {
   testBuyRemainingTokens,
   testActivate,
   defaultIpfsHashArray32,
-  stages
+  stages,
+  whitelistedPoaBuyers
 } = require('./poa')
 
 const { gasPrice } = require('./general')
@@ -29,12 +33,14 @@ const owner = accounts[0]
 const custodian = accounts[2]
 
 const setupPoaManager = async () => {
-  const poam = await PoaToken.new()
+  const poatm = await PoaToken.new()
+  const poacm = await PoaCrowdsale.new()
   const { reg, exr, exp, fmr } = await setupEcosystem()
   const pmr = await PoaManager.new(reg.address)
 
   await reg.updateContractAddress('PoaManager', pmr.address)
-  await reg.updateContractAddress('PoaTokenMaster', poam.address)
+  await reg.updateContractAddress('PoaTokenMaster', poatm.address)
+  await reg.updateContractAddress('PoaCrowdsaleMaster', poacm.address)
 
   await testSetCurrencyRate(exr, exp, defaultFiatCurrency, defaultFiatRate, {
     from: owner,
@@ -42,7 +48,7 @@ const setupPoaManager = async () => {
   })
 
   return {
-    poam,
+    poatm,
     reg,
     pmr,
     fmr
@@ -53,9 +59,9 @@ const addToken = async (pmr, config) => {
   const defaultStartTime = await getDefaultStartTime()
 
   const txReceipt = await pmr.addToken(
-    defaultName,
-    defaultSymbol,
-    defaultFiatCurrency,
+    defaultName32,
+    defaultSymbol32,
+    defaultFiatCurrency32,
     custodian,
     defaultTotalSupply,
     defaultStartTime,
@@ -79,8 +85,7 @@ const moveTokenToActive = async (poa, fmr) => {
 
   await testStartSale(poa)
   await testBuyRemainingTokens(poa, {
-    // must be accounts 4 - 8 to work with poa test helpers
-    from: accounts[8],
+    from: whitelistedPoaBuyers[whitelistedPoaBuyers.length - 1],
     gasPrice
   })
 

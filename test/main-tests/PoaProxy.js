@@ -1,121 +1,146 @@
-/* temp comment out in order for current implementation to pass */
+const assert = require('assert')
+const PoaProxy = artifacts.require('PoaProxy')
+const PoaToken = artifacts.require('PoaToken')
+const PoaCrowdsale = artifacts.require('PoaCrowdsale')
+const IPoaTokenCrowdsale = artifacts.require('IPoaTokenCrowdsale')
+const UpgradedPoa = artifacts.require('UpgradedPoa')
 
-// const assert = require('assert')
-// const PoaProxy = artifacts.require('PoaProxy')
-// const PoaToken = artifacts.require('PoaToken')
-// const UpgradedPoa = artifacts.require('UpgradedPoa')
-// const { testWillThrow } = require('../helpers/general')
-// const {
-//   checkPreSetupStorage,
-//   setupContract,
-//   checkPostSetupStorage,
-//   enterActiveStage,
-//   checkPostActiveStorage,
-//   checkPostIsUpgradedStorage
-// } = require('../helpers/pxy')
-// const {
-//   testApprove,
-//   whitelistedPoaBuyers,
-//   setupPoaAndEcosystem
-// } = require('../helpers/poa')
+const { testWillThrow } = require('../helpers/general')
+const {
+  checkPreSetupStorage,
+  initializeContract,
+  checkPostSetupStorage,
+  enterActiveStage,
+  checkPostActiveStorage,
+  checkPostIsUpgradedStorage
+} = require('../helpers/pxy')
+const {
+  testApprove,
+  whitelistedPoaBuyers,
+  setupEcosystem,
+  testSetCurrencyRate,
+  defaultFiatCurrency,
+  defaultFiatRate,
+  owner
+} = require('../helpers/poa')
 
-// describe.only('when using PoaProxy contract to proxy a PoaToken', () => {
-//   contract('PoaProxy/PoaToken', accounts => {
-//     let poam
-//     let upoam
-//     let pmr
-//     let pxy
-//     let poa
-//     let reg
-//     let fmr
+describe('when using PoaProxy contract to proxy a PoaToken', () => {
+  contract('PoaProxy/PoaToken', accounts => {
+    let poatm
+    let poacm
+    let upoam
+    let pxy
+    let poa
+    let reg
+    let fmr
 
-//     before('setup contracts', async () => {
-//       // this sets PoaManager contract as owner in registry... storage will reflect that
-//       const contracts = await setupPoaAndEcosystem()
-//       reg = contracts.reg
-//       pmr = contracts.pmr
-//       fmr = contracts.fmr
-//       poam = await PoaToken.new()
-//       upoam = await UpgradedPoa.new()
-//       pxy = await PoaProxy.new(poam.address, reg.address)
-//       poa = await PoaToken.at(pxy.address)
-//       assert.equal(
-//         poa.address,
-//         pxy.address,
-//         'poa and pxy should have the same address'
-//       )
-//     })
+    before('setup contracts', async () => {
+      // this sets PoaManager contract as owner in registry... storage will reflect that
+      const contracts = await setupEcosystem()
+      reg = contracts.reg
+      fmr = contracts.fmr
+      const { exr, exp } = contracts
+      poatm = await PoaToken.new()
+      poacm = await PoaCrowdsale.new()
+      upoam = await UpgradedPoa.new()
+      pxy = await PoaProxy.new(poatm.address, poacm.address, reg.address)
+      poa = await IPoaTokenCrowdsale.at(pxy.address)
 
-//     it('should have no storage sequential storage', async () => {
-//       await checkPreSetupStorage(poa)
-//     })
+      // set registry entries for ease of testing addresses
+      await reg.updateContractAddress('PoaTokenMaster', poatm.address)
+      await reg.updateContractAddress('PoaCrowdsaleMaster', poacm.address)
 
-//     it('should setupContract', async () => {
-//       await setupContract(pmr, poa)
-//     })
+      // setup currency so that initialization will pass
+      await testSetCurrencyRate(
+        exr,
+        exp,
+        defaultFiatCurrency,
+        defaultFiatRate,
+        {
+          from: owner,
+          value: 1e18
+        }
+      )
+      // set PoaManager to owner in registry in order to perform ownerOnly functions
+      await reg.updateContractAddress('PoaManager', owner)
 
-//     it('should have new storage after setupPoaToken', async () => {
-//       await checkPostSetupStorage(poa, reg)
-//     })
+      assert.equal(
+        poa.address,
+        pxy.address,
+        'poa and pxy should have the same address'
+      )
+    })
 
-//     it('should move to active poa stage', async () => {
-//       await enterActiveStage(poa, fmr)
-//     })
+    it('should have no sequential storage', async () => {
+      await checkPreSetupStorage(poa)
+    })
 
-//     it('should approve', async () => {
-//       await testApprove(poa, whitelistedPoaBuyers[1], 3e18, {
-//         from: whitelistedPoaBuyers[0]
-//       })
-//     })
+    it('should initializeContract', async () => {
+      await initializeContract(poa, reg)
+    })
 
-//     it('should have correct storage after entering active', async () => {
-//       await checkPostActiveStorage(poa, reg)
-//     })
+    it('should have new sequential/non-sequential storage after setupPoaToken', async () => {
+      await checkPostSetupStorage(poa, reg)
+    })
 
-//     it('should NOT upgrade to new master if NOT PoaManager (accounts[0] for test)', async () => {
-//       await testWillThrow(pxy.proxyChangeMaster, [
-//         upoam.address,
-//         { from: accounts[1] }
-//       ])
-//     })
+    it('should move to active poa stage', async () => {
+      await enterActiveStage(poa, fmr)
+    })
 
-//     it('should upgrade to new master with additional functionality and storage', async () => {
-//       const preMaster = await pxy.proxyMasterContract()
+    it('should approve', async () => {
+      await testApprove(poa, whitelistedPoaBuyers[1], 3e18, {
+        from: whitelistedPoaBuyers[0]
+      })
+    })
 
-//       await pxy.proxyChangeMaster(upoam.address)
+    it('should have correct storage after entering active', async () => {
+      await checkPostActiveStorage(poa, reg)
+    })
 
-//       const postMaster = await pxy.proxyMasterContract()
+    it('should NOT upgrade to new master if NOT PoaManager (accounts[0] for test)', async () => {
+      await testWillThrow(pxy.proxyChangeTokenMaster, [
+        upoam.address,
+        { from: accounts[1] }
+      ])
+    })
 
-//       assert.equal(
-//         preMaster,
-//         poam.address,
-//         'old master should be equal to poam.address'
-//       )
-//       assert.equal(
-//         postMaster,
-//         upoam.address,
-//         'new master should be equal to upoam.address'
-//       )
-//     })
+    it('should upgrade to new master with additional functionality and storage', async () => {
+      const preTokenMaster = await pxy.poaTokenMaster()
 
-//     it('should have the same storage as before', async () => {
-//       await checkPostActiveStorage(poa, reg)
-//       poa = UpgradedPoa.at(pxy.address)
-//     })
+      await pxy.proxyChangeTokenMaster(upoam.address)
 
-//     it('should use added functionality to change isUpgraded', async () => {
-//       const preIsUpgraded = await poa.isUpgraded()
+      const postTokenMaster = await pxy.poaTokenMaster()
 
-//       await poa.setUpgrade()
+      assert.equal(
+        preTokenMaster,
+        poatm.address,
+        'old master should be equal to poatm.address'
+      )
+      assert.equal(
+        postTokenMaster,
+        upoam.address,
+        'new master should be equal to upoam.address'
+      )
+    })
 
-//       const postIsUpgraded = await poa.isUpgraded()
+    it('should have the same storage as before', async () => {
+      await checkPostActiveStorage(poa, reg)
+      poa = UpgradedPoa.at(pxy.address)
+    })
 
-//       assert(!preIsUpgraded, 'preIsUpgraded should be false')
-//       assert(postIsUpgraded, 'postIsUpgraded should be true')
-//     })
+    it('should use added functionality to change isUpgraded', async () => {
+      const preIsUpgraded = await poa.isUpgraded()
 
-//     it('should have new storage for new bool isUpgraded after being set', async () => {
-//       await checkPostIsUpgradedStorage(poa, reg)
-//     })
-//   })
-// })
+      await poa.setUpgrade()
+
+      const postIsUpgraded = await poa.isUpgraded()
+
+      assert(!preIsUpgraded, 'preIsUpgraded should be false')
+      assert(postIsUpgraded, 'postIsUpgraded should be true')
+    })
+
+    it('should have new storage for new bool isUpgraded after being set', async () => {
+      await checkPostIsUpgradedStorage(poa, reg)
+    })
+  })
+})

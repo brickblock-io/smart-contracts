@@ -6,7 +6,9 @@ const FeeManager = artifacts.require('FeeManager')
 const Logger = artifacts.require('CentralLogger')
 const PoaManager = artifacts.require('PoaManager')
 const PoaToken = artifacts.require('PoaToken')
+const PoaCrowdsale = artifacts.require('PoaCrowdsale')
 const Whitelist = artifacts.require('Whitelist')
+const IPoaTokenCrowdsale = artifacts.require('IPoaTokenCrowdsale')
 
 const assert = require('assert')
 
@@ -29,7 +31,7 @@ const {
   sendTransaction,
   testWillThrow,
   timeTravel,
-  toBytes32
+  percentBigInt
 } = require('./general')
 const { finalizedBBK } = require('./bbk')
 const { testApproveAndLockMany } = require('./act')
@@ -48,7 +50,8 @@ const custodian = accounts[2]
 const bbkBonusAddress = accounts[3]
 const bbkContributors = accounts.slice(4, 6)
 // overlap with bbkContributors... need more than 2 buyer accounts
-const whitelistedPoaBuyers = accounts.slice(4, 9)
+const whitelistedPoaBuyers = accounts.slice(4, 8)
+const fiatBuyer = accounts[9]
 const bbkTokenDistAmount = new BigNumber(1e18)
 const actRate = new BigNumber(1e3)
 const defaultName = 'TestPoa'
@@ -165,48 +168,6 @@ const testSetCurrencyRate = async (exr, exp, currencyType, rate, config) => {
   await testSetRate(exr, exp, rate, false)
 }
 
-const setupPoaAndEcosystem = async () => {
-  const { reg, act, bbk, exr, exp, fmr, wht, pmr, log } = await setupEcosystem()
-
-  await testSetCurrencyRate(exr, exp, defaultFiatCurrency, defaultFiatRate, {
-    from: owner,
-    value: 1e18
-  })
-  const poa = await PoaToken.new()
-
-  await poa.setupContract(
-    toBytes32(defaultName),
-    toBytes32(defaultSymbol),
-    toBytes32(defaultFiatCurrency),
-    broker,
-    custodian,
-    reg.address,
-    defaultTotalSupply,
-    await getDefaultStartTime(),
-    defaultFundingTimeout,
-    defaultActivationTimeout,
-    defaultFundingGoal
-  )
-
-  // we change the PoaManager to owner address in registry in order to "trick"
-  // the only owner function so that testing is easier registry address
-  // in the contract remains the same
-  await reg.updateContractAddress('PoaManager', owner)
-
-  return {
-    act,
-    bbk,
-    exp,
-    exr,
-    fmr,
-    log,
-    pmr,
-    poa,
-    reg,
-    wht
-  }
-}
-
 const setupPoaProxyAndEcosystem = async () => {
   const { reg, act, bbk, exr, exp, fmr, wht, pmr, log } = await setupEcosystem()
 
@@ -216,18 +177,20 @@ const setupPoaProxyAndEcosystem = async () => {
   })
 
   // deploy poa master in order to allow proxies to use it's code
-  const poam = await PoaToken.new()
-  // add to registry for use by PoaManager and PoaToken proxies
-  await reg.updateContractAddress('PoaTokenMaster', poam.address)
+  const poatm = await PoaToken.new()
+  const poacm = await PoaCrowdsale.new()
 
+  // add to registry for use by PoaManager and PoaToken proxies
+  await reg.updateContractAddress('PoaTokenMaster', poatm.address)
+  await reg.updateContractAddress('PoaCrowdsaleMaster', poacm.address)
   // add broker to allow for adding a new token from PoaManager
   await pmr.addBroker(broker)
 
   // Poa PoaProxy contract
   const poaTx = await pmr.addToken(
-    defaultName,
-    defaultSymbol,
-    defaultFiatCurrency,
+    defaultName32,
+    defaultSymbol32,
+    defaultFiatCurrency32,
     custodian,
     defaultTotalSupply,
     await getDefaultStartTime(),
@@ -240,7 +203,7 @@ const setupPoaProxyAndEcosystem = async () => {
   )
 
   // wrap the proxied PoA in PoaToken ABI to call as if regular PoA
-  const poa = await PoaToken.at(poaTx.logs[0].args.token)
+  const poa = await IPoaTokenCrowdsale.at(poaTx.logs[0].args.token)
   // trick the proxyPoa into thinking that PoaManager is owner
   // this makes it easier to test with a regular account
   // PoaManager only functions are tested in PoaManager tests as
@@ -256,7 +219,7 @@ const setupPoaProxyAndEcosystem = async () => {
     wht,
     pmr,
     poa,
-    poam,
+    poatm,
     log
   }
 }
@@ -264,10 +227,14 @@ const setupPoaProxyAndEcosystem = async () => {
 const testProxyInitialization = async (reg, pmr, args) => {
   // list broker
   await pmr.addBroker(broker)
-  // create new master poa
-  const poam = await PoaToken.new()
+
+  // create new master poa contracts
+  const poatm = await PoaToken.new()
+  const poacm = await PoaCrowdsale.new()
+
   // add poa master to registry
-  await reg.updateContractAddress('PoaTokenMaster', poam.address)
+  await reg.updateContractAddress('PoaTokenMaster', poatm.address)
+  await reg.updateContractAddress('PoaCrowdsaleMaster', poacm.address)
 
   const defaultStartTime = await getDefaultStartTime()
 
@@ -275,7 +242,7 @@ const testProxyInitialization = async (reg, pmr, args) => {
   const poaTx = await pmr.addToken.apply(null, args)
 
   // wrap the proxied PoA in PoaToken ABI to call as if regular PoA
-  const poa = await PoaToken.at(poaTx.logs[0].args.token)
+  const poa = await IPoaTokenCrowdsale.at(poaTx.logs[0].args.token)
 
   const name = await poa.name()
   const symbol = await poa.symbol()
@@ -380,7 +347,6 @@ const testProxyInitialization = async (reg, pmr, args) => {
     areInRange(startTime, defaultStartTime, 1),
     'startTime should match startTime given in constructor'
   )
-
   return poa
 }
 
@@ -610,11 +576,18 @@ const testStartSale = async (poa, config) => {
 }
 
 const getExpectedTokenAmount = async (poa, amountInCents) => {
+  const precisionOfPercentCalc = await poa.precisionOfPercentCalc.call()
   const totalSupply = await poa.totalSupply()
   const fundingGoal = await poa.fundingGoalInCents()
-  const percentOfFundingGoal = fundingGoal.mul(100).div(amountInCents)
+  const percentOfFundingGoal = percentBigInt(
+    amountInCents,
+    fundingGoal,
+    precisionOfPercentCalc
+  )
 
-  return totalSupply.mul(percentOfFundingGoal).div(100)
+  return totalSupply
+    .mul(percentOfFundingGoal)
+    .div(new BigNumber(10).pow(precisionOfPercentCalc))
 }
 
 const testBuyTokensWithFiat = async (poa, buyer, amountInCents, config) => {
@@ -631,6 +604,7 @@ const testBuyTokensWithFiat = async (poa, buyer, amountInCents, config) => {
   const postInvestedTokenAmountPerUser = await poa.fiatInvestmentPerUserInTokens(
     buyer
   )
+
   const expectedFundedAmountInCents = preFundedAmountInCents.add(amountInCents)
   const postFundedAmountInTokens = await poa.fundedAmountInTokensDuringFiatFunding()
   const postFundedAmountInCents = await poa.fundedAmountInCentsDuringFiatFunding()
@@ -660,6 +634,32 @@ const testBuyTokensWithFiat = async (poa, buyer, amountInCents, config) => {
   )
 }
 
+const testIncrementOfBalanceWhenBuyTokensWithFiat = async (
+  poa,
+  buyer,
+  amountInCents
+) => {
+  const preInvestedTokenAmountPerUser = await poa.fiatInvestmentPerUserInTokens(
+    buyer
+  )
+  const expectedTokenAmount = await getExpectedTokenAmount(poa, amountInCents)
+
+  await testBuyTokensWithFiat(poa, buyer, amountInCents, {
+    from: custodian,
+    gasPrice
+  })
+
+  const postInvestedTokenAmountPerUser = await poa.fiatInvestmentPerUserInTokens(
+    buyer
+  )
+
+  assert.equal(
+    preInvestedTokenAmountPerUser.add(expectedTokenAmount).toString(),
+    postInvestedTokenAmountPerUser.toString(),
+    'Total invested token amount does not match with the expected.'
+  )
+}
+
 const testBuyTokens = async (poa, config) => {
   assert(!!config.gasPrice, 'gasPrice must be given')
   assert(!!config.value, 'value must be given')
@@ -672,6 +672,7 @@ const testBuyTokens = async (poa, config) => {
   const preTokenBalance = await poa.balanceOf(buyer)
   const preFundedAmount = await poa.fundedAmountInWei()
   const preUserWeiInvested = await poa.investmentAmountPerUserInWei(buyer)
+
   const tx = await poa.buy(config)
   const gasUsed = await getGasUsed(tx)
   const gasCost = new BigNumber(gasUsed).mul(config.gasPrice)
@@ -795,7 +796,9 @@ const testActivate = async (poa, fmr, ipfsHash32, config) => {
   const preCustody = await poa.proofOfCustody()
   const prePaused = await poa.paused()
   const preBrokerPayouts = await poa.currentPayout(broker, true)
+
   await poa.activate(ipfsHash32, config)
+
   const postFeeManagerBalance = await getEtherBalance(fmr.address)
   const postStage = await poa.stage()
   const postCustody = await poa.proofOfCustody()
@@ -1394,12 +1397,18 @@ const testResetCurrencyRate = async (exr, exp, currencyType, rate) => {
 const testActiveBalances = async (poa, commitments) => {
   const totalSupply = await poa.totalSupply()
   const fundedAmountInWei = await poa.fundedAmountInWei()
+  const fundedAmountInTokensDuringFiatFunding = await poa.fundedAmountInTokensDuringFiatFunding()
+  const totalSupplyForEthInvestors = totalSupply.minus(
+    fundedAmountInTokensDuringFiatFunding
+  )
   let tokenBalanceTotal = bigZero
 
   for (const commitment of commitments) {
     const { address, amount } = commitment
     const tokenBalance = await poa.balanceOf(address)
-    const expectedBalance = amount.mul(totalSupply).div(fundedAmountInWei)
+    const expectedBalance = amount
+      .mul(totalSupplyForEthInvestors)
+      .div(fundedAmountInWei)
     tokenBalanceTotal = tokenBalanceTotal.add(tokenBalance)
 
     assert(
@@ -1409,7 +1418,11 @@ const testActiveBalances = async (poa, commitments) => {
   }
 
   assert(
-    areInRange(tokenBalanceTotal, totalSupply, commitments.length),
+    areInRange(
+      tokenBalanceTotal,
+      totalSupplyForEthInvestors,
+      commitments.length
+    ),
     'totalSupply should be within 1 wei of tokenBalanceTotal'
   )
 }
@@ -1482,6 +1495,40 @@ const testProxyUnchanged = async (poa, first, state) => {
   }
 }
 
+const testPercent = async ({
+  poa,
+  totalAmount = new BigNumber(1e21),
+  partOfTotalAmount = new BigNumber(8e20)
+} = {}) => {
+  const precisionOfPercentCalc = parseInt(
+    (await poa.precisionOfPercentCalc.call()).toString()
+  )
+  const percentage = await poa.percent.call(
+    partOfTotalAmount,
+    totalAmount,
+    precisionOfPercentCalc
+  )
+  const expectedPercentage = percentBigInt(
+    partOfTotalAmount,
+    totalAmount,
+    precisionOfPercentCalc
+  )
+
+  assert.equal(
+    percentage.toString(),
+    expectedPercentage.toString(),
+    'Percentage calculated by the contract is not the same with the expected'
+  )
+}
+
+const getRemainingAmountInCents = async poa => {
+  const fundingGoalInCents = await poa.fundingGoalInCents()
+  const fundedAmount = await poa.fundedAmountInCentsDuringFiatFunding()
+  const remainingAmount = fundingGoalInCents.sub(fundedAmount)
+
+  return remainingAmount
+}
+
 module.exports = {
   accounts,
   activationTimeoutContract,
@@ -1491,6 +1538,7 @@ module.exports = {
   bbkTokenDistAmount,
   broker,
   custodian,
+  fiatBuyer,
   defaultActivationTimeout,
   defaultBuyAmount,
   defaultFiatCurrency,
@@ -1513,7 +1561,6 @@ module.exports = {
   getDefaultStartTime,
   owner,
   setupEcosystem,
-  setupPoaAndEcosystem,
   setupPoaProxyAndEcosystem,
   testActivate,
   testActiveBalances,
@@ -1523,6 +1570,7 @@ module.exports = {
   testBuyTokens,
   testBuyTokensMulti,
   testBuyTokensWithFiat,
+  testIncrementOfBalanceWhenBuyTokensWithFiat,
   testCalculateFee,
   testChangeCustodianAddress,
   testClaim,
@@ -1556,5 +1604,7 @@ module.exports = {
   whitelistedPoaBuyers,
   emptyBytes32,
   stages,
-  getExpectedTokenAmount
+  getExpectedTokenAmount,
+  testPercent,
+  getRemainingAmountInCents
 }

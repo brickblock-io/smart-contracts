@@ -1,9 +1,9 @@
 const BigNumber = require('bignumber.js')
 
-const getAllSimpleStorage = async addr => {
+const getAllSequentialStorage = async addr => {
   let slot = 0
   let zeroCounter = 0
-  const simpleStorage = []
+  const sequentialStorage = []
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const data = await web3.eth.getStorageAt(addr, slot)
@@ -11,7 +11,7 @@ const getAllSimpleStorage = async addr => {
       zeroCounter++
     }
 
-    simpleStorage.push({
+    sequentialStorage.push({
       slot,
       data
     })
@@ -22,7 +22,7 @@ const getAllSimpleStorage = async addr => {
     }
   }
 
-  return simpleStorage
+  return sequentialStorage
 }
 
 const findMappingStorage = async (address, key, startSlot, endSlot) => {
@@ -126,15 +126,59 @@ const findNestedMappingStorage = async (
 }
 
 // must be small enough to fit string length value in same slot as string
-const shortHexStorageToAscii = hex =>
+const shortHexStringStorageToAscii = hex =>
   web3.toAscii(hex.slice(0, parseInt('0x' + hex[hex.length - 1], 16) + 2))
 
+const hasZeroBytesAfter = (bytesBuffer, offset) => {
+  let hasZeroBytes = true
+
+  if (offset === bytesBuffer.length) return false
+
+  let index = 0
+  for (const byte of bytesBuffer.values()) {
+    if (index > offset) {
+      hasZeroBytes = hasZeroBytes && byte === 0
+    }
+
+    index++
+  }
+
+  return hasZeroBytes
+}
+
+const trimRightBytes = hex => {
+  const bytesBuffer = Buffer.from(hex.replace('0x', ''), 'hex')
+  const bytesArray = []
+  let counter = 0
+
+  for (const byte of bytesBuffer.values()) {
+    if (
+      byte !== 0 ||
+      (byte === 0 && !hasZeroBytesAfter(bytesBuffer, counter))
+    ) {
+      bytesArray.push(byte)
+    }
+
+    counter++
+  }
+
+  return '0x' + Buffer.from(bytesArray, 'hex').toString('hex')
+}
+
+const bytes32StorageToAscii = hex => {
+  const trimmedBytes = trimRightBytes(hex)
+  // because solidity also uses ascii NOT utf8
+  return Buffer.from(trimmedBytes.replace('0x', ''), 'hex').toString('ascii')
+}
+
 module.exports = {
-  getAllSimpleStorage,
+  getAllSequentialStorage,
   findMappingStorage,
   getMappingSlot,
   getMappingStorage,
   getNestedMappingStorage,
   findNestedMappingStorage,
-  shortHexStorageToAscii
+  shortHexStringStorageToAscii,
+  bytes32StorageToAscii,
+  trimRightBytes
 }

@@ -171,25 +171,6 @@ describe('when initializing PoaToken', () => {
       ])
     })
 
-    it('should NOT initialize with a NON ready fiatRate', async () => {
-      await testWillThrow(testProxyInitialization, [
-        reg,
-        pmr,
-        [
-          defaultName32,
-          defaultSymbol32,
-          defaultFiatCurrency32,
-          custodian,
-          defaultTotalSupply,
-          await getDefaultStartTime(),
-          defaultFundingTimeout,
-          defaultActivationTimeout,
-          defaultFundingGoal,
-          { from: broker }
-        ]
-      ])
-    })
-
     it('should NOT initialize when NOT sent from listed broker', async () => {
       await testSetCurrencyRate(
         exr,

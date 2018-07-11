@@ -463,10 +463,10 @@ This can be very easily avoided by simply inheriting from the original `PoaMaste
 `PoaProxy` keeps, in non-sequential storage, a masterContract and a registry address. These are accessed through the getter functions `proxyMasterContract()` and `proxyRegistry()`
 
 ### Owner
-There is no explicit `owner` but there is a single function, `proxyChangeMaster()` which requires that the caller is [PoaManager](#poamanager). So [PoaManager](#poamanager) can be considered the owner in this case.
+There is no explicit `owner` but there is a single function, `proxyChangeTokenMaster()` which requires that the caller is [PoaManager](#poamanager). So [PoaManager](#poamanager) can be considered the owner in this case.
 
 ### Upgrading
-`proxyChangeMaster()` is the method used to upgrade a `PoaProxy`. This simply points the `PoaProxy` to a new `PoaMaster` which has already been deployed. New functionality and/or bugfixes would be in the new `PoaMaster`. Care must be taken to correctly preserve the storage from the previous version of `PoaMaster`. To upgrade, the new address must be a contract and the method must be called from `PoaManager`.
+`proxyChangeTokenMaster()` and `proxyChangeCrowdsaleMaster()` are the methods used to upgrade a `PoaProxy`. These methods simply points the `PoaProxy` to a new `PoaMaster` or `PoaCrowdsaleMaster` which has already been deployed. New functionality and/or bugfixes would be in the new `PoaMaster` or `PoaCrowdsaleMaster`. Care must be taken to correctly preserve the storage from the previous version of `PoaMaster` or `PoaCrowdsaleMaster`. To upgrade, the new address must be a contract and the method must be called from `PoaManager`.
 
 ### Fallback Function
 This is where the magic happens. This is where `delegatecall` is used to take code from `PoaMaster` and use it on the `PoaProxy`'s `storage`. This forms the concept of a `Proxy`. For more information on how this works, see the links previously listed above.
@@ -711,7 +711,8 @@ The following contracts have no or very little state and can be upgraded through
 The following contracts have state but can be upgraded through various mechanisms:
 
 * [PoaProxy](#poaproxy)
-    * Can be upgraded through `proxyChangeMaster()`, pointing it to a new `PoaMaster` contract
+    * POA Token functionality can be upgraded through `proxyChangeTokenMaster()`, pointing it to a new `PoaTokenMaster` contract
+    * POA Crowdsale functionality can be upgraded through `proxyChangeCrowdsaleMaster()`, pointing it to a new `PoaCrowdsaleMaster` contract
 * [PoaManager](#poamanager)
     * Deploy new contract
         * New contract needs a function to migrate token and broker addresses into the new one

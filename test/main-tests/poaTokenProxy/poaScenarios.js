@@ -1,9 +1,12 @@
 const {
   custodian,
   whitelistedPoaBuyers,
+  fiatBuyer,
   defaultIpfsHashArray32,
   setupPoaProxyAndEcosystem,
+  testStartPreSale,
   testStartSale,
+  testBuyTokensWithFiat,
   testBuyTokens,
   determineNeededTimeTravel,
   testBuyRemainingTokens,
@@ -192,9 +195,15 @@ describe('when trying various scenarios involving payout, transfer, approve, and
       poa = contracts.poa
       fmr = contracts.fmr
 
+      // buy with fiat
+      const fiatConfig = { from: custodian, gasPrice: gasPrice }
+      await testStartPreSale(poa, fiatConfig)
+      await testBuyTokensWithFiat(poa, fiatBuyer, 1000, fiatConfig)
+
       // move into Funding
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
+
       await testStartSale(poa)
 
       await testBuyTokensMulti(poa, defaultBuyAmount)
@@ -237,7 +246,6 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           value: defaultPayoutAmount,
           gasPrice
         })
-
         senderAccount = await getAccountInformation(poa, sender)
         receiverAccount = await getAccountInformation(poa, receiver)
 
@@ -251,18 +259,20 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         expectedReceiverPayout = receiverAccount.tokenBalance.mul(
           expectedPerTokenPayout
         )
-
         assert(
           areInRange(senderAccount.currentPayout, expectedSenderPayout, 1e2),
-          'sender currentPayout should match expectedPayout'
+          `receiver currentPayout ${senderAccount.currentPayout.toString()}
+          should match expectedPayout ${expectedSenderPayout.toString()}`
         )
+
         assert(
           areInRange(
             receiverAccount.currentPayout,
             expectedReceiverPayout,
             1e2
           ),
-          'receiver currentPayout should match expectedPayout'
+          `receiver currentPayout ${receiverAccount.currentPayout.toString()}
+          should match expectedPayout ${expectedReceiverPayout.toString()}`
         )
 
         await testTransfer(poa, receiver, senderAccount.tokenBalance, {
@@ -299,7 +309,8 @@ describe('when trying various scenarios involving payout, transfer, approve, and
 
         assert(
           areInRange(senderAccount.currentPayout, expectedSenderPayout, 1e2),
-          'sender currentPayout should match expectedPayout'
+          `receiver currentPayout ${senderAccount.currentPayout.toString()}
+          should match expectedPayout ${expectedSenderPayout.toString()}`
         )
         assert(
           areInRange(
@@ -307,10 +318,11 @@ describe('when trying various scenarios involving payout, transfer, approve, and
             expectedReceiverPayout,
             1e2
           ),
-          'receiver currentPayout should match expectedPayout'
+          `receiver currentPayout ${receiverAccount.currentPayout.toString()}
+          should match expectedPayout ${expectedReceiverPayout.toString()}`
         )
 
-        await testClaimAllPayouts(poa, whitelistedPoaBuyers)
+        await testClaimAllPayouts(poa, [...whitelistedPoaBuyers, fiatBuyer])
       })
     })
 
@@ -349,7 +361,8 @@ describe('when trying various scenarios involving payout, transfer, approve, and
 
         assert(
           areInRange(senderAccount.currentPayout, expectedSenderPayout, 1e2),
-          'sender currentPayout should match expectedPayout'
+          `receiver currentPayout ${senderAccount.currentPayout.toString()}
+          should match expectedPayout ${expectedSenderPayout.toString()}`
         )
         assert(
           areInRange(
@@ -357,7 +370,8 @@ describe('when trying various scenarios involving payout, transfer, approve, and
             expectedReceiverPayout,
             1e2
           ),
-          'receiver currentPayout should match expectedPayout'
+          `receiver currentPayout ${receiverAccount.currentPayout.toString()}
+          should match expectedPayout ${expectedReceiverPayout.toString()}`
         )
 
         await testTransfer(
@@ -399,7 +413,8 @@ describe('when trying various scenarios involving payout, transfer, approve, and
 
         assert(
           areInRange(senderAccount.currentPayout, expectedSenderPayout, 1e2),
-          'sender currentPayout should match expectedPayout'
+          `receiver currentPayout ${senderAccount.currentPayout.toString()}
+          should match expectedPayout ${expectedSenderPayout.toString()}`
         )
         assert(
           areInRange(
@@ -407,10 +422,11 @@ describe('when trying various scenarios involving payout, transfer, approve, and
             expectedReceiverPayout,
             1e2
           ),
-          'receiver currentPayout should match expectedPayout'
+          `receiver currentPayout ${receiverAccount.currentPayout.toString()}
+          should match expectedPayout ${expectedReceiverPayout.toString()}`
         )
 
-        await testClaimAllPayouts(poa, whitelistedPoaBuyers)
+        await testClaimAllPayouts(poa, [...whitelistedPoaBuyers, fiatBuyer])
       })
     })
 
@@ -518,7 +534,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
             should match expectedPayout ${expectedReceiverPayout.toString()}`
         )
 
-        await testClaimAllPayouts(poa, whitelistedPoaBuyers)
+        await testClaimAllPayouts(poa, [...whitelistedPoaBuyers, fiatBuyer])
       })
     })
 
@@ -627,7 +643,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
             should match expectedPayout ${expectedReceiverPayout.toString()}`
         )
 
-        await testClaimAllPayouts(poa, whitelistedPoaBuyers)
+        await testClaimAllPayouts(poa, [...whitelistedPoaBuyers, fiatBuyer])
       })
     })
 
@@ -676,7 +692,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           should match expectedPayout ${expectedReceiverPayout.toString()}`
         )
 
-        await testClaimAllPayouts(poa, whitelistedPoaBuyers)
+        await testClaimAllPayouts(poa, [...whitelistedPoaBuyers, fiatBuyer])
       })
     })
 
@@ -733,7 +749,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           should match expectedPayout ${expectedReceiverPayout.toString()}`
         )
 
-        await testClaimAllPayouts(poa, whitelistedPoaBuyers)
+        await testClaimAllPayouts(poa, [...whitelistedPoaBuyers, fiatBuyer])
       })
     })
 
@@ -793,7 +809,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           should match expectedPayout ${expectedReceiverPayout.toString()}`
         )
 
-        await testClaimAllPayouts(poa, whitelistedPoaBuyers)
+        await testClaimAllPayouts(poa, [...whitelistedPoaBuyers, fiatBuyer])
       })
     })
 
@@ -857,7 +873,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           should match expectedPayout ${expectedReceiverPayout.toString()}`
         )
 
-        await testClaimAllPayouts(poa, whitelistedPoaBuyers)
+        await testClaimAllPayouts(poa, [...whitelistedPoaBuyers, fiatBuyer])
       })
     })
   })
@@ -879,6 +895,11 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       exp = contracts.exp
       fmr = contracts.fmr
       rate = new BigNumber(5e4)
+
+      // buy with fiat
+      const fiatConfig = { from: custodian, gasPrice: gasPrice }
+      await testStartPreSale(poa, fiatConfig)
+      await testBuyTokensWithFiat(poa, fiatBuyer, 1000, fiatConfig)
 
       // move into Funding
       const neededTime = await determineNeededTimeTravel(poa)

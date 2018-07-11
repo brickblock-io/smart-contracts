@@ -140,6 +140,9 @@ const testSetRate = async (exr, exp, rate, isAfterClearRateIntervals) => {
   await exp.simulate__callback(prePendingQueryId, bigRate.toString())
   const postPendingQueryId = await exp.pendingTestQueryId()
   const actualRate = await exr.getRate(queryType)
+  const actualRate32 = await exr.getRate32(
+    web3.sha3(web3.toHex(queryType), { encoding: 'hex' })
+  )
   // check on recursive callback settings
   const [
     callInterval,
@@ -203,6 +206,11 @@ const testSetRate = async (exr, exp, rate, isAfterClearRateIntervals) => {
     bigRate.toString(),
     actualRate.toString(),
     'the rate on exr should match the rate set'
+  )
+  assert.equal(
+    actualRate.toString(),
+    actualRate32.toString(),
+    'rates using getRate and getRate32 should match'
   )
 }
 
