@@ -13,18 +13,18 @@ module.exports = {
 
   // rinkeby
   '4': {
-    ContractRegistry: '0xe1c0a6e3894a690c3182b8005bbba18ecac4b026',
-    BrickblockToken: '0x9651bb4124346d0145f886f4be14d146d46a47ed',
-    AccessToken: '0x7ca6ac20d06b4d0fb1e59a9e4ced35de506fc53b',
-    BrickblockAccount: '0x2ae7e7fd214df573d3b4ac32248a43bfcf2f473c',
-    FeeManager: '0x2a46784a1971c43440c01d84208660c8f6950853',
-    Whitelist: '0x7b236255a5c9f0faac7c085c76ec1876aeef102f',
-    ExchangeRates: '0x09c03400b4338713081ac69d5184741dd057b69c',
-    ExchangeRateProvider: '0x6f6addd773758f1db6d3771d052085ed71a1ce76',
-    PoaManager: '0x219303e1fd7c7d89f122fb1cd30d3ab9e5dca6ac',
-    PoaTokenMaster: '0xfc34822730abe7b6170ec1b129e71ae2a533a324',
-    PoaCrowdsaleMaster: '0xed514da634bb61047c260052b1788343fa9aa62f',
-    CentralLogger: '0xdfb4e846c34dd184ff5ae89c441db8283abfd07d',
+    ContractRegistry: '0xf166a2c755c2ad404b42c9be146acefbb3907aee',
+    BrickblockToken: '0x9984fcd6af2df5ddf345cf5cae606c0780bf79ec',
+    AccessToken: '0x1c04bfa3be5f9616f85d755ad9e7937a50594053',
+    BrickblockAccount: '0xbd26e373a943788f836498b302822e4b02f5c859',
+    FeeManager: '0x44678e12b4c66c00f7d56cc1d6dbe9f4c84caec4',
+    Whitelist: '0x68ecd1639bc06bfddbd7f02d10e5b66f0029038a',
+    PoaManager: '0xcbdd46b4ccb65cb80e6964ba10d64988c8b14617',
+    ExchangeRates: '0xf693138139b61e877c2c82fc7d2f3e8ab8dcbea2',
+    ExchangeRateProvider: '0x5adf8fe37c57fdc98c6015e6aadbe8f6db8d7ea4',
+    PoaTokenMaster: '0xf4517a4fc3fe5c3492df0a6e4cb349b2f317d1fc',
+    PoaCrowdsaleMaster: '0x0f04f5acbe84d97e3e9b88fee513b631e65045db',
+    CentralLogger: '0xbf6b7a0866d5c712aadf47b2a9cf209f04151655',
     CustomPOAToken: ['0xcbf23082233ebf2b97a986b4d05669472d744e3c']
   },
 
