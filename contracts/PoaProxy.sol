@@ -1,22 +1,33 @@
+/* solium-disable security/no-low-level-calls */
+
 pragma solidity 0.4.23;
 
 import "./PoaProxyCommon.sol";
 
-/* solium-disable security/no-low-level-calls */
+/**
+  @title This contract manages the storage of:
+  - PoaProxyCommon
+  - PoaProxy
+  - PoaCommon
+  - PoaCrowdsale
+  - PoaToken
 
-
-/*
-  This is the contract where all poa storage is set.
-  It uses chained delegatecalls to use functions from
+  It uses chained "delegatecall()"s to call functions on
   PoaToken and PoaCrowdsale and set the resulting storage
   here on PoaProxy.
 */
+
+
 contract PoaProxy is PoaProxyCommon {
   uint8 public constant version = 1;
 
   event ProxyUpgradedEvent(address upgradedFrom, address upgradedTo);
 
-  // set addresses to chain
+  /**
+    @notice Stores addresses of our contract registry
+    as well as the PoaToken and PoaCrowdsale master
+    contracts to forward calls to.
+  */
   constructor(
     address _poaTokenMaster,
     address _poaCrowdsaleMaster,
@@ -24,22 +35,26 @@ contract PoaProxy is PoaProxyCommon {
   )
     public
   {
-    // ensure that none of the addresses given are empty/address(0)
+    // Ensure that none of the given addresses are empty
     require(_poaTokenMaster != address(0));
     require(_poaCrowdsaleMaster != address(0));
     require(_registry != address(0));
 
-    // set addresses in common storage using commonly agreed upon slots
+    // Set addresses in common storage using deterministic storage slots
     setPoaTokenMaster(_poaTokenMaster);
     setPoaCrowdsaleMaster(_poaCrowdsaleMaster);
     setRegistry(_registry);
   }
 
-  //
-  // start proxy state helpers
-  //
+  /*****************************
+   * Start Proxy State Helpers *
+   *****************************/
 
-  // ensures that address has code/is contract
+  /**
+    @notice Ensures that a given address is a contract by
+    making sure it has code. Used during upgrading to make
+    sure the new addresses to upgrade to are smart contracts.
+   */
   function isContract(address _address)
     private
     view
@@ -50,15 +65,16 @@ contract PoaProxy is PoaProxyCommon {
     return _size > 0;
   }
 
-  //
-  // end proxy state helpers
-  //
+  /***************************
+   * End Proxy State Helpers *
+   ***************************/
 
-  //
-  // start proxy state setters
-  //
 
-  // change poaTokenMaster to new contract in order to upgrade
+  /*****************************
+   * Start Proxy State Setters *
+   *****************************/
+
+  /// @notice Update the stored "poaTokenMaster" address to upgrade the PoaToken master contract
   function proxyChangeTokenMaster(address _newMaster)
     public
     returns (bool)
@@ -79,7 +95,7 @@ contract PoaProxy is PoaProxyCommon {
     return true;
   }
 
-  // change poaCrowdsaleMaster to new contract in order to upgrade
+  /// @notice Update the stored `poaCrowdsaleMaster` address to upgrade the PoaCrowdsale master contract
   function proxyChangeCrowdsaleMaster(address _newMaster)
     public
     returns (bool)
@@ -100,16 +116,16 @@ contract PoaProxy is PoaProxyCommon {
     return true;
   }
 
-  //
-  // start proxy state setters
-  //
+  /***************************
+   * End Proxy State Setters *
+   ***************************/
 
-  /*
-    fallback for all proxied functions using delegatecall
-    will first try functions at poaTokenMaster
-    if no matches are found...
-    will then try functions at poaCrowdsale using similar fallback
-    defined in poaTokenMaster
+  /**
+    @notice Fallback function for all proxied functions using "delegatecall()".
+    It will first forward all functions to the "poaTokenMaster" address. If the
+    called function isn't found there, then "poaTokenMaster"'s fallback function
+    will forward the call to "poaCrowdsale". If the called function also isn't
+    found there, it will fail at last.
   */
   function()
     external
@@ -117,7 +133,7 @@ contract PoaProxy is PoaProxyCommon {
   {
     bytes32 _poaTokenMasterSlot = poaTokenMasterSlot;
     assembly {
-      // load address from first storage pointer
+      // Load PoaToken master address from first storage pointer
       let _poaTokenMaster := sload(_poaTokenMasterSlot)
 
       // calldatacopy(t, f, s)
@@ -127,8 +143,8 @@ contract PoaProxy is PoaProxyCommon {
         calldatasize // s = size bytes
       )
 
-      // delegatecall(g, a, in, insize, out, outsize) => 0 on error 1 on success
-      let success := delegatecall(
+      // delegatecall(g, a, in, insize, out, outsize) => returns "0" on error, or "1" on success
+      let result := delegatecall(
         gas, // g = gas
         _poaTokenMaster, // a = address
         0x0, // in = mem in  mem[in..(in+insize)
@@ -144,10 +160,12 @@ contract PoaProxy is PoaProxyCommon {
         returndatasize // s = size bytes
       )
 
-      // check if call was a success and return if no errors & revert if errors
-      if iszero(success) {
+      // Check if the call was successful
+      if iszero(result) {
+        // Revert if call failed
         revert(0, 0)
       }
+        // Return if call succeeded
         return(
           0x0,
           returndatasize
