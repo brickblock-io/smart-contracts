@@ -26,7 +26,7 @@ contract PoaCrowdsale is PoaCommon {
   *********************************************/
 
   /**
-    @dev These are non-sequential storage slots used in order to not override
+    These are non-sequential storage slots used in order to not override
     PoaProxy storage. It is needed for any contract which is the target
     of a second level delegate call. There is no sequential storage on
     this contract in order to avoid these collisions.
@@ -68,7 +68,7 @@ contract PoaCrowdsale is PoaCommon {
   * start modifiers *
   ******************/
 
-  /// @dev Ensure that the contract has not timed out
+  /// @notice Ensure that the contract has not timed out
   modifier checkTimeout() {
     uint256 fundingTimeoutDeadline = startTime().add(fundingTimeout());
     uint256 activationTimeoutDeadline = startTime()
@@ -85,7 +85,7 @@ contract PoaCrowdsale is PoaCommon {
     _;
   }
 
-  /// @dev Ensure that a buyer is whitelisted before buying
+  /// @notice Ensure that a buyer is whitelisted before buying
   modifier isBuyWhitelisted() {
     require(isWhitelisted(msg.sender));
     _;
@@ -145,9 +145,10 @@ contract PoaCrowdsale is PoaCommon {
   * start lifecycle functions *
   ****************************/
 
-  /// @dev Used for moving contract into FiatFunding stage where fiat purchases can be made
+  /// @notice Used for moving contract into FiatFunding stage where fiat purchases can be made
   function startFiatPreSale()
     external
+    onlyCustodian
     atStage(Stages.PreFunding)
     returns (bool)
   {
@@ -155,7 +156,7 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
-  /// @dev Used for starting ETH sale as long as startTime has passed
+  /// @notice Used for starting ETH sale as long as startTime has passed
   function startEthSale()
     external
     atEitherStage(Stages.PreFunding, Stages.FiatFunding)
@@ -166,7 +167,7 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
-  /// @dev Used for funding through FIAT offchain during crowdsale. Balances are updated by custodian
+  /// @notice Used for funding through FIAT offchain during crowdsale. Balances are updated by custodian
   function buyFiat
   (
     address _contributor,
@@ -215,7 +216,7 @@ contract PoaCrowdsale is PoaCommon {
     }
   }
 
-  /// @dev Used for funding through ETH during crowdsale
+  /// @notice Used for funding through ETH during crowdsale
   function buy()
     external
     payable
@@ -261,7 +262,7 @@ contract PoaCrowdsale is PoaCommon {
     }
   }
 
-  /// @dev Buy and continue funding process (when funding goal not met)
+  /// @notice Buy and continue funding process (when funding goal not met)
   function buyAndContinueFunding(uint256 _payAmount)
     internal
     returns (bool)
@@ -281,7 +282,7 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
-  /// @dev Buy and finish funding process (when funding goal met)
+  /// @notice Buy and finish funding process (when funding goal met)
   function buyAndEndFunding(bool _shouldRefund)
     internal
     returns (bool)
@@ -299,7 +300,7 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
-  /// @dev Activate token with proofOfCustody fee is taken from contract balance
+  /// @notice Activate token with proofOfCustody fee is taken from contract balance
   /// brokers must work this into their funding goals
   function activate
   (
@@ -338,8 +339,8 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /**
-   @dev Used for manually setting Stage to Failed when no users have bought any tokens
-   if no buy()s occurred before fundingTimeoutBlock token would be stuck in Funding
+   @notice Used for manually setting Stage to Failed when no users have bought any tokens
+   if no `buy()`s occurred before fundingTimeoutBlock token would be stuck in Funding
    can also be used when activate is not called by custodian within activationTimeout
    lastly can also be used when no one else has called reclaim.
   */
@@ -355,7 +356,7 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
-  /// @dev Reclaim eth for sender if fundingGoalInCents is not met within fundingTimeoutBlock
+  /// @notice Reclaim eth for sender if fundingGoalInCents is not met within fundingTimeoutBlock
   function reclaim()
     external
     checkTimeout
@@ -377,7 +378,7 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
-  // When custodian enters wrong FIAT records BEFORE EthFunding stage, custodian can cancel the contract
+  /// @notice When custodian enters wrong FIAT records BEFORE EthFunding stage, custodian can cancel the contract
   function setCancelled()
     external
     onlyCustodian
@@ -397,7 +398,7 @@ contract PoaCrowdsale is PoaCommon {
   * start utility functions *
   **************************/
 
-  // convert to accurate percent using desired level of precision
+  /// @notice Convert to accurate percent using desired level of precision
   function percent(
     uint256 _numerator,
     uint256 _denominator,
@@ -415,7 +416,7 @@ contract PoaCrowdsale is PoaCommon {
     return (_quotient);
   }
 
-  // gas saving call to get fiat rate without interface
+  /// @notice gas saving call to get fiat rate without interface
   function getFiatRate()
     public
     view
@@ -450,7 +451,7 @@ contract PoaCrowdsale is PoaCommon {
     }
   }
 
-  // returns fiat value in cents of given wei amount
+  /// @notice Returns fiat value in cents of given wei amount
   function weiToFiatCents(uint256 _wei)
     public
     view
@@ -460,7 +461,7 @@ contract PoaCrowdsale is PoaCommon {
     return _wei.mul(getFiatRate()).div(1e18);
   }
 
-  // returns wei value from fiat cents
+  /// @notice Returns wei value from fiat cents
   function fiatCentsToWei(uint256 _cents)
     public
     view
@@ -469,7 +470,7 @@ contract PoaCrowdsale is PoaCommon {
     return _cents.mul(1e18).div(getFiatRate());
   }
 
-  // get funded amount in cents
+  /// @notice Get funded amount in cents
   function fundedAmountInCents()
     external
     view
@@ -478,7 +479,7 @@ contract PoaCrowdsale is PoaCommon {
     return weiToFiatCents(fundedAmountInWei());
   }
 
-  // get fundingGoal in wei
+  /// @notice Get fundingGoal in wei
   function fundingGoalInWei()
     external
     view
@@ -495,7 +496,7 @@ contract PoaCrowdsale is PoaCommon {
   * start regular getters *
   ************************/
 
-  // return converted string from  bytes32 fiatCurrency32
+  /// @notice Return converted string from bytes32 fiatCurrency32
   function fiatCurrency()
     public
     view

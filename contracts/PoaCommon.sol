@@ -10,19 +10,17 @@ import "./PoaProxyCommon.sol";
   @title PoaCommon acts as "contract" between PoaToken and PoaCrowdsale
   to use agreed upon non-sequential storage for getting/setting
   variables which are in common use.
-
   It also has a set of functions which are used by both contracts.
-
   It also inherits from PoaProxyCommon in order to adhere to agreed
   upon storage slots for getting/setting PoaProxy related storage
 */
 contract PoaCommon is PoaProxyCommon {
   using SafeMath for uint256;
 
-  /// @notice ‰ permille NOT percent: fee paid to BBK holders through ACT
+  // ‰ permille NOT percent: fee paid to BBK holders through ACT
   uint256 public constant feeRate = 5;
 
-  /// @dev enum representing different stages a contract can be in
+  /// enum representing different stages a contract can be in
   /// different stages enable/restrict certain functionality
   enum Stages {
     PreFunding, // 0
@@ -39,8 +37,8 @@ contract PoaCommon is PoaProxyCommon {
   * start common non-sequential storage pointers *
   ***********************************************/
 
-  /**
-    @dev These are commonly agreed upon storage slots
+  /*
+    These are commonly agreed upon storage slots
     which other contracts can use in order to get & set.
     Constants do not use storage so they can be safely shared.
   */
@@ -106,7 +104,7 @@ contract PoaCommon is PoaProxyCommon {
   }
 
   /** 
-    @dev Check that the most common hashing algo is used sha256
+    @notice Check that the most common hashing algo is used sha256
     and that the length is correct. In theory it could be different
     but use of this functionality is limited to only custodian
     so this validation should suffice.
@@ -128,7 +126,7 @@ contract PoaCommon is PoaProxyCommon {
   * start regular getters *
   ************************/
   /**
-    @dev Converts proofOfCustody32 to string
+    @notice Converts proofOfCustody32 to string
     @return string
    */
   function proofOfCustody()
@@ -165,7 +163,7 @@ contract PoaCommon is PoaProxyCommon {
   * start common utility functions *
   *********************************/
 
-  /// @dev Public utility function to allow checking of required fee for a given amount
+  /// @notice Public utility function to allow checking of required fee for a given amount
   function calculateFee(uint256 _value)
     public
     pure
@@ -175,7 +173,7 @@ contract PoaCommon is PoaProxyCommon {
     return feeRate.mul(_value).div(1000);
   }
 
-  /// @dev Pay fee to FeeManager contract
+  /// @notice Pay fee to FeeManager contract
   function payFee(uint256 _value)
     internal
     returns (bool)
@@ -197,7 +195,7 @@ contract PoaCommon is PoaProxyCommon {
     return fiatInvestmentPerUserInTokens(_buyer) != 0;
   }
 
-  /// @dev Used for checking if whitelisted at Whitelist contract
+  /// @notice Used for checking if whitelisted at Whitelist contract
   function isWhitelisted
   (
     address _address
@@ -235,7 +233,7 @@ contract PoaCommon is PoaProxyCommon {
     }
   }
 
-  /// @dev Takes a single bytes32 and returns a max 32 char long string
+  /// @notice Takes a single bytes32 and returns a max 32 char long string
   /// @param _data single bytes32 representation of a string
   function to32LengthString(
     bytes32 _data
@@ -283,7 +281,7 @@ contract PoaCommon is PoaProxyCommon {
     return string(_bytesStringTrimmed);
   }
 
-  /// @dev Needed for longer strings needed for longer strings up to 64 chars long
+  /// @notice Needed for longer strings needed for longer strings up to 64 chars long
   /// @param _data 2 length sized array of bytes32
   function to64LengthString(
     bytes32[2] _data
@@ -342,8 +340,8 @@ contract PoaCommon is PoaProxyCommon {
   * start common non-sequential storage getters/setters *
   ******************************************************/
 
-  /**
-    @dev Each function in this section without "set" prefix is a getter for a specific
+  /*
+     Each function in this section without "set" prefix is a getter for a specific
     non-sequential storage slot which can be called by either a user or the contract.
     Functions with "set" are internal and can only be called by the contract/inherited contracts.
     Both getters and setters work on commonly agreed up storage slots in order to avoid collisions.

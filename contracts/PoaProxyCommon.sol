@@ -13,8 +13,8 @@ contract PoaProxyCommon {
   * start proxy common non-sequential storage pointers *
   *****************************************************/
 
-  /**
-    @dev These are commonly agreed upon storage slots
+  /*
+    These are commonly agreed upon storage slots
     which other contracts can use in order to get & set.
     Constants do not use storage so they can be safely shared.
   */
@@ -36,8 +36,8 @@ contract PoaProxyCommon {
   * start proxy common non-sequential storage getters/setters *
   ************************************************************/
 
-  /**
-    @dev Each function in this section without "set" prefix is a getter for a specific
+  /*
+    Each function in this section without "set" prefix is a getter for a specific
     non-sequential storage slot which can be called by either a user or the contract.
     Functions with "set" are internal and can only be called by the contract/inherited contracts.
     Both getters and setters work on commonly agreed up storage slots in order to avoid collisions.
@@ -117,7 +117,7 @@ contract PoaProxyCommon {
   * start common utility functions *
   *********************************/
 
-  /// @dev Gets a given contract address by bytes32 in order to save gas
+  /// @notice Gets a given contract address by bytes32 in order to save gas
   function getContractAddress
   (
     string _name

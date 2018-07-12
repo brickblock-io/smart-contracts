@@ -94,7 +94,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
   ****************/
 
   /**
-    @dev Proxied contracts cannot have constructors. This works in place
+    @notice Proxied contracts cannot have constructors. This works in place
     of the constructor in order to initialize the contract storage.
   */
   function initializeToken(
@@ -137,7 +137,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
   * start lifecycle functions *
   ****************************/
 
-  /// @dev function to change custodianship of poa
+  /// @notice function to change custodianship of poa
   function changeCustodianAddress
   (
     address _newCustodian
@@ -159,7 +159,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
   }
 
   /** 
-    @dev Used when asset should no longer be tokenized.
+    @notice Used when asset should no longer be tokenized.
     Allows for winding down via payouts, and freeze trading
   */
   function terminate()
@@ -205,7 +205,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     emit Unpause();
   }
 
-  /// @dev enables whitelisted transfers/transferFroms
+  /// @notice enables whitelisted transfers/transferFroms
   function toggleWhitelistTransfers()
     external
     onlyOwner
@@ -223,7 +223,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
   * start getter functions *
   *************************/
 
-  /// @dev returns string coverted from bytes32 representation of name
+  /// @notice returns string coverted from bytes32 representation of name
   function name()
     external
     view
@@ -232,7 +232,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     return to32LengthString(name32);
   }
 
-  /// @dev returns strig converted from bytes32 representation of symbol
+  /// @notice returns strig converted from bytes32 representation of symbol
   function symbol()
     external
     view
@@ -249,7 +249,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
   * start payout related functions *
   *********************************/
 
-  /// @dev get current payout for perTokenPayout and unclaimed
+  /// @notice get current payout for perTokenPayout and unclaimed
   function currentPayout
   (
     address _address,
@@ -285,7 +285,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
 
   }
 
-  /// @dev settle up perToken balances and move into unclaimedPayoutTotals in order
+  /// @notice settle up perToken balances and move into unclaimedPayoutTotals in order
   /// to ensure that token transfers will not result in inaccurate balances
   function settleUnclaimedPerTokenPayouts
   (
@@ -312,7 +312,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     return true;
   }
 
-  /// @dev send Ξ to contract to be claimed by token holders
+  /// @notice send Ξ to contract to be claimed by token holders
   function payout()
     external
     payable
@@ -326,8 +326,8 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     require(_fee > 0);
     // deduct fee from payout
     uint256 _payoutAmount = msg.value.sub(_fee);
-    /**
-      @dev totalPerTokenPayout is a rate at which to payout based on token balance.
+    /*
+      totalPerTokenPayout is a rate at which to payout based on token balance.
       It is stored as * 1e18 in order to keep accuracy
       It is / 1e18 when used relating to actual Ξ values
     */
@@ -337,8 +337,8 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
         .div(totalSupply())
       );
 
-    /// @dev take remaining dust and send to feeManager rather than leave stuck in
-    /// contract. should not be more than a few wei
+    // take remaining dust and send to feeManager rather than leave stuck in
+    // contract. should not be more than a few wei
     uint256 _delta = (_payoutAmount.mul(1e18) % totalSupply()).div(1e18);
     // pay fee along with any dust to FeeManager
     payFee(_fee.add(_delta));
@@ -349,7 +349,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     return true;
   }
 
-  /// @dev claim total eth claimable for sender based on token holdings at time of each payout
+  /// @notice claim total eth claimable for sender based on token holdings at time of each payout
   function claim()
     external
     atEitherStage(Stages.Active, Stages.Terminated)
@@ -378,7 +378,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     return _payoutAmount;
   }
 
-  /// @dev allow ipfs hash to be updated when audit etc occurs
+  /// @notice allow ipfs hash to be updated when audit etc occurs
   function updateProofOfCustody
   (
     bytes32[2] _ipfsHash
@@ -405,7 +405,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
   * start ERC20 overrides *
   ************************/
 
-  /// @dev used for calculating starting balance once activated
+  /// @notice used for calculating starting balance once activated
   function startingBalance
   (
     address _address
@@ -429,7 +429,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     }
   }
 
-  /// @dev ERC20 override uses NoobCoin pattern
+  /// @notice ERC20 override uses NoobCoin pattern
   function balanceOf
   (
     address _address
@@ -444,7 +444,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
   }
 
   /**
-    @dev ERC20 transfer override:
+    @notice ERC20 transfer override:
     - uses NoobCoin pattern combined with settling payout balances
   */
   function transfer
@@ -458,7 +458,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     isTransferWhitelisted(msg.sender)
     returns (bool)
   {
-    /// @dev move perToken payout balance to unclaimedPayoutTotals
+    // move perToken payout balance to unclaimedPayoutTotals
     settleUnclaimedPerTokenPayouts(msg.sender, _to);
 
     require(_to != address(0));
@@ -470,7 +470,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
   }
 
   /**
-    @dev ERC20 transfer override:
+    @notice ERC20 transfer override:
     - uses NoobCoin pattern combined with settling payout balances
   */
   function transferFrom
@@ -538,7 +538,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
   * start ERC20 overrides *
   ************************/
 
-  // forward any non-matching function calls to poaCrowdsaleMaster
+  /// @notice forward any non-matching function calls to poaCrowdsaleMaster
   function()
     external
     payable

@@ -11,7 +11,7 @@ import "./PoaProxyCommon.sol";
   - PoaToken
   - PoaCrowdsale
 
-  @dev For all Poa related contracts, there are two common terms which
+  @notice For all Poa related contracts, there are two common terms which
   need explanation:
   - sequential storage
     - contract storage that is stored sequentially in order of declaration
@@ -26,7 +26,7 @@ import "./PoaProxyCommon.sol";
   PoaToken and PoaCrowdsale and set the resulting storage
   here on PoaProxy.
 
-  @notice `getContractAddress("Logger").call()` does not use the return value
+  @dev `getContractAddress("Logger").call()` does not use the return value
   because we would rather contract functions to continue even if the event
   did not successfully trigger on the logger contract.
 */
