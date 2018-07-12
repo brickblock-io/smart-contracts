@@ -6,8 +6,8 @@ import "./PoaCommon.sol";
 /* solium-disable security/no-low-level-calls */
 
 
-/*
-  This acts as a master copy for use with PoaProxy in conjunction
+/**
+  @title This contract acts as a master copy for use with PoaProxy in conjunction
   with PoaToken. Storage is assumed to be set on PoaProxy through
   delegatecall in fallback function. This contract handles the
   crowdsale functionality of PoaProxy. Inherited PoaCommon dictates
@@ -21,50 +21,54 @@ contract PoaCrowdsale is PoaCommon {
   // Number of digits included during the percent calculation
   uint256 public constant precisionOfPercentCalc = 18;
 
-  //
-  // start special hashed PoaCrowdsale pointers
-  //
+  /*********************************************
+  * start special hashed PoaCrowdsale pointers *
+  *********************************************/
 
-  /*
-    These are non-sequential storage slots used in order to not override
+  /**
+    @dev These are non-sequential storage slots used in order to not override
     PoaProxy storage. It is needed for any contract which is the target
     of a second level delegate call. There is no sequential storage on
     this contract in order to avoid these collisions.
   */
 
-  // TYPE: BOOL: bool indicating whether or not crowdsale proxy has been initialized
+  // TYPE: bool
+  // Bool indicating whether or not crowdsale proxy has been initialized
   bytes32 private constant crowdsaleInitializedSlot = keccak256("crowdsaleInitialized");
-  // TYPE: UINT256: used to check when contract should move from
-  // PreFunding or FiatFunding to Funding stage
+  // TYPE: uint256
+  // Used for checking when contract should move from PreFunding or FiatFunding to Funding stage
   bytes32 private constant startTimeSlot = keccak256("startTime");
-  // TYPE: UINT256: amount of seconds until moving to Failed from
-  // Funding stage after startTime
+  // TYPE: uint256
+  // Amount of seconds until moving to Failed from Funding stage after startTime
   bytes32 private constant fundingTimeoutSlot = keccak256("fundingTimeout");
-  // TYPE: UINT256: amount of seconds until moving to Failed from
-  // Pending stage after startTime + fundingTimeout
+  // TYPE: uint256
+  // Amount of seconds until moving to Failed from Pending stage after startTime + fundingTimeout
   bytes32 private constant activationTimeoutSlot = keccak256("activationTimeout");
-  // TYPE: BYTES32: bytes32 representation fiat currency symbol used to get rate
+  // TYPE: bytes32
+  // bytes32 representation fiat currency symbol used to get rate
   bytes32 private constant fiatCurrency32Slot = keccak256("fiatCurrency32");
-  // TYPE: UINT256: amount needed before moving to pending calculated in fiat
+  // TYPE: uint256
+  // Amount needed before moving to pending calculated in fiat
   bytes32 private constant fundingGoalInCentsSlot = keccak256("fundingGoalInCents");
-  // TYPE: UINT256: used for keeping track of actual funded amount in fiat during
-  // FiatFunding stage
+  // TYPE: uint256
+  // Used for keeping track of actual funded amount in fiat during FiatFunding stage
   bytes32 private constant fundedAmountInCentsDuringFiatFundingSlot
   = keccak256("fundedAmountInCentsDuringFiatFunding");
-  // TYPE: ADDRESS: broker who is selling property, whitelisted on PoaManager
+  // TYPE: address
+  // Broker who is selling property, whitelisted on PoaManager
   bytes32 private constant brokerSlot = keccak256("broker");
 
-  //
-  // end special hashed PoaCrowdsale pointers
-  //
+  /*******************************************
+  * end special hashed PoaCrowdsale pointers *
+  *******************************************/
 
   event Unpause();
 
-  //
-  // start modifiers
-  //
+  /******************
+  * start modifiers *
+  ******************/
 
-  // ensure that the contract has not timed out
+  /// @dev Ensure that the contract has not timed out
   modifier checkTimeout() {
     uint256 fundingTimeoutDeadline = startTime().add(fundingTimeout());
     uint256 activationTimeoutDeadline = startTime()
@@ -81,18 +85,18 @@ contract PoaCrowdsale is PoaCommon {
     _;
   }
 
-  // ensure that a buyer is whitelisted before buying
+  /// @dev Ensure that a buyer is whitelisted before buying
   modifier isBuyWhitelisted() {
     require(isWhitelisted(msg.sender));
     _;
   }
 
-  //
-  // end modifiers
-  //
+  /****************
+  * end modifiers *
+  ****************/
 
-  /*
-    Proxied contracts cannot have constructors. This works in place
+  /**
+    @notice Proxied contracts cannot have constructors. This works in place
     of the constructor in order to initialize the contract storage.
   */
   function initializeCrowdsale(
@@ -137,12 +141,11 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
-  //
-  // start lifecycle functions
-  //
+  /****************************
+  * start lifecycle functions *
+  ****************************/
 
-  // used for moving contract into FiatFunding stage
-  // where fiat purchases can be made
+  /// @dev Used for moving contract into FiatFunding stage where fiat purchases can be made
   function startFiatPreSale()
     external
     atStage(Stages.PreFunding)
@@ -152,7 +155,7 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
-  // used for starting ETH sale as long as startTime has passed
+  /// @dev Used for starting ETH sale as long as startTime has passed
   function startEthSale()
     external
     atEitherStage(Stages.PreFunding, Stages.FiatFunding)
@@ -163,7 +166,7 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
-  // Buy with FIAT
+  /// @dev Used for funding through FIAT offchain during crowdsale. Balances are updated by custodian
   function buyFiat
   (
     address _contributor,
@@ -190,14 +193,18 @@ contract PoaCrowdsale is PoaCommon {
       uint256 _percentOfFundingGoal = percent(_amountInCents, fundingGoalInCents(), precisionOfPercentCalc);
       uint256 _tokenAmount = totalSupply().mul(_percentOfFundingGoal).div(10 ** precisionOfPercentCalc);
 
+      // update total fiat funded amount
       setFundedAmountInTokensDuringFiatFunding(
         fundedAmountInTokensDuringFiatFunding().add(_tokenAmount)
       );
+
+      // update balance of investor
       setFiatInvestmentPerUserInTokens(
         _contributor,
         fiatInvestmentPerUserInTokens(_contributor).add(_tokenAmount)
       );
 
+      // if funded amount reaches the funding goal, enter to Pending stage
       if (fundedAmountInCentsDuringFiatFunding() >= fundingGoalInCents()) {
         enterStage(Stages.Pending);
       }
@@ -208,7 +215,7 @@ contract PoaCrowdsale is PoaCommon {
     }
   }
 
-  // buy tokens
+  /// @dev Used for funding through ETH during crowdsale
   function buy()
     external
     payable
@@ -217,7 +224,7 @@ contract PoaCrowdsale is PoaCommon {
     isBuyWhitelisted
     returns (bool)
   {
-    // Prevent FiatFunding addresses from contributing to funding to keep total supply legit
+    // prevent FiatFunding addresses from contributing to funding to keep total supply legit
     if (isFiatInvestor(msg.sender)) {
       return false;
     }
@@ -254,7 +261,7 @@ contract PoaCrowdsale is PoaCommon {
     }
   }
 
-  // buy and continue funding process (when funding goal not met)
+  /// @dev Buy and continue funding process (when funding goal not met)
   function buyAndContinueFunding(uint256 _payAmount)
     internal
     returns (bool)
@@ -274,12 +281,11 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
-  // buy and finish funding process (when funding goal met)
+  /// @dev Buy and finish funding process (when funding goal met)
   function buyAndEndFunding(bool _shouldRefund)
     internal
     returns (bool)
   {
-    // let the world know that the token is in Pending Stage
     enterStage(Stages.Pending);
     uint256 _refundAmount = _shouldRefund ?
       fundedAmountInWei().add(msg.value).sub(fiatCentsToWei(fundingGoalInCents())) :
@@ -293,8 +299,8 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
-  // activate token with proofOfCustody fee is taken from contract balance
-  // brokers must work this into their funding goals
+  /// @dev Activate token with proofOfCustody fee is taken from contract balance
+  /// brokers must work this into their funding goals
   function activate
   (
     bytes32[2] _ipfsHash
@@ -331,10 +337,12 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
-  // used for manually setting Stage to Failed when no users have bought any tokens
-  // if no buy()s occurred before fundingTimeoutBlock token would be stuck in Funding
-  // can also be used when activate is not called by custodian within activationTimeout
-  // lastly can also be used when no one else has called reclaim.
+  /**
+   @dev Used for manually setting Stage to Failed when no users have bought any tokens
+   if no buy()s occurred before fundingTimeoutBlock token would be stuck in Funding
+   can also be used when activate is not called by custodian within activationTimeout
+   lastly can also be used when no one else has called reclaim.
+  */
   function setFailed()
     external
     atEitherStage(Stages.EthFunding, Stages.Pending)
@@ -347,7 +355,7 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
-  // reclaim eth for sender if fundingGoalInCents is not met within fundingTimeoutBlock
+  /// @dev Reclaim eth for sender if fundingGoalInCents is not met within fundingTimeoutBlock
   function reclaim()
     external
     checkTimeout
@@ -369,7 +377,7 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
-  // set stage to Cancelled
+  // When custodian enters wrong FIAT records BEFORE EthFunding stage, custodian can cancel the contract
   function setCancelled()
     external
     onlyCustodian
@@ -381,13 +389,13 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
-  //
-  // end lifecycle functions
-  //
+  /**************************
+  * end lifecycle functions *
+  **************************/
 
-  //
-  // start utility functions
-  //
+  /**************************
+  * start utility functions *
+  **************************/
 
   // convert to accurate percent using desired level of precision
   function percent(
@@ -479,13 +487,13 @@ contract PoaCrowdsale is PoaCommon {
     return fiatCentsToWei(fundingGoalInCents());
   }
 
-  //
-  // end utility functions
-  //
+  /************************
+  * end utility functions *
+  ************************/
 
-  //
-  // start regular getters
-  //
+  /************************
+  * start regular getters *
+  ************************/
 
   // return converted string from  bytes32 fiatCurrency32
   function fiatCurrency()
@@ -496,13 +504,13 @@ contract PoaCrowdsale is PoaCommon {
     return to32LengthString(fiatCurrency32());
   }
 
-  //
-  // end regular getters
-  //
+  /**********************
+  * end regular getters *
+  **********************/
 
-  //
-  // start non-sequential storage getters/setters
-  //
+  /***********************************************
+  * start non-sequential storage getters/setters *
+  ***********************************************/
 
   /*
     Each function in this section without "set" prefix is a getter for a specific
@@ -688,8 +696,8 @@ contract PoaCrowdsale is PoaCommon {
     }
   }
 
-  //
-  // end non-sequential storage getters/setters
-  //
+  /*********************************************
+  * end non-sequential storage getters/setters *
+  *********************************************/
 
 }

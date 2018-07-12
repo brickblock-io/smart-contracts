@@ -4,20 +4,32 @@ pragma solidity 0.4.23;
 
 import "./PoaProxyCommon.sol";
 
-/**
-  @title This contract manages the storage of:
-  - PoaProxyCommon
-  - PoaProxy
-  - PoaCommon
-  - PoaCrowdsale
-  - PoaToken
 
-  It uses chained "delegatecall()"s to call functions on
+/**
+  @title This contract manages the storage (sequential and non-sequential) of:
+  - PoaProxy
+  - PoaToken
+  - PoaCrowdsale
+
+  @dev For all Poa related contracts, there are two common terms which
+  need explanation:
+  - sequential storage
+    - contract storage that is stored sequentially in order of declaration
+    - this is the normal way storage works with smart contracts
+  - non-sequential storage
+    - contract storage that is stored in a slot non sequentially
+    - storage slot is determined by taking a hash of variable's name
+    and using that hash as the storage location
+    - this pattern is used in order to ensure storage from multiple
+    proxied master contracts does not collide
+  PoaProxy uses chained "delegatecall()"s to call functions on
   PoaToken and PoaCrowdsale and set the resulting storage
   here on PoaProxy.
+
+  @notice `getContractAddress("Logger").call()` does not use the return value
+  because we would rather contract functions to continue even if the event
+  did not successfully trigger on the logger contract.
 */
-
-
 contract PoaProxy is PoaProxyCommon {
   uint8 public constant version = 1;
 

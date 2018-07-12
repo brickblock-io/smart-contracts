@@ -1,48 +1,48 @@
 pragma solidity 0.4.23;
 
 
-/*
-  PoaProxyCommon acts as a "contract" between:
+/**
+  @title PoaProxyCommon acts as a "contract" between:
   - PoaCommon (indirectly PoaToken & PoaCrowdsale)
   - PoaProxy
 
   This "contract" dictates where to read and write specific non sequential storage
 */
 contract PoaProxyCommon {
-  //
-  // start proxy common non-sequential storage pointers
-  //
+  /*****************************************************
+  * start proxy common non-sequential storage pointers *
+  *****************************************************/
 
-  /*
-    These are commonly agreed upon storage slots
+  /**
+    @dev These are commonly agreed upon storage slots
     which other contracts can use in order to get & set.
-
     Constants do not use storage so they can be safely shared.
   */
-  // TYPE: ADDRESS
+  // TYPE: address
+  // Slot for PoaTokenMaster used by proxies
   bytes32 public constant poaTokenMasterSlot = keccak256("PoaTokenMaster");
-  // TYPE: ADDRESS
+  // TYPE: address
+  // Slot for PoaCrowdsaleMaster used by proxies
   bytes32 public constant poaCrowdsaleMasterSlot = keccak256("PoaCrowdsaleMaster");
-  // TYPE: ADDRESS
+  // TYPE: address
+  // Slot for Registry used for getting other contract addresses
   bytes32 public constant registrySlot = keccak256("registry");
 
-  //
-  // end proxy common non-sequential storage pointers
-  //
+  /****************************************************
+  * end proxy common non-sequential storage pointers *
+  ****************************************************/
 
-  //
-  // start proxy common non-sequential storage getters/setters
-  //
+  /************************************************************
+  * start proxy common non-sequential storage getters/setters *
+  ************************************************************/
 
-  /*
-    Each function in this section without "set" prefix is a getter for a specific
-    non-sequential storage  slot which can be called by either a user or the contract.
+  /**
+    @dev Each function in this section without "set" prefix is a getter for a specific
+    non-sequential storage slot which can be called by either a user or the contract.
     Functions with "set" are internal and can only be called by the contract/inherited contracts.
-
     Both getters and setters work on commonly agreed up storage slots in order to avoid collisions.
   */
 
-  // contract address of poaTokenMaster, used for delegatecalls
   function poaTokenMaster()
     public
     view
@@ -65,7 +65,6 @@ contract PoaProxyCommon {
     }
   }
 
-  // contract address of poaCrowdsaleMaster, used for delegatecalls
   function poaCrowdsaleMaster()
     public
     view
@@ -88,7 +87,6 @@ contract PoaProxyCommon {
     }
   }
 
-  // contract address of the registry, used for calling other contracts
   function registry()
     public
     view
@@ -111,15 +109,15 @@ contract PoaProxyCommon {
     }
   }
 
-  //
-  // end proxy common non-sequential storage getters/setters
-  //
+  /**********************************************************
+  * end proxy common non-sequential storage getters/setters *
+  **********************************************************/
 
-  //
-  // start common utility functions
-  //
+  /*********************************
+  * start common utility functions *
+  *********************************/
 
-  // gets a given contract address by bytes32 saving gas
+  /// @dev Gets a given contract address by bytes32 in order to save gas
   function getContractAddress
   (
     string _name
@@ -138,7 +136,7 @@ contract PoaProxyCommon {
       mstore(add(_call, 0x04), _name32) // store _name32 at _call offset by 4 bytes for pre-existing _sig
 
       // staticcall(g, a, in, insize, out, outsize) => 0 on error 1 on success
-      let success := staticcall(
+      let result := staticcall(
         gas,    // g = gas: whatever was passed already
         _registry,  // a = address: address in storage
         _call,  // in = mem in  mem[in..(in+insize): set to free memory pointer
@@ -148,17 +146,18 @@ contract PoaProxyCommon {
       )
 
       // revert if not successful
-      if iszero(success) {
+      if iszero(result) {
         revert(0, 0)
       }
 
-      _contractAddress := mload(_call) // assign result to return value
-      mstore(0x40, add(_call, 0x24)) // advance free memory pointer by largest _call size
+      // assign result to return value
+      _contractAddress := mload(_call)
+      // advance free memory pointer by largest _call size
+      mstore(0x40, add(_call, 0x24))
     }
   }
 
-  //
-  // end common utility functions
-  //
-
+  /*******************************
+  * end common utility functions *
+  *******************************/
 }

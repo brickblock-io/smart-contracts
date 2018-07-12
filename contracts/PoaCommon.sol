@@ -6,8 +6,8 @@ import "./PoaProxyCommon.sol";
 /* solium-disable security/no-low-level-calls */
 
 
-/*
-  PoaCommon acts as "contract" between PoaToken and PoaCrowdsale
+/**
+  @title PoaCommon acts as "contract" between PoaToken and PoaCrowdsale
   to use agreed upon non-sequential storage for getting/setting
   variables which are in common use.
 
@@ -19,12 +19,11 @@ import "./PoaProxyCommon.sol";
 contract PoaCommon is PoaProxyCommon {
   using SafeMath for uint256;
 
-
-  // ‰ permille NOT percent: fee paid to BBK holders through ACT
+  /// @notice ‰ permille NOT percent: fee paid to BBK holders through ACT
   uint256 public constant feeRate = 5;
 
-  // enum representing different stages a contract can be in
-  // different stages enable/restrict certain functionality
+  /// @dev enum representing different stages a contract can be in
+  /// different stages enable/restrict certain functionality
   enum Stages {
     PreFunding, // 0
     FiatFunding, // 1
@@ -36,53 +35,60 @@ contract PoaCommon is PoaProxyCommon {
     Cancelled // 7
   }
 
-  //
-  // start common non-sequential storage pointers
-  //
+  /***********************************************
+  * start common non-sequential storage pointers *
+  ***********************************************/
 
-  /*
-    These are commonly agreed upon storage slots
+  /**
+    @dev These are commonly agreed upon storage slots
     which other contracts can use in order to get & set.
-
     Constants do not use storage so they can be safely shared.
   */
 
-  // TYPE: Stage: represents current stage enabling/restricting functionality
+  // TYPE: Stage
+  // Represents current stage enabling/restricting functionality
   bytes32 internal constant stageSlot = keccak256("stage");
-  // TYPE: ADDRESS: custodian in charge of taking care of asset and payouts
+  // TYPE: address
+  // Custodian in charge of taking care of asset and payouts
   bytes32 internal constant custodianSlot = keccak256("custodian");
-  // TYPE: bytes32[2]: ipfs hash for proof of custody by custodian
+  // TYPE: bytes32[2]
+  // IPFS hash for proof of custody by custodian
   bytes32 internal constant proofOfCustody32Slot = keccak256("proofOfCustody32");
-  // TYPE: UINT256: ERC20 totalSupply
+  // TYPE: uint256
+  // ERC20 totalSupply
   bytes32 internal constant totalSupplySlot = keccak256("totalSupply");
-  // TYPE: UINT256: used to keep track of actual funded amount in POA
-  // token during FiatFunding stage
+  // TYPE: uint256
+  // Used for keeping track of actual funded amount in POA token during FiatFunding stage
   bytes32 internal constant fundedAmountInTokensDuringFiatFundingSlot =
   keccak256("fundedAmountInTokensDuringFiatFunding");
-  // TYPE: mapping(address => uint256): amount fiat invested per user.
-  // used for balance calculations
+  // TYPE: mapping(address => uint256)
+  // Amount fiat invested per user. Used for balance calculations
   bytes32 internal constant fiatInvestmentPerUserInTokensSlot =
   keccak256("fiatInvestmentPerUserInTokens");
-  // TYPE: UINT256: used for tracking fiat pre sale contributors
+  // TYPE: uint256
+  // Used for tracking fiat pre sale contributors
   bytes32 internal constant fundedAmountInWeiSlot = keccak256("fundedAmountInWei");
-  // TYPE: mapping(address => uint256): used for keeping track of of actual
-  // fundedAmount in eth
+  // TYPE: mapping(address => uint256)
+  // Used for keeping track of of actual fundedAmount in eth
   bytes32 internal constant investmentAmountPerUserInWeiSlot =
   keccak256("investmentAmountPerUserInWei");
-  // TYPE: mapping(address => uint256): per user invested in wei used for balance calculations
+  // TYPE: mapping(address => uint256)
+  // Per user invested in wei used for balance calculations
   bytes32 internal constant unclaimedPayoutTotalsSlot = keccak256("unclaimedPayoutTotals");
-  // TYPE: BOOL: used for enabling/disabling token movements
+  // TYPE: bool
+  // Used for enabling/disabling token movements
   bytes32 internal constant pausedSlot = keccak256("paused");
-  // TYPE: BOOL: indicates if poaToken has been initialized
+  // TYPE: bool
+  // Indicates if poaToken has been initialized
   bytes32 internal constant tokenInitializedSlot = keccak256("tokenInitialized");
 
-  //
-  // end common non-sequential storage pointers
-  //
+  /*********************************************
+  * end common non-sequential storage pointers *
+  *********************************************/
 
-  //
-  // start common modifiers
-  //
+  /*************************
+  * start common modifiers *
+  *************************/
 
   modifier onlyCustodian() {
     require(msg.sender == custodian());
@@ -99,11 +105,13 @@ contract PoaCommon is PoaProxyCommon {
     _;
   }
 
+  /** 
+    @dev Check that the most common hashing algo is used sha256
+    and that the length is correct. In theory it could be different
+    but use of this functionality is limited to only custodian
+    so this validation should suffice.
+  */
   modifier validIpfsHash(bytes32[2] _ipfsHash) {
-    // Check that the most common hashing algo is used sha256
-    // and that the length is correct. In theory it could be different
-    // but use of this functionality is limited to only custodian
-    // so this validation should suffice.
     bytes memory _ipfsHashBytes = bytes(to64LengthString(_ipfsHash));
     require(_ipfsHashBytes.length == 46);
     require(_ipfsHashBytes[0] == 0x51);
@@ -112,14 +120,17 @@ contract PoaCommon is PoaProxyCommon {
     _;
   }
 
-  //
-  // end common modifiers
-  //
+  /***********************
+  * end common modifiers *
+  ***********************/
 
-  //
-  // start regular getters
-  //
-
+  /************************
+  * start regular getters *
+  ************************/
+  /**
+    @dev Converts proofOfCustody32 to string
+    @return string
+   */
   function proofOfCustody()
     public
     view
@@ -128,13 +139,13 @@ contract PoaCommon is PoaProxyCommon {
     return to64LengthString(proofOfCustody32());
   }
 
-  //
-  // end regular getters
-  //
+  /**********************
+  * end regular getters *
+  **********************/
 
-  //
-  // start common lifecycle functions
-  //
+  /***********************************
+  * start common lifecycle functions *
+  ***********************************/
 
   function enterStage(Stages _stage)
     internal
@@ -146,15 +157,15 @@ contract PoaCommon is PoaProxyCommon {
     );
   }
 
-  //
-  // end common lifecycle functions
-  //
+  /*********************************
+  * end common lifecycle functions *
+  *********************************/
 
-  //
-  // start common utility functions
-  //
+  /*********************************
+  * start common utility functions *
+  *********************************/
 
-  // public utility function to allow checking of required fee for a given amount
+  /// @dev Public utility function to allow checking of required fee for a given amount
   function calculateFee(uint256 _value)
     public
     pure
@@ -164,7 +175,7 @@ contract PoaCommon is PoaProxyCommon {
     return feeRate.mul(_value).div(1000);
   }
 
-  // pay fee to FeeManager
+  /// @dev Pay fee to FeeManager contract
   function payFee(uint256 _value)
     internal
     returns (bool)
@@ -186,7 +197,7 @@ contract PoaCommon is PoaProxyCommon {
     return fiatInvestmentPerUserInTokens(_buyer) != 0;
   }
 
-  // used to check if whitelisted at Whitelist contract
+  /// @dev Used for checking if whitelisted at Whitelist contract
   function isWhitelisted
   (
     address _address
@@ -205,7 +216,7 @@ contract PoaCommon is PoaProxyCommon {
       mstore(add(_call, 0x04), _arg) // store _arg at _call offset by 4 bytes for pre-existing _sig
 
       // staticcall(g, a, in, insize, out, outsize) => 0 on error 1 on success
-      let success := staticcall(
+      let result := staticcall(
         gas,    // g = gas: whatever was passed already
         _whitelistContract,  // a = address: _whitelist address assigned from getContractAddress()
         _call,  // in = mem in  mem[in..(in+insize): set to _call pointer
@@ -215,7 +226,7 @@ contract PoaCommon is PoaProxyCommon {
       )
 
       // revert if not successful
-      if iszero(success) {
+      if iszero(result) {
         revert(0, 0)
       }
 
@@ -224,7 +235,8 @@ contract PoaCommon is PoaProxyCommon {
     }
   }
 
-  // takes a single bytes32 and returns a max 32 char long string
+  /// @dev Takes a single bytes32 and returns a max 32 char long string
+  /// @param _data single bytes32 representation of a string
   function to32LengthString(
     bytes32 _data
   )
@@ -239,7 +251,7 @@ contract PoaCommon is PoaProxyCommon {
 
     // loop through each byte in bytes32
     for (uint _bytesCounter = 0; _bytesCounter < 32; _bytesCounter++) {
-      /*
+      /**
         Convert bytes32 data to uint in order to increase the number enough to
         shift bytes further left while pushing out leftmost bytes
         then convert uint256 data back to bytes32
@@ -271,7 +283,8 @@ contract PoaCommon is PoaProxyCommon {
     return string(_bytesStringTrimmed);
   }
 
-  // takes a dynamically sized array of bytes32. needed for longer strings
+  /// @dev Needed for longer strings needed for longer strings up to 64 chars long
+  /// @param _data 2 length sized array of bytes32
   function to64LengthString(
     bytes32[2] _data
   )
@@ -321,20 +334,18 @@ contract PoaCommon is PoaProxyCommon {
     return string(_bytesStringTrimmed);
   }
 
-  //
-  // end common utility functions
-  //
+  /*******************************
+  * end common utility functions *
+  *******************************/
 
+  /******************************************************
+  * start common non-sequential storage getters/setters *
+  ******************************************************/
 
-  //
-  // start common non-sequential storage getters/setters
-  //
-
-  /*
-    Each function in this section without "set" prefix is a getter for a specific
-    non-sequential storage  slot which can be called by either a user or the contract.
+  /**
+    @dev Each function in this section without "set" prefix is a getter for a specific
+    non-sequential storage slot which can be called by either a user or the contract.
     Functions with "set" are internal and can only be called by the contract/inherited contracts.
-
     Both getters and setters work on commonly agreed up storage slots in order to avoid collisions.
   */
 
@@ -613,7 +624,7 @@ contract PoaCommon is PoaProxyCommon {
     }
   }
 
-  //
-  // end common non-sequential storage getters/setters
-  //
+  /****************************************************
+  * end common non-sequential storage getters/setters *
+  ****************************************************/
 }
