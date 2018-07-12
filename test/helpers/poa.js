@@ -538,7 +538,7 @@ const testCalculateFee = async (poa, taxableValue) => {
 const testStartPreSale = async (poa, config) => {
   const preStage = await poa.stage()
 
-  await poa.startFiatPreSale(config ? config : { from: owner })
+  await poa.startFiatPreSale(config ? config : { from: custodian })
 
   const postStage = await poa.stage()
 
