@@ -4,6 +4,7 @@
 * This README shows how to work with our smart contracts.
 * [ECOSYSTEM.md](./ECOSYSTEM.md) gives an architectural overview and detailed information about the individual contracts
 * [TEST-AGAINST-GETH.md](./TEST-AGAINST-GETH.md) explains how to run the tests against `geth` instead of truffle's `ganache`
+* [WORST-CASE-SCENARIOS.md](./WORST-CASE-SCENARIOS.md) analyzes what could go wrong along with potential mitigation steps
 
 ## Prerequisites
 * [Node.js](https://nodejs.org/en/) (we always work with the [latest LTS release](https://github.com/nodejs/Release#release-schedule))
