@@ -5,8 +5,8 @@ import "./interfaces/IRegistry.sol";
 import "./interfaces/IBrickblockToken.sol";
 
 
-/*
-  glossary:
+/**
+  @title glossary:
     dividendParadigm: the way of handling dividends, and the per token data structures
       * totalLockedBBK * (totalMintedPerToken - distributedPerBBK) / 1e18
       * this is the typical way of handling dividends.
@@ -111,8 +111,8 @@ contract AccessToken is PausableToken {
     registry = IRegistry(_registryAddress);
   }
 
-  // check an address for amount of currently locked BBK
-  // works similar to basic ERC20 balanceOf
+  /// @notice Check an address for amount of currently locked BBK
+  /// works similar to basic ERC20 balanceOf
   function lockedBbkOf(
     address _address
   )
@@ -123,9 +123,11 @@ contract AccessToken is PausableToken {
     return lockedBBK[_address];
   }
 
-  // transfers BBK from an account to this contract
-  // uses settlePerTokenToSecured to move funds in dividendParadigm to securedFundsParadigm
-  // keeps a record of transfers in lockedBBK (securedFundsParadigm)
+  /** @notice Transfers BBK from an account to this contract.
+    Uses settlePerTokenToSecured to move funds in `dividendParadigm` to `securedFundsParadigm`.
+    Keeps a record of transfers in lockedBBK (securedFundsParadigm)
+    @param _amount BBK token amount to lock
+  */
   function lockBBK(
     uint256 _amount
   )
@@ -144,9 +146,11 @@ contract AccessToken is PausableToken {
     return true;
   }
 
-  // transfers BBK from this contract to an account
-  // uses settlePerTokenToSecured to move funds in dividendParadigm to securedFundsParadigm
-  // keeps a record of transfers in lockedBBK (securedFundsParadigm)
+  /** @notice Transfers BBK from this contract to an account
+    Uses settlePerTokenToSecured to move funds in `dividendParadigm` to `securedFundsParadigm`.
+    Keeps a record of transfers in lockedBBK (securedFundsParadigm).
+    @param _amount BBK token amount to unlock
+  */
   function unlockBBK(
     uint256 _amount
   )
@@ -165,9 +169,13 @@ contract AccessToken is PausableToken {
     return true;
   }
 
-  // distribute tokens to all BBK token holders
-  // uses dividendParadigm to distribute ACT to lockedBBK holders
-  // adds delta (integer division remainders) to owner securedFundsParadigm balance
+  /**
+    @notice Distribute tokens to all BBK token holders.
+    Uses dividendParadigm to distribute ACT to lockedBBK holders.
+    Adds delta (integer division remainders) to owner securedFundsParadigm balance.
+    @param _amount Amount of fee to be distributed to ACT holders
+    @dev Accepts calls from only `FeeManager` contract
+  */
   function distribute(
     uint256 _amount
   )
@@ -209,12 +217,15 @@ contract AccessToken is PausableToken {
     return true;
   }
 
-  //
-  // start ERC20 overrides
-  //
+  /************************
+  * Start ERC20 overrides *
+  ************************/
 
-  // combines dividendParadigm, securedFundsParadigm, and doubleEntryParadigm
-  // in order to give a correct balance
+  /** @notice combines dividendParadigm, securedFundsParadigm
+    and doubleEntryParadigm in order to give a correct balance
+    @param _address Sender address
+    @return uint256
+  */
   function balanceOf(
     address _address
   )
@@ -233,9 +244,14 @@ contract AccessToken is PausableToken {
       .sub(spentBalances[_address]);
   }
 
-  // does the same thing as ERC20 transfer but...
-  // uses balanceOf rather than balances[adr] (balances is inaccurate see above)
-  // sets correct values for doubleEntryParadigm (see glossary)
+  /** 
+    @notice does the same thing as ERC20 transfer but,
+    uses balanceOf rather than balances[adr] (balances is inaccurate see above)
+    sets correct values for doubleEntryParadigm (see glossary)
+    @param _to Receiver address
+    @param _value Amount
+    @return bool
+  */
   function transfer(
     address _to,
     uint256 _value
@@ -252,9 +268,15 @@ contract AccessToken is PausableToken {
     return true;
   }
 
-  // does the same thing as ERC20 transferFrom but...
-  // uses balanceOf rather than balances[adr] (balances is inaccurate see above)
-  // sets correct values for doubleEntryParadigm (see glossary)
+  /** 
+    @notice Does the same thing as ERC20 transferFrom but...
+    Uses balanceOf rather than balances[adr] (balances is inaccurate see above)
+    Sets correct values for doubleEntryParadigm (see glossary)
+    @param _from Sender Address
+    @param _to Receiver address
+    @param _value Amount
+    @return bool
+  */
   function transferFrom(
     address _from,
     address _to,
@@ -274,13 +296,18 @@ contract AccessToken is PausableToken {
     return true;
   }
 
-  //
-  // end ERC20 overrides
-  //
+  /**********************
+  * End ERC20 overrides *
+  ***********************/
 
-  // callable only by FeeManager contract
-  // burns tokens through incrementing spentBalances[adr] and decrements totalSupply
-  // works with doubleEntryParadigm (see glossary)
+  /**
+    @notice Callable only by FeeManager contract
+    Burns tokens through incrementing spentBalances[adr] and decrements totalSupply
+    Works with doubleEntryParadigm (see glossary)
+    @param _address Sender Address
+    @param _value Amount
+    @return bool
+  */
   function burn(
     address _address,
     uint256 _value
@@ -296,7 +323,7 @@ contract AccessToken is PausableToken {
     return true;
   }
 
-  // prevent anyone from sending funds other than selfdestructs of course :)
+  /// @notice prevent anyone from sending funds
   function()
     public
     payable
