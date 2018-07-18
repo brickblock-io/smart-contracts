@@ -27,7 +27,7 @@ interface IPoaTokenCrowdsale {
     external
     view
     returns (bool);
-  
+
   function initializeToken(
     bytes32 _name32, // bytes32 of name string
     bytes32 _symbol32, // bytes32 of symbol string
@@ -48,10 +48,10 @@ interface IPoaTokenCrowdsale {
     external
     returns (bool);
 
-  function pause() 
+  function pause()
     external;
 
-  function unpause() 
+  function unpause()
     external;
 
   function toggleWhitelistTransfers()
@@ -70,7 +70,7 @@ interface IPoaTokenCrowdsale {
 
   function currentPayout
   (
-    address _address, 
+    address _address,
     bool _includeUnclaimed
   )
     external
@@ -127,18 +127,18 @@ interface IPoaTokenCrowdsale {
   (
     address _owner,
     address _spender
-  ) 
-    external 
-    view 
+  )
+    external
+    view
     returns (uint256);
 
   function approve(
-    address _spender, 
+    address _spender,
     uint256 _value
-  ) 
-    external 
+  )
+    external
     returns (bool);
-  
+
 
   //
   // end token functionality
@@ -173,7 +173,7 @@ interface IPoaTokenCrowdsale {
 
   function buyFiat
   (
-    address _contributor, 
+    address _contributor,
     uint256 _amountInCents
   )
     external
@@ -283,7 +283,7 @@ interface IPoaTokenCrowdsale {
   // start common functionality
   //
 
-  function feeRate()
+  function feeRateInPermille()
     external
     view
     returns (uint256);
@@ -389,4 +389,4 @@ interface IPoaTokenCrowdsale {
   //
   // end common functionality
   //
-} 
+}

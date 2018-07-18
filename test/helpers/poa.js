@@ -251,7 +251,7 @@ const testProxyInitialization = async (reg, pmr, args) => {
   const actualBroker = await poa.broker()
   const actualCustodian = await poa.custodian()
   const decimals = await poa.decimals()
-  const feeRate = await poa.feeRate()
+  const feeRateInPermille = await poa.feeRateInPermille()
   const startTime = await poa.startTime()
   const fundingTimeout = await poa.fundingTimeout()
   const fundingGoalInCents = await poa.fundingGoalInCents()
@@ -293,7 +293,7 @@ const testProxyInitialization = async (reg, pmr, args) => {
     'decimals should be constant of 18'
   )
   assert.equal(
-    feeRate.toString(),
+    feeRateInPermille.toString(),
     new BigNumber(5).toString(),
     'fee rate should be a constant of 5'
   )
@@ -383,7 +383,7 @@ const testInitialization = async (exr, exp, reg, pmr) => {
   const actualBroker = await poa.broker()
   const actualCustodian = await poa.custodian()
   const decimals = await poa.decimals()
-  const feeRate = await poa.feeRate()
+  const feeRateInPermille = await poa.feeRateInPermille()
   const startTime = await poa.startTime()
   const fundingTimeout = await poa.fundingTimeout()
   const fundingGoalInCents = await poa.fundingGoalInCents()
@@ -425,7 +425,7 @@ const testInitialization = async (exr, exp, reg, pmr) => {
     'decimals should be constant of 18'
   )
   assert.equal(
-    feeRate.toString(),
+    feeRateInPermille.toString(),
     new BigNumber(5).toString(),
     'fee rate should be a constant of 5'
   )
@@ -515,8 +515,8 @@ const testFiatCentsToWei = async (poa, fiatCentInput) => {
 }
 
 const testCalculateFee = async (poa, taxableValue) => {
-  const feeRate = await poa.feeRate()
-  const expectedFee = feeRate
+  const feeRateInPermille = await poa.feeRateInPermille()
+  const expectedFee = feeRateInPermille
     .mul(taxableValue)
     .div(1e3)
     .floor()
@@ -1452,7 +1452,7 @@ const testProxyUnchanged = async (poa, first, state) => {
       actualBroker: await poa.broker(),
       actualCustodian: await poa.custodian(),
       decimals: await poa.decimals(),
-      feeRate: await poa.feeRate(),
+      feeRateInPermille: await poa.feeRateInPermille(),
       startTime: await poa.startTime(),
       fundingTimeout: await poa.fundingTimeout(),
       fundingGoalInCents: await poa.fundingGoalInCents(),
@@ -1476,7 +1476,7 @@ const testProxyUnchanged = async (poa, first, state) => {
         actualBroker: await poa.broker(),
         actualCustodian: await poa.custodian(),
         decimals: await poa.decimals(),
-        feeRate: await poa.feeRate(),
+        feeRateInPermille: await poa.feeRateInPermille(),
         startTime: await poa.startTime(),
         fundingTimeout: await poa.fundingTimeout(),
         fundingGoalInCents: await poa.fundingGoalInCents(),

@@ -185,7 +185,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
   contract('PoaTokenProxy', () => {
     let poa
     let fmr
-    let feeRate
+    let feeRateInPermille
     let totalSupply
     const defaultPayoutAmount = new BigNumber(0.23437e16)
     const defaultBuyAmount = new BigNumber(1.802384753e16)
@@ -224,7 +224,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
       // clean out broker balance for easier debugging
       await testBrokerClaim(poa)
 
-      feeRate = await poa.feeRate()
+      feeRateInPermille = await poa.feeRateInPermille()
       totalSupply = await poa.totalSupply()
     })
 
@@ -249,7 +249,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         senderAccount = await getAccountInformation(poa, sender)
         receiverAccount = await getAccountInformation(poa, receiver)
 
-        fee = defaultPayoutAmount.mul(feeRate).div(1e3)
+        fee = defaultPayoutAmount.mul(feeRateInPermille).div(1e3)
         expectedPerTokenPayout = defaultPayoutAmount.sub(fee).div(totalSupply)
 
         // should just be perToken rate here
@@ -297,7 +297,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         senderAccount = await getAccountInformation(poa, sender)
         receiverAccount = await getAccountInformation(poa, receiver)
 
-        fee = defaultPayoutAmount.mul(feeRate).div(1e3)
+        fee = defaultPayoutAmount.mul(feeRateInPermille).div(1e3)
         expectedPerTokenPayout = defaultPayoutAmount.sub(fee).div(totalSupply)
 
         expectedSenderPayout = senderAccount.tokenBalance
@@ -348,7 +348,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         senderAccount = await getAccountInformation(poa, sender)
         receiverAccount = await getAccountInformation(poa, receiver)
 
-        fee = defaultPayoutAmount.mul(feeRate).div(1e3)
+        fee = defaultPayoutAmount.mul(feeRateInPermille).div(1e3)
         expectedPerTokenPayout = defaultPayoutAmount.sub(fee).div(totalSupply)
 
         // should just be perToken rate here
@@ -401,7 +401,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         senderAccount = await getAccountInformation(poa, sender)
         receiverAccount = await getAccountInformation(poa, receiver)
 
-        fee = defaultPayoutAmount.mul(feeRate).div(1e3)
+        fee = defaultPayoutAmount.mul(feeRateInPermille).div(1e3)
         expectedPerTokenPayout = defaultPayoutAmount.sub(fee).div(totalSupply)
 
         expectedSenderPayout = senderAccount.tokenBalance
@@ -453,7 +453,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         senderAccount = await getAccountInformation(poa, sender)
         receiverAccount = await getAccountInformation(poa, receiver)
 
-        fee = defaultPayoutAmount.mul(feeRate).div(1e3)
+        fee = defaultPayoutAmount.mul(feeRateInPermille).div(1e3)
         expectedPerTokenPayout = defaultPayoutAmount.sub(fee).div(totalSupply)
 
         // should just be perToken rate here
@@ -509,7 +509,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         senderAccount = await getAccountInformation(poa, sender)
         receiverAccount = await getAccountInformation(poa, receiver)
 
-        fee = defaultPayoutAmount.mul(feeRate).div(1e3)
+        fee = defaultPayoutAmount.mul(feeRateInPermille).div(1e3)
         expectedPerTokenPayout = defaultPayoutAmount.sub(fee).div(totalSupply)
 
         expectedSenderPayout = senderAccount.tokenBalance
@@ -561,7 +561,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         senderAccount = await getAccountInformation(poa, sender)
         receiverAccount = await getAccountInformation(poa, receiver)
 
-        fee = defaultPayoutAmount.mul(feeRate).div(1e3)
+        fee = defaultPayoutAmount.mul(feeRateInPermille).div(1e3)
         expectedPerTokenPayout = defaultPayoutAmount.sub(fee).div(totalSupply)
 
         // should just be perToken rate here
@@ -618,7 +618,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         senderAccount = await getAccountInformation(poa, sender)
         receiverAccount = await getAccountInformation(poa, receiver)
 
-        fee = defaultPayoutAmount.mul(feeRate).div(1e3)
+        fee = defaultPayoutAmount.mul(feeRateInPermille).div(1e3)
         expectedPerTokenPayout = defaultPayoutAmount.sub(fee).div(totalSupply)
 
         expectedSenderPayout = senderAccount.tokenBalance
@@ -665,7 +665,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           gasPrice
         })
 
-        const fee = defaultPayoutAmount.mul(feeRate).div(1e3)
+        const fee = defaultPayoutAmount.mul(feeRateInPermille).div(1e3)
         const expectedPerTokenPayout = defaultPayoutAmount
           .sub(fee)
           .div(totalSupply)
@@ -719,7 +719,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           gasPrice
         })
 
-        const fee = defaultPayoutAmount.mul(feeRate).div(1e3)
+        const fee = defaultPayoutAmount.mul(feeRateInPermille).div(1e3)
         const expectedPerTokenPayout = defaultPayoutAmount
           .sub(fee)
           .div(totalSupply)
@@ -782,7 +782,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           gasPrice
         })
 
-        const fee = defaultPayoutAmount.mul(feeRate).div(1e3)
+        const fee = defaultPayoutAmount.mul(feeRateInPermille).div(1e3)
         const expectedPerTokenPayout = defaultPayoutAmount
           .sub(fee)
           .div(totalSupply)
@@ -842,7 +842,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           gasPrice
         })
 
-        const fee = defaultPayoutAmount.mul(feeRate).div(1e3)
+        const fee = defaultPayoutAmount.mul(feeRateInPermille).div(1e3)
         const expectedPerTokenPayout = defaultPayoutAmount
           .sub(fee)
           .div(totalSupply)

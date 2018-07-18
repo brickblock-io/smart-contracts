@@ -1,40 +1,42 @@
+/* solium-disable security/no-low-level-calls */
+
 pragma solidity 0.4.23;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./PoaProxyCommon.sol";
 
-/* solium-disable security/no-low-level-calls */
-
 
 /**
-  @title PoaCommon acts as "contract" between PoaToken and PoaCrowdsale
-  to use agreed upon non-sequential storage for getting/setting
-  variables which are in common use.
-  It also has a set of functions which are used by both contracts.
-  It also inherits from PoaProxyCommon in order to adhere to agreed
-  upon storage slots for getting/setting PoaProxy related storage
+  @title Firstly, PoaCommon acts as an agreement between PoaToken and PoaCrowdsale
+  to use agreed upon non-sequential storage for getting & setting
+  variables which are used by both contracts.
+  Secondly, it has a set of shared functions.
+  Thirdly, it inherits from PoaProxyCommon to adhere to the agreed
+  upon storage slots for getting & setting PoaProxy related storage.
 */
 contract PoaCommon is PoaProxyCommon {
   using SafeMath for uint256;
 
-  // ‰ permille NOT percent: fee paid to BBK holders through ACT
-  uint256 public constant feeRate = 5;
+  // The fee paid to the BBK network per crowdsale investment and per payout
+  // NOTE: Tracked in permille (and NOT percent) to reduce dust and
+  // inaccuracies caused by integer division
+  uint256 public constant feeRateInPermille = 5; // read: 0.5%
 
-  /// enum representing different stages a contract can be in
-  /// different stages enable/restrict certain functionality
+  // An enum representing all stages a contract can be in.
+  // Different stages enable or restrict certain functionality.
   enum Stages {
-    PreFunding, // 0
+    PreFunding,  // 0
     FiatFunding, // 1
-    EthFunding, // 2
-    Pending, // 3
-    Failed,  // 4
-    Active, // 5
-    Terminated, // 6
-    Cancelled // 7
+    EthFunding,  // 2
+    Pending,     // 3
+    Failed,      // 4
+    Active,      // 5
+    Terminated,  // 6
+    Cancelled    // 7
   }
 
   /***********************************************
-  * start common non-sequential storage pointers *
+  * Start Common Non-Sequential Storage Pointers *
   ***********************************************/
 
   /*
@@ -43,49 +45,63 @@ contract PoaCommon is PoaProxyCommon {
     Constants do not use storage so they can be safely shared.
   */
 
+  // Represents current stage
   // TYPE: Stage
-  // Represents current stage enabling/restricting functionality
   bytes32 internal constant stageSlot = keccak256("stage");
-  // TYPE: address
+
   // Custodian in charge of taking care of asset and payouts
+  // TYPE: address
   bytes32 internal constant custodianSlot = keccak256("custodian");
+
+  // IPFS hash storing the proof of custody provided by custodian
   // TYPE: bytes32[2]
-  // IPFS hash for proof of custody by custodian
   bytes32 internal constant proofOfCustody32Slot = keccak256("proofOfCustody32");
-  // TYPE: uint256
+
   // ERC20 totalSupply
-  bytes32 internal constant totalSupplySlot = keccak256("totalSupply");
   // TYPE: uint256
-  // Used for keeping track of actual funded amount in POA token during FiatFunding stage
+  bytes32 internal constant totalSupplySlot = keccak256("totalSupply");
+
+  // Tracks the total amount of tokens sold during the FiatFunding stage
+  // TYPE: uint256
   bytes32 internal constant fundedAmountInTokensDuringFiatFundingSlot =
   keccak256("fundedAmountInTokensDuringFiatFunding");
+
+  // Tracks the Fiat investments per user raised during the FiatFunding stage
   // TYPE: mapping(address => uint256)
-  // Amount fiat invested per user. Used for balance calculations
   bytes32 internal constant fiatInvestmentPerUserInTokensSlot =
   keccak256("fiatInvestmentPerUserInTokens");
+
+  // Tracks the total amount of ETH raised during the EthFunding stage.
+  // NOTE: We can't use `address(this).balance` because after activating the
+  // POA contract, its balance will become `claimable` by the broker and can
+  // therefore no longer be used to calculate balances.
   // TYPE: uint256
-  // Used for tracking fiat pre sale contributors
   bytes32 internal constant fundedAmountInWeiSlot = keccak256("fundedAmountInWei");
+
+  // Tracks the ETH investments per user raised during the EthFunding stage
   // TYPE: mapping(address => uint256)
-  // Used for keeping track of of actual fundedAmount in eth
   bytes32 internal constant investmentAmountPerUserInWeiSlot =
   keccak256("investmentAmountPerUserInWei");
+
+  // Tracks unclaimed payouts per user
   // TYPE: mapping(address => uint256)
-  // Per user invested in wei used for balance calculations
   bytes32 internal constant unclaimedPayoutTotalsSlot = keccak256("unclaimedPayoutTotals");
+
+  // ERC20 paused - Used for enabling/disabling token transfers
   // TYPE: bool
-  // Used for enabling/disabling token movements
   bytes32 internal constant pausedSlot = keccak256("paused");
-  // TYPE: bool
+
   // Indicates if poaToken has been initialized
+  // TYPE: bool
   bytes32 internal constant tokenInitializedSlot = keccak256("tokenInitialized");
 
   /*********************************************
-  * end common non-sequential storage pointers *
+  * End Common Non-Sequential Storage Pointers *
   *********************************************/
 
+
   /*************************
-  * start common modifiers *
+  * Start Common Modifiers *
   *************************/
 
   modifier onlyCustodian() {
@@ -103,10 +119,10 @@ contract PoaCommon is PoaProxyCommon {
     _;
   }
 
-  /** 
-    @notice Check that the most common hashing algo is used sha256
-    and that the length is correct. In theory it could be different
-    but use of this functionality is limited to only custodian
+  /**
+    @notice Check that the most common hashing algo is used (keccak256)
+    and that its length is correct. In theory, it could be different.
+    But the use of this functionality is limited to "onlyCustodian"
     so this validation should suffice.
   */
   modifier validIpfsHash(bytes32[2] _ipfsHash) {
@@ -119,14 +135,15 @@ contract PoaCommon is PoaProxyCommon {
   }
 
   /***********************
-  * end common modifiers *
+  * End Common Modifiers *
   ***********************/
 
+
   /************************
-  * start regular getters *
+  * Start Regular Getters *
   ************************/
   /**
-    @notice Converts proofOfCustody32 to string
+    @notice Converts proofOfCustody from bytes32 to string
     @return string
    */
   function proofOfCustody()
@@ -138,11 +155,12 @@ contract PoaCommon is PoaProxyCommon {
   }
 
   /**********************
-  * end regular getters *
+  * End Regular Getters *
   **********************/
 
+
   /***********************************
-  * start common lifecycle functions *
+  * Start Common Lifecycle Functions *
   ***********************************/
 
   function enterStage(Stages _stage)
@@ -156,35 +174,40 @@ contract PoaCommon is PoaProxyCommon {
   }
 
   /*********************************
-  * end common lifecycle functions *
+  * End Common Lifecycle Functions *
   *********************************/
+
 
   /*********************************
-  * start common utility functions *
+  * Start Common Utility Functions *
   *********************************/
 
-  /// @notice Public utility function to allow checking of required fee for a given amount
+  /// @notice Utility function calculating the necessary fee for a given amount
+  /// @return uint256 Payable fee
   function calculateFee(uint256 _value)
     public
     pure
     returns (uint256)
   {
-    // divide by 1000 because feeRate permille
-    return feeRate.mul(_value).div(1000);
+    return feeRateInPermille.mul(_value).div(1000);
   }
 
   /// @notice Pay fee to FeeManager contract
+  /// @return true if fee payment succeeded, or false if it failed
   function payFee(uint256 _value)
     internal
     returns (bool)
   {
     require(
+      // NOTE: It's an `internal` call and we know exactly what
+      // we're calling so it's safe to ignore this solium warning.
       // solium-disable-next-line security/no-call-value
       getContractAddress("FeeManager")
         .call.value(_value)(bytes4(keccak256("payFee()")))
     );
   }
 
+  /// @notice Checks if a given address has invested during the FiatFunding stage.
   function isFiatInvestor(
     address _buyer
   )
@@ -195,7 +218,8 @@ contract PoaCommon is PoaProxyCommon {
     return fiatInvestmentPerUserInTokens(_buyer) != 0;
   }
 
-  /// @notice Used for checking if whitelisted at Whitelist contract
+  /// @notice Checks if a given address is whitelisted
+  /// @return true if address is whitelisted, false if not
   function isWhitelisted
   (
     address _address
@@ -204,32 +228,31 @@ contract PoaCommon is PoaProxyCommon {
     view
     returns (bool _isWhitelisted)
   {
-    bytes4 _sig = bytes4(keccak256("whitelisted(address)"));
+    bytes4 _signature = bytes4(keccak256("whitelisted(address)"));
     address _whitelistContract = getContractAddress("Whitelist");
-    address _arg = _address;
 
     assembly {
-      let _call := mload(0x40) // set _call to free memory pointer
-      mstore(_call, _sig) // store _sig at _call pointer
-      mstore(add(_call, 0x04), _arg) // store _arg at _call offset by 4 bytes for pre-existing _sig
+      let _pointer := mload(0x40)  // Set _pointer to free memory pointer
+      mstore(_pointer, _signature) // Store _signature at _pointer
+      mstore(add(_pointer, 0x04), _address) // Store _address at _pointer. Offset by 4 bytes for previously stored _signature
 
-      // staticcall(g, a, in, insize, out, outsize) => 0 on error 1 on success
+      // staticcall(g, a, in, insize, out, outsize) => returns 0 on error, 1 on success
       let result := staticcall(
-        gas,    // g = gas: whatever was passed already
-        _whitelistContract,  // a = address: _whitelist address assigned from getContractAddress()
-        _call,  // in = mem in  mem[in..(in+insize): set to _call pointer
-        0x24,   // insize = mem insize  mem[in..(in+insize): size of sig (bytes4) + bytes32 = 0x24
-        _call,   // out = mem out  mem[out..(out+outsize): output assigned to this storage address
-        0x20    // outsize = mem outsize  mem[out..(out+outsize): output should be 32byte slot (bool size = 0x01 < slot size 0x20)
+        gas,                // g = gas: whatever was passed already
+        _whitelistContract, // a = address: _whitelist address assigned from getContractAddress()
+        _pointer,           // in = mem in  mem[in..(in+insize): set to _pointer pointer
+        0x24,               // insize = mem insize  mem[in..(in+insize): size of sig (bytes4) + bytes32 = 0x24
+        _pointer,           // out = mem out  mem[out..(out+outsize): output assigned to this storage address
+        0x20                // outsize = mem outsize  mem[out..(out+outsize): output should be 32byte slot (bool size = 0x01 < slot size 0x20)
       )
 
-      // revert if not successful
+      // Revert if not successful
       if iszero(result) {
         revert(0, 0)
       }
 
-      _isWhitelisted := mload(_call) // assign result to returned value
-      mstore(0x40, add(_call, 0x24)) // advance free memory pointer by largest _call size
+      _isWhitelisted := mload(_pointer) // assign result to returned value
+      mstore(0x40, add(_pointer, 0x24)) // advance free memory pointer by largest _pointer size
     }
   }
 
@@ -242,46 +265,49 @@ contract PoaCommon is PoaProxyCommon {
     internal
     returns (string)
   {
-    // create new empty bytes array with same length as input
+    // Create new empty bytes array with same length as input
     bytes memory _bytesString = new bytes(32);
-    // keep track of string length for later usage in trimming
+
+    // Keep track of string length for later usage in trimming
     uint256 _stringLength;
 
-    // loop through each byte in bytes32
+    // Loop through each byte in bytes32
     for (uint _bytesCounter = 0; _bytesCounter < 32; _bytesCounter++) {
-      /**
-        Convert bytes32 data to uint in order to increase the number enough to
-        shift bytes further left while pushing out leftmost bytes
-        then convert uint256 data back to bytes32
-        then convert to bytes1 where everything but the leftmost hex value (byte)
-        is cutoff leaving only the leftmost byte
+      /*
+        Convert bytes32 data to uint256 in order to increase the number enough to
+        shift bytes further left while pushing out leftmost bytes.
+        Then convert uint256 data back to bytes32.
+        Then convert bytes32 data to bytes1 where everything but the leftmost hex value (byte)
+        is cut off, leaving only the leftmost byte.
 
-        TLDR: takes a single character from bytes based on counter
+        TL;DR: Takes a single character from a bytes32 based on a counter
       */
       bytes1 _char = bytes1(
         bytes32(
           uint(_data) * 2 ** (8 * _bytesCounter)
         )
       );
-      // add the character if not empty
+
+      // Add the character if not empty
       if (_char != 0) {
         _bytesString[_stringLength] = _char;
         _stringLength += 1;
       }
     }
 
-    // new bytes with correct matching string length
+    // New bytes with matching string length
     bytes memory _bytesStringTrimmed = new bytes(_stringLength);
-    // loop through _bytesStringTrimmed throwing in
-    // non empty data from _bytesString
+
+    // Loop through _bytesStringTrimmed throwing in non empty data from _bytesString
     for (_bytesCounter = 0; _bytesCounter < _stringLength; _bytesCounter++) {
       _bytesStringTrimmed[_bytesCounter] = _bytesString[_bytesCounter];
     }
-    // return trimmed bytes array converted to string
+
+    // Return trimmed bytes array converted to string
     return string(_bytesStringTrimmed);
   }
 
-  /// @notice Needed for longer strings needed for longer strings up to 64 chars long
+  /// @notice Needed for longer strings up to 64 chars long
   /// @param _data 2 length sized array of bytes32
   function to64LengthString(
     bytes32[2] _data
@@ -290,30 +316,33 @@ contract PoaCommon is PoaProxyCommon {
     internal
     returns (string)
   {
-    // create new empty bytes array with same length as input
+    // Create new empty bytes array with same length as input
     bytes memory _bytesString = new bytes(_data.length * 32);
-    // keep track of string length for later usage in trimming
+
+    // Keep track of string length for later usage in trimming
     uint256 _stringLength;
 
-    // loop through each bytes32 in array
+    // Loop through each bytes32 in the array
     for (uint _arrayCounter = 0; _arrayCounter < _data.length; _arrayCounter++) {
-      // loop through each byte in bytes32
+
+      // Loop through each byte in the bytes32
       for (uint _bytesCounter = 0; _bytesCounter < 32; _bytesCounter++) {
         /*
           Convert bytes32 data to uint in order to increase the number enough to
-          shift bytes further left while pushing out leftmost bytes
-          then convert uint256 data back to bytes32
-          then convert to bytes1 where everything but the leftmost hex value (byte)
-          is cutoff leaving only the leftmost byte
+          shift bytes further left while pushing out leftmost bytes.
+          Then convert uint256 data back to bytes32
+          Then convert bytes32 data to bytes1 where everything but the leftmost hex value (byte)
+          is cut off, leaving only the leftmost byte.
 
-          TLDR: takes a single character from bytes based on counter
+          TL;DR: Takes a single character from a bytes32 based on a counter
         */
         bytes1 _char = bytes1(
           bytes32(
             uint(_data[_arrayCounter]) * 2 ** (8 * _bytesCounter)
           )
         );
-        // add the character if not empty
+
+        // Add the character if not empty
         if (_char != 0) {
           _bytesString[_stringLength] = _char;
           _stringLength += 1;
@@ -321,30 +350,34 @@ contract PoaCommon is PoaProxyCommon {
       }
     }
 
-    // new bytes with correct matching string length
+    // New bytes with correct matching string length
     bytes memory _bytesStringTrimmed = new bytes(_stringLength);
-    // loop through _bytesStringTrimmed throwing in
-    // non empty data from _bytesString
+
+    // Loop through _bytesStringTrimmed throwing in non empty data from _bytesString
     for (_bytesCounter = 0; _bytesCounter < _stringLength; _bytesCounter++) {
       _bytesStringTrimmed[_bytesCounter] = _bytesString[_bytesCounter];
     }
-    // return trimmed bytes array converted to string
+
+    // Return trimmed bytes array converted to string
     return string(_bytesStringTrimmed);
   }
 
   /*******************************
-  * end common utility functions *
+  * End Common Utility Functions *
   *******************************/
 
+
   /******************************************************
-  * start common non-sequential storage getters/setters *
+  * Start Common Non-Sequential Storage Getters/Setters *
   ******************************************************/
 
   /*
-     Each function in this section without "set" prefix is a getter for a specific
-    non-sequential storage slot which can be called by either a user or the contract.
-    Functions with "set" are internal and can only be called by the contract/inherited contracts.
-    Both getters and setters work on commonly agreed up storage slots in order to avoid collisions.
+    Each function without a "set" prefix in this section is a public getter for a
+    specific non-sequential storage slot.
+
+    Setter functions, starting with "set", are internal and can only be called by this
+    contract, or contracts inheriting from it. Both getters and setters work on commonly
+    agreed upon storage slots in order to avoid storage collisions.
   */
 
   function stage()
@@ -407,12 +440,12 @@ contract PoaCommon is PoaProxyCommon {
   {
     bytes32 _proofOfCustody32Slot = proofOfCustody32Slot;
     assembly {
-      // store first slot from memory
+      // Store first slot from memory
       sstore(
         _proofOfCustody32Slot,
         mload(_proofOfCustody32)
       )
-      // store second slot from memory
+      // Store second slot from memory
       sstore(
         add(_proofOfCustody32Slot, 0x01),
         mload(
@@ -623,6 +656,6 @@ contract PoaCommon is PoaProxyCommon {
   }
 
   /****************************************************
-  * end common non-sequential storage getters/setters *
+  * End Common Non-Sequential Storage Getters/Setters *
   ****************************************************/
 }

@@ -158,7 +158,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     return true;
   }
 
-  /** 
+  /**
     @notice Used when asset should no longer be tokenized.
     Allows for winding down via payouts, and freeze trading
   */
@@ -320,7 +320,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     onlyCustodian
     returns (bool)
   {
-    // calculate fee based on feeRate
+    // calculate fee based on feeRateInPermille
     uint256 _fee = calculateFee(msg.value);
     // ensure the value is high enough for a fee to be claimed
     require(_fee > 0);
