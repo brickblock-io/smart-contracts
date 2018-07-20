@@ -1,4 +1,4 @@
-: "${GITLAB_BOT_CI_TOKEN:?Environment variable GITLAB_BOT_CI_TOKEN needs to be set as secret CI variable in GitLab before running this script}"
+: "${SECRET_GITLAB_BOT_CI_TOKEN:?Environment variable SECRET_GITLAB_BOT_CI_TOKEN needs to be set as secret CI variable in GitLab before running this script}"
 
 # This perl command extracts the ssh/git URL because the runner uses a tokenized URL
 export CI_PUSH_REPO=`echo $CI_REPOSITORY_URL | perl -pe 's#.*@(.+?(\:\d+)?)/#git@\1:#'`
