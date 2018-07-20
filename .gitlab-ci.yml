@@ -10,6 +10,9 @@ stages:
   - build
   - release
 
+#########
+# SETUP #
+#########
 setup:
   stage: setup
   cache:
@@ -23,6 +26,9 @@ setup:
   script:
     - yarn install --pure-lockfile --cache-folder .yarn-cache
 
+########
+# TEST #
+########
 lint:
   stage: test
   cache:
@@ -63,6 +69,9 @@ test-poa-proxy:
 #     - yarn truffle compile
 #     - /opt/python3/bin/python3 /opt/mythril/myth --truffle
 
+#########
+# BUILD #
+#########
 build:
   stage: build
   cache:
@@ -71,6 +80,9 @@ build:
     - cat .env.example > .env
     - yarn build
 
+###############
+# NPM RELEASE #
+###############
 release:
   stage: release
   cache:
