@@ -49,6 +49,10 @@ contract PoaCommon is PoaProxyCommon {
   // TYPE: Stage
   bytes32 internal constant stageSlot = keccak256("stage");
 
+  // Broker in charge of starting sale, paying fee and handling payouts
+  // TYPE: address
+  bytes32 internal constant brokerSlot = keccak256("broker");
+
   // Custodian in charge of taking care of asset and payouts
   // TYPE: address
   bytes32 internal constant custodianSlot = keccak256("custodian");
@@ -105,17 +109,22 @@ contract PoaCommon is PoaProxyCommon {
   *************************/
 
   modifier onlyCustodian() {
-    require(msg.sender == custodian());
+    require(msg.sender == custodian(), "Function can only be called by the custodian of this contract");
+    _;
+  }
+
+  modifier onlyBroker() {
+    require(msg.sender == broker(), "Function can only be called by the broker of this contract");
     _;
   }
 
   modifier atStage(Stages _stage) {
-    require(stage() == _stage);
+    require(stage() == _stage, "Function can't be called while contract is in the current 'Stage'");
     _;
   }
 
   modifier atEitherStage(Stages _stage, Stages _orStage) {
-    require(stage() == _stage || stage() == _orStage);
+    require(stage() == _stage || stage() == _orStage, "Function can't be called while contract is in the current 'Stage'");
     _;
   }
 
@@ -261,8 +270,8 @@ contract PoaCommon is PoaProxyCommon {
   function to32LengthString(
     bytes32 _data
   )
-    pure
     internal
+    pure
     returns (string)
   {
     // Create new empty bytes array with same length as input
@@ -312,8 +321,8 @@ contract PoaCommon is PoaProxyCommon {
   function to64LengthString(
     bytes32[2] _data
   )
-    pure
     internal
+    pure
     returns (string)
   {
     // Create new empty bytes array with same length as input
@@ -417,6 +426,26 @@ contract PoaCommon is PoaProxyCommon {
     bytes32 _custodianSlot = custodianSlot;
     assembly {
       sstore(_custodianSlot, _custodian)
+    }
+  }
+
+  function broker()
+    public
+    view
+    returns (address _broker)
+  {
+    bytes32 _brokerSlot = brokerSlot;
+    assembly {
+      _broker := sload(_brokerSlot)
+    }
+  }
+
+  function setBroker(address _broker)
+    internal
+  {
+    bytes32 _brokerSlot = brokerSlot;
+    assembly {
+      sstore(_brokerSlot, _broker)
     }
   }
 

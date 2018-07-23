@@ -882,7 +882,7 @@ const testPayout = async (poa, fmr, config) => {
   )
 
   const preContractTotalTokenPayout = await poa.totalPerTokenPayout()
-  const preCustodianEtherBalance = await getEtherBalance(custodian)
+  const preBrokerEtherBalance = await getEtherBalance(broker)
   const preContractEtherBalance = await getEtherBalance(poa.address)
   const preFeeManagerEtherBalance = await getEtherBalance(fmr.address)
 
@@ -898,8 +898,8 @@ const testPayout = async (poa, fmr, config) => {
   const expectedContractTotalTokenPayout = preContractTotalTokenPayout.add(
     currentExpectedTotalTokenPayout
   )
-  const postCustodianEtherBalance = await getEtherBalance(custodian)
-  const expectedCustodianEtherBalance = preCustodianEtherBalance
+  const postBrokerEtherBalance = await getEtherBalance(broker)
+  const expectedBrokerEtherBalance = preBrokerEtherBalance
     .sub(gasPrice.mul(gasUsed))
     .sub(payoutValue)
   const postContractEtherBalance = await getEtherBalance(poa.address)
@@ -912,14 +912,14 @@ const testPayout = async (poa, fmr, config) => {
     'totalPerTokenPayout should match the expected value'
   )
   assert.equal(
-    expectedCustodianEtherBalance.toString(),
-    postCustodianEtherBalance.toString(),
-    'expected custodian ether balance should match actual after payout'
+    expectedBrokerEtherBalance.toString(),
+    postBrokerEtherBalance.toString(),
+    "expected broker's ether balance should match actual after payout"
   )
   assert.equal(
     postContractEtherBalance.sub(preContractEtherBalance).toString(),
     expectedContractEtherBalance.toString(),
-    'contact ether balance should be incremented by the payoutValue sub fees'
+    "contract's ether balance should be incremented by the payoutValue minus fees"
   )
   assert.equal(
     postFeeManagerEtherBalance.sub(preFeeManagerEtherBalance).toString(),

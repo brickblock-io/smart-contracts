@@ -1,4 +1,5 @@
 const {
+  broker,
   custodian,
   whitelistedPoaBuyers,
   defaultIpfsHashArray32,
@@ -56,9 +57,9 @@ describe("when going through Poa's normal flow", async () => {
       await testBrokerClaim(poa)
     })
 
-    it('should payout from custodian', async () => {
+    it('should allow payouts by broker', async () => {
       await testPayout(poa, fmr, {
-        from: custodian,
+        from: broker,
         value: 2e18,
         gasPrice
       })

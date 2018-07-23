@@ -1,5 +1,6 @@
 const {
   owner,
+  broker,
   custodian,
   bbkContributors,
   whitelistedPoaBuyers,
@@ -81,11 +82,11 @@ describe('when in FIAT Funding (stage 1)', () => {
       await testWillThrow(testReclaim, [poa, { from: whitelistedPoaBuyers[0] }])
     })
 
-    it('should NOT payout, even if custodian', async () => {
+    it('should NOT payout, even if broker', async () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { from: custodian, value: 1e18, gasPrice }
+        { from: broker, value: 1e18, gasPrice }
       ])
     })
 

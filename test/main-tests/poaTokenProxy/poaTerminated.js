@@ -1,5 +1,6 @@
 const {
   owner,
+  broker,
   custodian,
   bbkContributors,
   whitelistedPoaBuyers,
@@ -163,23 +164,28 @@ describe('when in Terminated (stage 5)', () => {
       await testWillThrow(testClaim, [poa, { from: whitelistedPoaBuyers[0] }])
     })
 
-    it('should payout as custodian', async () => {
-      await testPayout(poa, fmr, { value: 2e18, from: custodian, gasPrice })
+    it('should payout as broker', async () => {
+      await testPayout(poa, fmr, { value: 2e18, from: broker, gasPrice })
     })
 
-    it('should NOT payout as custodian if payout is too low', async () => {
+    it('should NOT payout as broker if payout is too low', async () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { value: 100, from: custodian, gasPrice }
+        { value: 100, from: broker, gasPrice }
       ])
     })
 
-    it('should NOT payout as NOT custodian', async () => {
+    it('should NOT payout as NOT broker', async () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
         { value: 2e18, from: owner, gasPrice }
+      ])
+      await testWillThrow(testPayout, [
+        poa,
+        fmr,
+        { value: 2e18, from: custodian, gasPrice }
       ])
     })
 

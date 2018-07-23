@@ -238,6 +238,7 @@ contract PoaManager is Ownable {
     IPoaToken(_tokenAddress).initializeToken(
       _name32,
       _symbol32,
+      msg.sender,
       _custodian,
       registry,
       _totalSupply
@@ -245,7 +246,6 @@ contract PoaManager is Ownable {
 
     IPoaCrowdsale(_tokenAddress).initializeCrowdsale(
       _fiatCurrency32,
-      msg.sender,
       _startTime,
       _fundingTimeout,
       _activationTimeout,

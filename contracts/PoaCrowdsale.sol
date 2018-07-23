@@ -54,9 +54,6 @@ contract PoaCrowdsale is PoaCommon {
   // Used for keeping track of actual funded amount in fiat during FiatFunding stage
   bytes32 private constant fundedAmountInCentsDuringFiatFundingSlot
   = keccak256("fundedAmountInCentsDuringFiatFunding");
-  // TYPE: address
-  // Broker who is selling property, whitelisted on PoaManager
-  bytes32 private constant brokerSlot = keccak256("broker");
 
   /*******************************************
   * end special hashed PoaCrowdsale pointers *
@@ -101,7 +98,6 @@ contract PoaCrowdsale is PoaCommon {
   */
   function initializeCrowdsale(
     bytes32 _fiatCurrency32, // bytes32 of fiat currency string
-    address _broker,
     uint256 _startTime, // unix timestamp
     uint256 _fundingTimeout, // seconds after startTime
     uint256 _activationTimeout, // seconds after startTime + fundingTimeout
@@ -117,7 +113,6 @@ contract PoaCrowdsale is PoaCommon {
 
     // validate initialize parameters
     require(_fiatCurrency32 != bytes32(0));
-    require(_broker != address(0));
     require(_startTime > block.timestamp);
     require(_fundingTimeout >= 60 * 60 * 24);
     require(_activationTimeout >= 60 * 60 * 24 * 7);
@@ -126,7 +121,6 @@ contract PoaCrowdsale is PoaCommon {
 
     // initialize non-sequential storage
     setFiatCurrency32(_fiatCurrency32);
-    setBroker(_broker);
     setStartTime(_startTime);
     setFundingTimeout(_fundingTimeout);
     setActivationTimeout(_activationTimeout);
@@ -672,28 +666,6 @@ contract PoaCrowdsale is PoaCommon {
     bytes32 _fundedAmountInCentsDuringFiatFundingSlot = fundedAmountInCentsDuringFiatFundingSlot;
     assembly {
       sstore(_fundedAmountInCentsDuringFiatFundingSlot, _fundedAmountInCentsDuringFiatFunding)
-    }
-  }
-
-  function broker()
-    public
-    view
-    returns (address _broker)
-  {
-    bytes32 _brokerSlot = brokerSlot;
-    assembly {
-      _broker := sload(_brokerSlot)
-    }
-  }
-
-  function setBroker(
-    address _broker
-  )
-    internal
-  {
-    bytes32 _brokerSlot = brokerSlot;
-    assembly {
-      sstore(_brokerSlot, _broker)
     }
   }
 

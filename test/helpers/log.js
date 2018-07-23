@@ -1,15 +1,16 @@
 const BigNumber = require('bignumber.js')
 const { waitForEvent, gasPrice } = require('./general')
 const {
+  owner,
+  broker,
+  custodian,
   determineNeededTimeTravel,
   timeTravel,
   testStartSale,
   whitelistedPoaBuyers,
-  owner,
   testBuyTokens,
   testBuyRemainingTokens,
   testActivate,
-  custodian,
   defaultIpfsHashArray32,
   defaultIpfsHash,
   testPayout,
@@ -176,7 +177,7 @@ const testActivateEvents = async (poa, reg, pmr, fmr, log) => {
 }
 
 const testPayoutEvents = async (poa, reg, pmr, fmr, log) => {
-  const from = custodian
+  const from = broker
   const value = new BigNumber(1e18)
   // change to actual PoaManager contract so that logger validation works...
   await poaManagerToPoaManager(reg, pmr.address)

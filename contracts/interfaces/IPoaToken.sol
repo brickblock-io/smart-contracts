@@ -5,6 +5,7 @@ interface IPoaToken {
   (
     bytes32 _name32, // bytes32 of name string
     bytes32 _symbol32, // bytes32 of symbol string
+    address _broker,
     address _custodian,
     address _registry,
     uint256 _totalSupply // token total supply

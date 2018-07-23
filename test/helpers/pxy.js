@@ -2,20 +2,20 @@ const assert = require('assert')
 const BigNumber = require('bignumber.js')
 const { gasPrice } = require('../helpers/general')
 const {
+  owner,
+  broker,
+  custodian,
   defaultName32,
   defaultName,
   defaultSymbol32,
   defaultSymbol,
   defaultFiatCurrency32,
   defaultFiatCurrency,
-  broker,
-  custodian,
   defaultTotalSupply,
   getDefaultStartTime,
   defaultFundingTimeout,
   defaultActivationTimeout,
   defaultFundingGoal,
-  owner,
   timeTravel,
   testStartSale,
   determineNeededTimeTravel,
@@ -59,6 +59,7 @@ const getNonSequentialOffsetStorage = (contract, identifier, offset) => {
 
 const getCommonStorage = async poa => ({
   stage: new BigNumber(await getNonSequentialStorage(poa, 'stage')),
+  broker: await getNonSequentialStorage(poa, 'broker'),
   custodian: await getNonSequentialStorage(poa, 'custodian'),
   proofOfCustody32: [
     trimRightBytes(await getNonSequentialStorage(poa, 'proofOfCustody32')),
@@ -108,14 +109,14 @@ const getCrowdsaleStorage = async poa => ({
   ),
   fundedAmountInCentsDuringFiatFunding: new BigNumber(
     await getNonSequentialStorage(poa, 'fundedAmountInCentsDuringFiatFunding')
-  ),
-  broker: await getNonSequentialStorage(poa, 'broker')
+  )
 })
 
 const initializeContract = async (poa, reg) => {
   await poa.initializeToken(
     defaultName32,
     defaultSymbol32,
+    broker,
     custodian,
     reg.address,
     defaultTotalSupply
@@ -123,7 +124,6 @@ const initializeContract = async (poa, reg) => {
 
   await poa.initializeCrowdsale(
     defaultFiatCurrency32,
-    broker,
     await getDefaultStartTime(),
     defaultFundingTimeout,
     defaultActivationTimeout,
@@ -176,6 +176,7 @@ const checkPostSetupStorage = async (poa, reg) => {
   )
   const {
     stage,
+    broker: actualBroker,
     custodian: actualCustodian,
     proofOfCustody32,
     totalSupply,
@@ -234,8 +235,7 @@ const checkPostSetupStorage = async (poa, reg) => {
     activationTimeout,
     fiatCurrency32: actualFiatCurrency32,
     fundingGoalInCents,
-    fundedAmountInCentsDuringFiatFunding,
-    broker: actualBroker
+    fundedAmountInCentsDuringFiatFunding
   } = await getCrowdsaleStorage(poa)
 
   assert(crowdsaleInitialized, 'crowdsaleInitialized should be true')
@@ -341,6 +341,7 @@ const checkPostActiveStorage = async (poa, reg) => {
   )
   const {
     stage,
+    broker: actualBroker,
     custodian: actualCustodian,
     proofOfCustody32,
     totalSupply,
@@ -398,8 +399,7 @@ const checkPostActiveStorage = async (poa, reg) => {
     activationTimeout,
     fiatCurrency32: actualFiatCurrency32,
     fundingGoalInCents,
-    fundedAmountInCentsDuringFiatFunding,
-    broker: actualBroker
+    fundedAmountInCentsDuringFiatFunding
   } = await getCrowdsaleStorage(poa)
 
   assert(crowdsaleInitialized, 'crowdsaleInitialized should be true')
@@ -514,6 +514,7 @@ const checkPostIsUpgradedStorage = async (poa, reg) => {
   )
   const {
     stage,
+    broker: actualBroker,
     custodian: actualCustodian,
     proofOfCustody32,
     totalSupply,
@@ -571,8 +572,7 @@ const checkPostIsUpgradedStorage = async (poa, reg) => {
     activationTimeout,
     fiatCurrency32: actualFiatCurrency32,
     fundingGoalInCents,
-    fundedAmountInCentsDuringFiatFunding,
-    broker: actualBroker
+    fundedAmountInCentsDuringFiatFunding
   } = await getCrowdsaleStorage(poa)
 
   assert(crowdsaleInitialized, 'crowdsaleInitialized should be true')

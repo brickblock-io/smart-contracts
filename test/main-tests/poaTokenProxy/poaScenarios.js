@@ -1,4 +1,5 @@
 const {
+  broker,
   custodian,
   whitelistedPoaBuyers,
   fiatBuyer,
@@ -242,7 +243,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         let fee
 
         await testPayout(poa, fmr, {
-          from: custodian,
+          from: broker,
           value: defaultPayoutAmount,
           gasPrice
         })
@@ -288,7 +289,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         )
 
         await testPayout(poa, fmr, {
-          from: custodian,
+          from: broker,
           value: defaultPayoutAmount,
           gasPrice
         })
@@ -340,7 +341,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         let fee
 
         await testPayout(poa, fmr, {
-          from: custodian,
+          from: broker,
           value: defaultPayoutAmount,
           gasPrice
         })
@@ -392,7 +393,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         )
 
         await testPayout(poa, fmr, {
-          from: custodian,
+          from: broker,
           value: defaultPayoutAmount,
           gasPrice
         })
@@ -445,7 +446,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         let fee
 
         await testPayout(poa, fmr, {
-          from: custodian,
+          from: broker,
           value: defaultPayoutAmount,
           gasPrice
         })
@@ -500,7 +501,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         )
 
         await testPayout(poa, fmr, {
-          from: custodian,
+          from: broker,
           value: defaultPayoutAmount,
           gasPrice
         })
@@ -553,7 +554,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         let fee
 
         await testPayout(poa, fmr, {
-          from: custodian,
+          from: broker,
           value: defaultPayoutAmount,
           gasPrice
         })
@@ -609,7 +610,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         )
 
         await testPayout(poa, fmr, {
-          from: custodian,
+          from: broker,
           value: defaultPayoutAmount,
           gasPrice
         })
@@ -660,7 +661,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         })
 
         await testPayout(poa, fmr, {
-          from: custodian,
+          from: broker,
           value: defaultPayoutAmount,
           gasPrice
         })
@@ -714,7 +715,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         )
 
         await testPayout(poa, fmr, {
-          from: custodian,
+          from: broker,
           value: defaultPayoutAmount,
           gasPrice
         })
@@ -777,7 +778,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         )
 
         await testPayout(poa, fmr, {
-          from: custodian,
+          from: broker,
           value: defaultPayoutAmount,
           gasPrice
         })
@@ -837,7 +838,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         )
 
         await testPayout(poa, fmr, {
-          from: custodian,
+          from: broker,
           value: defaultPayoutAmount,
           gasPrice
         })

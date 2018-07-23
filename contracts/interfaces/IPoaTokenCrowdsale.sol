@@ -31,6 +31,7 @@ interface IPoaTokenCrowdsale {
   function initializeToken(
     bytes32 _name32, // bytes32 of name string
     bytes32 _symbol32, // bytes32 of symbol string
+    address _broker,
     address _custodian,
     address _registry,
     uint256 _totalSupply // token total supply
@@ -154,7 +155,6 @@ interface IPoaTokenCrowdsale {
 
   function initializeCrowdsale(
     bytes32 _fiatCurrency32, // bytes32 of fiat currency string
-    address _broker,
     uint256 _startTime, // unix timestamp
     uint256 _fundingTimeout, // seconds after startTime
     uint256 _activationTimeout, // seconds after startTime + fundingTimeout

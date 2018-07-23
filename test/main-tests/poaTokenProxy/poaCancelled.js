@@ -1,5 +1,6 @@
 const {
   owner,
+  broker,
   custodian,
   bbkContributors,
   whitelistedPoaBuyers,
@@ -83,11 +84,11 @@ describe('when in Cancelled', () => {
       await testWillThrow(testTerminate, [poa, { from: custodian }])
     })
 
-    it('should NOT payout, even if custodian', async () => {
+    it('should NOT payout, even if broker', async () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { from: custodian, value: 1e18, gasPrice }
+        { from: broker, value: 1e18, gasPrice }
       ])
     })
 

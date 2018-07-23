@@ -100,6 +100,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
   function initializeToken(
     bytes32 _name32, // bytes32 of name string
     bytes32 _symbol32, // bytes32 of symbol string
+    address _broker,
     address _custodian,
     address _registry,
     uint256 _totalSupply // token total supply
@@ -113,6 +114,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     // validate initialize parameters
     require(_name32 != bytes32(0));
     require(_symbol32 != bytes32(0));
+    require(_broker != address(0));
     require(_custodian != address(0));
     require(_registry != address(0));
     require(_totalSupply >= 1e18);
@@ -124,6 +126,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     owner = getContractAddress("PoaManager");
 
     // initialize non-sequential storage
+    setBroker(_broker);
     setCustodian(_custodian);
     setRegistry(_registry);
     setTotalSupply(_totalSupply);
@@ -317,7 +320,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     external
     payable
     atEitherStage(Stages.Active, Stages.Terminated)
-    onlyCustodian
+    onlyBroker
     returns (bool)
   {
     // calculate fee based on feeRateInPermille
