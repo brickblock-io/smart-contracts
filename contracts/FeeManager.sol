@@ -1,4 +1,4 @@
-pragma solidity 0.4.23;
+pragma solidity 0.4.24;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./interfaces/IAccessToken.sol";
@@ -22,8 +22,8 @@ contract FeeManager {
   }
 
   function weiToAct(uint256 _wei)
-    view
     public
+    view
     returns (uint256)
   {
 
@@ -31,8 +31,8 @@ contract FeeManager {
   }
 
   function actToWei(uint256 _act)
-    view
     public
+    view
     returns (uint256)
   {
     return _act.div(actRate);

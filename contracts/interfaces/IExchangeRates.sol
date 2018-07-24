@@ -1,10 +1,10 @@
-pragma solidity 0.4.23;
+pragma solidity 0.4.24;
 
 interface IExchangeRates {
   function queryTypes(
     bytes32 _queryId
-  ) 
-    external 
+  )
+    external
     returns (string);
 
   function ratesActive()
@@ -35,7 +35,7 @@ interface IExchangeRates {
   function getCurrencySettings(
     string _queryType
   )
-    view
     external
+    view
     returns (uint256, uint256, string);
 }

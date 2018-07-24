@@ -1,4 +1,4 @@
-pragma solidity 0.4.23;
+pragma solidity 0.4.24;
 
 
 /**
@@ -127,7 +127,7 @@ contract PoaProxyCommon {
     returns (address _contractAddress)
   {
     bytes4 _sig = bytes4(keccak256("getContractAddress32(bytes32)"));
-    bytes32 _name32 = keccak256(_name);
+    bytes32 _name32 = keccak256(abi.encodePacked(_name));
     address _registry = registry();
 
     assembly {

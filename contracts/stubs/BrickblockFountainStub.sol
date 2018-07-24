@@ -1,5 +1,5 @@
 // THIS IS EXAMPLE CODE ONLY AND THE FUNCTIONS MOST LIKELY WILL CHANGE
-pragma solidity 0.4.23;
+pragma solidity 0.4.24;
 
 import "../BrickblockToken.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";

@@ -1,4 +1,4 @@
-pragma solidity 0.4.23;
+pragma solidity 0.4.24;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "../interfaces/IRegistry.sol";
@@ -48,8 +48,8 @@ contract ExchangeRateProviderStub {
 
   // SIMULATE: set callbackGasPrice
   function setCallbackGasPrice(uint256 _gasPrice)
-    onlyExchangeRates
     external
+    onlyExchangeRates
     returns (bool)
   {
     callbackGasPrice = _gasPrice;
@@ -61,15 +61,19 @@ contract ExchangeRateProviderStub {
   // leave out modifier as shown in
   function sendQuery(
     string _queryString,
-    uint256 _callInterval, //not used in stub so will do a dummy check to get rid of compiler warnings
+    uint256 _callInterval,
     uint256 _callbackGasLimit,
     string _queryType
   )
+    public
     onlyAllowed
     payable
-    public
     returns (bool)
   {
+    // _callInterval and _callbackGasLimit are not used in this stub
+    // so we do this dummy check to get rid of compiler warnings
+    require(_callInterval != 0);
+    require(_callbackGasLimit != 0);
     // simulate price of 2 000 000 000
     uint256 _simulatedPrice = 2e9;
     if (_simulatedPrice > address(this).balance) {
@@ -78,7 +82,7 @@ contract ExchangeRateProviderStub {
       return false;
     } else {
       // simulate _queryId by hashing first element of bytes32 array
-      pendingTestQueryId = keccak256(_queryString);
+      pendingTestQueryId = keccak256(abi.encodePacked(_queryString));
       setQueryId(pendingTestQueryId, _queryType);
       return true;
     }
@@ -123,7 +127,7 @@ contract ExchangeRateProviderStub {
     _exchangeRates.setRate(_queryId, parseInt(_result));
 
     if (_callInterval > 0 && _ratesActive) {
-      pendingTestQueryId = keccak256(_result);
+      pendingTestQueryId = keccak256(abi.encodePacked(_result));
       pendingQueryType = _queryType;
       shouldCallAgainWithQuery = _queryString;
       shouldCallAgainIn = _callInterval;
@@ -176,15 +180,15 @@ contract ExchangeRateProviderStub {
 
   // used in case we need to get money out of the contract before replacing
   function selfDestruct(address _address)
-    onlyExchangeRates
     public
+    onlyExchangeRates
   {
     selfdestruct(_address);
   }
 
   // ensure that we can fund queries by paying the contract
   function()
-    payable
     public
+    payable
   {}
 }

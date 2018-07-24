@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
@@ -28,7 +28,7 @@ contract EmployeeTokenSalaryPayout is Ownable {
   address[] public employeeAddressList;
 
   IBrickblockToken bbkToken;
-  
+
   constructor (IBrickblockToken _bbkToken)
     public
   {
@@ -79,7 +79,7 @@ contract EmployeeTokenSalaryPayout is Ownable {
     if (_deletedUser.index != employeeAddressList.length-1) {
       address lastAddress = employeeAddressList[employeeAddressList.length-1];
       employeeAddressList[_deletedUser.index] = lastAddress;
-      employees[lastAddress].index = _deletedUser.index; 
+      employees[lastAddress].index = _deletedUser.index;
     }
     delete employees[_beneficiary];
     employeeAddressList.length--;
@@ -117,11 +117,11 @@ contract EmployeeTokenSalaryPayout is Ownable {
     returns(uint256)
   {
     uint256 _totalAmount;
-  
+
     for (uint i = 0; i < employeeAddressList.length; i++) {
       address _address = employeeAddressList[i];
       uint256 _amount = employees[_address].quarterlyAmount;
-  
+
       if (employees[_address].initialPayoutAmount != 0) {
         _amount = _amount.add(employees[_address].initialPayoutAmount);
       }
@@ -136,7 +136,7 @@ contract EmployeeTokenSalaryPayout is Ownable {
     onlyOwner
   {
     uint256 _totalAmount;
-  
+
     for (uint i = 0; i < employeeAddressList.length; i++) {
       address _address = employeeAddressList[i];
       uint256 _amount = employees[_address].quarterlyAmount;

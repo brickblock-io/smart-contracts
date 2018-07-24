@@ -1,4 +1,4 @@
-pragma solidity 0.4.23;
+pragma solidity 0.4.24;
 
 import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
@@ -189,9 +189,9 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
   ************************/
 
   function pause()
+    public
     onlyOwner
     whenNotPaused
-    public
   {
     setPaused(true);
 
@@ -199,10 +199,10 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
   }
 
   function unpause()
+    public
     onlyOwner
     whenPaused
     atStage(Stages.Active)
-    public
   {
     setPaused(false);
     emit Unpause();

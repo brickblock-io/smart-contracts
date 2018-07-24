@@ -1,9 +1,9 @@
-pragma solidity 0.4.23;
+pragma solidity 0.4.24;
 
 // limited ContractRegistry definition
 interface IRegistry {
-  function owner() 
-    external 
+  function owner()
+    external
     returns(address);
 
   function updateContractAddress(

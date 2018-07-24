@@ -1,4 +1,4 @@
-pragma solidity 0.4.23;
+pragma solidity 0.4.24;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./interfaces/IRegistry.sol";
@@ -155,7 +155,7 @@ contract ExchangeRates is Ownable {
     // set _queryId to empty (uninitialized, to prevent from being called again)
     delete queryTypes[_queryId];
     // set currency rate depending on _queryType (USD, EUR, etc.)
-    rates[keccak256(_queryType)] = _result;
+    rates[keccak256(abi.encodePacked(_queryType))] = _result;
     // event for particular rate that was updated
     emit RateUpdatedEvent(
       _queryType,
@@ -164,7 +164,7 @@ contract ExchangeRates is Ownable {
 
     return true;
   }
-  
+
   //
   // end exchange rate provider only settings
   //
@@ -297,7 +297,7 @@ contract ExchangeRates is Ownable {
     view
     returns (uint256)
   {
-    uint256 _rate = rates[keccak256(toUpperCase(_queryTypeString))];
+    uint256 _rate = rates[keccak256(abi.encodePacked(toUpperCase(_queryTypeString)))];
     require(_rate > 0, "Fiat rate should be higher than zero");
     return _rate;
   }
@@ -318,15 +318,15 @@ contract ExchangeRates is Ownable {
   // end getter functions
   //
 
-  // 
+  //
   // start utility functions
   //
 
   // convert string to uppercase to ensure that there are not multiple
   // instances of same currencies
   function toUpperCase(string _base)
-    pure
     public
+    pure
     returns (string)
   {
     bytes memory _stringBytes = bytes(_base);

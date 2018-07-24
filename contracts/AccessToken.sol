@@ -1,4 +1,4 @@
-pragma solidity 0.4.23;
+pragma solidity 0.4.24;
 
 import "openzeppelin-solidity/contracts/token/ERC20/PausableToken.sol";
 import "./interfaces/IRegistry.sol";
@@ -84,13 +84,13 @@ contract AccessToken is PausableToken {
   event MintEvent(uint256 amount);
   event BurnEvent(address indexed burner, uint256 value);
   event BBKLockedEvent(
-    address indexed locker, 
-    uint256 lockedAmount, 
+    address indexed locker,
+    uint256 lockedAmount,
     uint256 totalLockedAmount
   );
   event BBKUnlockedEvent(
-    address indexed locker, 
-    uint256 lockedAmount, 
+    address indexed locker,
+    uint256 lockedAmount,
     uint256 totalLockedAmount
   );
 
@@ -244,7 +244,7 @@ contract AccessToken is PausableToken {
       .sub(spentBalances[_address]);
   }
 
-  /** 
+  /**
     @notice does the same thing as ERC20 transfer but,
     uses balanceOf rather than balances[adr] (balances is inaccurate see above)
     sets correct values for doubleEntryParadigm (see glossary)
@@ -268,7 +268,7 @@ contract AccessToken is PausableToken {
     return true;
   }
 
-  /** 
+  /**
     @notice Does the same thing as ERC20 transferFrom but...
     Uses balanceOf rather than balances[adr] (balances is inaccurate see above)
     Sets correct values for doubleEntryParadigm (see glossary)

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 // limited BrickblockToken definition
 interface IBrickblockToken {
@@ -23,7 +23,7 @@ interface IBrickblockToken {
     external
     view
     returns (uint256);
-  
+
   function approve(
     address _spender,
     uint256 _value

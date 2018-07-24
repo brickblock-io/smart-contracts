@@ -1,4 +1,4 @@
-pragma solidity 0.4.23;
+pragma solidity 0.4.24;
 
 // this is meant to be a combined interface of PoaToken and PoaCrowdsale
 // the resulting ABI can be used for calling both PoaToken and PoaCrowdsale functions

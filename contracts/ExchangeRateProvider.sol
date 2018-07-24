@@ -1,4 +1,4 @@
-pragma solidity 0.4.23;
+pragma solidity 0.4.24;
 
 import "./OraclizeAPI.sol";
 import "./interfaces/IRegistry.sol";
@@ -37,8 +37,8 @@ contract ExchangeRateProvider is usingOraclize {
 
   // set gas price used for oraclize callbacks
   function setCallbackGasPrice(uint256 _gasPrice)
-    onlyExchangeRates
     external
+    onlyExchangeRates
     returns (bool)
   {
     oraclize_setCustomGasPrice(_gasPrice);
@@ -54,9 +54,9 @@ contract ExchangeRateProvider is usingOraclize {
     uint256 _callbackGasLimit,
     string _queryType
   )
+    public
     onlyAllowed
     payable
-    public
     returns (bool)
   {
     // check that there is enough money to make the query
@@ -132,15 +132,15 @@ contract ExchangeRateProvider is usingOraclize {
 
   // used in case we need to get money out of the contract before replacing
   function selfDestruct(address _address)
-    onlyExchangeRates
     public
+    onlyExchangeRates
   {
     selfdestruct(_address);
   }
 
   // ensure that we can fund queries by paying the contract
   function()
-    payable
     public
+    payable
   {}
 }

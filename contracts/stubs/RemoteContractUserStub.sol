@@ -1,4 +1,4 @@
-pragma solidity 0.4.23;
+pragma solidity 0.4.24;
 
 import "../interfaces/IRegistry.sol";
 
@@ -10,7 +10,7 @@ interface RemoteContractStubInterface {
     returns (uint256);
 
   function add(
-    uint256 _num1, 
+    uint256 _num1,
     uint256 _num2
   )
     external
