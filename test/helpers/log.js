@@ -6,7 +6,7 @@ const {
   custodian,
   determineNeededTimeTravel,
   timeTravel,
-  testStartSale,
+  testStartEthSale,
   whitelistedPoaBuyers,
   testBuyTokens,
   testBuyRemainingTokens,
@@ -41,7 +41,7 @@ const testPreFundingToFundingEvent = async (poa, reg, pmr, log) => {
     whitelistedPoaBuyers[0]
   )
   await timeTravel(neededTime)
-  await testStartSale(poa)
+  await testStartEthSale(poa)
 
   const { args: triggeredLoggerEvent } = await waitForEvent(LoggerStageEvent)
 
@@ -55,7 +55,7 @@ const testPreFundingToFundingEvent = async (poa, reg, pmr, log) => {
   )
   assert.equal(
     triggeredLoggerEvent.stage.toString(),
-    stages.Funding,
+    stages.EthFunding,
     'stage event stage should be in Funding Stage'
   )
 }
@@ -309,10 +309,10 @@ const testReclaimEvents = async () => {
   // need a whole new instance in order to test this...
   const { poa, reg, log, pmr } = await setupPoaProxyAndEcosystem()
   await pmr.listToken(poa.address)
-  // move into Funding
+  // move into "EthFunding" stage
   const neededTime = await determineNeededTimeTravel(poa)
   await timeTravel(neededTime)
-  await testStartSale(poa)
+  await testStartEthSale(poa)
   // purchase tokens to reclaim when failed
   await testBuyTokens(poa, {
     from,

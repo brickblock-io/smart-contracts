@@ -6,8 +6,8 @@ const {
   whitelistedPoaBuyers,
   defaultIpfsHashArray32,
   setupPoaProxyAndEcosystem,
-  testStartSale,
-  testStartPreSale,
+  testStartEthSale,
+  testStartFiatSale,
   testBuyTokens,
   testBuyTokensWithFiat,
   testIncrementOfBalanceWhenBuyTokensWithFiat,
@@ -46,7 +46,7 @@ describe('when in FIAT Funding (stage 1)', () => {
       fmr = contracts.fmr
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
-      await testStartPreSale(poa)
+      await testStartFiatSale(poa, { from: broker, gasPrice })
     })
 
     it('should start paused', async () => {
@@ -57,8 +57,13 @@ describe('when in FIAT Funding (stage 1)', () => {
       await testWillThrow(testUnpause, [poa, { from: owner }])
     })
 
-    it('should NOT startPreSale, even if owner', async () => {
-      await testWillThrow(testStartPreSale, [poa, { from: owner }])
+    /*
+     * TODO @chapati: Does this test make sense @cody? In the before() hook we're already doing a `testStartFiatSale`
+     * So this would throw even if the correct role (broker) called this function because we already are
+     * in the FiatFunding stage and we can't enter it twice.
+     */
+    it('should NOT startFiatSale, even if owner', async () => {
+      await testWillThrow(testStartFiatSale, [poa, { from: owner, gasPrice }])
     })
 
     it('should NOT setFailed', async () => {
@@ -212,7 +217,7 @@ describe('when in FIAT Funding (stage 1)', () => {
     })
 
     it('should NOT allow FIAT investment during the ETH sale', async () => {
-      await testStartSale(poa)
+      await testStartEthSale(poa)
 
       await testWillThrow(testBuyTokensWithFiat, [
         poa,
@@ -237,7 +242,7 @@ describe('when in FIAT Funding (stage 1) and funding goal is met during the fiat
       poa = contracts.poa
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
-      await testStartPreSale(poa)
+      await testStartFiatSale(poa, { from: broker, gasPrice })
     })
 
     it('Should set correct amount of tokens for investor if invested amount equals funding goal', async () => {

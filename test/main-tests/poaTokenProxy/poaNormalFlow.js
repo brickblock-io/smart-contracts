@@ -4,7 +4,7 @@ const {
   whitelistedPoaBuyers,
   defaultIpfsHashArray32,
   setupPoaProxyAndEcosystem,
-  testStartSale,
+  testStartEthSale,
   testBuyTokens,
   determineNeededTimeTravel,
   testBuyRemainingTokens,
@@ -26,10 +26,10 @@ describe("when going through Poa's normal flow", async () => {
       fmr = contracts.fmr
     })
 
-    it('should move from PreFunding to Funding after startTime', async () => {
+    it('should move from PreFunding to EthFunding after startTime', async () => {
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
-      await testStartSale(poa)
+      await testStartEthSale(poa)
     })
 
     it('should allow buying', async () => {

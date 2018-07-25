@@ -163,7 +163,7 @@ interface IPoaTokenCrowdsale {
     external
     returns (bool);
 
-  function startFiatPreSale()
+  function startFiatSale()
     external
     returns (bool);
 

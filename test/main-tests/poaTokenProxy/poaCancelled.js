@@ -6,7 +6,7 @@ const {
   whitelistedPoaBuyers,
   defaultIpfsHashArray32,
   setupPoaProxyAndEcosystem,
-  testStartSale,
+  testStartEthSale,
   testBuyTokens,
   determineNeededTimeTravel,
   testActivate,
@@ -19,7 +19,7 @@ const {
   testApprove,
   testTransferFrom,
   testTerminate,
-  testStartPreSale,
+  testStartFiatSale,
   testBuyTokensWithFiat,
   testSetCancelled
 } = require('../../helpers/poa')
@@ -40,10 +40,10 @@ describe('when in Cancelled', () => {
       poa = contracts.poa
       fmr = contracts.fmr
 
-      // move into Fiat Funding
+      // move into "FiatFunding" stagew
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
-      await testStartPreSale(poa)
+      await testStartFiatSale(poa, { from: broker, gasPrice })
       await testBuyTokensWithFiat(poa, fiatInvestor, 100000, {
         from: custodian,
         gasPrice
@@ -60,8 +60,8 @@ describe('when in Cancelled', () => {
       await testWillThrow(testUnpause, [poa, { from: owner }])
     })
 
-    it('should NOT startSale, even if owner', async () => {
-      await testWillThrow(testStartSale, [poa, { from: owner }])
+    it('should NOT startEthSale, even if owner', async () => {
+      await testWillThrow(testStartEthSale, [poa, { from: owner }])
     })
 
     it('should NOT buy, even if whitelisted', async () => {
@@ -150,7 +150,7 @@ describe('when in Cancelled', () => {
 
     // start core stage functionality
 
-    it('should Not allow FiatFunding', async () => {
+    it('should NOT allow FiatFunding', async () => {
       await testWillThrow(testBuyTokensWithFiat, [
         poa,
         fiatInvestor,
@@ -162,7 +162,7 @@ describe('when in Cancelled', () => {
       ])
     })
 
-    it('should Not allow EthFunding', async () => {
+    it('should NOT allow EthFunding', async () => {
       await testWillThrow(testBuyTokens, [
         poa,
         {

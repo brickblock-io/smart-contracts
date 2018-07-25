@@ -536,8 +536,8 @@ There are 3 time related storage variables in the contract, they are all unix ti
 
 1. `startTime`
     * timestamp for when the "crowdsale" should start.
-    * once past `startTime` anyone can start the "crowdsale" by running `startSale()`
-        * `startSale()` moves the contract from `PreFunding` stage to `FundingStage`
+    * once past `startTime` anyone can start the "crowdsale" by running `startEthSale()`
+        * `startEthSale()` moves the contract from `PreFunding` stage to `FundingStage`
 1. `fundingTimeout`
     * is an offset from `startTime`
     * must be a minimum of 24 hours

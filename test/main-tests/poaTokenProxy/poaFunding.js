@@ -6,7 +6,7 @@ const {
   whitelistedPoaBuyers,
   defaultIpfsHashArray32,
   setupPoaProxyAndEcosystem,
-  testStartSale,
+  testStartEthSale,
   testBuyTokens,
   determineNeededTimeTravel,
   testBuyRemainingTokens,
@@ -29,7 +29,7 @@ const {
   gasPrice
 } = require('../../helpers/general.js')
 
-describe('when in Funding (stage 1)', () => {
+describe('when in EthFunding (stage 2)', () => {
   contract('PoaTokenProxy', () => {
     let poa
     let fmr
@@ -40,7 +40,7 @@ describe('when in Funding (stage 1)', () => {
       fmr = contracts.fmr
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
-      await testStartSale(poa)
+      await testStartEthSale(poa)
     })
 
     it('should start paused', async () => {
@@ -51,8 +51,8 @@ describe('when in Funding (stage 1)', () => {
       await testWillThrow(testUnpause, [poa, { from: owner }])
     })
 
-    it('should NOT startSale, even if owner', async () => {
-      await testWillThrow(testStartSale, [poa, { from: owner }])
+    it('should NOT startEthSale, even if owner', async () => {
+      await testWillThrow(testStartEthSale, [poa, { from: owner }])
     })
 
     it('should NOT setFailed', async () => {

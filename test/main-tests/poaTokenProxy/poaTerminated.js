@@ -6,7 +6,7 @@ const {
   whitelistedPoaBuyers,
   defaultIpfsHashArray32,
   setupPoaProxyAndEcosystem,
-  testStartSale,
+  testStartEthSale,
   testBuyTokens,
   determineNeededTimeTravel,
   testBuyRemainingTokens,
@@ -45,10 +45,10 @@ describe('when in Terminated (stage 5)', () => {
       poa = contracts.poa
       fmr = contracts.fmr
 
-      // move into Funding
+      // move into "EthFunding" stage
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
-      await testStartSale(poa)
+      await testStartEthSale(poa)
 
       // move into Pending
       await testBuyTokens(poa, {
@@ -83,8 +83,8 @@ describe('when in Terminated (stage 5)', () => {
       await testWillThrow(testUnpause, [poa, { from: owner }])
     })
 
-    it('should NOT startSale, even if owner', async () => {
-      await testWillThrow(testStartSale, [poa, { from: owner }])
+    it('should NOT startEthSale, even if owner', async () => {
+      await testWillThrow(testStartEthSale, [poa, { from: owner }])
     })
 
     it('should NOT buy, even if whitelisted', async () => {

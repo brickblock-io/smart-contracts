@@ -36,10 +36,10 @@ contract PoaCrowdsale is PoaCommon {
   // Bool indicating whether or not crowdsale proxy has been initialized
   bytes32 private constant crowdsaleInitializedSlot = keccak256("crowdsaleInitialized");
   // TYPE: uint256
-  // Used for checking when contract should move from PreFunding or FiatFunding to Funding stage
+  // Used for checking when contract should move from PreFunding or FiatFunding to EthFunding stage
   bytes32 private constant startTimeSlot = keccak256("startTime");
   // TYPE: uint256
-  // Amount of seconds until moving to Failed from Funding stage after startTime
+  // Amount of seconds until moving to Failed from EthFunding stage after startTime
   bytes32 private constant fundingTimeoutSlot = keccak256("fundingTimeout");
   // TYPE: uint256
   // Amount of seconds until moving to Failed from Pending stage after startTime + fundingTimeout
@@ -140,9 +140,9 @@ contract PoaCrowdsale is PoaCommon {
   ****************************/
 
   /// @notice Used for moving contract into FiatFunding stage where fiat purchases can be made
-  function startFiatPreSale()
+  function startFiatSale()
     external
-    onlyCustodian
+    onlyBroker
     atStage(Stages.PreFunding)
     returns (bool)
   {

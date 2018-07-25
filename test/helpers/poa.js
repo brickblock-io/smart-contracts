@@ -15,7 +15,7 @@ const assert = require('assert')
 const stages = {
   PreFunding: '0',
   FiatFunding: '1',
-  Funding: '2',
+  EthFunding: '2',
   Pending: '3',
   Failed: '4',
   Active: '5',
@@ -535,10 +535,12 @@ const testCalculateFee = async (poa, taxableValue) => {
   )
 }
 
-const testStartPreSale = async (poa, config) => {
+const testStartFiatSale = async (poa, config = {}) => {
+  assert(!!config.gasPrice, "'gasPrice' must be defined in the config object")
+  assert(!!config.from, "'from' must be defined in the config object")
   const preStage = await poa.stage()
 
-  await poa.startFiatPreSale(config ? config : { from: custodian })
+  await poa.startFiatSale(config)
 
   const postStage = await poa.stage()
 
@@ -555,7 +557,7 @@ const testStartPreSale = async (poa, config) => {
   )
 }
 
-const testStartSale = async (poa, config) => {
+const testStartEthSale = async (poa, config) => {
   const preStage = await poa.stage()
 
   await poa.startEthSale(config ? config : { from: owner })
@@ -570,8 +572,8 @@ const testStartSale = async (poa, config) => {
 
   assert.equal(
     postStage.toString(),
-    stages.Funding,
-    'stage should start as Funding'
+    stages.EthFunding,
+    'stage should start as EthFunding'
   )
 }
 
@@ -781,7 +783,11 @@ const testBuyRemainingTokens = async (poa, config) => {
     areInRange(fundingGoalInCents, postFundedFiatCents, 1),
     'fundedAmount in fiat cents should be within 1 cent of fundingGoalCents'
   )
-  assert.equal(preStage.toString(), stages.Funding, 'stage should be Funding')
+  assert.equal(
+    preStage.toString(),
+    stages.EthFunding,
+    'stage should be EthFunding'
+  )
   assert.equal(postStage.toString(), stages.Pending, 'stage should be Pending')
 
   return postUserWeiInvested
@@ -1035,9 +1041,9 @@ const testFirstReclaim = async (poa, config, shouldBePending) => {
 
   assert.equal(
     preStage.toString(),
-    shouldBePending ? stages.Pending : stages.Funding,
+    shouldBePending ? stages.Pending : stages.EthFunding,
     `contract should be in stage ${
-      shouldBePending ? 'Funding' : 'Pending'
+      shouldBePending ? 'EthFunding' : 'Pending'
     } before reclaiming`
   )
 
@@ -1072,8 +1078,8 @@ const testSetFailed = async (poa, shouldBePending) => {
 
   assert.equal(
     preStage.toString(),
-    shouldBePending ? stages.Pending : stages.Funding,
-    `preStage should be ${shouldBePending ? 'Pending' : 'Funding'}`
+    shouldBePending ? stages.Pending : stages.EthFunding,
+    `preStage should be ${shouldBePending ? 'Pending' : 'EthFunding'}`
   )
 
   assert.equal(
@@ -1171,12 +1177,12 @@ const testReclaim = async (poa, config, first = false) => {
   assert.equal(
     preClaimerTokenBalance.toString(),
     bigZero.toString(),
-    'claimer token balance should be 0 unless reaching  Funding stage'
+    'claimer token balance should be 0 unless reaching EthFunding stage'
   )
   assert.equal(
     postClaimerTokenBalance.toString(),
     bigZero.toString(),
-    'claimer token balance should be 0 unless reaching Funding stage'
+    'claimer token balance should be 0 unless reaching EthFunding stage'
   )
   assert.equal(
     postClaimerEtherBalance.toString(),
@@ -1591,8 +1597,8 @@ module.exports = {
   testSetCurrencyRate,
   testSetFailed,
   testSetCancelled,
-  testStartPreSale,
-  testStartSale,
+  testStartFiatSale,
+  testStartEthSale,
   testTerminate,
   testToggleWhitelistTransfers,
   testTransfer,

@@ -4,7 +4,7 @@ const {
   custodian,
   bbkContributors,
   whitelistedPoaBuyers,
-  testStartSale,
+  testStartEthSale,
   testBuyTokens,
   determineNeededTimeTravel,
   testActivate,
@@ -142,16 +142,16 @@ describe('when in PreFunding (stage 0)', async () => {
     // start core stage functionality
 
     it('should NOT move to funding before startTime, EVEN if owner', async () => {
-      await testWillThrow(testStartSale, [poa, { from: owner }])
+      await testWillThrow(testStartEthSale, [poa, { from: owner }])
     })
 
-    it('should allow ANYONE to move to Stages.Funding when after startTime', async () => {
+    it('should allow ANYONE to move to Stages.EthFunding when after startTime', async () => {
       const neededTime = await determineNeededTimeTravel(
         poa,
         whitelistedPoaBuyers[0]
       )
       await timeTravel(neededTime)
-      await testStartSale(poa)
+      await testStartEthSale(poa)
     })
   })
 })

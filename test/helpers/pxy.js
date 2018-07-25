@@ -17,7 +17,7 @@ const {
   defaultActivationTimeout,
   defaultFundingGoal,
   timeTravel,
-  testStartSale,
+  testStartEthSale,
   determineNeededTimeTravel,
   testBuyRemainingTokens,
   testActivate,
@@ -271,10 +271,10 @@ const checkPostSetupStorage = async (poa, reg) => {
 }
 
 const enterActiveStage = async (poa, fmr) => {
-  // move into Funding
+  // move into "EthFunding" stage
   const neededTime = await determineNeededTimeTravel(poa)
   await timeTravel(neededTime)
-  await testStartSale(poa)
+  await testStartEthSale(poa)
 
   // move into Pending
   await testBuyRemainingTokens(poa, {

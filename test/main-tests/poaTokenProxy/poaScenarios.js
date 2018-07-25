@@ -5,8 +5,8 @@ const {
   fiatBuyer,
   defaultIpfsHashArray32,
   setupPoaProxyAndEcosystem,
-  testStartPreSale,
-  testStartSale,
+  testStartFiatSale,
+  testStartEthSale,
   testBuyTokensWithFiat,
   testBuyTokens,
   determineNeededTimeTravel,
@@ -57,10 +57,10 @@ describe('De-whitelisted POA holders', () => {
       fmr = contracts.fmr
       wht = contracts.wht
 
-      // move into Funding
+      // move into "EthFunding" stage
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
-      await testStartSale(poa)
+      await testStartEthSale(poa)
 
       await testBuyTokensMulti(poa, defaultBuyAmount)
 
@@ -136,7 +136,7 @@ describe('when handling unhappy paths', async () => {
       const tokenBuyAmount = new BigNumber(1e18)
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
-      await testStartSale(poa)
+      await testStartEthSale(poa)
 
       // purchase tokens to reclaim when failed
       await testBuyTokens(poa, {
@@ -152,7 +152,7 @@ describe('when handling unhappy paths', async () => {
     it('should hit checkTimeout when reclaiming after activationTimeout', async () => {
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
-      await testStartSale(poa)
+      await testStartEthSale(poa)
 
       // move to Pending
       await testBuyRemainingTokens(poa, {
@@ -168,7 +168,7 @@ describe('when handling unhappy paths', async () => {
     it('should setFailed by anyone when activationTimeout has occured', async () => {
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
-      await testStartSale(poa)
+      await testStartEthSale(poa)
 
       // move to Pending
       await testBuyRemainingTokens(poa, {
@@ -197,15 +197,17 @@ describe('when trying various scenarios involving payout, transfer, approve, and
       fmr = contracts.fmr
 
       // buy with fiat
-      const fiatConfig = { from: custodian, gasPrice: gasPrice }
-      await testStartPreSale(poa, fiatConfig)
-      await testBuyTokensWithFiat(poa, fiatBuyer, 1000, fiatConfig)
+      await testStartFiatSale(poa, { from: broker, gasPrice })
+      await testBuyTokensWithFiat(poa, fiatBuyer, 1000, {
+        from: custodian,
+        gasPrice
+      })
 
-      // move into Funding
+      // move into "EthFunding" stage
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
 
-      await testStartSale(poa)
+      await testStartEthSale(poa)
 
       await testBuyTokensMulti(poa, defaultBuyAmount)
 
@@ -229,7 +231,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
       totalSupply = await poa.totalSupply()
     })
 
-    describe('payout -> trasfer 100% -> payout', () => {
+    describe('payout -> transfer 100% -> payout', () => {
       it('should have correct currentPayout and claims all users', async () => {
         const sender = whitelistedPoaBuyers[0]
         const receiver = whitelistedPoaBuyers[1]
@@ -898,14 +900,16 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       rate = new BigNumber(5e4)
 
       // buy with fiat
-      const fiatConfig = { from: custodian, gasPrice: gasPrice }
-      await testStartPreSale(poa, fiatConfig)
-      await testBuyTokensWithFiat(poa, fiatBuyer, 1000, fiatConfig)
+      await testStartFiatSale(poa, { from: broker, gasPrice })
+      await testBuyTokensWithFiat(poa, fiatBuyer, 1000, {
+        from: custodian,
+        gasPrice
+      })
 
-      // move into Funding
+      // move into "EthFunding" stage
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
-      await testStartSale(poa)
+      await testStartEthSale(poa)
 
       // set starting rate to be sure of rate
       await testResetCurrencyRate(exr, exp, 'EUR', rate)
@@ -1013,8 +1017,8 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
 
       assert.equal(
         postStage.toString(),
-        stages.Funding,
-        'contract should still be in stage Funding'
+        stages.EthFunding,
+        'contract should still be in stage EthFunding'
       )
       assert(
         areInRange(postFundedAmountCents, fundingGoalFiatCents.div(2), 1e2),
@@ -1059,13 +1063,13 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
 
       assert.equal(
         interimStage.toString(),
-        stages.Funding,
-        'stage should still be Funding'
+        stages.EthFunding,
+        'stage should still be EthFunding'
       )
       assert.equal(
         postStage.toString(),
         stages.Pending,
-        'stage should now be  Pending'
+        'stage should now be Pending'
       )
       assert.equal(
         postSecondTokenBalance.toString(),

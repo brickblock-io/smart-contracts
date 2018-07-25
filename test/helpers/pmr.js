@@ -17,7 +17,7 @@ const {
   getDefaultStartTime,
   determineNeededTimeTravel,
   timeTravel,
-  testStartSale,
+  testStartEthSale,
   testBuyRemainingTokens,
   testActivate,
   defaultIpfsHashArray32,
@@ -83,7 +83,7 @@ const moveTokenToActive = async (poa, fmr) => {
   const neededTime = await determineNeededTimeTravel(poa)
   await timeTravel(neededTime)
 
-  await testStartSale(poa)
+  await testStartEthSale(poa)
   await testBuyRemainingTokens(poa, {
     from: whitelistedPoaBuyers[whitelistedPoaBuyers.length - 1],
     gasPrice
