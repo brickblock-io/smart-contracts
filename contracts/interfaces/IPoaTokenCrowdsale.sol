@@ -191,7 +191,7 @@ interface IPoaTokenCrowdsale {
     external
     returns (bool);
 
-  function setFailed()
+  function setStageToTimedOut()
     external
     returns (bool);
 

@@ -14,7 +14,7 @@ const {
   testClaim,
   testReclaim,
   fundingTimeoutContract,
-  testSetFailed,
+  testSetStageToTimedOut,
   testReclaimAll,
   testPaused,
   testUnpause,
@@ -31,7 +31,7 @@ const {
 } = require('../../helpers/general.js')
 const BigNumber = require('bignumber.js')
 
-describe('when in Failed (stage 3)', () => {
+describe('when in TimedOut (stage 3)', () => {
   contract('PoaTokenProxy', () => {
     const tokenBuyAmount = new BigNumber(5e17)
     let poa
@@ -166,12 +166,12 @@ describe('when in Failed (stage 3)', () => {
 
     // start core stage functionality
 
-    it('should setFailed', async () => {
-      await testSetFailed(poa)
+    it('should setTimedOut', async () => {
+      await testSetStageToTimedOut(poa)
     })
 
-    it('should NOT setFailed again, even if owner', async () => {
-      await testWillThrow(testSetFailed, [poa, { from: owner }])
+    it('should NOT be able to call setStageToTimedOut again, even if owner', async () => {
+      await testWillThrow(testSetStageToTimedOut, [poa, { from: owner }])
     })
 
     it('should reclaim', async () => {

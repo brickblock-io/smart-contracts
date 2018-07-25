@@ -18,7 +18,7 @@ const {
   testFirstReclaim,
   fundingTimeoutContract,
   activationTimeoutContract,
-  testSetFailed,
+  testSetStageToTimedOut,
   testTransfer,
   testApprove,
   testTransferFrom,
@@ -154,7 +154,7 @@ describe('when handling unhappy paths', async () => {
       await timeTravel(neededTime)
       await testStartEthSale(poa)
 
-      // move to Pending
+      // move to "FundingSuccessful" stage
       await testBuyRemainingTokens(poa, {
         from: whitelistedPoaBuyers[0],
         gasPrice
@@ -165,19 +165,19 @@ describe('when handling unhappy paths', async () => {
       await testFirstReclaim(poa, { from: whitelistedPoaBuyers[0] }, true)
     })
 
-    it('should setFailed by anyone when activationTimeout has occured', async () => {
+    it('should setStageToTimedOut by anyone when activationTimeout has occured', async () => {
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
       await testStartEthSale(poa)
 
-      // move to Pending
+      // move to "FundingSuccessful" stage
       await testBuyRemainingTokens(poa, {
         from: whitelistedPoaBuyers[0],
         gasPrice
       })
 
       await activationTimeoutContract(poa)
-      await testSetFailed(poa, true)
+      await testSetStageToTimedOut(poa, true)
     })
   })
 })
@@ -1068,8 +1068,8 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       )
       assert.equal(
         postStage.toString(),
-        stages.Pending,
-        'stage should now be Pending'
+        stages.FundingSuccessful,
+        'stage should now be FundingSuccessful'
       )
       assert.equal(
         postSecondTokenBalance.toString(),

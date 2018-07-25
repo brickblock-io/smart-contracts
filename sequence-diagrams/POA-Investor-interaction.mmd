@@ -12,7 +12,7 @@ sequenceDiagram
     POA->>POA: check if funding target has been met
 
     alt PoaToken funding goal reached
-      POA->>POA: enterStage(Pending)
+      POA->>POA: enterStage(FundingSuccessful)
       POA-->>Investor: return any extra ETH
     end
   end

@@ -40,7 +40,7 @@ describe("when going through Poa's normal flow", async () => {
       })
     })
 
-    it('should buy all remaining tokens, moving to Pending', async () => {
+    it("should buy all remaining tokens, moving to 'FundingSuccessful' stage", async () => {
       await testBuyRemainingTokens(poa, {
         from: whitelistedPoaBuyers[1],
         gasPrice

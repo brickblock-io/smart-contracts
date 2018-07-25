@@ -276,13 +276,13 @@ const enterActiveStage = async (poa, fmr) => {
   await timeTravel(neededTime)
   await testStartEthSale(poa)
 
-  // move into Pending
+  // move into "FundingSuccessful" stage
   await testBuyRemainingTokens(poa, {
     from: whitelistedPoaBuyers[0],
     gasPrice
   })
 
-  // move into Active
+  // move into "Active" stage
   await testActivate(poa, fmr, defaultIpfsHashArray32, {
     from: custodian
   })

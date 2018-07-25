@@ -16,8 +16,8 @@ const stages = {
   PreFunding: '0',
   FiatFunding: '1',
   EthFunding: '2',
-  Pending: '3',
-  Failed: '4',
+  FundingSuccessful: '3',
+  TimedOut: '4',
   Active: '5',
   Terminated: '6',
   Cancelled: '7'
@@ -772,7 +772,7 @@ const testBuyRemainingTokens = async (poa, config) => {
   assert.equal(
     bigZero.toString(),
     postTokenBalance.toString(),
-    'token balance should be 0 even after buying all remaining and entering Pending stage'
+    "token balance should be 0 even after buying all remaining and entering 'FundingSuccessful' stage"
   )
   assert.equal(
     postFundedWei.sub(preFundedWei).toString(),
@@ -788,7 +788,11 @@ const testBuyRemainingTokens = async (poa, config) => {
     stages.EthFunding,
     'stage should be EthFunding'
   )
-  assert.equal(postStage.toString(), stages.Pending, 'stage should be Pending')
+  assert.equal(
+    postStage.toString(),
+    stages.FundingSuccessful,
+    "stage should be 'FundingSuccessful'"
+  )
 
   return postUserWeiInvested
 }
@@ -823,8 +827,8 @@ const testActivate = async (poa, fmr, ipfsHash32, config) => {
   )
   assert.equal(
     preStage.toString(),
-    stages.Pending,
-    'preStage should be Pending'
+    stages.FundingSuccessful,
+    "preStage should be 'FundingSuccessful'"
   )
   assert.equal(
     postStage.toString(),
@@ -1058,14 +1062,14 @@ const testClaimAllPayouts = async (poa, poaTokenHolders) => {
   )
 }
 
-const testFirstReclaim = async (poa, config, shouldBePending) => {
+const testFirstReclaim = async (poa, config, shouldBeFundingSuccessful) => {
   const preStage = await poa.stage()
 
   assert.equal(
     preStage.toString(),
-    shouldBePending ? stages.Pending : stages.EthFunding,
+    shouldBeFundingSuccessful ? stages.FundingSuccessful : stages.EthFunding,
     `contract should be in stage ${
-      shouldBePending ? 'EthFunding' : 'Pending'
+      shouldBeFundingSuccessful ? 'EthFunding' : 'FundingSuccessful'
     } before reclaiming`
   )
 
@@ -1075,8 +1079,8 @@ const testFirstReclaim = async (poa, config, shouldBePending) => {
 
   assert.equal(
     postStage.toNumber(),
-    stages.Failed,
-    'the contract should be in stage Failed after reclaiming'
+    stages.TimedOut,
+    'the contract should be in stage TimedOut after reclaiming'
   )
 }
 
@@ -1091,23 +1095,25 @@ const activationTimeoutContract = async poa => {
   await timeTravel(fundingTimeout.add(activationTimeout).toNumber())
 }
 
-const testSetFailed = async (poa, shouldBePending) => {
+const testSetStageToTimedOut = async (poa, shouldBeFundingSuccessful) => {
   const preStage = await poa.stage()
 
-  await poa.setFailed()
+  await poa.setStageToTimedOut()
 
   const postStage = await poa.stage()
 
   assert.equal(
     preStage.toString(),
-    shouldBePending ? stages.Pending : stages.EthFunding,
-    `preStage should be ${shouldBePending ? 'Pending' : 'EthFunding'}`
+    shouldBeFundingSuccessful ? stages.FundingSuccessful : stages.EthFunding,
+    `preStage should be ${
+      shouldBeFundingSuccessful ? 'FundingSuccessful' : 'EthFunding'
+    }`
   )
 
   assert.equal(
     postStage.toString(),
-    stages.Failed,
-    'postStage should be Failed'
+    stages.TimedOut,
+    'postStage should be TimedOut'
   )
 }
 
@@ -1617,7 +1623,7 @@ module.exports = {
   testReclaimAll,
   testResetCurrencyRate,
   testSetCurrencyRate,
-  testSetFailed,
+  testSetStageToTimedOut,
   testSetCancelled,
   testStartFiatSale,
   testStartEthSale,

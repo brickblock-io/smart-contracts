@@ -509,7 +509,7 @@ The Custodian can:
 * `terminate()`
     * same as owner (see above)
 * `activate()`
-    * move the contract from `Pending` to `Active` (see Stages section for more details)
+    * move the contract from `FundingSuccessful` to `Active` (see [Stages](#stages) section for more details)
     * must provide an IPFS hash which is set in the contract as proof of custody
         * this proves that the custodian is indeed in possession the asset and acknowledges that everythinng is in order through running this method from the custodian entity's address
 * `payout()`
@@ -551,20 +551,24 @@ There are 3 time related storage variables in the contract, they are all unix ti
     * if not met, anyone can call `setFailed()`
 
 ### Stages
-There are 5 possible stages for the contract each of them enabling or restricting certain functionality:
+There are multiple stages for each POA contract. Each stage enables or restricts certain functionality:
 
 1. `PreFunding`
     * starting stage, nothing can happen until `startTime` has passed
-1. `Funding`
+1. `FiatFunding`
+    * window between calling `startFiatSale` (start) and `startEthSale` (end)
+    * If `fundingGoalInCents` is met, will move directly to `FundingSuccessful`
+    * If `fundingGoalInCents` is NOT met, will move to `EthFunding`
+1. `EthFunding`
     * window between `startTime` and `startTime + fundingTimeout`
     * `fundingGoalInCents` must be met or will result in moving to `Failed` stage
-1. `Pending`
+1. `FundingSuccessful`
     * stage where `fundingGoalInCents` has been met
     * waiting on custodian to `activate()` during window between `startTime` and `startTime + fundingTimeout + activationTimeout`
     * must be activated during window or will go to `Failed` stage
-1. `Failed`
+1. `TimedOut`
     * stage where deadlines were not met
-    * can be entered through `reclaim()` or `setFailed()`
+    * can be entered through `reclaim()` or `setStageToTimedOut()` or the `checkTimeout()` modifier that gets called before certain functions such as `buy()`, `activate()` or `reclaim()`
     * users who paid in ETH can reclaim ETH at this stage
     * end of lifecycle
 1. `Active`

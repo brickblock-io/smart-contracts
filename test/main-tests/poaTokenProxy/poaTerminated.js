@@ -15,7 +15,7 @@ const {
   testPayout,
   testClaim,
   testReclaim,
-  testSetFailed,
+  testSetStageToTimedOut,
   testPaused,
   testUnpause,
   testUpdateProofOfCustody,
@@ -50,7 +50,7 @@ describe('when in Terminated (stage 5)', () => {
       await timeTravel(neededTime)
       await testStartEthSale(poa)
 
-      // move into Pending
+      // move into "FundingSuccessful" stage
       await testBuyTokens(poa, {
         from: whitelistedPoaBuyers[0],
         value: 1e18,
@@ -62,7 +62,7 @@ describe('when in Terminated (stage 5)', () => {
         gasPrice
       })
 
-      // move into Active
+      // move into "Active" stage
       await testActivate(poa, fmr, defaultIpfsHashArray32, {
         from: custodian
       })
@@ -70,7 +70,7 @@ describe('when in Terminated (stage 5)', () => {
       // clean out broker balance for easier debugging
       await testBrokerClaim(poa)
 
-      // move into Terminated
+      // move into "Terminated" stage
       //⚠️  also acts as a test terminating as owner rather than custodian
       await testTerminate(poa, { from: owner })
     })
@@ -94,8 +94,8 @@ describe('when in Terminated (stage 5)', () => {
       ])
     })
 
-    it('should NOT setFailed, even if owner', async () => {
-      await testWillThrow(testSetFailed, [poa, { from: owner }])
+    it('should NOT setStageToTimedOut, even if owner', async () => {
+      await testWillThrow(testSetStageToTimedOut, [poa, { from: owner }])
     })
 
     it('should NOT activate, even if custodian', async () => {

@@ -345,8 +345,8 @@ const testReclaimEvents = async () => {
   )
   assert.equal(
     triggeredLoggerStageEvent.stage.toString(),
-    stages.Failed,
-    'logger stage event stage should match Failed'
+    stages.TimedOut,
+    'logger stage event stage should match TimedOut'
   )
   assert.equal(
     triggeredLoggerReclaimEvent.tokenAddress,

@@ -7,10 +7,14 @@ import "./PoaProxyCommon.sol";
 
 
 /**
-  @title Firstly, PoaCommon acts as an agreement between PoaToken and PoaCrowdsale
+  @title Firstly, PoaCommon acts as a convention between:
+  - PoaToken
+  - PoaCrowdsale
   to use agreed upon non-sequential storage for getting & setting
   variables which are used by both contracts.
+
   Secondly, it has a set of shared functions.
+
   Thirdly, it inherits from PoaProxyCommon to adhere to the agreed
   upon storage slots for getting & setting PoaProxy related storage.
 */
@@ -25,14 +29,14 @@ contract PoaCommon is PoaProxyCommon {
   // An enum representing all stages a contract can be in.
   // Different stages enable or restrict certain functionality.
   enum Stages {
-    PreFunding,  // 0
-    FiatFunding, // 1
-    EthFunding,  // 2
-    Pending,     // 3
-    Failed,      // 4
-    Active,      // 5
-    Terminated,  // 6
-    Cancelled    // 7
+    PreFunding,        // 0
+    FiatFunding,       // 1
+    EthFunding,        // 2
+    FundingSuccessful, // 3
+    TimedOut,          // 4
+    Active,            // 5
+    Terminated,        // 6
+    Cancelled          // 7
   }
 
   /***********************************************

@@ -14,7 +14,7 @@ const {
   testPayout,
   testClaim,
   testReclaim,
-  testSetFailed,
+  testSetStageToTimedOut,
   testPaused,
   testUnpause,
   testUpdateProofOfCustody,
@@ -29,7 +29,7 @@ const {
   gasPrice
 } = require('../../helpers/general.js')
 
-describe('when in Pending (stage 3)', () => {
+describe('when in FundingSuccessful (stage 3)', () => {
   contract('PoaTokenProxy', () => {
     let poa
     let fmr
@@ -44,7 +44,7 @@ describe('when in Pending (stage 3)', () => {
       await timeTravel(neededTime)
       await testStartEthSale(poa)
 
-      // move into Pending
+      // move into "FundingSuccessful" stage
       await testBuyRemainingTokens(poa, {
         from: whitelistedPoaBuyers[1],
         gasPrice
@@ -70,8 +70,8 @@ describe('when in Pending (stage 3)', () => {
       ])
     })
 
-    it('should NOT setFailed', async () => {
-      await testWillThrow(testSetFailed, [poa, { from: owner }])
+    it('should NOT setStageToTimedOut', async () => {
+      await testWillThrow(testSetStageToTimedOut, [poa, { from: owner }])
     })
 
     it('should NOT terminate, even if custodian', async () => {

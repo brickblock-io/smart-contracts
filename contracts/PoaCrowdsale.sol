@@ -35,21 +35,27 @@ contract PoaCrowdsale is PoaCommon {
   // TYPE: bool
   // Bool indicating whether or not crowdsale proxy has been initialized
   bytes32 private constant crowdsaleInitializedSlot = keccak256("crowdsaleInitialized");
+
   // TYPE: uint256
   // Used for checking when contract should move from PreFunding or FiatFunding to EthFunding stage
   bytes32 private constant startTimeSlot = keccak256("startTime");
+
   // TYPE: uint256
-  // Amount of seconds until moving to Failed from EthFunding stage after startTime
+  // Amount of seconds (starting at startTime) until moving from EthFunding to TimedOut stage
   bytes32 private constant fundingTimeoutSlot = keccak256("fundingTimeout");
+
   // TYPE: uint256
-  // Amount of seconds until moving to Failed from Pending stage after startTime + fundingTimeout
+  // Amount of seconds (starting at startTime + fundingTimeout) until moving from FundingSuccessful stage to TimedOut
   bytes32 private constant activationTimeoutSlot = keccak256("activationTimeout");
+
   // TYPE: bytes32
   // bytes32 representation fiat currency symbol used to get rate
   bytes32 private constant fiatCurrency32Slot = keccak256("fiatCurrency32");
+
   // TYPE: uint256
   // Amount needed before moving to pending calculated in fiat
   bytes32 private constant fundingGoalInCentsSlot = keccak256("fundingGoalInCents");
+
   // TYPE: uint256
   // Used for keeping track of actual funded amount in fiat during FiatFunding stage
   bytes32 private constant fundedAmountInCentsDuringFiatFundingSlot
@@ -74,9 +80,9 @@ contract PoaCrowdsale is PoaCommon {
 
     if (
       (uint256(stage()) < 3 && block.timestamp >= fundingTimeoutDeadline) ||
-      (stage() == Stages.Pending && block.timestamp >= activationTimeoutDeadline)
+      (stage() == Stages.FundingSuccessful && block.timestamp >= activationTimeoutDeadline)
     ) {
-      enterStage(Stages.Failed);
+      enterStage(Stages.TimedOut);
     }
 
     _;
@@ -95,13 +101,19 @@ contract PoaCrowdsale is PoaCommon {
   /**
     @notice Proxied contracts cannot have constructors. This works in place
     of the constructor in order to initialize the contract storage.
+
+    @param _fiatCurrency32     bytes32 of fiat currency string
+    @param _startTime          Beginning of the sale as unix timestamp
+    @param _fundingTimeout     Duration of the sale (starting from _startTime)
+    @param _activationTimeout  Timeframe for the custodian to activate the token (starting from _startTime + _fundingTimeout)
+    @param _fundingGoalInCents Funding goal in fiat cents (e.g. a €10,000 fundingGoal would be '10000000')
   */
   function initializeCrowdsale(
-    bytes32 _fiatCurrency32, // bytes32 of fiat currency string
-    uint256 _startTime, // unix timestamp
-    uint256 _fundingTimeout, // seconds after startTime
-    uint256 _activationTimeout, // seconds after startTime + fundingTimeout
-    uint256 _fundingGoalInCents // fiat cents
+    bytes32 _fiatCurrency32,
+    uint256 _startTime,
+    uint256 _fundingTimeout,
+    uint256 _activationTimeout,
+    uint256 _fundingGoalInCents
   )
     external
     returns (bool)
@@ -199,9 +211,9 @@ contract PoaCrowdsale is PoaCommon {
         fiatInvestmentPerUserInTokens(_contributor).add(_tokenAmount)
       );
 
-      // if funded amount reaches the funding goal, enter to Pending stage
+      // if funded amount reaches the funding goal, enter FundingSuccessful stage
       if (fundedAmountInCentsDuringFiatFunding() >= fundingGoalInCents()) {
-        enterStage(Stages.Pending);
+        enterStage(Stages.FundingSuccessful);
       }
 
       return true;
@@ -227,7 +239,7 @@ contract PoaCrowdsale is PoaCommon {
     // prevent case where buying after reaching fundingGoal results in buyer
     // earning money on a buy
     if (weiToFiatCents(fundedAmountInWei()) > fundingGoalInCents()) {
-      enterStage(Stages.Pending);
+      enterStage(Stages.FundingSuccessful);
       if (msg.value > 0) {
         msg.sender.transfer(msg.value);
       }
@@ -238,7 +250,7 @@ contract PoaCrowdsale is PoaCommon {
     // with most current rate available
     uint256 _currentFundedCents = weiToFiatCents(fundedAmountInWei().add(msg.value))
       .add(fundedAmountInCentsDuringFiatFunding());
-    // check if balance has met funding goal to move on to Pending
+    // check if balance has met funding goal to move on to FundingSuccessful
     if (_currentFundedCents < fundingGoalInCents()) {
       // give a range due to fun fun integer division
       if (fundingGoalInCents().sub(_currentFundedCents) > 1) {
@@ -281,7 +293,7 @@ contract PoaCrowdsale is PoaCommon {
     internal
     returns (bool)
   {
-    enterStage(Stages.Pending);
+    enterStage(Stages.FundingSuccessful);
     uint256 _refundAmount = _shouldRefund ?
       fundedAmountInWei().add(msg.value).sub(fiatCentsToWei(fundingGoalInCents())) :
       0;
@@ -303,7 +315,7 @@ contract PoaCrowdsale is PoaCommon {
     external
     checkTimeout
     onlyCustodian
-    atStage(Stages.Pending)
+    atStage(Stages.FundingSuccessful)
     validIpfsHash(_ipfsHash)
     returns (bool)
   {
@@ -333,18 +345,18 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /**
-   @notice Used for manually setting Stage to Failed when no users have bought any tokens
+   @notice Used for manually setting Stage to TimedOut when no users have bought any tokens
    if no `buy()`s occurred before fundingTimeoutBlock token would be stuck in Funding
    can also be used when activate is not called by custodian within activationTimeout
    lastly can also be used when no one else has called reclaim.
   */
-  function setFailed()
+  function setStageToTimedOut()
     external
-    atEitherStage(Stages.EthFunding, Stages.Pending)
+    atEitherStage(Stages.EthFunding, Stages.FundingSuccessful)
     checkTimeout
     returns (bool)
   {
-    if (stage() != Stages.Failed) {
+    if (stage() != Stages.TimedOut) {
       revert();
     }
     return true;
@@ -354,7 +366,7 @@ contract PoaCrowdsale is PoaCommon {
   function reclaim()
     external
     checkTimeout
-    atStage(Stages.Failed)
+    atStage(Stages.TimedOut)
     returns (bool)
   {
     require(!isFiatInvestor(msg.sender));

@@ -16,7 +16,7 @@ const {
   testPayout,
   testClaim,
   testReclaim,
-  testSetFailed,
+  testSetStageToTimedOut,
   testPaused,
   testUnpause,
   testUpdateProofOfCustody,
@@ -66,8 +66,8 @@ describe('when in FIAT Funding (stage 1)', () => {
       await testWillThrow(testStartFiatSale, [poa, { from: owner, gasPrice }])
     })
 
-    it('should NOT setFailed', async () => {
-      await testWillThrow(testSetFailed, [poa, { from: owner }])
+    it('should NOT setStageToTimedOut', async () => {
+      await testWillThrow(testSetStageToTimedOut, [poa, { from: owner }])
     })
 
     it('should NOT activate, even if custodian', async () => {
@@ -267,8 +267,8 @@ describe('when in FIAT Funding (stage 1) and funding goal is met during the fiat
 
       assert.equal(
         postStage.toString(),
-        stages.Pending,
-        'Contract should be in Pending stage after funding goal meets'
+        stages.FundingSuccessful,
+        "Contract should be in 'FundingSuccessful' stage after funding goal meets"
       )
     })
 
@@ -298,8 +298,8 @@ describe('when in FIAT Funding (stage 1) and funding goal is met during the fiat
 
       assert.equal(
         postStage.toString(),
-        stages.Pending,
-        'The contract should be in Pending stage after funding goal meets'
+        stages.FundingSuccessful,
+        "The contract should be in 'FundingSuccessful' stage after funding goal meets"
       )
     })
   })

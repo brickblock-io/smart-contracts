@@ -15,7 +15,7 @@ const {
   testPayout,
   testClaim,
   testReclaim,
-  testSetFailed,
+  testSetStageToTimedOut,
   testPaused,
   testPause,
   testUnpause,
@@ -51,7 +51,7 @@ describe('when in Active (stage 4)', () => {
       await timeTravel(neededTime)
       await testStartEthSale(poa)
 
-      // move into Pending
+      // move into "FundingSuccessful" stage
       await testBuyTokens(poa, {
         from: whitelistedPoaBuyers[0],
         value: defaultBuyAmount,
@@ -75,7 +75,7 @@ describe('when in Active (stage 4)', () => {
         amount: commitAmount
       })
 
-      // move into Active
+      // move into "Active" stage
       await testActivate(poa, fmr, defaultIpfsHashArray32, {
         from: custodian
       })
@@ -127,8 +127,8 @@ describe('when in Active (stage 4)', () => {
       ])
     })
 
-    it('should NOT setFailed, even if owner', async () => {
-      await testWillThrow(testSetFailed, [poa, { from: owner }])
+    it('should NOT setStageToTimedOut, even if owner', async () => {
+      await testWillThrow(testSetStageToTimedOut, [poa, { from: owner }])
     })
 
     it('should NOT activate, even if custodian', async () => {

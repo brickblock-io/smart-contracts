@@ -14,7 +14,7 @@ const {
   testPayout,
   testClaim,
   testReclaim,
-  testSetFailed,
+  testSetStageToTimedOut,
   testPaused,
   testUnpause,
   testUpdateProofOfCustody,
@@ -55,8 +55,8 @@ describe('when in EthFunding (stage 2)', () => {
       await testWillThrow(testStartEthSale, [poa, { from: owner }])
     })
 
-    it('should NOT setFailed', async () => {
-      await testWillThrow(testSetFailed, [poa, { from: owner }])
+    it('should NOT setStageToTimedOut', async () => {
+      await testWillThrow(testSetStageToTimedOut, [poa, { from: owner }])
     })
 
     it('should NOT activate, even if custodian', async () => {
