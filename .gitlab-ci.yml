@@ -44,16 +44,6 @@ test:
     - cp .env.example .env
     - yarn test:ci
 
-test-poa-proxy:
-  stage: test
-  cache:
-    policy: pull
-  only:
-    - master
-  script:
-    - cp .env.example .env
-    - yarn test:ci:poa-proxy
-
 # test-frozen:
 #   stage: test
 #   cache:
