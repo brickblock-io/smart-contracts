@@ -872,9 +872,9 @@ const testBrokerClaim = async poa => {
 }
 
 const testPayout = async (poa, fmr, config) => {
-  assert(config.from, 'from not included in config!')
-  assert(config.value, 'value not included in config!')
-  assert(config.gasPrice, 'gasPrice not included in config!')
+  assert(config.from, "'from' not included in config!")
+  assert(config.value, "'value' not included in config!")
+  assert(config.gasPrice, "'gasPrice' not included in config!")
   const totalSupply = await poa.totalSupply()
   const payoutValue = new BigNumber(config.value)
   const _fee = await poa.calculateFee(payoutValue)
@@ -889,6 +889,7 @@ const testPayout = async (poa, fmr, config) => {
 
   const preContractTotalTokenPayout = await poa.totalPerTokenPayout()
   const preBrokerEtherBalance = await getEtherBalance(broker)
+  const preCustodianEtherBalance = await getEtherBalance(custodian)
   const preContractEtherBalance = await getEtherBalance(poa.address)
   const preFeeManagerEtherBalance = await getEtherBalance(fmr.address)
 
@@ -904,10 +905,6 @@ const testPayout = async (poa, fmr, config) => {
   const expectedContractTotalTokenPayout = preContractTotalTokenPayout.add(
     currentExpectedTotalTokenPayout
   )
-  const postBrokerEtherBalance = await getEtherBalance(broker)
-  const expectedBrokerEtherBalance = preBrokerEtherBalance
-    .sub(gasPrice.mul(gasUsed))
-    .sub(payoutValue)
   const postContractEtherBalance = await getEtherBalance(poa.address)
   const expectedContractEtherBalance = payoutValue.sub(fee)
   const postFeeManagerEtherBalance = await getEtherBalance(fmr.address)
@@ -917,16 +914,41 @@ const testPayout = async (poa, fmr, config) => {
     expectedContractTotalTokenPayout.toString(),
     'totalPerTokenPayout should match the expected value'
   )
-  assert.equal(
-    expectedBrokerEtherBalance.toString(),
-    postBrokerEtherBalance.toString(),
-    "expected broker's ether balance should match actual after payout"
-  )
+
+  if (config.from === broker) {
+    const actualBrokerEtherBalance = await getEtherBalance(broker)
+    const expectedBrokerEtherBalance = preBrokerEtherBalance
+      .sub(gasPrice.mul(gasUsed))
+      .sub(payoutValue)
+
+    assert.equal(
+      expectedBrokerEtherBalance.toString(),
+      actualBrokerEtherBalance.toString(),
+      "expected broker's ether balance should match actual after payout"
+    )
+  } else if (config.from === custodian) {
+    const actualCustodianEtherBalance = await getEtherBalance(custodian)
+    const expectedCustodianEtherBalance = preCustodianEtherBalance
+      .sub(gasPrice.mul(gasUsed))
+      .sub(payoutValue)
+
+    assert.equal(
+      expectedCustodianEtherBalance.toString(),
+      actualCustodianEtherBalance.toString(),
+      "expected custodian's ether balance should match actual after payout"
+    )
+  } else {
+    throw new Error(
+      'Payouts can only be done by the broker or custodian of this POA contract!'
+    )
+  }
+
   assert.equal(
     postContractEtherBalance.sub(preContractEtherBalance).toString(),
     expectedContractEtherBalance.toString(),
     "contract's ether balance should be incremented by the payoutValue minus fees"
   )
+
   assert.equal(
     postFeeManagerEtherBalance.sub(preFeeManagerEtherBalance).toString(),
     fee.toString(),

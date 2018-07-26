@@ -185,7 +185,7 @@ describe('when in Terminated (stage 5)', () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { value: 2e18, from: custodian, gasPrice }
+        { value: 2e18, from: whitelistedPoaBuyers[0], gasPrice }
       ])
     })
 

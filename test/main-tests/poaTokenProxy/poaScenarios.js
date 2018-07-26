@@ -541,7 +541,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
       })
     })
 
-    describe('payout -> trasferFrom 50% -> payout', () => {
+    describe('payout -> transferFrom 50% -> payout', () => {
       it('should have correct currentPayout and claims all users', async () => {
         const sender = whitelistedPoaBuyers[0]
         const receiver = whitelistedPoaBuyers[1]

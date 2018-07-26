@@ -2061,7 +2061,7 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
       })
     })
 
-    describe('payout -> trasfer 100% -> payout', () => {
+    describe('payout -> transfer 100% -> payout', () => {
       it('should have the correct currentPayout and claims for each user', async () => {
         const payoutAmount = new BigNumber(1e18)
         const senderAccount1 = await getAccountInformation(sender, cpoa)
@@ -2141,7 +2141,7 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
       })
     })
 
-    describe('payout -> trasfer 50% -> payout', () => {
+    describe('payout -> transfer 50% -> payout', () => {
       it('should have the correct currentPayout and claims for each user', async () => {
         const payoutAmount = new BigNumber(1e18)
         const senderAccount1 = await getAccountInformation(sender, cpoa)
@@ -2221,7 +2221,7 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
       })
     })
 
-    describe('payout -> trasferFrom 100% -> payout', () => {
+    describe('payout -> transferFrom 100% -> payout', () => {
       it('should have the correct currentPayout and claims for each user', async () => {
         const payoutAmount = new BigNumber(1e18)
         const allowanceOwnerAccount1 = await getAccountInformation(
@@ -2316,7 +2316,7 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
       })
     })
 
-    describe('payout -> trasferFrom 50% -> payout', () => {
+    describe('payout -> transferFrom 50% -> payout', () => {
       it('should have the correct currentPayout and claims for each user', async () => {
         const payoutAmount = new BigNumber(1e18)
         const allowanceOwnerAccount1 = await getAccountInformation(

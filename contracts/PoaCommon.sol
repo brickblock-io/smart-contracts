@@ -250,7 +250,7 @@ contract PoaCommon is PoaProxyCommon {
         gas,                // g = gas: whatever was passed already
         _whitelistContract, // a = address: _whitelist address assigned from getContractAddress()
         _pointer,           // in = mem in  mem[in..(in+insize): set to _pointer pointer
-        0x24,               // insize = mem insize  mem[in..(in+insize): size of sig (bytes4) + bytes32 = 0x24
+        0x24,               // insize = mem insize  mem[in..(in+insize): size of signature (bytes4) + bytes32 = 0x24
         _pointer,           // out = mem out  mem[out..(out+outsize): output assigned to this storage address
         0x20                // outsize = mem outsize  mem[out..(out+outsize): output should be 32byte slot (bool size = 0x01 < slot size 0x20)
       )
@@ -260,8 +260,8 @@ contract PoaCommon is PoaProxyCommon {
         revert(0, 0)
       }
 
-      _isWhitelisted := mload(_pointer) // assign result to returned value
-      mstore(0x40, add(_pointer, 0x24)) // advance free memory pointer by largest _pointer size
+      _isWhitelisted := mload(_pointer) // Assign result to returned value
+      mstore(0x40, add(_pointer, 0x24)) // Advance free memory pointer by largest _pointer size
     }
   }
 
@@ -380,8 +380,8 @@ contract PoaCommon is PoaProxyCommon {
   * Start Common Non-Sequential Storage Getters/Setters *
   ******************************************************/
 
-  /*
-    Each function without a "set" prefix in this section is a public getter for a
+  /**
+    @dev Each function without a "set" prefix in this section is a public getter for a
     specific non-sequential storage slot.
 
     Setter functions, starting with "set", are internal and can only be called by this

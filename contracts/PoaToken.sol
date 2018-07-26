@@ -62,6 +62,14 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     _;
   }
 
+  modifier eitherBrokerOrCustodian() {
+    require(
+      msg.sender == broker() ||
+      msg.sender == custodian()
+    );
+    _;
+  }
+
   modifier onlyOwner() {
     owner = getContractAddress("PoaManager");
     require(msg.sender == owner);
@@ -320,7 +328,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     external
     payable
     atEitherStage(Stages.Active, Stages.Terminated)
-    onlyBroker
+    eitherBrokerOrCustodian
     returns (bool)
   {
     // calculate fee based on feeRateInPermille

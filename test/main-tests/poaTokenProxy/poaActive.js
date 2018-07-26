@@ -150,8 +150,9 @@ describe('when in Active (stage 4)', () => {
       await testWillThrow(testClaim, [poa, { from: whitelistedPoaBuyers[0] }])
     })
 
-    it('should payout as broker', async () => {
+    it('should payout as broker OR custodian', async () => {
       await testPayout(poa, fmr, { value: 2e18, from: broker, gasPrice })
+      await testPayout(poa, fmr, { value: 2e18, from: custodian, gasPrice })
     })
 
     it('should NOT payout as broker if payout is too low', async () => {
@@ -162,12 +163,7 @@ describe('when in Active (stage 4)', () => {
       ])
     })
 
-    it('should NOT payout as NOT broker', async () => {
-      await testWillThrow(testPayout, [
-        poa,
-        fmr,
-        { value: 2e18, from: custodian, gasPrice }
-      ])
+    it('should NOT payout as NOT broker or custodian', async () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
