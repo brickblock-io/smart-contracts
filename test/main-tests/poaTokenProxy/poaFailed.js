@@ -31,7 +31,7 @@ const {
 } = require('../../helpers/general.js')
 const BigNumber = require('bignumber.js')
 
-describe('when in TimedOut (stage 3)', () => {
+describe("when in 'TimedOut' stage", () => {
   contract('PoaTokenProxy', () => {
     const tokenBuyAmount = new BigNumber(5e17)
     let poa

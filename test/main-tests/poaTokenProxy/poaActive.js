@@ -35,7 +35,7 @@ const {
   gasPrice
 } = require('../../helpers/general.js')
 
-describe('when in Active (stage 4)', () => {
+describe("when in 'Active' stage", () => {
   contract('PoaTokenProxy', () => {
     let poa
     let fmr

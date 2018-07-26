@@ -29,7 +29,7 @@ const {
   gasPrice
 } = require('../../helpers/general.js')
 
-describe('when in EthFunding (stage 2)', () => {
+describe("when in 'EthFunding' stage", () => {
   contract('PoaTokenProxy', () => {
     let poa
     let fmr

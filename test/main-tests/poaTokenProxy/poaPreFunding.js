@@ -28,7 +28,7 @@ const {
   gasPrice
 } = require('../../helpers/general.js')
 
-describe('when in PreFunding (stage 0)', async () => {
+describe("when in 'PreFunding' stage", async () => {
   contract('PoaTokenProxy', () => {
     let poa
     let fmr

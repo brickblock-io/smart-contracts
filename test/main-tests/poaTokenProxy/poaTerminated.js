@@ -30,7 +30,7 @@ const {
   gasPrice
 } = require('../../helpers/general.js')
 
-describe('when in Terminated (stage 5)', () => {
+describe("when in 'Terminated' stage", () => {
   contract('PoaTokenProxy', () => {
     const newIpfsHash = 'Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u'
     const newIpfsHashArray32 = [

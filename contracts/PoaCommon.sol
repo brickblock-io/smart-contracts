@@ -33,10 +33,10 @@ contract PoaCommon is PoaProxyCommon {
     FiatFunding,       // 1
     EthFunding,        // 2
     FundingSuccessful, // 3
-    TimedOut,          // 4
-    Active,            // 5
-    Terminated,        // 6
-    Cancelled          // 7
+    FundingCancelled,  // 4
+    TimedOut,          // 5
+    Active,            // 6
+    Terminated         // 7
   }
 
   /***********************************************

@@ -34,7 +34,7 @@ const {
   gasPrice
 } = require('../../helpers/general.js')
 
-describe('when in FIAT Funding (stage 1)', () => {
+describe("when in 'FiatFunding' stage", () => {
   contract('PoaToken', accounts => {
     let poa
     let fmr

@@ -29,7 +29,7 @@ const {
   gasPrice
 } = require('../../helpers/general.js')
 
-describe('when in FundingSuccessful (stage 3)', () => {
+describe("when in 'FundingSuccessful' stage", () => {
   contract('PoaTokenProxy', () => {
     let poa
     let fmr

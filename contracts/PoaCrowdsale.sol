@@ -384,14 +384,25 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
-  /// @notice When custodian enters wrong FIAT records BEFORE EthFunding stage, custodian can cancel the contract
-  function setCancelled()
+  /**
+    @notice When something goes wrong during the "PreFunding" or "FiatFunding"
+    stages, this is an escape hatch to cancel the funding process.
+    If the contract hits the "EthFunding" stage, this can no longer be used.
+
+    This is a nuclear option and should only be used under exceptional
+    circumstances, for example:
+    - Asset gets damaged due to natural catastrophe
+    - Legal issue arises with the asset
+    - Broker gets blacklisted during the funding phase
+      due to fraudulent behavior
+    */
+  function cancelFunding()
     external
     onlyCustodian
     atEitherStage(Stages.PreFunding, Stages.FiatFunding)
     returns (bool)
   {
-    enterStage(Stages.Cancelled);
+    enterStage(Stages.FundingCancelled);
 
     return true;
   }

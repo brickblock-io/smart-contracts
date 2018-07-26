@@ -199,7 +199,7 @@ interface IPoaTokenCrowdsale {
     external
     returns (bool);
 
-  function setCancelled()
+  function cancelFunding()
     external
     returns (bool);
 

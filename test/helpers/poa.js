@@ -17,10 +17,10 @@ const stages = {
   FiatFunding: '1',
   EthFunding: '2',
   FundingSuccessful: '3',
-  TimedOut: '4',
-  Active: '5',
-  Terminated: '6',
-  Cancelled: '7'
+  FundingCancelled: '4',
+  TimedOut: '5',
+  Active: '6',
+  Terminated: '7'
 }
 const {
   areInRange,
@@ -1000,8 +1000,8 @@ const testClaim = async (poa, config, isTerminated) => {
   )
   assert.equal(
     stage.toString(),
-    isTerminated ? new BigNumber(6).toString() : new BigNumber(5).toString(),
-    `stage should be in ${isTerminated ? 6 : 5}, Active`
+    isTerminated ? new BigNumber(7).toString() : new BigNumber(6).toString(),
+    `stage should be in ${isTerminated ? 7 : 6}, Active`
   )
 }
 
@@ -1117,10 +1117,10 @@ const testSetStageToTimedOut = async (poa, shouldBeFundingSuccessful) => {
   )
 }
 
-const testSetCancelled = async (poa, from, shoulBeFiatFunding) => {
+const testCancelFunding = async (poa, from, shoulBeFiatFunding) => {
   const preStage = await poa.stage()
 
-  await poa.setCancelled({ from })
+  await poa.cancelFunding({ from })
 
   const postStage = await poa.stage()
 
@@ -1132,8 +1132,8 @@ const testSetCancelled = async (poa, from, shoulBeFiatFunding) => {
 
   assert.equal(
     postStage.toString(),
-    stages.Cancelled,
-    'Post stage should be Cancelled'
+    stages.FundingCancelled,
+    'Post stage should be FundingCancelled'
   )
 }
 
@@ -1624,7 +1624,7 @@ module.exports = {
   testResetCurrencyRate,
   testSetCurrencyRate,
   testSetStageToTimedOut,
-  testSetCancelled,
+  testCancelFunding,
   testStartFiatSale,
   testStartEthSale,
   testTerminate,

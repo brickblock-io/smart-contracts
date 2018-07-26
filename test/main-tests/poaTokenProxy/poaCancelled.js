@@ -21,7 +21,7 @@ const {
   testTerminate,
   testStartFiatSale,
   testBuyTokensWithFiat,
-  testSetCancelled
+  testCancelFunding
 } = require('../../helpers/poa')
 const {
   testWillThrow,
@@ -29,7 +29,7 @@ const {
   gasPrice
 } = require('../../helpers/general.js')
 
-describe('when in Cancelled', () => {
+describe("when in 'FundingCancelled' stage", () => {
   contract('PoaToken', accounts => {
     let poa
     let fmr
@@ -49,7 +49,7 @@ describe('when in Cancelled', () => {
         gasPrice
       })
 
-      await testSetCancelled(poa, custodian, true)
+      await testCancelFunding(poa, custodian, true)
     })
 
     it('should start paused', async () => {

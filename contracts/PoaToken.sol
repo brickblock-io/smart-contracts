@@ -426,11 +426,14 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     returns (uint256)
   {
     if (isFiatInvestor(_address)) {
-      return uint256(stage()) > 4
+      // Token balances will only show in "Active" stage
+      // and "Terminated" stage. Why also in "Terminated"?
+      // Because there can still be pending payouts
+      return uint256(stage()) > 5
         ? fiatInvestmentPerUserInTokens(_address)
         : 0;
     } else {
-      return uint256(stage()) > 4
+      return uint256(stage()) > 5
         ? investmentAmountPerUserInWei(_address)
           .mul(
             totalSupply().sub(fundedAmountInTokensDuringFiatFunding())
