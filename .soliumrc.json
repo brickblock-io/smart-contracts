@@ -10,7 +10,7 @@
     "conditionals-whitespace": "error",
     "deprecated-suicide": "error",
     "emit": "error",
-    "error-reason": "warning",
+    "error-reason": "off",
     "function-order": "off",
     "function-whitespace": "error",
     "imports-on-top": "error",

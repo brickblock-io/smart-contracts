@@ -7,7 +7,6 @@ cache:
 stages:
   - setup
   - test
-  - build
   - release
 
 #########
@@ -58,17 +57,6 @@ test:
 #   script:
 #     - yarn truffle compile
 #     - /opt/python3/bin/python3 /opt/mythril/myth --truffle
-
-#########
-# BUILD #
-#########
-build:
-  stage: build
-  cache:
-    policy: pull
-  script:
-    - cat .env.example > .env
-    - yarn build
 
 ###############
 # NPM RELEASE #
