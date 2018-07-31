@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.3.0"></a>
+# [3.3.0](https://git.brickblock-dev.io/platform/smart-contracts/compare/v2.6.1...v3.3.0) (2018-07-31)
+
+
+### Bug Fixes
+
+* added an account for the autominer and reverted to timebased triggering. ([c398a10](https://git.brickblock-dev.io/platform/smart-contracts/commits/c398a10))
+* CI should `npm release` and update the `package.json` via a `git push` so the version number goes to master ([a5990ca](https://git.brickblock-dev.io/platform/smart-contracts/commits/a5990ca))
+* remove setupPoaToken function from PoaManager; the only way to setup a… ([e797597](https://git.brickblock-dev.io/platform/smart-contracts/commits/e797597))
+* SECRET env vars are prefixed with SECRET ([25defe1](https://git.brickblock-dev.io/platform/smart-contracts/commits/25defe1))
+* testing suite for BrickblockToken now passes on geth. ([5e829f1](https://git.brickblock-dev.io/platform/smart-contracts/commits/5e829f1))
+* testing suite for ContractRegistry now passes on geth. ([8c405f7](https://git.brickblock-dev.io/platform/smart-contracts/commits/8c405f7))
+* testing suite for ExchangeRates now passes on geth. ([def9168](https://git.brickblock-dev.io/platform/smart-contracts/commits/def9168))
+* wrap hdwallet-provider ([101a475](https://git.brickblock-dev.io/platform/smart-contracts/commits/101a475))
+
+
+### Features
+
+* BrickblockAccount uses timestamp as a time lock to successfully call withdrawBbkFunds ([bd96048](https://git.brickblock-dev.io/platform/smart-contracts/commits/bd96048))
+* **POA:** move broker getter/setter to POACommon, add `onlyBroker` modifier, switch `payout()` from `onlyCustodian` to `onlyBroker` ([581a03c](https://git.brickblock-dev.io/platform/smart-contracts/commits/581a03c))
+* **POA:** switch `startFiatSale` from `onlyCustodian` to `onlyBroker` (+ some name consolidation between fiatSale / fiatPreSale / sale / ethSale / Funding / Eth Funding…) ([93a5fcb](https://git.brickblock-dev.io/platform/smart-contracts/commits/93a5fcb))
+
+
+
 <a name="2.6.1"></a>
 ## [2.6.1](https://git.brickblock-dev.io/platform/smart-contracts/compare/v2.6.0...v2.6.1) (2018-05-28)
 
