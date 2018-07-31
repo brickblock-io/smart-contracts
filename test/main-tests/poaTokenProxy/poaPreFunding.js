@@ -4,23 +4,24 @@ const {
   custodian,
   bbkContributors,
   whitelistedPoaBuyers,
-  testStartEthSale,
-  testBuyTokens,
+  defaultIpfsHashArray32,
   determineNeededTimeTravel,
+  setupPoaProxyAndEcosystem,
   testActivate,
-  testPayout,
+  testApprove,
+  testBuyTokens,
   testClaim,
+  testPaused,
+  testPayout,
   testReclaim,
   testSetStageToTimedOut,
-  testPaused,
-  testUnpause,
-  testUpdateProofOfCustody,
-  testTransfer,
-  testApprove,
-  testTransferFrom,
+  testStartEthSale,
+  testStartFiatSale,
   testTerminate,
-  defaultIpfsHashArray32,
-  setupPoaProxyAndEcosystem
+  testTransfer,
+  testTransferFrom,
+  testUnpause,
+  testUpdateProofOfCustody
 } = require('../../helpers/poa')
 const {
   testWillThrow,
@@ -140,6 +141,9 @@ describe("when in 'PreFunding' stage", async () => {
     })
 
     // start core stage functionality
+    it('should NOT startFiatSale, even if owner', async () => {
+      await testWillThrow(testStartFiatSale, [poa, { from: owner, gasPrice }])
+    })
 
     it('should NOT move to funding before startTime, EVEN if owner', async () => {
       await testWillThrow(testStartEthSale, [poa, { from: owner }])

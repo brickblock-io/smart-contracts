@@ -57,15 +57,6 @@ describe("when in 'FiatFunding' stage", () => {
       await testWillThrow(testUnpause, [poa, { from: owner }])
     })
 
-    /*
-     * TODO @chapati: Does this test make sense @cody? In the before() hook we're already doing a `testStartFiatSale`
-     * So this would throw even if the correct role (broker) called this function because we already are
-     * in the FiatFunding stage and we can't enter it twice.
-     */
-    it('should NOT startFiatSale, even if owner', async () => {
-      await testWillThrow(testStartFiatSale, [poa, { from: owner, gasPrice }])
-    })
-
     it('should NOT setStageToTimedOut', async () => {
       await testWillThrow(testSetStageToTimedOut, [poa, { from: owner }])
     })

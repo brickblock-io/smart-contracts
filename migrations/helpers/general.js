@@ -35,76 +35,46 @@ const deployContracts = async (
 
   const ownerPreEtherBalance = await getEtherBalance(owner)
 
-  console.log(chalk.yellow('deploying ContractRegistry...'))
-  //ContractRegistry
+  console.log(chalk.yellow('\n➡️  Deploying contracts…'))
+
+  /*
+   * Registry needs to be deployed first because all other contracts depend on it
+   */
+  console.log(chalk.yellow('Deploying ContractRegistry…'))
   await deployer.deploy(ContractRegistry, {
     from: owner
   })
   const reg = await ContractRegistry.deployed()
-  console.log(chalk.cyan('deployment successful!'))
 
-  console.log(chalk.yellow('deploying BrickblockToken...'))
-  //BrickblockToken
-  await deployer.deploy(BrickblockToken, bonusAddress, {
-    from: owner
-  })
-  const bbk = await BrickblockToken.deployed()
-  console.log(chalk.cyan('deployment successful!'))
-
-  console.log(chalk.yellow('deploying AccessToken...'))
-  //AccessToken
+  console.log(chalk.yellow('Deploying AccessToken…'))
   await deployer.deploy(AccessToken, reg.address, {
     from: owner
   })
   const act = await AccessToken.deployed()
-  console.log(chalk.cyan('deployment successful!'))
 
-  console.log(chalk.yellow('deploying BrickblockAccount...'))
-  //BrickblockAccount
+  console.log(chalk.yellow('Deploying BrickblockAccount…'))
   const releaseTime = unixTimeWithOffset(60 * 60 * 24 * 365 * 2) // 2 years in seconds
   await deployer.deploy(BrickblockAccount, reg.address, releaseTime, {
     from: owner
   })
   const bat = await BrickblockAccount.deployed()
-  console.log(chalk.cyan('deployment successful!'))
 
-  console.log(chalk.yellow('deploying FeeManager...'))
-  //FeeManager
-  await deployer.deploy(FeeManager, reg.address, {
+  console.log(chalk.yellow('Deploying BrickblockToken…'))
+  await deployer.deploy(BrickblockToken, bonusAddress, {
     from: owner
   })
-  const fmr = await FeeManager.deployed()
-  console.log(chalk.cyan('deployment successful!'))
+  const bbk = await BrickblockToken.deployed()
 
-  console.log(chalk.yellow('deploying Whitelist...'))
-  //WhiteList
-  await deployer.deploy(Whitelist, {
+  console.log(chalk.yellow('Deploying CentralLogger…'))
+  await deployer.deploy(CentralLogger, reg.address, {
     from: owner
   })
-  const wht = await FeeManager.deployed()
-  console.log(chalk.cyan('deployment successful!'))
+  const log = await CentralLogger.deployed()
 
-  console.log(chalk.yellow('deploying PoaManager...'))
-  // PoaManager
-  await deployer.deploy(PoaManager, reg.address, {
-    from: owner
-  })
-  const pmr = await PoaManager.deployed()
-  console.log(chalk.cyan('deployment successful!'))
-
-  console.log(chalk.yellow('deploying ExchangeRates...'))
-  // ExchangeRates
-  await deployer.deploy(ExchangeRates, reg.address, {
-    from: owner
-  })
-  const exr = await ExchangeRates.deployed()
-  console.log(chalk.cyan('deployment successful!'))
-
-  console.log(chalk.yellow('deploying ExchangeRateProvider...'))
-  // ExchangeRateProvider
+  console.log(chalk.yellow('Deploying ExchangeRateProvider…'))
   let exp
   if (useExpStub) {
-    console.log(chalk.red('using stub'))
+    console.log(chalk.magenta('using stub'))
     await deployer.deploy(ExchangeRateProviderStub, reg.address, {
       from: owner
     })
@@ -116,30 +86,41 @@ const deployContracts = async (
     exp = await ExchangeRateProvider.deployed()
   }
 
-  console.log(chalk.cyan('deployment successful!'))
+  console.log(chalk.yellow('Deploying ExchangeRates…'))
+  await deployer.deploy(ExchangeRates, reg.address, {
+    from: owner
+  })
+  const exr = await ExchangeRates.deployed()
 
-  console.log(chalk.yellow('deploying PoaTokenMaster...'))
-  // PoaToken master
+  console.log(chalk.yellow('Deploying FeeManager…'))
+  await deployer.deploy(FeeManager, reg.address, {
+    from: owner
+  })
+  const fmr = await FeeManager.deployed()
+
+  console.log(chalk.yellow('Deploying PoaCrowdsale Master…'))
+  const poaCrowdsaleMaster = await deployer.deploy(PoaCrowdsaleMaster)
+
+  console.log(chalk.yellow('Deploying PoaManager…'))
+  await deployer.deploy(PoaManager, reg.address, {
+    from: owner
+  })
+  const pmr = await PoaManager.deployed()
+
+  console.log(chalk.yellow('Deploying PoaTokenMaster…'))
   const poaTokenMaster = await deployer.deploy(PoaTokenMaster, {
     gas: gasAmountForPoa
   })
-  console.log(chalk.cyan('deployment successful!'))
 
-  console.log(chalk.yellow('deploying PoaCrowdsale Master...'))
-  // PoaCrowdsale master
-  const poaCrowdsaleMaster = await deployer.deploy(PoaCrowdsaleMaster)
-  console.log(chalk.cyan('deployment successful!'))
-
-  console.log(chalk.yellow('deploying CentralLogger...'))
-  // CentralLogger
-  await deployer.deploy(CentralLogger, reg.address, {
+  console.log(chalk.yellow('Deploying Whitelist…'))
+  await deployer.deploy(Whitelist, {
     from: owner
   })
-  const log = await CentralLogger.deployed()
-  console.log(chalk.cyan('deployment successful!'))
+  const wht = await Whitelist.deployed()
+
+  console.log(chalk.cyan('✅  Successfully deployed all contracts\n\n'))
 
   const ownerPostEtherBalance = await getEtherBalance(owner)
-
   const gasCost = ownerPreEtherBalance.sub(ownerPostEtherBalance)
 
   return {
@@ -162,7 +143,7 @@ const deployContracts = async (
 }
 
 const addContractsToRegistry = async config => {
-  console.log(chalk.yellow('deploying adding contracts to ContractRegistry...'))
+  console.log(chalk.yellow('➡️  Adding contracts to ContractRegistry…'))
 
   const {
     act, // AccessToken
@@ -181,51 +162,43 @@ const addContractsToRegistry = async config => {
   const { owner } = config
   const ownerPreEtherBalance = await getEtherBalance(owner)
 
-  console.log('Registering BricblockToken')
+  console.log('Registering BrickblockToken…')
   await reg.updateContractAddress('BrickblockToken', bbk.address, {
     from: owner
   })
-  console.log('Succesful!')
-  console.log('Registering AccessToken')
+  console.log('Registering AccessToken…')
   await reg.updateContractAddress('AccessToken', act.address, {
     from: owner
   })
-  console.log('Registering ExchangeRates')
+  console.log('Registering ExchangeRates…')
   await reg.updateContractAddress('ExchangeRates', exr.address, {
     from: owner
   })
-  console.log('Succesful!')
-  console.log('Registering ExchangeRateProvider')
+  console.log('Registering ExchangeRateProvider…')
   await reg.updateContractAddress('ExchangeRateProvider', exp.address, {
     from: owner
   })
-  console.log('Succesful!')
-  console.log('Registering FeeManager')
+  console.log('Registering FeeManager…')
   await reg.updateContractAddress('FeeManager', fmr.address, {
     from: owner
   })
-  console.log('Succesful!')
-  console.log('Registering BrickblockAccount')
+  console.log('Registering BrickblockAccount…')
   await reg.updateContractAddress('BrickblockAccount', bat.address, {
     from: owner
   })
-  console.log('Succesful!')
-  console.log('Registering Whitelist')
+  console.log('Registering Whitelist…')
   await reg.updateContractAddress('Whitelist', wht.address, {
     from: owner
   })
-  console.log('Succesful!')
-  console.log('Registering PoaManager')
+  console.log('Registering PoaManager…')
   await reg.updateContractAddress('PoaManager', pmr.address, {
     from: owner
   })
-  console.log('Succesful!')
-  console.log('Registering PoaTokenMaster')
+  console.log('Registering PoaTokenMaster…')
   await reg.updateContractAddress('PoaTokenMaster', poaTokenMaster.address, {
     from: owner
   })
-  console.log('Succesful!')
-  console.log('Registering PoaCrowdsaleMaster')
+  console.log('Registering PoaCrowdsaleMaster…')
   await reg.updateContractAddress(
     'PoaCrowdsaleMaster',
     poaCrowdsaleMaster.address,
@@ -233,37 +206,16 @@ const addContractsToRegistry = async config => {
       from: owner
     }
   )
-  console.log('Succesful!')
-  console.log('Registering PoaCrowdsaleMaster')
+  console.log('Registering PoaCrowdsaleMaster…')
   await reg.updateContractAddress('Logger', log.address, {
     from: owner
   })
-  console.log('Succesful!')
-  const ownerPostEtherBalance = await getEtherBalance(owner)
+  console.log(chalk.cyan('✅  Successfully updated ContractRegistry\n\n'))
 
+  const ownerPostEtherBalance = await getEtherBalance(owner)
   const gasCost = ownerPreEtherBalance.sub(ownerPostEtherBalance)
-  console.log(chalk.cyan('registry update successful!'))
 
   return { gasCost }
-}
-
-const setFiatRate = async (exr, exp, queryType, rate, useStub, config) => {
-  await exr.setCurrencySettings(
-    queryType,
-    'https://min-api.cryptocompare.com/data/price?fsym=ETH',
-    30,
-    1.5e5,
-    {
-      from: config.from
-    }
-  )
-  await exr.fetchRate(queryType, config)
-  if (useStub) {
-    const pendingQueryId = await exp.pendingTestQueryId()
-    await exp.simulate__callback(pendingQueryId, '50000', {
-      from: config.from
-    })
-  }
 }
 
 const getEtherBalance = address => {
@@ -280,6 +232,5 @@ module.exports = {
   setWeb3,
   deployContracts,
   addContractsToRegistry,
-  setFiatRate,
   getEtherBalance
 }
