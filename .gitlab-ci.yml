@@ -1,8 +1,9 @@
+image: node:10
+
 cache:
-  untracked: true
-  key: $CI_COMMIT_REF_NAME
+  key: $CI_COMMIT_REF_SLUG
   paths:
-    - .yarn-cache/
+    - node_modules/
 
 stages:
   - setup
@@ -14,16 +15,11 @@ stages:
 #########
 setup:
   stage: setup
-  cache:
-    key: $CI_COMMIT_REF_NAME
+  script:
+    - yarn install --frozen-lockfile
+  artifacts:
     paths:
       - node_modules/
-  artifacts:
-    expire_in: 3d
-    paths:
-      - node_modules
-  script:
-    - yarn install --pure-lockfile --cache-folder .yarn-cache
 
 ########
 # TEST #
@@ -40,23 +36,7 @@ test:
   cache:
     policy: pull
   script:
-    - cp .env.example .env
-    - yarn test:ci
-
-# test-frozen:
-#   stage: test
-#   cache:
-#     policy: pull
-#   script:
-#     - yarn test:frozen
-
-# mythril:
-#   stage: test
-#   cache:
-#     policy: pull
-#   script:
-#     - yarn truffle compile
-#     - /opt/python3/bin/python3 /opt/mythril/myth --truffle
+    - yarn test
 
 ###############
 # NPM RELEASE #
