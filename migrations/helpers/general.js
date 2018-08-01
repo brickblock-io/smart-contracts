@@ -1,6 +1,11 @@
 /* eslint-disable no-console */
 const chalk = require('chalk')
 
+const {
+  oneHundredThousandEuroInCents,
+  oneHundredThousandTokensInWei
+} = require('../../config/constants')
+
 let web3
 
 const setWeb3 = _web3 => (web3 = _web3)
@@ -19,6 +24,7 @@ const deployContracts = async (
     AccessToken,
     BrickblockAccount,
     ContractRegistry,
+    CustomPOAToken,
     BrickblockToken,
     ExchangeRates,
     FeeManager,
@@ -31,6 +37,8 @@ const deployContracts = async (
     ExchangeRateProviderStub
   } = contracts
   const owner = accounts[0]
+  const broker = accounts[1]
+  const custodian = accounts[2]
   const bonusAddress = accounts[1]
 
   const ownerPreEtherBalance = await getEtherBalance(owner)
@@ -70,6 +78,26 @@ const deployContracts = async (
     from: owner
   })
   const log = await CentralLogger.deployed()
+
+  /*
+   * Deploy Custom POA token for backwards compatibility
+   * TODO: Remove this after removing CustomPOA from platform!
+   */
+  console.log(chalk.yellow('Deploying CustomPOAToken…'))
+  await deployer.deploy(
+    CustomPOAToken,
+    'CustomPOA Testnet Token',
+    'CPOA-RE-DE123',
+    broker,
+    custodian,
+    web3.eth.blockNumber + 5000,
+    oneHundredThousandTokensInWei,
+    oneHundredThousandEuroInCents,
+    {
+      from: owner
+    }
+  )
+  const cpoa = await CustomPOAToken.deployed()
 
   console.log(chalk.yellow('Deploying ExchangeRateProvider…'))
   let exp
@@ -125,18 +153,19 @@ const deployContracts = async (
 
   return {
     contracts: {
-      reg,
-      bbk,
       act,
       bat,
-      fmr,
-      wht,
-      pmr,
-      exr,
+      bbk,
+      cpoa,
       exp,
-      poaTokenMaster,
+      exr,
+      fmr,
+      log,
+      pmr,
       poaCrowdsaleMaster,
-      log
+      poaTokenMaster,
+      reg,
+      wht
     },
     gasCost
   }

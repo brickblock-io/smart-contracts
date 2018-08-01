@@ -83,7 +83,6 @@ const localMigration = async (deployer, accounts, contracts, web3) => {
   /*
    * Deploy new POA token from the previously added broker address
    */
-
   const { gasCost: deployPoaTokenGasCost } = await poaManager.deployPoa(
     instances.pmr,
     {

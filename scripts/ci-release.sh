@@ -1,6 +1,5 @@
 : "${SECRET_GITLAB_BOT_CI_TOKEN:?Environment variable SECRET_GITLAB_BOT_CI_TOKEN needs to be set as secret CI variable in GitLab before running this script}"
 
-
 # Make sure to check out the latest master branch
 echo "git checkout master && git pull"
 git checkout master && git pull
@@ -12,13 +11,6 @@ echo "git config --global user.email \"git@brickblock.io\""
 git config --global user.email "git@brickblock.io"
 echo "git config --global push.default current"
 git config --global push.default current
-
-# Set correct origin for `git push`
-# This perl command extracts the ssh/git URL because the runner uses a tokenized URL
-# CI_PUSH_REPO=$(echo "$CI_REPOSITORY_URL" | perl -pe 's#.*@(.+?(\:\d+)?)/#git@\1:#')
-# export CI_PUSH_REPO
-# echo "git remote set-url --push origin \"${CI_PUSH_REPO}\""
-# git remote set-url --push origin "${CI_PUSH_REPO}"
 
 # Auto-generate CHANGELOG.md and bump version number in package.json
 echo "yarn release"

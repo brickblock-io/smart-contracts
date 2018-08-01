@@ -34,7 +34,7 @@ const deployedAddressesGroupedByContractName = R.toPairs(
         1: 'mainnet',
         4: 'rinkeby',
         42: 'kovan',
-        4447: 'testnet'
+        4447: 'local'
       }
       // must be an array since CustomPOAToken is handle so "special" in platform
       acc[contractName][networkNames[networkId]] = [].concat(
