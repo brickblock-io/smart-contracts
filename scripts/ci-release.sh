@@ -12,6 +12,10 @@ git config --global user.email "git@brickblock.io"
 echo "git config --global push.default current"
 git config --global push.default current
 
+# Compiles all JSON ABIs of our contracts into the `.gitignore`d folder `./deployed-contracts`
+echo "yarn build"
+yarn build
+
 # Auto-generate CHANGELOG.md and bump version number in package.json
 echo "yarn release"
 yarn release
