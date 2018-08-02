@@ -266,8 +266,14 @@ const testProxyInitialization = async (reg, pmr, args) => {
 
   // FIXME: This test is flaky in CI, temporarily added some debug console.logs
   /* eslint-disable no-console */
-  console.log('testProxyInitialization() - defaultStartTime:', defaultStartTime)
-  console.log('testProxyInitialization() - startTime:', startTime)
+  console.log(
+    'testProxyInitialization() - defaultStartTime:',
+    new Date(defaultStartTime.toString() * 1000)
+  )
+  console.log(
+    'testProxyInitialization() - startTime:',
+    new Date(startTime.toString() * 1000)
+  )
   /* eslint-enable no-console */
 
   assert.equal(name, defaultName, 'name should match that given in constructor')
