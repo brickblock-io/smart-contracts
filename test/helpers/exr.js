@@ -376,15 +376,20 @@ const testSetRateClearIntervals = async (exr, exp, rate) => {
   )
 }
 
+// FIXME: This test is flaky in CI, temporarily added some debug console.logs
+/* eslint-disable no-console */
 const testSetQueryId = async (exr, exp, queryType) => {
   // create a dummy queryId
   // this test has been giving us random trouble for a long time...
   // trying different Date method and crossing fingers...
   const now = new Date().getTime().toString()
+  console.log('const now =', now)
   const queryId = web3.sha3(web3.toHex(now), { encoding: 'hex' })
+  console.log('const queryId =', queryId)
 
   await exp.setQueryId(queryId, queryType)
   const postQueryType = await exr.queryTypes(queryId)
+  console.log('const postQueryType =', postQueryType)
   assert.equal(
     queryType,
     postQueryType,
@@ -392,6 +397,7 @@ const testSetQueryId = async (exr, exp, queryType) => {
   )
   return queryId
 }
+/* eslint-enable no-console */
 
 const testSetRateRatesActiveFalse = async (exr, exp, rate) => {
   const bigRate = new BigNumber(rate)

@@ -236,8 +236,6 @@ const testProxyInitialization = async (reg, pmr, args) => {
   await reg.updateContractAddress('PoaTokenMaster', poatm.address)
   await reg.updateContractAddress('PoaCrowdsaleMaster', poacm.address)
 
-  const defaultStartTime = await getDefaultStartTime()
-
   // Poa PoaProxy contract tx
   const poaTx = await pmr.addToken.apply(null, args)
 
@@ -252,6 +250,7 @@ const testProxyInitialization = async (reg, pmr, args) => {
   const actualCustodian = await poa.custodian()
   const decimals = await poa.decimals()
   const feeRateInPermille = await poa.feeRateInPermille()
+  const defaultStartTime = await getDefaultStartTime()
   const startTime = await poa.startTime()
   const fundingTimeout = await poa.fundingTimeout()
   const fundingGoalInCents = await poa.fundingGoalInCents()
@@ -264,6 +263,12 @@ const testProxyInitialization = async (reg, pmr, args) => {
   const whitelistTransfers = await poa.whitelistTransfers()
   const registry = await poa.registry()
   const contractOwner = await poa.owner()
+
+  // FIXME: This test is flaky in CI, temporarily added some debug console.logs
+  /* eslint-disable no-console */
+  console.log('testProxyInitialization() - defaultStartTime:', defaultStartTime)
+  console.log('testProxyInitialization() - startTime:', startTime)
+  /* eslint-enable no-console */
 
   assert.equal(name, defaultName, 'name should match that given in constructor')
   assert.equal(
