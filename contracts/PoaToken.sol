@@ -365,10 +365,13 @@ contract PoaToken is PoaCommon {
   function payout()
     external
     payable
-    atEitherStage(Stages.Active, Stages.Terminated)
     eitherBrokerOrCustodian
     returns (bool)
   {
+    require(
+      stage == Stages.Active || stage == Stages.FundingSuccessful || stage == Stages.Terminated
+    );
+
     // calculate fee based on feeRateInPermille
     uint256 _fee = calculateFee(msg.value);
     // ensure the value is high enough for a fee to be claimed
