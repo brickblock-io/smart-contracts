@@ -204,6 +204,7 @@ const setupPoaProxyAndEcosystem = async () => {
 
   // wrap the proxied PoA in PoaToken ABI to call as if regular PoA
   const poa = await IPoaTokenCrowdsale.at(poaTx.logs[0].args.token)
+
   // trick the proxyPoa into thinking that PoaManager is owner
   // this makes it easier to test with a regular account
   // PoaManager only functions are tested in PoaManager tests as

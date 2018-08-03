@@ -7,9 +7,9 @@ const UpgradedPoa = artifacts.require('UpgradedPoa')
 
 const { testWillThrow } = require('../helpers/general')
 const {
-  checkPreSetupStorage,
+  checkPreInitializedStorage,
   initializeContract,
-  checkPostSetupStorage,
+  checkPostInitializedStorage,
   enterActiveStage,
   checkPostActiveStorage,
   checkPostIsUpgradedStorage
@@ -71,16 +71,16 @@ describe('when using PoaProxy contract to proxy a PoaToken', () => {
       )
     })
 
-    it('should have no sequential storage', async () => {
-      await checkPreSetupStorage(poa)
+    it('should have proxy addresses in storage before intiialization', async () => {
+      await checkPreInitializedStorage(poa, reg)
     })
 
     it('should initializeContract', async () => {
       await initializeContract(poa, reg)
     })
 
-    it('should have new sequential/non-sequential storage after setupPoaToken', async () => {
-      await checkPostSetupStorage(poa, reg)
+    it('should have new storage after initializing token and crowdsale', async () => {
+      await checkPostInitializedStorage(poa, reg)
     })
 
     it('should move to active poa stage', async () => {
@@ -108,6 +108,7 @@ describe('when using PoaProxy contract to proxy a PoaToken', () => {
       const preTokenMaster = await pxy.poaTokenMaster()
 
       await pxy.proxyChangeTokenMaster(upoam.address)
+      await reg.updateContractAddress('PoaTokenMaster', upoam.address)
 
       const postTokenMaster = await pxy.poaTokenMaster()
 

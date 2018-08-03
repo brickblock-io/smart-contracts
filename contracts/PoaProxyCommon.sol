@@ -6,118 +6,25 @@ pragma solidity 0.4.24;
   - PoaCommon (and its inheritants: PoaToken & PoaCrowdsale)
   - PoaProxy
 
-  It dictates where to read and write specific non sequential storage
+  It dictates where to read and write storage
 */
 contract PoaProxyCommon {
-  /*****************************************************
-  * Start Proxy Common Non-Sequential Storage Pointers *
-  *****************************************************/
+  /*****************************
+  * Start Proxy Common Storage *
+  *****************************/
 
-  /*
-    These are commonly agreed upon storage slots
-    which other contracts can use in order to get & set.
-    Constants do not use storage so they can be safely shared.
-  */
+  // PoaTokenMaster logic contract used by proxies
+  address public poaTokenMaster;
 
-  // Slot for the PoaTokenMaster logic contract used by proxies
-  // TYPE: address
-  bytes32 public constant poaTokenMasterSlot = keccak256("PoaTokenMaster");
+  // PoaCrowdsaleMaster logic contract used by proxies
+  address public poaCrowdsaleMaster;
 
-  // Slot for the PoaCrowdsaleMaster logic contract used by proxies
-  // TYPE: address
-  bytes32 public constant poaCrowdsaleMasterSlot = keccak256("PoaCrowdsaleMaster");
+  // Registry used for getting other contract addresses
+  address public registry;
 
-  // Slot for the Registry used for getting other contract addresses
-  // TYPE: address
-  bytes32 public constant registrySlot = keccak256("registry");
-
-  /****************************************************
-  * End Proxy Common Non-Sequential Storage Pointers *
-  ****************************************************/
-
-
-  /************************************************************
-  * Start Proxy Common Non-Sequential Storage Getters/Setters *
-  ************************************************************/
-
-  /**
-    @dev Each function without a "set" prefix in this section is a public getter for a
-    specific non-sequential storage slot.
-
-    Setter functions, starting with "set", are internal and can only be called by this
-    contract, or contracts inheriting from it. Both getters and setters work on commonly
-    agreed upon storage slots in order to avoid storage collisions.
-  */
-
-  function poaTokenMaster()
-    public
-    view
-    returns (address _poaTokenMaster)
-  {
-    bytes32 _poaTokenMasterSlot = poaTokenMasterSlot;
-    assembly {
-      _poaTokenMaster := sload(_poaTokenMasterSlot)
-    }
-  }
-
-  function setPoaTokenMaster(
-    address _poaTokenMaster
-  )
-    internal
-  {
-    bytes32 _poaTokenMasterSlot = poaTokenMasterSlot;
-    assembly {
-      sstore(_poaTokenMasterSlot, _poaTokenMaster)
-    }
-  }
-
-  function poaCrowdsaleMaster()
-    public
-    view
-    returns (address _poaCrowdsaleMaster)
-  {
-    bytes32 _poaCrowdsaleMasterSlot = poaCrowdsaleMasterSlot;
-    assembly {
-      _poaCrowdsaleMaster := sload(_poaCrowdsaleMasterSlot)
-    }
-  }
-
-  function setPoaCrowdsaleMaster(
-    address _poaCrowdsaleMaster
-  )
-    internal
-  {
-    bytes32 _poaCrowdsaleMasterSlot = poaCrowdsaleMasterSlot;
-    assembly {
-      sstore(_poaCrowdsaleMasterSlot, _poaCrowdsaleMaster)
-    }
-  }
-
-  function registry()
-    public
-    view
-    returns (address _registry)
-  {
-    bytes32 _registrySlot = registrySlot;
-    assembly {
-      _registry := sload(_registrySlot)
-    }
-  }
-
-  function setRegistry(
-    address _registry
-  )
-    internal
-  {
-    bytes32 _registrySlot = registrySlot;
-    assembly {
-      sstore(_registrySlot, _registry)
-    }
-  }
-
-  /**********************************************************
-  * End Proxy Common Non-Sequential Storage Getters/Setters *
-  **********************************************************/
+  /***************************
+  * End Proxy Common Storage *
+  ***************************/
 
 
   /*********************************
@@ -135,9 +42,9 @@ contract PoaProxyCommon {
   {
     bytes4 _signature = bytes4(keccak256("getContractAddress32(bytes32)"));
     bytes32 _name32 = keccak256(abi.encodePacked(_name));
-    address _registry = registry();
 
     assembly {
+      let _registry := sload(registry_slot) // load registry address from storage
       let _pointer := mload(0x40)          // Set _pointer to free memory pointer
       mstore(_pointer, _signature)         // Store _signature at _pointer
       mstore(add(_pointer, 0x04), _name32) // Store _name32 at _pointer offset by 4 bytes for pre-existing _signature

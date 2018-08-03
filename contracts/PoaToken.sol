@@ -15,7 +15,7 @@ import "./PoaCommon.sol";
   common storage slots as well as common functions used by both PoaToken
   and PoaCrowdsale.
 */
-contract PoaToken is StandardToken, Ownable, PoaCommon {
+contract PoaToken is PoaCommon {
   uint256 public constant tokenVersion = 1;
 
   /**********************************
@@ -30,33 +30,72 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
   uint256 public constant decimals = 18;
   // the total per token payout rate: accumulates as payouts are received
   uint256 public totalPerTokenPayout;
-  // used to enable/disable whitelist required transfers/transferFroms
-  bool public whitelistTransfers;
-
-  // used to deduct already claimed payouts on a per token basis
+  // the onwer of the contract
+  address public owner;
+  // used for deducting already claimed payouts on a per token basis
   mapping(address => uint256) public claimedPerTokenPayouts;
-  // used to calculate balanceOf by deducting spent balances
+  // used for calculating balanceOf by deducting spent balances
   mapping(address => uint256) public spentBalances;
-  // used to calculate balanceOf by adding received balances
+  // used for calculating balanceOf by adding received balances
   mapping(address => uint256) public receivedBalances;
-  // hide balances to ensure that only balanceOf is being used
-  mapping(address => uint256) private balances;
+  // allowance of spender to spend owners tokens
+  mapping (address => mapping (address => uint256)) internal allowed;
+  // used in order to enable/disable whitelist required transfers/transferFroms
+  bool public whitelistTransfers;
 
   /********************************
   * end poaToken specific storage *
   ********************************/
 
+  /************************************
+  * start non-centrally logged events *
+  ************************************/
+
   event Pause();
   event Unpause();
+  event OwnershipTransferred(
+    address indexed previousOwner,
+    address indexed newOwner
+  );
+  event Approval(
+    address indexed owner,
+    address indexed spender,
+    uint256 value
+  );
+  event Transfer(
+    address indexed from, 
+    address indexed to, 
+    uint256 value
+  );
+
+  /**********************************
+  * end non-centrally logged events *
+  **********************************/
 
   /******************
   * start modifiers *
   ******************/
 
+  modifier onlyOwner() {
+    owner = getContractAddress("PoaManager");
+    require(msg.sender == owner);
+    _;
+  }
+
+  modifier whenNotPaused() {
+    require(!paused);
+    _;
+  }
+
+  modifier whenPaused() {
+    require(paused);
+    _;
+  }
+
   modifier eitherCustodianOrOwner() {
     owner = getContractAddress("PoaManager");
     require(
-      msg.sender == custodian() ||
+      msg.sender == custodian ||
       msg.sender == owner
     );
     _;
@@ -64,15 +103,9 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
 
   modifier eitherBrokerOrCustodian() {
     require(
-      msg.sender == broker() ||
-      msg.sender == custodian()
+      msg.sender == broker ||
+      msg.sender == custodian
     );
-    _;
-  }
-
-  modifier onlyOwner() {
-    owner = getContractAddress("PoaManager");
-    require(msg.sender == owner);
     _;
   }
 
@@ -84,16 +117,6 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
       require(isWhitelisted(_address));
     }
 
-    _;
-  }
-
-  modifier whenNotPaused() {
-    require(!paused());
-    _;
-  }
-
-  modifier whenPaused() {
-    require(paused());
     _;
   }
 
@@ -117,7 +140,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     returns (bool)
   {
     // ensure initialize has not been called already
-    require(!tokenInitialized());
+    require(!tokenInitialized);
 
     // validate initialize parameters
     require(_name32 != bytes32(0));
@@ -134,12 +157,12 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     owner = getContractAddress("PoaManager");
 
     // initialize non-sequential storage
-    setBroker(_broker);
-    setCustodian(_custodian);
-    setRegistry(_registry);
-    setTotalSupply(_totalSupply);
-    setPaused(true);
-    setTokenInitialized(true);
+    broker = _broker;
+    custodian = _custodian;
+    registry = _registry;
+    totalSupply_ = _totalSupply;
+    paused = true;
+    tokenInitialized = true;
 
     return true;
   }
@@ -158,9 +181,9 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     returns (bool)
   {
     require(_newCustodian != address(0));
-    require(_newCustodian != custodian());
-    address _oldCustodian = custodian();
-    setCustodian(_newCustodian);
+    require(_newCustodian != custodian);
+    address _oldCustodian = custodian;
+    custodian = _newCustodian;
     getContractAddress("Logger").call(
       bytes4(keccak256("logCustodianChangedEvent(address,address)")),
       _oldCustodian,
@@ -182,7 +205,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     // set Stage to terminated
     enterStage(Stages.Terminated);
     // pause. Cannot be unpaused now that in Stages.Terminated
-    setPaused(true);
+    paused = true;
     getContractAddress("Logger")
       .call(bytes4(keccak256("logTerminatedEvent()")));
     return true;
@@ -196,12 +219,23 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
   * start owner functions *
   ************************/
 
+  function transferOwnership(
+    address _newOwner
+  ) 
+    public 
+    onlyOwner
+  {
+    require(_newOwner != address(0));
+    emit OwnershipTransferred(owner, _newOwner);
+    owner = _newOwner;
+  }
+
   function pause()
     public
     onlyOwner
     whenNotPaused
   {
-    setPaused(true);
+    paused = true;
 
     emit Pause();
   }
@@ -212,7 +246,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     whenPaused
     atStage(Stages.Active)
   {
-    setPaused(false);
+    paused = false;
     emit Unpause();
   }
 
@@ -250,6 +284,14 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     returns (string)
   {
     return to32LengthString(symbol32);
+  }
+
+  function totalSupply()
+    public
+    view
+    returns (uint256)
+  {
+    return totalSupply_;
   }
 
   /***********************
@@ -291,7 +333,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
       `unclaimedPayoutTotals` are stored as actual Ξ value no need for rate * balance
     */
     return _includeUnclaimed
-      ? _totalPerTokenUnclaimedConverted.add(unclaimedPayoutTotals(_address))
+      ? _totalPerTokenUnclaimedConverted.add(unclaimedPayoutTotals[_address])
       : _totalPerTokenUnclaimedConverted;
 
   }
@@ -307,17 +349,13 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     returns (bool)
   {
     // add perToken balance to unclaimedPayoutTotals which will not be affected by transfers
-    setUnclaimedPayoutTotals(
-      _from,
-      unclaimedPayoutTotals(_from).add(currentPayout(_from, false))
-    );
+    unclaimedPayoutTotals[_from] = unclaimedPayoutTotals[_from]
+      .add(currentPayout(_from, false));
     // max out claimedPerTokenPayouts in order to effectively make perToken balance 0
     claimedPerTokenPayouts[_from] = totalPerTokenPayout;
     // same as above for to
-    setUnclaimedPayoutTotals(
-      _to,
-      unclaimedPayoutTotals(_to).add(currentPayout(_to, false))
-    );
+    unclaimedPayoutTotals[_to] = unclaimedPayoutTotals[_to]
+      .add(currentPayout(_to, false));
     // same as above for to
     claimedPerTokenPayouts[_to] = totalPerTokenPayout;
     return true;
@@ -345,12 +383,12 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     totalPerTokenPayout = totalPerTokenPayout
       .add(_payoutAmount
         .mul(1e18)
-        .div(totalSupply())
+        .div(totalSupply_)
       );
 
     // take remaining dust and send to feeManager rather than leave stuck in
     // contract. should not be more than a few wei
-    uint256 _delta = (_payoutAmount.mul(1e18) % totalSupply()).div(1e18);
+    uint256 _delta = (_payoutAmount.mul(1e18) % totalSupply_).div(1e18);
     // pay fee along with any dust to FeeManager
     payFee(_fee.add(_delta));
     getContractAddress("Logger").call(
@@ -378,7 +416,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     // 0 for sender
     claimedPerTokenPayouts[msg.sender] = totalPerTokenPayout;
     // 0 out unclaimedPayoutTotals for user
-    setUnclaimedPayoutTotals(msg.sender, 0);
+    unclaimedPayoutTotals[msg.sender] = 0;
     // transfer Ξ payable amount to sender
     msg.sender.transfer(_payoutAmount);
     getContractAddress("Logger").call(
@@ -400,7 +438,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     validIpfsHash(_ipfsHash)
     returns (bool)
   {
-    setProofOfCustody32(_ipfsHash);
+    proofOfCustody32_ = _ipfsHash;
     getContractAddress("Logger").call(
       bytes4(keccak256("logProofOfCustodyUpdatedEvent(string)")),
       _ipfsHash
@@ -411,7 +449,7 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
   /*******************************
   * end payout related functions *
   *******************************/
-
+  // tovar
   /************************
   * start ERC20 overrides *
   ************************/
@@ -429,21 +467,21 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
       // Token balances will only show in "Active" stage
       // and "Terminated" stage. Why also in "Terminated"?
       // Because there can still be pending payouts
-      return uint256(stage()) > 5
-        ? fiatInvestmentPerUserInTokens(_address)
+      return uint256(stage) > 5
+        ? fiatInvestmentPerUserInTokens[_address]
         : 0;
     } else {
-      return uint256(stage()) > 5
-        ? investmentAmountPerUserInWei(_address)
+      return uint256(stage) > 5
+        ? investmentAmountPerUserInWei[_address]
           .mul(
-            totalSupply().sub(fundedAmountInTokensDuringFiatFunding())
+            totalSupply_.sub(fundedAmountInTokensDuringFiatFunding)
           )
-          .div(fundedAmountInWei())
+          .div(fundedAmountInWei)
         : 0;
     }
   }
 
-  /// @notice ERC20 override uses NoobCoin pattern
+  /// @notice ERC20 compliant balanceOf: uses NoobCoin pattern: https://github.com/TovarishFin/NoobCoin
   function balanceOf
   (
     address _address
@@ -458,8 +496,8 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
   }
 
   /**
-    @notice ERC20 transfer override:
-    - uses NoobCoin pattern combined with settling payout balances
+    @notice ERC20 compliant transfer:
+    - uses NoobCoin pattern combined with settling payout balances: https://github.com/TovarishFin/NoobCoin
   */
   function transfer
   (
@@ -484,8 +522,8 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
   }
 
   /**
-    @notice ERC20 transfer override:
-    - uses NoobCoin pattern combined with settling payout balances
+    @notice ERC20 compliant transferFrom:
+    - uses NoobCoin pattern combined with settling payout balances: https://github.com/TovarishFin/NoobCoin
   */
   function transferFrom
   (
@@ -512,6 +550,9 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     return true;
   }
 
+  /**
+    @notice ERCO compliant approve
+  */
   function approve
   (
     address _spender,
@@ -521,9 +562,14 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     whenNotPaused
     returns (bool)
   {
-    return super.approve(_spender, _value);
+    allowed[msg.sender][_spender] = _value;
+    emit Approval(msg.sender, _spender, _value);
+    return true;
   }
 
+  /**
+    @notice openZeppelin implementation of increaseApproval
+  */
   function increaseApproval
   (
     address _spender,
@@ -533,9 +579,15 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     whenNotPaused
     returns (bool success)
   {
-    return super.increaseApproval(_spender, _addedValue);
+    allowed[msg.sender][_spender] = (
+      allowed[msg.sender][_spender].add(_addedValue));
+    emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
+    return true;
   }
 
+  /**
+    @notice openZeppelin implementation of decreaseApproval
+  */
   function decreaseApproval
   (
     address _spender,
@@ -545,7 +597,28 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     whenNotPaused
     returns (bool success)
   {
-    return super.decreaseApproval(_spender, _subtractedValue);
+    uint256 oldValue = allowed[msg.sender][_spender];
+    if (_subtractedValue > oldValue) {
+      allowed[msg.sender][_spender] = 0;
+    } else {
+      allowed[msg.sender][_spender] = oldValue.sub(_subtractedValue);
+    }
+    emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
+    return true;
+  }
+
+  /**
+  @notice ERC20 compliant allowance
+  */
+  function allowance(
+    address _owner,
+    address _spender
+   )
+    public
+    view
+    returns (uint256)
+  {
+    return allowed[_owner][_spender];
   }
 
   /************************
@@ -557,9 +630,9 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
     external
     payable
   {
-    address _poaCrowdsaleMaster = poaCrowdsaleMaster();
     assembly {
-
+      // load value using *_slot suffix
+      let _poaCrowdsaleMaster := sload(poaCrowdsaleMaster_slot)
       // calldatacopy(t, f, s)
       calldatacopy(
         0x0, // t = mem position to
@@ -589,10 +662,10 @@ contract PoaToken is StandardToken, Ownable, PoaCommon {
         revert(0, 0)
       }
 
-        return(
-          0x0,
-          returndatasize
-        )
+      return(
+        0x0,
+        returndatasize
+      )
     }
   }
 }

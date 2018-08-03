@@ -21,50 +21,6 @@ contract PoaCrowdsale is PoaCommon {
   // Number of digits included during the percent calculation
   uint256 public constant precisionOfPercentCalc = 18;
 
-  /*********************************************
-  * start special hashed PoaCrowdsale pointers *
-  *********************************************/
-
-  /**
-    These are non-sequential storage slots used in order to not override
-    PoaProxy storage. It is needed for any contract which is the target
-    of a second level delegate call. There is no sequential storage on
-    this contract in order to avoid these collisions.
-  */
-
-  // TYPE: bool
-  // Bool indicating whether or not crowdsale proxy has been initialized
-  bytes32 private constant crowdsaleInitializedSlot = keccak256("crowdsaleInitialized");
-
-  // TYPE: uint256
-  // Used for checking when contract should move from PreFunding or FiatFunding to EthFunding stage
-  bytes32 private constant startTimeSlot = keccak256("startTime");
-
-  // TYPE: uint256
-  // Amount of seconds (starting at startTime) until moving from EthFunding to TimedOut stage
-  bytes32 private constant fundingTimeoutSlot = keccak256("fundingTimeout");
-
-  // TYPE: uint256
-  // Amount of seconds (starting at startTime + fundingTimeout) until moving from FundingSuccessful stage to TimedOut
-  bytes32 private constant activationTimeoutSlot = keccak256("activationTimeout");
-
-  // TYPE: bytes32
-  // bytes32 representation fiat currency symbol used to get rate
-  bytes32 private constant fiatCurrency32Slot = keccak256("fiatCurrency32");
-
-  // TYPE: uint256
-  // Amount needed before moving to pending calculated in fiat
-  bytes32 private constant fundingGoalInCentsSlot = keccak256("fundingGoalInCents");
-
-  // TYPE: uint256
-  // Used for keeping track of actual funded amount in fiat during FiatFunding stage
-  bytes32 private constant fundedAmountInCentsDuringFiatFundingSlot
-  = keccak256("fundedAmountInCentsDuringFiatFunding");
-
-  /*******************************************
-  * end special hashed PoaCrowdsale pointers *
-  *******************************************/
-
   event Unpause();
 
   /******************
@@ -73,14 +29,14 @@ contract PoaCrowdsale is PoaCommon {
 
   /// @notice Ensure that the contract has not timed out
   modifier checkTimeout() {
-    uint256 fundingTimeoutDeadline = startTime().add(fundingTimeout());
-    uint256 activationTimeoutDeadline = startTime()
-      .add(fundingTimeout())
-      .add(activationTimeout());
+    uint256 fundingTimeoutDeadline = startTime.add(fundingTimeout);
+    uint256 activationTimeoutDeadline = startTime
+      .add(fundingTimeout)
+      .add(activationTimeout);
 
     if (
-      (uint256(stage()) < 3 && block.timestamp >= fundingTimeoutDeadline) ||
-      (stage() == Stages.FundingSuccessful && block.timestamp >= activationTimeoutDeadline)
+      (uint256(stage) < 3 && block.timestamp >= fundingTimeoutDeadline) ||
+      (stage == Stages.FundingSuccessful && block.timestamp >= activationTimeoutDeadline)
     ) {
       enterStage(Stages.TimedOut);
     }
@@ -119,9 +75,9 @@ contract PoaCrowdsale is PoaCommon {
     returns (bool)
   {
     // ensure that token has already been initialized
-    require(tokenInitialized());
+    require(tokenInitialized);
     // ensure that crowdsale has not already been initialized
-    require(!crowdsaleInitialized());
+    require(!crowdsaleInitialized);
 
     // validate initialize parameters
     require(_fiatCurrency32 != bytes32(0));
@@ -129,20 +85,20 @@ contract PoaCrowdsale is PoaCommon {
     require(_fundingTimeout >= 60 * 60 * 24);
     require(_activationTimeout >= 60 * 60 * 24 * 7);
     require(_fundingGoalInCents > 0);
-    require(totalSupply() > _fundingGoalInCents);
+    require(totalSupply_ > _fundingGoalInCents);
 
     // initialize non-sequential storage
-    setFiatCurrency32(_fiatCurrency32);
-    setStartTime(_startTime);
-    setFundingTimeout(_fundingTimeout);
-    setActivationTimeout(_activationTimeout);
-    setFundingGoalInCents(_fundingGoalInCents);
+    fiatCurrency32 = _fiatCurrency32;
+    startTime = _startTime;
+    fundingTimeout = _fundingTimeout;
+    activationTimeout = _activationTimeout;
+    fundingGoalInCents = _fundingGoalInCents;
 
     // run getRate once in order to see if rate is initialized, throws if not
     require(getFiatRate() > 0);
 
     // set crowdsaleInitialized to true so cannot be initialized again
-    setCrowdsaleInitialized(true);
+    crowdsaleInitialized = true;
 
     return true;
   }
@@ -168,7 +124,7 @@ contract PoaCrowdsale is PoaCommon {
     atEitherStage(Stages.PreFunding, Stages.FiatFunding)
     returns (bool)
   {
-    require(block.timestamp >= startTime());
+    require(block.timestamp >= startTime);
     enterStage(Stages.EthFunding);
     return true;
   }
@@ -187,32 +143,28 @@ contract PoaCrowdsale is PoaCommon {
     // Do not allow funding less than 100 cents
     require(_amountInCents >= 100);
 
-    uint256 _newFundedAmount = fundedAmountInCentsDuringFiatFunding().add(_amountInCents);
+    uint256 _newFundedAmount = fundedAmountInCentsDuringFiatFunding.add(_amountInCents);
 
     // if the amount is smaller than remaining amount, continue the transaction
 
-    if (fundingGoalInCents().sub(_newFundedAmount) >= 0) {
-      setFundedAmountInCentsDuringFiatFunding(
-        fundedAmountInCentsDuringFiatFunding().add(_amountInCents)
-      );
+    if (fundingGoalInCents.sub(_newFundedAmount) >= 0) {
+      fundedAmountInCentsDuringFiatFunding = fundedAmountInCentsDuringFiatFunding
+        .add(_amountInCents);
 
       //_percentOfFundingGoal multipled by precisionOfPercentCalc to get a more accurate result
-      uint256 _percentOfFundingGoal = percent(_amountInCents, fundingGoalInCents(), precisionOfPercentCalc);
-      uint256 _tokenAmount = totalSupply().mul(_percentOfFundingGoal).div(10 ** precisionOfPercentCalc);
+      uint256 _percentOfFundingGoal = percent(_amountInCents, fundingGoalInCents, precisionOfPercentCalc);
+      uint256 _tokenAmount = totalSupply_.mul(_percentOfFundingGoal).div(10 ** precisionOfPercentCalc);
 
       // update total fiat funded amount
-      setFundedAmountInTokensDuringFiatFunding(
-        fundedAmountInTokensDuringFiatFunding().add(_tokenAmount)
-      );
+      fundedAmountInTokensDuringFiatFunding = fundedAmountInTokensDuringFiatFunding
+        .add(_tokenAmount);
 
       // update balance of investor
-      setFiatInvestmentPerUserInTokens(
-        _contributor,
-        fiatInvestmentPerUserInTokens(_contributor).add(_tokenAmount)
-      );
+      fiatInvestmentPerUserInTokens[_contributor] = fiatInvestmentPerUserInTokens[_contributor]
+        .add(_tokenAmount);
 
       // if funded amount reaches the funding goal, enter FundingSuccessful stage
-      if (fundedAmountInCentsDuringFiatFunding() >= fundingGoalInCents()) {
+      if (fundedAmountInCentsDuringFiatFunding >= fundingGoalInCents) {
         enterStage(Stages.FundingSuccessful);
       }
 
@@ -238,7 +190,7 @@ contract PoaCrowdsale is PoaCommon {
 
     // prevent case where buying after reaching fundingGoal results in buyer
     // earning money on a buy
-    if (weiToFiatCents(fundedAmountInWei()) > fundingGoalInCents()) {
+    if (weiToFiatCents(fundedAmountInWei) > fundingGoalInCents) {
       enterStage(Stages.FundingSuccessful);
       if (msg.value > 0) {
         msg.sender.transfer(msg.value);
@@ -248,12 +200,12 @@ contract PoaCrowdsale is PoaCommon {
 
     // get current funded amount + sent value in cents
     // with most current rate available
-    uint256 _currentFundedCents = weiToFiatCents(fundedAmountInWei().add(msg.value))
-      .add(fundedAmountInCentsDuringFiatFunding());
+    uint256 _currentFundedCents = weiToFiatCents(fundedAmountInWei.add(msg.value))
+      .add(fundedAmountInCentsDuringFiatFunding);
     // check if balance has met funding goal to move on to FundingSuccessful
-    if (_currentFundedCents < fundingGoalInCents()) {
+    if (_currentFundedCents < fundingGoalInCents) {
       // give a range due to fun fun integer division
-      if (fundingGoalInCents().sub(_currentFundedCents) > 1) {
+      if (fundingGoalInCents.sub(_currentFundedCents) > 1) {
         // continue sale if more than 1 cent from goal in fiat
         return buyAndContinueFunding(msg.value);
       } else {
@@ -274,12 +226,10 @@ contract PoaCrowdsale is PoaCommon {
     returns (bool)
   {
     // save this for later in case needing to reclaim
-    setInvestmentAmountPerUserInWei(
-      msg.sender,
-      investmentAmountPerUserInWei(msg.sender).add(_payAmount)
-    );
+    investmentAmountPerUserInWei[msg.sender] = investmentAmountPerUserInWei[msg.sender]
+      .add(_payAmount);
     // increment the funded amount
-    setFundedAmountInWei(fundedAmountInWei().add(_payAmount));
+    fundedAmountInWei = fundedAmountInWei.add(_payAmount);
 
     getContractAddress("Logger").call(
       bytes4(keccak256("logBuyEvent(address,uint256)")), msg.sender, _payAmount
@@ -295,7 +245,7 @@ contract PoaCrowdsale is PoaCommon {
   {
     enterStage(Stages.FundingSuccessful);
     uint256 _refundAmount = _shouldRefund ?
-      fundedAmountInWei().add(msg.value).sub(fiatCentsToWei(fundingGoalInCents())) :
+      fundedAmountInWei.add(msg.value).sub(fiatCentsToWei(fundingGoalInCents)) :
       0;
     // transfer refund amount back to user
     msg.sender.transfer(_refundAmount);
@@ -326,18 +276,16 @@ contract PoaCrowdsale is PoaCommon {
     // fee sent to FeeManager where fee gets
     // turned into ACT for lockedBBK holders
     payFee(_fee);
-    setProofOfCustody32(_ipfsHash);
+    proofOfCustody32_ = _ipfsHash;
     getContractAddress("Logger")
       .call(bytes4(keccak256("logProofOfCustodyUpdatedEvent()")));
     // balance of contract (fundingGoalInCents) set to claimable by broker.
     // can now be claimed by broker via claim function
     // should only be buy()s - fee. this ensures buy() dust is cleared
-    setUnclaimedPayoutTotals(
-      broker(),
-      unclaimedPayoutTotals(broker()).add(address(this).balance)
-    );
+    unclaimedPayoutTotals[broker] = unclaimedPayoutTotals[broker]
+      .add(address(this).balance); 
     // allow trading of tokens
-    setPaused(false);
+    paused = false;
     // let world know that this token can now be traded.
     emit Unpause();
 
@@ -356,7 +304,7 @@ contract PoaCrowdsale is PoaCommon {
     checkTimeout
     returns (bool)
   {
-    if (stage() != Stages.TimedOut) {
+    if (stage != Stages.TimedOut) {
       revert();
     }
     return true;
@@ -370,11 +318,11 @@ contract PoaCrowdsale is PoaCommon {
     returns (bool)
   {
     require(!isFiatInvestor(msg.sender));
-    setTotalSupply(0);
-    uint256 _refundAmount = investmentAmountPerUserInWei(msg.sender);
-    setInvestmentAmountPerUserInWei(msg.sender, 0);
+    totalSupply_ = 0;
+    uint256 _refundAmount = investmentAmountPerUserInWei[msg.sender];
+    investmentAmountPerUserInWei[msg.sender] = 0;
     require(_refundAmount > 0);
-    setFundedAmountInWei(fundedAmountInWei().sub(_refundAmount));
+    fundedAmountInWei = fundedAmountInWei.sub(_refundAmount);
     msg.sender.transfer(_refundAmount);
     getContractAddress("Logger").call(
       bytes4(keccak256("logReclaimEvent(address,uint256)")),
@@ -493,7 +441,7 @@ contract PoaCrowdsale is PoaCommon {
     view
     returns (uint256)
   {
-    return weiToFiatCents(fundedAmountInWei());
+    return weiToFiatCents(fundedAmountInWei);
   }
 
   /// @notice Get fundingGoal in wei
@@ -502,7 +450,7 @@ contract PoaCrowdsale is PoaCommon {
     view
     returns (uint256)
   {
-    return fiatCentsToWei(fundingGoalInCents());
+    return fiatCentsToWei(fundingGoalInCents);
   }
 
   /************************
@@ -519,181 +467,10 @@ contract PoaCrowdsale is PoaCommon {
     view
     returns (string)
   {
-    return to32LengthString(fiatCurrency32());
+    return to32LengthString(fiatCurrency32);
   }
 
   /**********************
   * end regular getters *
   **********************/
-
-  /***********************************************
-  * start non-sequential storage getters/setters *
-  ***********************************************/
-
-  /*
-    Each function in this section without "set" prefix is a getter for a specific
-    non-sequential storage slot which are public and can be called by a user or contract.
-    Functions with "set" are internal and can only be called by the contract/inherited contracts.
-
-    Both getters and setters use commonly agreed upon storage slots to avoid collisions.
-  */
-
-  function crowdsaleInitialized()
-    public
-    view
-    returns (bool _crowdsaleInitialized)
-  {
-    bytes32 _crowdsaleInitializedSlot = crowdsaleInitializedSlot;
-    assembly {
-      _crowdsaleInitialized := sload(_crowdsaleInitializedSlot)
-    }
-  }
-
-  function setCrowdsaleInitialized(
-    bool _crowdsaleInitialized
-  )
-    internal
-  {
-    bytes32 _crowdsaleInitializedSlot = crowdsaleInitializedSlot;
-    assembly {
-      sstore(_crowdsaleInitializedSlot, _crowdsaleInitialized)
-    }
-  }
-
-  function startTime()
-    public
-    view
-    returns (uint256 _startTime)
-  {
-    bytes32 _startTimeSlot = startTimeSlot;
-    assembly {
-      _startTime := sload(_startTimeSlot)
-    }
-  }
-
-  function setStartTime(
-    uint256 _startTime
-  )
-    internal
-  {
-    bytes32 _startTimeSlot = startTimeSlot;
-    assembly {
-      sstore(_startTimeSlot, _startTime)
-    }
-  }
-
-  function fundingTimeout()
-    public
-    view
-    returns (uint256 _fundingTimeout)
-  {
-    bytes32 _fundingTimeoutSlot = fundingTimeoutSlot;
-    assembly {
-      _fundingTimeout := sload(_fundingTimeoutSlot)
-    }
-  }
-
-  function setFundingTimeout(
-    uint256 _fundingTimeout
-  )
-    internal
-  {
-    bytes32 _fundingTimeoutSlot = fundingTimeoutSlot;
-    assembly {
-      sstore(_fundingTimeoutSlot, _fundingTimeout)
-    }
-  }
-
-  function activationTimeout()
-    public
-    view
-    returns (uint256 _activationTimeout)
-  {
-    bytes32 _activationTimeoutSlot = activationTimeoutSlot;
-    assembly {
-      _activationTimeout := sload(_activationTimeoutSlot)
-    }
-  }
-
-  function setActivationTimeout(
-    uint256 _activationTimeout
-  )
-    internal
-  {
-    bytes32 _activationTimeoutSlot = activationTimeoutSlot;
-    assembly {
-      sstore(_activationTimeoutSlot, _activationTimeout)
-    }
-  }
-
-  function fiatCurrency32()
-    internal
-    view
-    returns (bytes32 _fiatCurrency32)
-  {
-    bytes32 _fiatCurrency32Slot = fiatCurrency32Slot;
-    assembly {
-      _fiatCurrency32 := sload(_fiatCurrency32Slot)
-    }
-  }
-
-  function setFiatCurrency32(
-    bytes32 _fiatCurrency32
-  )
-    internal
-  {
-    bytes32 _fiatCurrency32Slot = fiatCurrency32Slot;
-    assembly {
-      sstore(_fiatCurrency32Slot, _fiatCurrency32)
-    }
-  }
-
-  function fundingGoalInCents()
-    public
-    view
-    returns (uint256 _fundingGoalInCents)
-  {
-    bytes32 _fundingGoalInCentsSlot = fundingGoalInCentsSlot;
-    assembly {
-      _fundingGoalInCents := sload(_fundingGoalInCentsSlot)
-    }
-  }
-
-  function setFundingGoalInCents(
-    uint256 _fundingGoalInCents
-  )
-    internal
-  {
-    bytes32 _fundingGoalInCentsSlot = fundingGoalInCentsSlot;
-    assembly {
-      sstore(_fundingGoalInCentsSlot, _fundingGoalInCents)
-    }
-  }
-
-  function fundedAmountInCentsDuringFiatFunding()
-    public
-    view
-    returns (uint256 _fundedAmountInCentsDuringFiatFunding)
-  {
-    bytes32 _fundedAmountInCentsDuringFiatFundingSlot = fundedAmountInCentsDuringFiatFundingSlot;
-    assembly {
-      _fundedAmountInCentsDuringFiatFunding := sload(_fundedAmountInCentsDuringFiatFundingSlot)
-    }
-  }
-
-  function setFundedAmountInCentsDuringFiatFunding(
-    uint256 _fundedAmountInCentsDuringFiatFunding
-  )
-    internal
-  {
-    bytes32 _fundedAmountInCentsDuringFiatFundingSlot = fundedAmountInCentsDuringFiatFundingSlot;
-    assembly {
-      sstore(_fundedAmountInCentsDuringFiatFundingSlot, _fundedAmountInCentsDuringFiatFunding)
-    }
-  }
-
-  /*********************************************
-  * end non-sequential storage getters/setters *
-  *********************************************/
-
 }

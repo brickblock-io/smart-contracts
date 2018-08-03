@@ -386,6 +386,26 @@ interface IPoaTokenCrowdsale {
     view
     returns (address _custodian);
 
+  
+  function crowdsaleVersion()
+    external
+    view
+    returns (uint256);
+
+  function tokenVersion()
+    external
+    view
+    returns (uint256);
+
+  function poaTokenMaster()
+    external
+    view
+    returns (address);
+
+  function poaCrowdsaleMaaster()
+    external
+    view
+    returns (address);
   //
   // end common functionality
   //

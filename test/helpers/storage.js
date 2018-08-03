@@ -1,4 +1,5 @@
 const BigNumber = require('bignumber.js')
+const leftPad = require('left-pad')
 
 const getAllSequentialStorage = async addr => {
   let slot = 0
@@ -51,10 +52,8 @@ const findMappingStorage = async (address, key, startSlot, endSlot) => {
   return null
 }
 
-const standardizeInput = input => {
-  input = input.replace('0x', '')
-  return input.length >= 64 ? input : '0'.repeat(64 - input.length) + input
-}
+const standardizeInput = input =>
+  leftPad(web3.toHex(input).replace('0x', ''), 64, '0')
 
 const getMappingSlot = (mappingSlot, key) => {
   const mappingSlotPadded = standardizeInput(mappingSlot)

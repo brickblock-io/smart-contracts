@@ -6,24 +6,13 @@ import "./PoaProxyCommon.sol";
 
 
 /**
-  @title This contract manages the storage (sequential and non-sequential) of:
+  @title This contract manages the storage of:
   - PoaProxy
   - PoaToken
   - PoaCrowdsale
 
-  @notice For all Poa related contracts, there are two common terms which
-  need explanation:
-  - sequential storage
-    - contract storage that is stored sequentially in order of declaration
-    - this is the normal way storage works with smart contracts
-  - non-sequential storage
-    - contract storage that is stored in a slot non sequentially
-    - storage slot is determined by taking a hash of variable's name
-    and using that hash as the storage location
-    - this pattern is used in order to ensure storage from multiple
-    proxied master contracts does not collide
-  PoaProxy uses chained "delegatecall()"s to call functions on
-  PoaToken and PoaCrowdsale and set the resulting storage
+  @notice PoaProxy uses chained "delegatecall()"s to call functions on
+  PoaToken and PoaCrowdsale and sets the resulting storage
   here on PoaProxy.
 
   @dev `getContractAddress("Logger").call()` does not use the return value
@@ -53,9 +42,9 @@ contract PoaProxy is PoaProxyCommon {
     require(_registry != address(0));
 
     // Set addresses in common storage using deterministic storage slots
-    setPoaTokenMaster(_poaTokenMaster);
-    setPoaCrowdsaleMaster(_poaCrowdsaleMaster);
-    setRegistry(_registry);
+    poaTokenMaster = _poaTokenMaster;
+    poaCrowdsaleMaster = _poaCrowdsaleMaster;
+    registry = _registry;
   }
 
   /*****************************
@@ -93,10 +82,10 @@ contract PoaProxy is PoaProxyCommon {
   {
     require(msg.sender == getContractAddress("PoaManager"));
     require(_newMaster != address(0));
-    require(poaTokenMaster() != _newMaster);
+    require(poaTokenMaster != _newMaster);
     require(isContract(_newMaster));
-    address _oldMaster = poaTokenMaster();
-    setPoaTokenMaster(_newMaster);
+    address _oldMaster = poaTokenMaster;
+    poaTokenMaster = _newMaster;
 
     emit ProxyUpgradedEvent(_oldMaster, _newMaster);
     getContractAddress("Logger").call(
@@ -114,10 +103,10 @@ contract PoaProxy is PoaProxyCommon {
   {
     require(msg.sender == getContractAddress("PoaManager"));
     require(_newMaster != address(0));
-    require(poaCrowdsaleMaster() != _newMaster);
+    require(poaCrowdsaleMaster != _newMaster);
     require(isContract(_newMaster));
-    address _oldMaster = poaCrowdsaleMaster();
-    setPoaCrowdsaleMaster(_newMaster);
+    address _oldMaster = poaCrowdsaleMaster;
+    poaCrowdsaleMaster = _newMaster;
 
     emit ProxyUpgradedEvent(_oldMaster, _newMaster);
     getContractAddress("Logger").call(
@@ -143,10 +132,9 @@ contract PoaProxy is PoaProxyCommon {
     external
     payable
   {
-    bytes32 _poaTokenMasterSlot = poaTokenMasterSlot;
     assembly {
       // Load PoaToken master address from first storage pointer
-      let _poaTokenMaster := sload(_poaTokenMasterSlot)
+      let _poaTokenMaster := sload(poaTokenMaster_slot)
 
       // calldatacopy(t, f, s)
       calldatacopy(

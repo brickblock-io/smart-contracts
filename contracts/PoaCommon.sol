@@ -10,7 +10,7 @@ import "./PoaProxyCommon.sol";
   @title Firstly, PoaCommon acts as a convention between:
   - PoaToken
   - PoaCrowdsale
-  to use agreed upon non-sequential storage for getting & setting
+  to use agreed upon storage for getting & setting
   variables which are used by both contracts.
 
   Secondly, it has a set of shared functions.
@@ -39,73 +39,86 @@ contract PoaCommon is PoaProxyCommon {
     Terminated         // 7
   }
 
-  /***********************************************
-  * Start Common Non-Sequential Storage Pointers *
-  ***********************************************/
-
-  /*
-    These are commonly agreed upon storage slots
-    which other contracts can use in order to get & set.
-    Constants do not use storage so they can be safely shared.
-  */
+  /***********************
+  * Start Common Storage *
+  ***********************/
 
   // Represents current stage
-  // TYPE: Stage
-  bytes32 internal constant stageSlot = keccak256("stage");
+  Stages public stage;
 
   // Broker in charge of starting sale, paying fee and handling payouts
-  // TYPE: address
-  bytes32 internal constant brokerSlot = keccak256("broker");
+  address public broker;
 
   // Custodian in charge of taking care of asset and payouts
-  // TYPE: address
-  bytes32 internal constant custodianSlot = keccak256("custodian");
+  address public custodian;
 
   // IPFS hash storing the proof of custody provided by custodian
-  // TYPE: bytes32[2]
-  bytes32 internal constant proofOfCustody32Slot = keccak256("proofOfCustody32");
+  bytes32[2] internal proofOfCustody32_;
 
   // ERC20 totalSupply
-  // TYPE: uint256
-  bytes32 internal constant totalSupplySlot = keccak256("totalSupply");
+  uint256 internal totalSupply_;
 
   // Tracks the total amount of tokens sold during the FiatFunding stage
-  // TYPE: uint256
-  bytes32 internal constant fundedAmountInTokensDuringFiatFundingSlot =
-  keccak256("fundedAmountInTokensDuringFiatFunding");
+  uint256 public fundedAmountInTokensDuringFiatFunding;
 
   // Tracks the Fiat investments per user raised during the FiatFunding stage
-  // TYPE: mapping(address => uint256)
-  bytes32 internal constant fiatInvestmentPerUserInTokensSlot =
-  keccak256("fiatInvestmentPerUserInTokens");
+  mapping(address => uint256) public fiatInvestmentPerUserInTokens;
 
   // Tracks the total amount of ETH raised during the EthFunding stage.
   // NOTE: We can't use `address(this).balance` because after activating the
   // POA contract, its balance will become `claimable` by the broker and can
   // therefore no longer be used to calculate balances.
-  // TYPE: uint256
-  bytes32 internal constant fundedAmountInWeiSlot = keccak256("fundedAmountInWei");
+  uint256 public fundedAmountInWei;
 
   // Tracks the ETH investments per user raised during the EthFunding stage
-  // TYPE: mapping(address => uint256)
-  bytes32 internal constant investmentAmountPerUserInWeiSlot =
-  keccak256("investmentAmountPerUserInWei");
+  mapping(address => uint256) public investmentAmountPerUserInWei;
 
   // Tracks unclaimed payouts per user
-  // TYPE: mapping(address => uint256)
-  bytes32 internal constant unclaimedPayoutTotalsSlot = keccak256("unclaimedPayoutTotals");
+  mapping(address => uint256) public unclaimedPayoutTotals;
 
   // ERC20 paused - Used for enabling/disabling token transfers
-  // TYPE: bool
-  bytes32 internal constant pausedSlot = keccak256("paused");
+  bool public paused;
 
   // Indicates if poaToken has been initialized
-  // TYPE: bool
-  bytes32 internal constant tokenInitializedSlot = keccak256("tokenInitialized");
+  bool public tokenInitialized;
 
-  /*********************************************
-  * End Common Non-Sequential Storage Pointers *
-  *********************************************/
+  /*********************
+  * End Common Storage *
+  *********************/
+
+  /**************************
+  * Start Crowdsale Storage *
+  **************************/
+
+  /*
+    Crowdsale storage must be declared in PoaCommon in order to
+    avoid storage overwrites by PoaCrowdsale.
+  */
+
+  // Bool indicating whether or not crowdsale proxy has been initialized
+  bool public crowdsaleInitialized;
+
+  // Used for checking when contract should move from PreFunding or FiatFunding to EthFunding stage
+  uint256 public startTime;
+
+  // Amount of seconds (starting at startTime) until moving from EthFunding to TimedOut stage
+  uint256 public fundingTimeout;
+
+  // Amount of seconds (starting at startTime + fundingTimeout) until moving from FundingSuccessful stage to TimedOut
+  uint256 public activationTimeout;
+
+  // bytes32 representation fiat currency symbol used to get rate
+  bytes32 public fiatCurrency32;
+
+  // Amount needed before moving to 'FundingSuccessful', calculated in fiat
+  uint256 public fundingGoalInCents;
+
+  // Used for keeping track of actual funded amount in fiat during FiatFunding stage
+  uint256 public fundedAmountInCentsDuringFiatFunding;
+
+  /************************
+  * End Crowdsale Storage *
+  ************************/
 
 
   /*************************
@@ -113,22 +126,22 @@ contract PoaCommon is PoaProxyCommon {
   *************************/
 
   modifier onlyCustodian() {
-    require(msg.sender == custodian(), "Function can only be called by the custodian of this contract");
+    require(msg.sender == custodian);
     _;
   }
 
   modifier onlyBroker() {
-    require(msg.sender == broker(), "Function can only be called by the broker of this contract");
+    require(msg.sender == broker);
     _;
   }
 
   modifier atStage(Stages _stage) {
-    require(stage() == _stage, "Function can't be called while contract is in the current 'Stage'");
+    require(stage == _stage);
     _;
   }
 
   modifier atEitherStage(Stages _stage, Stages _orStage) {
-    require(stage() == _stage || stage() == _orStage, "Function can't be called while contract is in the current 'Stage'");
+    require(stage == _stage || stage == _orStage);
     _;
   }
 
@@ -143,7 +156,7 @@ contract PoaCommon is PoaProxyCommon {
     require(_ipfsHashBytes.length == 46);
     require(_ipfsHashBytes[0] == 0x51);
     require(_ipfsHashBytes[1] == 0x6D);
-    require(keccak256(_ipfsHashBytes) != keccak256(bytes(proofOfCustody())));
+    require(keccak256(abi.encodePacked(_ipfsHashBytes)) != keccak256(abi.encodePacked(proofOfCustody())));
     _;
   }
 
@@ -155,6 +168,7 @@ contract PoaCommon is PoaProxyCommon {
   /************************
   * Start Regular Getters *
   ************************/
+
   /**
     @notice Converts proofOfCustody from bytes32 to string
     @return string
@@ -164,7 +178,7 @@ contract PoaCommon is PoaProxyCommon {
     view
     returns (string)
   {
-    return to64LengthString(proofOfCustody32());
+    return to64LengthString(proofOfCustody32_);
   }
 
   /**********************
@@ -179,7 +193,7 @@ contract PoaCommon is PoaProxyCommon {
   function enterStage(Stages _stage)
     internal
   {
-    setStage(_stage);
+    stage = _stage;
     getContractAddress("Logger").call(
       bytes4(keccak256("logStageEvent(uint256)")),
       _stage
@@ -228,7 +242,7 @@ contract PoaCommon is PoaProxyCommon {
     view
     returns(bool)
   {
-    return fiatInvestmentPerUserInTokens(_buyer) != 0;
+    return fiatInvestmentPerUserInTokens[_buyer] != 0;
   }
 
   /// @notice Checks if a given address is whitelisted
@@ -378,317 +392,4 @@ contract PoaCommon is PoaProxyCommon {
   /*******************************
   * End Common Utility Functions *
   *******************************/
-
-
-  /******************************************************
-  * Start Common Non-Sequential Storage Getters/Setters *
-  ******************************************************/
-
-  /**
-    @dev Each function without a "set" prefix in this section is a public getter for a
-    specific non-sequential storage slot.
-
-    Setter functions, starting with "set", are internal and can only be called by this
-    contract, or contracts inheriting from it. Both getters and setters work on commonly
-    agreed upon storage slots in order to avoid storage collisions.
-  */
-
-  function stage()
-    public
-    view
-    returns (Stages _stage)
-  {
-    bytes32 _stageSlot = stageSlot;
-    assembly {
-      _stage := sload(_stageSlot)
-    }
-  }
-
-  function setStage(Stages _stage)
-    internal
-  {
-    bytes32 _stageSlot = stageSlot;
-    assembly {
-      sstore(_stageSlot, _stage)
-    }
-  }
-
-  function custodian()
-    public
-    view
-    returns (address _custodian)
-  {
-    bytes32 _custodianSlot = custodianSlot;
-    assembly {
-      _custodian := sload(_custodianSlot)
-    }
-  }
-
-  function setCustodian(address _custodian)
-    internal
-  {
-    bytes32 _custodianSlot = custodianSlot;
-    assembly {
-      sstore(_custodianSlot, _custodian)
-    }
-  }
-
-  function broker()
-    public
-    view
-    returns (address _broker)
-  {
-    bytes32 _brokerSlot = brokerSlot;
-    assembly {
-      _broker := sload(_brokerSlot)
-    }
-  }
-
-  function setBroker(address _broker)
-    internal
-  {
-    bytes32 _brokerSlot = brokerSlot;
-    assembly {
-      sstore(_brokerSlot, _broker)
-    }
-  }
-
-  function proofOfCustody32()
-    public
-    view
-    returns (bytes32[2] _proofOfCustody32)
-  {
-    bytes32 _proofOfCustody32Slot = proofOfCustody32Slot;
-
-    assembly {
-      mstore(_proofOfCustody32, sload(_proofOfCustody32Slot))
-      mstore(add(_proofOfCustody32, 0x20), sload(add(_proofOfCustody32Slot, 0x01)))
-    }
-  }
-
-  function setProofOfCustody32(
-    bytes32[2] _proofOfCustody32
-  )
-    internal
-  {
-    bytes32 _proofOfCustody32Slot = proofOfCustody32Slot;
-    assembly {
-      // Store first slot from memory
-      sstore(
-        _proofOfCustody32Slot,
-        mload(_proofOfCustody32)
-      )
-      // Store second slot from memory
-      sstore(
-        add(_proofOfCustody32Slot, 0x01),
-        mload(
-          add(_proofOfCustody32, 0x20)
-        )
-      )
-    }
-  }
-
-  function totalSupply()
-    public
-    view
-    returns (uint256 _totalSupply)
-  {
-    bytes32 _totalSupplySlot = totalSupplySlot;
-    assembly {
-      _totalSupply := sload(_totalSupplySlot)
-    }
-  }
-
-  function setTotalSupply(uint256 _totalSupply)
-    internal
-  {
-    bytes32 _totalSupplySlot = totalSupplySlot;
-    assembly {
-      sstore(_totalSupplySlot, _totalSupply)
-    }
-  }
-
-  function fundedAmountInTokensDuringFiatFunding()
-    public
-    view
-    returns (uint256 _fundedAmountInTokensDuringFiatFunding)
-  {
-    bytes32 _fundedAmountInTokensDuringFiatFundingSlot = fundedAmountInTokensDuringFiatFundingSlot;
-    assembly {
-      _fundedAmountInTokensDuringFiatFunding := sload(
-        _fundedAmountInTokensDuringFiatFundingSlot
-      )
-    }
-  }
-
-  function setFundedAmountInTokensDuringFiatFunding(
-    uint256 _amount
-  )
-    internal
-  {
-    bytes32 _fundedAmountInTokensDuringFiatFundingSlot = fundedAmountInTokensDuringFiatFundingSlot;
-    assembly {
-      sstore(
-        _fundedAmountInTokensDuringFiatFundingSlot,
-        _amount
-      )
-    }
-  }
-
-  function fiatInvestmentPerUserInTokens(
-    address _address
-  )
-    public
-    view
-    returns (uint256 _fiatInvested)
-  {
-    bytes32 _entrySlot = keccak256(
-      abi.encodePacked(_address, fiatInvestmentPerUserInTokensSlot)
-    );
-    assembly {
-      _fiatInvested := sload(_entrySlot)
-    }
-  }
-
-  function setFiatInvestmentPerUserInTokens(
-    address _address,
-    uint256 _fiatInvestment
-  )
-    internal
-  {
-    bytes32 _entrySlot = keccak256(
-      abi.encodePacked(_address, fiatInvestmentPerUserInTokensSlot)
-    );
-    assembly {
-      sstore(_entrySlot, _fiatInvestment)
-    }
-  }
-
-  function fundedAmountInWei()
-    public
-    view
-    returns (uint256 _fundedAmountInWei)
-  {
-    bytes32 _fundedAmountInWeiSlot = fundedAmountInWeiSlot;
-    assembly {
-      _fundedAmountInWei := sload(_fundedAmountInWeiSlot)
-    }
-  }
-
-  function setFundedAmountInWei(
-    uint256 _fundedAmountInWei
-  )
-    internal
-  {
-    bytes32 _fundedAmountInWeiSlot = fundedAmountInWeiSlot;
-    assembly {
-      sstore(_fundedAmountInWeiSlot, _fundedAmountInWei)
-    }
-  }
-
-  function investmentAmountPerUserInWei(
-    address _address
-  )
-    public
-    view
-    returns (uint256 _investmentAmountPerUserInWei)
-  {
-    bytes32 _entrySlot = keccak256(
-      abi.encodePacked(_address, investmentAmountPerUserInWeiSlot)
-    );
-    assembly {
-      _investmentAmountPerUserInWei := sload(_entrySlot)
-    }
-  }
-
-  function setInvestmentAmountPerUserInWei(
-    address _address,
-    uint256 _amount
-  )
-    internal
-  {
-    bytes32 _entrySlot = keccak256(
-      abi.encodePacked(_address, investmentAmountPerUserInWeiSlot)
-    );
-    assembly {
-      sstore(_entrySlot, _amount)
-    }
-  }
-
-  function unclaimedPayoutTotals(
-    address _address
-  )
-    public
-    view
-    returns (uint256 _unclaimedPayoutTotals)
-  {
-    bytes32 _entrySlot = keccak256(
-      abi.encodePacked(_address, unclaimedPayoutTotalsSlot)
-    );
-    assembly {
-      _unclaimedPayoutTotals := sload(_entrySlot)
-    }
-  }
-
-  function setUnclaimedPayoutTotals(
-    address _address,
-    uint256 _amount
-  )
-    internal
-  {
-    bytes32 _entrySlot = keccak256(
-      abi.encodePacked(_address, unclaimedPayoutTotalsSlot)
-    );
-    assembly {
-      sstore(_entrySlot, _amount)
-    }
-  }
-
-  function paused()
-    public
-    view
-    returns (bool _paused)
-  {
-    bytes32 _pausedSlot = pausedSlot;
-    assembly {
-      _paused := sload(_pausedSlot)
-    }
-  }
-
-  function setPaused(
-    bool _paused
-  )
-    internal
-  {
-    bytes32 _pausedSlot = pausedSlot;
-    assembly {
-      sstore(_pausedSlot, _paused)
-    }
-  }
-
-  function tokenInitialized()
-    public
-    view
-    returns (bool _tokenInitialized)
-  {
-    bytes32 _tokenInitializedSlot = tokenInitializedSlot;
-    assembly {
-      _tokenInitialized := sload(_tokenInitializedSlot)
-    }
-  }
-
-  function setTokenInitialized(
-    bool _tokenInitialized
-  )
-    internal
-  {
-    bytes32 _tokenInitializedSlot = tokenInitializedSlot;
-    assembly {
-      sstore(_tokenInitializedSlot, _tokenInitialized)
-    }
-  }
-
-  /****************************************************
-  * End Common Non-Sequential Storage Getters/Setters *
-  ****************************************************/
 }
