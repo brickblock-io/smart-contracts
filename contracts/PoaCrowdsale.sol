@@ -239,7 +239,9 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /// @notice Buy and finish funding process (when funding goal met)
-  function buyAndEndFunding(bool _shouldRefund)
+  function buyAndEndFunding(
+    bool _shouldRefund
+  )
     internal
     returns (bool)
   {
@@ -254,6 +256,22 @@ contract PoaCrowdsale is PoaCommon {
     buyAndContinueFunding(_payAmount);
 
     return true;
+  }
+
+  /// @notice check if fundingGoalInCents has been met due to fluctuating fiat rates
+  function checkFundingSuccessful()
+    external
+    atEitherStage(Stages.FiatFunding, Stages.EthFunding)
+    returns (bool) 
+  {
+    uint256 _currentFundedCents = weiToFiatCents(fundedAmountInWei);
+
+    if (_currentFundedCents >= fundingGoalInCents) {
+      enterStage(Stages.FundingSuccessful);
+      return true;
+    }
+
+    return false;
   }
 
   /// @notice Activate token with proofOfCustody fee is taken from contract balance

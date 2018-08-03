@@ -140,6 +140,10 @@ describe("when in 'PreFunding' stage", async () => {
       ])
     })
 
+    it('should NOT checkFundingSuccessful', async () => {
+      await testWillThrow(poa.checkFundingSuccessful, [])
+    })
+
     // start core stage functionality
     it('should NOT startFiatSale, even if owner', async () => {
       await testWillThrow(testStartFiatSale, [poa, { from: owner, gasPrice }])

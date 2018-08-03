@@ -144,6 +144,10 @@ describe("when in 'Active' stage", () => {
       await testWillThrow(testReclaim, [poa, { from: whitelistedPoaBuyers[0] }])
     })
 
+    it('should NOT checkFundingSuccessful', async () => {
+      await testWillThrow(poa.checkFundingSuccessful, [])
+    })
+
     // start core stage functionality
 
     it('should NOT claim if no payouts', async () => {

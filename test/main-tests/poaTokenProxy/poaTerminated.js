@@ -158,6 +158,10 @@ describe("when in 'Terminated' stage", () => {
         }
       ])
     })
+
+    it('should NOT checkFundingSuccessful', async () => {
+      await testWillThrow(poa.checkFundingSuccessful, [])
+    })
     // start core stage functionality
 
     it('should NOT claim if no payouts', async () => {

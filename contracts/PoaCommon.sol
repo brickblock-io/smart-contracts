@@ -120,7 +120,6 @@ contract PoaCommon is PoaProxyCommon {
   * End Crowdsale Storage *
   ************************/
 
-
   /*************************
   * Start Common Modifiers *
   *************************/

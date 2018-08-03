@@ -275,6 +275,10 @@ interface IPoaTokenCrowdsale {
     view
     returns (address _broker);
 
+  function checkFundingSuccessful()
+    external
+    returns (bool);
+
   //
   // end crowdsale functionality
   //

@@ -146,6 +146,10 @@ describe("when in 'FundingSuccessful' stage", () => {
       ])
     })
 
+    it('should NOT checkFundingSuccessful', async () => {
+      await testWillThrow(poa.checkFundingSuccessful, [])
+    })
+
     // start core stage functionality
 
     it('should move into Active when activated', async () => {

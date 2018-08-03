@@ -148,7 +148,9 @@ describe("when in 'FundingCancelled' stage", () => {
       ])
     })
 
-    // start core stage functionality
+    it('should NOT checkFundingSuccessful', async () => {
+      await testWillThrow(poa.checkFundingSuccessful, [])
+    })
 
     it('should NOT allow FiatFunding', async () => {
       await testWillThrow(testBuyTokensWithFiat, [

@@ -1082,5 +1082,39 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
         'only gasCost should be deducted, the rest should be sent back'
       )
     })
+
+    it('should move to FundingSuccessful using check when rate goes high enough beforehand', async () => {
+      const fundingGoalFiatCents = await poa.fundingGoalInCents()
+      const preNeededWei = await poa.fiatCentsToWei(fundingGoalFiatCents)
+
+      // buy half of tokens based on original rate
+      await testBuyTokens(poa, {
+        from: whitelistedPoaBuyers[0],
+        value: preNeededWei.div(2),
+        gasPrice
+      })
+
+      // rate doubles
+      rate = rate.mul(2).floor()
+      await testResetCurrencyRate(exr, exp, 'EUR', rate)
+
+      const interimStage = await poa.stage()
+
+      // use checkFundingSuccessful after rate doubling (fundingGoal should be met)
+      await poa.checkFundingSuccessful()
+
+      const postStage = await poa.stage()
+
+      assert.equal(
+        interimStage.toString(),
+        stages.EthFunding,
+        'stage should still be EthFunding'
+      )
+      assert.equal(
+        postStage.toString(),
+        stages.FundingSuccessful,
+        'stage should now be FundingSuccessful'
+      )
+    })
   })
 })

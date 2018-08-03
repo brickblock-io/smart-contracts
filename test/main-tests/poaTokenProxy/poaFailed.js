@@ -170,6 +170,10 @@ describe("when in 'TimedOut' stage", () => {
       await testSetStageToTimedOut(poa)
     })
 
+    it('should NOT checkFundingSuccessful', async () => {
+      await testWillThrow(poa.checkFundingSuccessful, [])
+    })
+
     it('should NOT be able to call setStageToTimedOut again, even if owner', async () => {
       await testWillThrow(testSetStageToTimedOut, [poa, { from: owner }])
     })
