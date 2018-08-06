@@ -427,10 +427,6 @@ interface IPoaTokenCrowdsale {
     view
     returns (address);
 
-  function poaCrowdsaleMaster()
-    external
-    view
-    returns (address);
   //
   // end common functionality
   //
