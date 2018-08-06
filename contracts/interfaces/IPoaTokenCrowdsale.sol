@@ -427,7 +427,7 @@ interface IPoaTokenCrowdsale {
     view
     returns (address);
 
-  function poaCrowdsaleMaaster()
+  function poaCrowdsaleMaster()
     external
     view
     returns (address);
