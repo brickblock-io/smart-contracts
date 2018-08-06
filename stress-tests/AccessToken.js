@@ -4,7 +4,7 @@ const {
   getEtherBalance,
   getRandomBigInt,
   getRandomInt
-} = require('.test/helpers/general')
+} = require('../test/helpers/general')
 const chalk = require('chalk')
 
 const {
@@ -16,7 +16,7 @@ const {
   testTransferActManyWithIndividualAmounts,
   generateRandomLockAmounts,
   testRandomLockAndUnlock
-} = require('../helpers/act')
+} = require('../test/helpers/act')
 
 describe('AccessToken Stress Tests', () => {
   describe('test scenarios with random numbers', () => {
