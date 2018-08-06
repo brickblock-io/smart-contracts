@@ -232,6 +232,7 @@ const testProxyInitialization = async (reg, pmr, args) => {
   // create new master poa contracts
   const poatm = await PoaToken.new()
   const poacm = await PoaCrowdsale.new()
+  const givenstartTimeForFiatFunding = args[5]
 
   // add poa master to registry
   await reg.updateContractAddress('PoaTokenMaster', poatm.address)
@@ -251,8 +252,7 @@ const testProxyInitialization = async (reg, pmr, args) => {
   const actualCustodian = await poa.custodian()
   const decimals = await poa.decimals()
   const feeRateInPermille = await poa.feeRateInPermille()
-  const defaultStartTime = await getDefaultStartTime()
-  const startTimeForEthFunding = await poa.startTimeForEthFunding()
+  const startTimeForFiatFunding = await poa.startTimeForEthFunding()
   const endTimeForEthFunding = await poa.endTimeForEthFunding()
   const fundingGoalInCents = await poa.fundingGoalInCents()
   const totalPerTokenPayout = await poa.totalPerTokenPayout()
@@ -264,18 +264,6 @@ const testProxyInitialization = async (reg, pmr, args) => {
   const whitelistTransfers = await poa.whitelistTransfers()
   const registry = await poa.registry()
   const contractOwner = await poa.owner()
-
-  // FIXME: This test is flaky in CI, temporarily added some debug console.logs
-  /* eslint-disable no-console */
-  console.log(
-    'testProxyInitialization() - defaultStartTime:',
-    new Date(defaultStartTime.toString() * 1000)
-  )
-  console.log(
-    'testProxyInitialization() - startTimeForEthFunding:',
-    new Date(startTimeForEthFunding.toString() * 1000)
-  )
-  /* eslint-enable no-console */
 
   assert.equal(name, defaultName, 'name should match that given in constructor')
   assert.equal(
@@ -355,9 +343,11 @@ const testProxyInitialization = async (reg, pmr, args) => {
     !whitelistTransfers,
     'contract should start not requiring whitelisted for transfers'
   )
-  assert(
-    areInRange(startTimeForEthFunding, defaultStartTime, 1),
-    'startTimeForEthFunding should match startTimeForEthFunding given in constructor'
+
+  assert.equal(
+    givenstartTimeForFiatFunding.toString(),
+    startTimeForFiatFunding.toString(),
+    'startTimeForFiatFunding should match startTimeForFiatFunding given in constructor'
   )
   return poa
 }
