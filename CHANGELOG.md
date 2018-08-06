@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.3.9"></a>
+## [3.3.9](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.3.8...v3.3.9) (2018-08-06)
+
+
+### Bug Fixes
+
+* **CI:** fixed `yarn todo` task due to missing `leasot` dependency ([88d5071](https://git.brickblock-dev.io/platform/smart-contracts/commits/88d5071))
+* **POA:** typo in IPoaTokenCrowdsale interface ([950cc3d](https://git.brickblock-dev.io/platform/smart-contracts/commits/950cc3d))
+
+
+
 <a name="3.3.8"></a>
 ## [3.3.8](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.3.7...v3.3.8) (2018-08-06)
 
