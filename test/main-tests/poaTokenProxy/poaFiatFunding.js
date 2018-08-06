@@ -10,6 +10,7 @@ const {
   testStartFiatSale,
   testBuyTokens,
   testBuyTokensWithFiat,
+  testRemoveTokensWithFiat,
   testIncrementOfBalanceWhenBuyTokensWithFiat,
   determineNeededTimeTravel,
   testActivate,
@@ -292,6 +293,100 @@ describe('when in FIAT Funding (stage 1) and funding goal is met during the fiat
         stages.FundingSuccessful,
         "The contract should be in 'FundingSuccessful' stage after funding goal meets"
       )
+    })
+
+    it('should remove fiat after adding incorrect amount', async () => {
+      const investmentAmountInCents = (await getRemainingAmountInCents(
+        poa
+      )).div(2)
+
+      await testBuyTokensWithFiat(poa, fiatInvestor, investmentAmountInCents, {
+        from: custodian,
+        gasPrice
+      })
+
+      await testRemoveTokensWithFiat(
+        poa,
+        fiatInvestor,
+        investmentAmountInCents,
+        {
+          from: custodian,
+          gasPrice
+        }
+      )
+    })
+
+    it('should NOT remove fiat more than invested', async () => {
+      const investmentAmountInCents = (await getRemainingAmountInCents(
+        poa
+      )).div(2)
+
+      await testWillThrow(testRemoveTokensWithFiat, [
+        poa,
+        fiatInvestor,
+        investmentAmountInCents,
+        {
+          from: custodian,
+          gasPrice
+        }
+      ])
+    })
+
+    it('buyFiat should be callable by only custodian', async () => {
+      const investmentAmountInCents = (await getRemainingAmountInCents(
+        poa
+      )).div(5)
+
+      await testBuyTokensWithFiat(poa, fiatInvestor, investmentAmountInCents, {
+        from: custodian,
+        gasPrice
+      })
+
+      await testWillThrow(testBuyTokensWithFiat, [
+        poa,
+        fiatInvestor,
+        investmentAmountInCents,
+        {
+          from: fiatInvestor,
+          gasPrice
+        }
+      ])
+    })
+
+    it('removeFiat should be callable by only custodian', async () => {
+      const investmentAmountInCents = (await getRemainingAmountInCents(
+        poa
+      )).div(5)
+
+      await testBuyTokensWithFiat(poa, fiatInvestor, investmentAmountInCents, {
+        from: custodian,
+        gasPrice
+      })
+
+      await testRemoveTokensWithFiat(
+        poa,
+        fiatInvestor,
+        investmentAmountInCents,
+        {
+          from: custodian,
+          gasPrice
+        }
+      )
+
+      await testBuyTokensWithFiat(poa, fiatInvestor, investmentAmountInCents, {
+        from: custodian,
+        gasPrice
+      })
+
+      await testWillThrow(testRemoveTokensWithFiat, [
+        poa,
+        fiatInvestor,
+        investmentAmountInCents,
+        {
+          from: fiatInvestor,
+          gasPrice
+        }
+      ])
     })
   })
 })

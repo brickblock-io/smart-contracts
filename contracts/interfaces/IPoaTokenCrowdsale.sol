@@ -171,7 +171,21 @@ interface IPoaTokenCrowdsale {
     external
     returns (bool);
 
+  function calculateTokenAmountForAmountInCents(
+    uint256 _amountInCents
+  )
+    external
+    returns (uint256);
+
   function buyFiat
+  (
+    address _contributor,
+    uint256 _amountInCents
+  )
+    external
+    returns (bool);
+
+  function removeFiat
   (
     address _contributor,
     uint256 _amountInCents

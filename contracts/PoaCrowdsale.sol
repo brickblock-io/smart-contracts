@@ -129,6 +129,20 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
+  /// @notice Used for the calculation of token amount to be given to FIAT investor
+  function calculateTokenAmountForAmountInCents
+  (
+    uint256 _amountInCents
+  )
+    public
+    view
+    returns(uint256)
+  {
+    //_percentOfFundingGoal multipled by precisionOfPercentCalc to get a more accurate result
+    uint256 _percentOfFundingGoal = percent(_amountInCents, fundingGoalInCents, precisionOfPercentCalc);
+    return totalSupply_.mul(_percentOfFundingGoal).div(10 ** precisionOfPercentCalc);
+  }
+
   /// @notice Used for funding through FIAT offchain during crowdsale. Balances are updated by custodian
   function buyFiat
   (
@@ -151,9 +165,8 @@ contract PoaCrowdsale is PoaCommon {
       fundedAmountInCentsDuringFiatFunding = fundedAmountInCentsDuringFiatFunding
         .add(_amountInCents);
 
-      //_percentOfFundingGoal multipled by precisionOfPercentCalc to get a more accurate result
-      uint256 _percentOfFundingGoal = percent(_amountInCents, fundingGoalInCents, precisionOfPercentCalc);
-      uint256 _tokenAmount = totalSupply_.mul(_percentOfFundingGoal).div(10 ** precisionOfPercentCalc);
+
+      uint256 _tokenAmount = calculateTokenAmountForAmountInCents(_amountInCents);
 
       // update total fiat funded amount
       fundedAmountInTokensDuringFiatFunding = fundedAmountInTokensDuringFiatFunding
@@ -172,6 +185,32 @@ contract PoaCrowdsale is PoaCommon {
     } else {
       return false;
     }
+  }
+
+  function removeFiat
+  (
+    address _contributor,
+    uint256 _amountInCents
+  )
+    external
+    atStage(Stages.FiatFunding)
+    onlyCustodian
+    returns(bool)
+  {
+    require(_amountInCents >= 0);
+
+    fundedAmountInCentsDuringFiatFunding = fundedAmountInCentsDuringFiatFunding.sub(_amountInCents);
+
+    uint256 _tokenAmount = calculateTokenAmountForAmountInCents(_amountInCents);
+
+    // update total fiat funded amount
+    fundedAmountInTokensDuringFiatFunding = fundedAmountInTokensDuringFiatFunding.sub(_tokenAmount);
+
+    // update balance of investor
+    fiatInvestmentPerUserInTokens[_contributor] = fiatInvestmentPerUserInTokens[_contributor].sub(_tokenAmount);
+
+    return true;
+
   }
 
   /// @notice Used for funding through ETH during crowdsale

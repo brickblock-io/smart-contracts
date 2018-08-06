@@ -648,6 +648,50 @@ const testBuyTokensWithFiat = async (poa, buyer, amountInCents, config) => {
   )
 }
 
+const testRemoveTokensWithFiat = async (poa, buyer, amountInCents, config) => {
+  assert(!!config.gasPrice, 'gasPrice must be given')
+  assert(!!config.from, 'from must be given')
+
+  const preInvestedTokenAmountPerUser = await poa.fiatInvestmentPerUserInTokens(
+    buyer
+  )
+  const preFundedAmountInTokens = await poa.fundedAmountInTokensDuringFiatFunding()
+  const preFundedAmountInCents = await poa.fundedAmountInCentsDuringFiatFunding()
+  await poa.removeFiat(buyer, amountInCents, config)
+
+  const postInvestedTokenAmountPerUser = await poa.fiatInvestmentPerUserInTokens(
+    buyer
+  )
+
+  const expectedFundedAmountInCents = preFundedAmountInCents.sub(amountInCents)
+  const postFundedAmountInTokens = await poa.fundedAmountInTokensDuringFiatFunding()
+  const postFundedAmountInCents = await poa.fundedAmountInCentsDuringFiatFunding()
+  const expectedUserTokenAmount = await getExpectedTokenAmount(
+    poa,
+    amountInCents
+  )
+
+  assert.equal(
+    expectedFundedAmountInCents.toString(),
+    postFundedAmountInCents.toString(),
+    'Funded Amount In Cents should match expected value'
+  )
+
+  assert.equal(
+    expectedUserTokenAmount.toString(),
+    preFundedAmountInTokens.sub(postFundedAmountInTokens).toString(),
+    'Token amount should match the expected value'
+  )
+
+  assert.equal(
+    preInvestedTokenAmountPerUser
+      .sub(postInvestedTokenAmountPerUser)
+      .toString(),
+    expectedUserTokenAmount.toString(),
+    'Investor token amount should match the expected value'
+  )
+}
+
 const testIncrementOfBalanceWhenBuyTokensWithFiat = async (
   poa,
   buyer,
@@ -1616,6 +1660,7 @@ module.exports = {
   testBuyTokens,
   testBuyTokensMulti,
   testBuyTokensWithFiat,
+  testRemoveTokensWithFiat,
   testIncrementOfBalanceWhenBuyTokensWithFiat,
   testCalculateFee,
   testChangeCustodianAddress,
