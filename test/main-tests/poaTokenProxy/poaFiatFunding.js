@@ -247,7 +247,7 @@ describe('when in FIAT Funding (stage 1) and funding goal is met during the fiat
       })
 
       const postStage = await poa.stage()
-      const postInvestorBalance = await poa.fiatInvestmentPerUserInTokens(
+      const postInvestorBalance = await poa.fundedFiatAmountPerUserInTokens(
         fiatInvestor
       )
 
@@ -277,7 +277,7 @@ describe('when in FIAT Funding (stage 1) and funding goal is met during the fiat
         )
       }
 
-      const postInvestorBalance = await poa.fiatInvestmentPerUserInTokens(
+      const postInvestorBalance = await poa.fundedFiatAmountPerUserInTokens(
         fiatInvestor
       )
       const postStage = await poa.stage()

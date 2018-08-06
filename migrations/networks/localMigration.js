@@ -4,15 +4,16 @@ const BigNumber = require('bignumber.js')
 const { table } = require('table')
 
 const {
-  oneWeekInMs,
-  twoWeeksInMs,
+  oneWeekInSec,
+  twoWeeksInSec,
   oneHundredThousandEuroInCents,
   oneHundredThousandTokensInWei
 } = require('../../config/constants')
 const {
-  deployContracts,
   addContractsToRegistry,
-  getEtherBalance
+  deployContracts,
+  getEtherBalance,
+  unixTimeWithOffsetInSec
 } = require('../helpers/general')
 const bbk = require('../helpers/bbk')
 const poaManager = require('../helpers/poa-manager')
@@ -95,9 +96,10 @@ const localMigration = async (deployer, accounts, contracts, web3) => {
         symbol: 'BBK-RE-DE123',
         fiatCurrency: 'EUR',
         totalSupply: oneHundredThousandTokensInWei,
-        startTime: Date.now(),
-        fundingTimeout: Date.now() + oneWeekInMs,
-        activationTimeout: Date.now() + twoWeeksInMs,
+        // startTimeForEthFunding needs a little offset so that it isn't too close to `block.timestamp` which would fail
+        startTimeForEthFunding: unixTimeWithOffsetInSec(60),
+        endTimeForEthFunding: unixTimeWithOffsetInSec(oneWeekInSec),
+        activationTimeout: unixTimeWithOffsetInSec(twoWeeksInSec),
         fundingGoalInCents: oneHundredThousandEuroInCents
       }
     }

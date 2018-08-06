@@ -153,12 +153,20 @@ interface IPoaTokenCrowdsale {
     external
     returns(uint256);
 
+  /**
+    @notice Starts the crowdsale
+    @param _fiatCurrency32 bytes32 of fiat currency string
+    @param _startTimeForEthFunding unix timestamp in seconds
+    @param _endTimeForEthFunding seconds after startTimeForEthFunding
+    @param _activationTimeout seconds after startTimeForEthFunding + endTimeForEthFunding
+    @param _fundingGoalInCents in fiat cents
+   */
   function initializeCrowdsale(
-    bytes32 _fiatCurrency32, // bytes32 of fiat currency string
-    uint256 _startTime, // unix timestamp
-    uint256 _fundingTimeout, // seconds after startTime
-    uint256 _activationTimeout, // seconds after startTime + fundingTimeout
-    uint256 _fundingGoalInCents // fiat cents
+    bytes32 _fiatCurrency32,
+    uint256 _startTimeForEthFunding,
+    uint256 _endTimeForEthFunding,
+    uint256 _activationTimeout,
+    uint256 _fundingGoalInCents
   )
     external
     returns (bool);
@@ -239,7 +247,7 @@ interface IPoaTokenCrowdsale {
     view
     returns (uint256);
 
-  function fundedAmountInCents()
+  function fundedEthAmountInCents()
     external
     view
     returns (uint256);
@@ -259,15 +267,15 @@ interface IPoaTokenCrowdsale {
     view
     returns (bool _crowdsaleInitialized);
 
-  function startTime()
+  function startTimeForEthFunding()
     external
     view
-    returns (uint256 _startTime);
+    returns (uint256 _startTimeForEthFunding);
 
-  function fundingTimeout()
+  function endTimeForEthFunding()
     external
     view
-    returns (uint256 _fundingTimeout);
+    returns (uint256 _endTimeForEthFunding);
 
   function activationTimeout()
     external
@@ -279,10 +287,10 @@ interface IPoaTokenCrowdsale {
     view
     returns (uint256 _fundingGoalInCents);
 
-  function fundedAmountInCentsDuringFiatFunding()
+  function fundedFiatAmountInCents()
     external
     view
-    returns (uint256 _fundedAmountInCentsDuringFiatFunding);
+    returns (uint256 _fundedFiatAmountInCents);
 
   function broker()
     external
@@ -350,12 +358,12 @@ interface IPoaTokenCrowdsale {
     view
     returns (uint256 _totalSupply);
 
-  function fundedAmountInTokensDuringFiatFunding()
+  function fundedFiatAmountInTokens()
     external
     view
-    returns (uint256 _fundedAmountInTokensDuringFiatFunding);
+    returns (uint256 _fundedFiatAmountInTokens);
 
-  function fiatInvestmentPerUserInTokens
+  function fundedFiatAmountPerUserInTokens
   (
     address _address
   )
@@ -363,18 +371,18 @@ interface IPoaTokenCrowdsale {
     view
     returns (uint256 _fiatInvested);
 
-  function fundedAmountInWei()
+  function fundedEthAmountInWei()
     external
     view
-    returns (uint256 _fundedAmountInWei);
+    returns (uint256 _fundedEthAmountInWei);
 
-  function investmentAmountPerUserInWei
+  function fundedEthAmountPerUserInWei
   (
     address _address
   )
     external
     view
-    returns (uint256 _investmentAmountPerUserInWei);
+    returns (uint256 _fundedEthAmountPerUserInWei);
 
   function registry()
     external
@@ -404,7 +412,6 @@ interface IPoaTokenCrowdsale {
     view
     returns (address _custodian);
 
-  
   function crowdsaleVersion()
     external
     view

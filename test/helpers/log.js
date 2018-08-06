@@ -18,7 +18,7 @@ const {
   testTerminate,
   testChangeCustodianAddress,
   setupPoaProxyAndEcosystem,
-  fundingTimeoutContract,
+  forcePoaTimeout,
   testReclaim,
   stages
 } = require('./poa')
@@ -319,7 +319,7 @@ const testReclaimEvents = async () => {
     value,
     gasPrice
   })
-  await fundingTimeoutContract(poa)
+  await forcePoaTimeout(poa)
 
   // change to actual PoaManager contract so that logger validation works...
   await poaManagerToPoaManager(reg, pmr.address)

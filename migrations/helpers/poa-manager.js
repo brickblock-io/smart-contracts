@@ -4,10 +4,10 @@ const chalk = require('chalk')
 const {
   oneHundredThousandEuroInCents,
   oneHundredThousandTokensInWei,
-  oneWeekInMs,
-  twoWeeksInMs
+  oneWeekInSec,
+  twoWeeksInSec
 } = require('../../config/constants')
-const { getEtherBalance } = require('./general.js')
+const { getEtherBalance, unixTimeWithOffsetInSec } = require('./general.js')
 
 const addBroker = async (
   poaManager,
@@ -43,9 +43,9 @@ const deployPoa = async (
       symbol: 'BBK-RE-DE123',
       fiatCurrency: 'EUR',
       totalSupply: oneHundredThousandTokensInWei,
-      startTime: Date.now(),
-      fundingTimeout: Date.now() + oneWeekInMs,
-      activationTimeout: Date.now() + twoWeeksInMs,
+      startTimeForEthFunding: unixTimeWithOffsetInSec(60),
+      endTimeForEthFunding: unixTimeWithOffsetInSec(oneWeekInSec),
+      activationTimeout: unixTimeWithOffsetInSec(twoWeeksInSec),
       fundingGoalInCents: oneHundredThousandEuroInCents
     }
   }
@@ -57,8 +57,8 @@ const deployPoa = async (
       symbol,
       fiatCurrency,
       totalSupply,
-      startTime,
-      fundingTimeout,
+      startTimeForEthFunding,
+      endTimeForEthFunding,
       activationTimeout,
       fundingGoalInCents
     }
@@ -74,8 +74,8 @@ const deployPoa = async (
     fiatCurrency,
     custodian,
     totalSupply,
-    startTime,
-    fundingTimeout,
+    startTimeForEthFunding,
+    endTimeForEthFunding,
     activationTimeout,
     fundingGoalInCents,
     { from: broker }

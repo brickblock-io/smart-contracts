@@ -13,7 +13,7 @@ const {
   testPayout,
   testClaim,
   testReclaim,
-  fundingTimeoutContract,
+  forcePoaTimeout,
   testSetStageToTimedOut,
   testReclaimAll,
   testPaused,
@@ -65,7 +65,7 @@ describe("when in 'TimedOut' stage", () => {
         gasPrice
       })
 
-      await fundingTimeoutContract(poa)
+      await forcePoaTimeout(poa)
     })
 
     it('should start paused', async () => {

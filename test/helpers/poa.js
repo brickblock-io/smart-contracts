@@ -86,12 +86,12 @@ const getDefaultStartTime = async () => {
 }
 
 const determineNeededTimeTravel = async poa => {
-  const startTime = await poa.startTime()
+  const startTimeForEthFunding = await poa.startTimeForEthFunding()
   const currentBlock = await web3.eth.getBlock(web3.eth.blockNumber)
   const blockNow = new BigNumber(currentBlock.timestamp)
-  return blockNow.greaterThan(startTime)
+  return blockNow.greaterThan(startTimeForEthFunding)
     ? 0
-    : startTime
+    : startTimeForEthFunding
         .sub(blockNow)
         .add(1)
         .toNumber()
@@ -252,11 +252,11 @@ const testProxyInitialization = async (reg, pmr, args) => {
   const decimals = await poa.decimals()
   const feeRateInPermille = await poa.feeRateInPermille()
   const defaultStartTime = await getDefaultStartTime()
-  const startTime = await poa.startTime()
-  const fundingTimeout = await poa.fundingTimeout()
+  const startTimeForEthFunding = await poa.startTimeForEthFunding()
+  const endTimeForEthFunding = await poa.endTimeForEthFunding()
   const fundingGoalInCents = await poa.fundingGoalInCents()
   const totalPerTokenPayout = await poa.totalPerTokenPayout()
-  const fundedAmountInWei = await poa.fundedAmountInWei()
+  const fundedEthAmountInWei = await poa.fundedEthAmountInWei()
   const totalSupply = await poa.totalSupply()
   const contractBalance = await poa.balanceOf(poa.address)
   const stage = await poa.stage()
@@ -272,8 +272,8 @@ const testProxyInitialization = async (reg, pmr, args) => {
     new Date(defaultStartTime.toString() * 1000)
   )
   console.log(
-    'testProxyInitialization() - startTime:',
-    new Date(startTime.toString() * 1000)
+    'testProxyInitialization() - startTimeForEthFunding:',
+    new Date(startTimeForEthFunding.toString() * 1000)
   )
   /* eslint-enable no-console */
 
@@ -310,9 +310,9 @@ const testProxyInitialization = async (reg, pmr, args) => {
     'fee rate should be a constant of 5'
   )
   assert.equal(
-    fundingTimeout.toString(),
+    endTimeForEthFunding.toString(),
     defaultFundingTimeout.toString(),
-    'fundingTimeout should match that given in constructor'
+    'endTimeForEthFunding should match that given in constructor'
   )
   assert.equal(
     fundingGoalInCents.toString(),
@@ -325,9 +325,9 @@ const testProxyInitialization = async (reg, pmr, args) => {
     'totalPerTokenPayout should start uninitialized'
   )
   assert.equal(
-    fundedAmountInWei.toString(),
+    fundedEthAmountInWei.toString(),
     bigZero.toString(),
-    'fundedAmountInWei should start uninitialized'
+    'fundedEthAmountInWei should start uninitialized'
   )
   assert.equal(
     totalSupply.toString(),
@@ -356,8 +356,8 @@ const testProxyInitialization = async (reg, pmr, args) => {
     'contract should start not requiring whitelisted for transfers'
   )
   assert(
-    areInRange(startTime, defaultStartTime, 1),
-    'startTime should match startTime given in constructor'
+    areInRange(startTimeForEthFunding, defaultStartTime, 1),
+    'startTimeForEthFunding should match startTimeForEthFunding given in constructor'
   )
   return poa
 }
@@ -396,11 +396,11 @@ const testInitialization = async (exr, exp, reg, pmr) => {
   const actualCustodian = await poa.custodian()
   const decimals = await poa.decimals()
   const feeRateInPermille = await poa.feeRateInPermille()
-  const startTime = await poa.startTime()
-  const fundingTimeout = await poa.fundingTimeout()
+  const startTimeForEthFunding = await poa.startTimeForEthFunding()
+  const endTimeForEthFunding = await poa.endTimeForEthFunding()
   const fundingGoalInCents = await poa.fundingGoalInCents()
   const totalPerTokenPayout = await poa.totalPerTokenPayout()
-  const fundedAmountInWei = await poa.fundedAmountInWei()
+  const fundedEthAmountInWei = await poa.fundedEthAmountInWei()
   const totalSupply = await poa.totalSupply()
   const contractBalance = await poa.balanceOf(poa.address)
   const stage = await poa.stage()
@@ -442,14 +442,14 @@ const testInitialization = async (exr, exp, reg, pmr) => {
     'fee rate should be a constant of 5'
   )
   assert.equal(
-    startTime.toString(),
+    startTimeForEthFunding.toString(),
     defaultStartTime.toString(),
-    'startTime should match startTime given in constructor'
+    'startTimeForEthFunding should match startTimeForEthFunding given in constructor'
   )
   assert.equal(
-    fundingTimeout.toString(),
+    endTimeForEthFunding.toString(),
     defaultFundingTimeout.toString(),
-    'fundingTimeout should match that given in constructor'
+    'endTimeForEthFunding should match that given in constructor'
   )
   assert.equal(
     fundingGoalInCents.toString(),
@@ -462,9 +462,9 @@ const testInitialization = async (exr, exp, reg, pmr) => {
     'totalPerTokenPayout should start uninitialized'
   )
   assert.equal(
-    fundedAmountInWei.toString(),
+    fundedEthAmountInWei.toString(),
     bigZero.toString(),
-    'fundedAmountInWei should start uninitialized'
+    'fundedEthAmountInWei should start uninitialized'
   )
   assert.equal(
     totalSupply.toString(),
@@ -608,20 +608,20 @@ const testBuyTokensWithFiat = async (poa, buyer, amountInCents, config) => {
   assert(!!config.gasPrice, 'gasPrice must be given')
   assert(!!config.from, 'from must be given')
 
-  const preInvestedTokenAmountPerUser = await poa.fiatInvestmentPerUserInTokens(
+  const preInvestedTokenAmountPerUser = await poa.fundedFiatAmountPerUserInTokens(
     buyer
   )
-  const preFundedAmountInTokens = await poa.fundedAmountInTokensDuringFiatFunding()
-  const preFundedAmountInCents = await poa.fundedAmountInCentsDuringFiatFunding()
+  const preFundedAmountInTokens = await poa.fundedFiatAmountInTokens()
+  const preFundedAmountInCents = await poa.fundedFiatAmountInCents()
   await poa.buyFiat(buyer, amountInCents, config)
 
-  const postInvestedTokenAmountPerUser = await poa.fiatInvestmentPerUserInTokens(
+  const postInvestedTokenAmountPerUser = await poa.fundedFiatAmountPerUserInTokens(
     buyer
   )
 
   const expectedFundedAmountInCents = preFundedAmountInCents.add(amountInCents)
-  const postFundedAmountInTokens = await poa.fundedAmountInTokensDuringFiatFunding()
-  const postFundedAmountInCents = await poa.fundedAmountInCentsDuringFiatFunding()
+  const postFundedAmountInTokens = await poa.fundedFiatAmountInTokens()
+  const postFundedAmountInCents = await poa.fundedFiatAmountInCents()
   const expectedUserTokenAmount = await getExpectedTokenAmount(
     poa,
     amountInCents
@@ -652,20 +652,20 @@ const testRemoveTokensWithFiat = async (poa, buyer, amountInCents, config) => {
   assert(!!config.gasPrice, 'gasPrice must be given')
   assert(!!config.from, 'from must be given')
 
-  const preInvestedTokenAmountPerUser = await poa.fiatInvestmentPerUserInTokens(
+  const preInvestedTokenAmountPerUser = await poa.fundedFiatAmountPerUserInTokens(
     buyer
   )
-  const preFundedAmountInTokens = await poa.fundedAmountInTokensDuringFiatFunding()
-  const preFundedAmountInCents = await poa.fundedAmountInCentsDuringFiatFunding()
+  const preFundedAmountInTokens = await poa.fundedFiatAmountInTokens()
+  const preFundedAmountInCents = await poa.fundedFiatAmountInCents()
   await poa.removeFiat(buyer, amountInCents, config)
 
-  const postInvestedTokenAmountPerUser = await poa.fiatInvestmentPerUserInTokens(
+  const postInvestedTokenAmountPerUser = await poa.fundedFiatAmountPerUserInTokens(
     buyer
   )
 
   const expectedFundedAmountInCents = preFundedAmountInCents.sub(amountInCents)
-  const postFundedAmountInTokens = await poa.fundedAmountInTokensDuringFiatFunding()
-  const postFundedAmountInCents = await poa.fundedAmountInCentsDuringFiatFunding()
+  const postFundedAmountInTokens = await poa.fundedFiatAmountInTokens()
+  const postFundedAmountInCents = await poa.fundedFiatAmountInCents()
   const expectedUserTokenAmount = await getExpectedTokenAmount(
     poa,
     amountInCents
@@ -697,7 +697,7 @@ const testIncrementOfBalanceWhenBuyTokensWithFiat = async (
   buyer,
   amountInCents
 ) => {
-  const preInvestedTokenAmountPerUser = await poa.fiatInvestmentPerUserInTokens(
+  const preInvestedTokenAmountPerUser = await poa.fundedFiatAmountPerUserInTokens(
     buyer
   )
   const expectedTokenAmount = await getExpectedTokenAmount(poa, amountInCents)
@@ -707,7 +707,7 @@ const testIncrementOfBalanceWhenBuyTokensWithFiat = async (
     gasPrice
   })
 
-  const postInvestedTokenAmountPerUser = await poa.fiatInvestmentPerUserInTokens(
+  const postInvestedTokenAmountPerUser = await poa.fundedFiatAmountPerUserInTokens(
     buyer
   )
 
@@ -728,8 +728,8 @@ const testBuyTokens = async (poa, config) => {
 
   const preEthBalance = await getEtherBalance(buyer)
   const preTokenBalance = await poa.balanceOf(buyer)
-  const preFundedAmount = await poa.fundedAmountInWei()
-  const preUserWeiInvested = await poa.investmentAmountPerUserInWei(buyer)
+  const preFundedAmount = await poa.fundedEthAmountInWei()
+  const preUserWeiInvested = await poa.fundedEthAmountPerUserInWei(buyer)
 
   const tx = await poa.buy(config)
   const gasUsed = await getGasUsed(tx)
@@ -737,8 +737,8 @@ const testBuyTokens = async (poa, config) => {
 
   const postEthBalance = await getEtherBalance(buyer)
   const postTokenBalance = await poa.balanceOf(buyer)
-  const postFundedAmount = await poa.fundedAmountInWei()
-  const postUserWeiInvested = await poa.investmentAmountPerUserInWei(buyer)
+  const postFundedAmount = await poa.fundedEthAmountInWei()
+  const postUserWeiInvested = await poa.fundedEthAmountPerUserInWei(buyer)
 
   const expectedPostEthBalance = preEthBalance.sub(weiBuyAmount).sub(gasCost)
 
@@ -760,7 +760,7 @@ const testBuyTokens = async (poa, config) => {
   assert.equal(
     postFundedAmount.sub(preFundedAmount).toString(),
     weiBuyAmount.toString(),
-    'fiat fundedAmountInWei should be incremented by eth wei amount'
+    'fiat fundedEthAmountInWei should be incremented by eth wei amount'
   )
   assert.equal(
     postUserWeiInvested.sub(preUserWeiInvested).toString(),
@@ -781,11 +781,11 @@ const testBuyRemainingTokens = async (poa, config) => {
   assert(!!config.gasPrice, 'gasPrice must be given')
   assert(!!config.from, 'from must be given')
 
-  const preUserWeiInvested = await poa.investmentAmountPerUserInWei(config.from)
-  const fundedAmountInWei = await poa.fundedAmountInWei()
+  const preUserWeiInvested = await poa.fundedEthAmountPerUserInWei(config.from)
+  const fundedEthAmountInWei = await poa.fundedEthAmountInWei()
   const fundingGoalInCents = await poa.fundingGoalInCents()
   const fundingGoalWei = await poa.fiatCentsToWei(fundingGoalInCents)
-  const remainingBuyableEth = fundingGoalWei.sub(fundedAmountInWei)
+  const remainingBuyableEth = fundingGoalWei.sub(fundedEthAmountInWei)
 
   config.value = remainingBuyableEth
   const buyer = config.from
@@ -794,17 +794,15 @@ const testBuyRemainingTokens = async (poa, config) => {
 
   const preEthBalance = await getEtherBalance(buyer)
   const preTokenBalance = await poa.balanceOf(buyer)
-  const preFundedWei = await poa.fundedAmountInWei()
+  const preFundedWei = await poa.fundedEthAmountInWei()
   const tx = await poa.buy(config)
   const gasUsed = await getGasUsed(tx)
   const gasCost = new BigNumber(gasUsed).mul(config.gasPrice)
 
-  const postUserWeiInvested = await poa.investmentAmountPerUserInWei(
-    config.from
-  )
+  const postUserWeiInvested = await poa.fundedEthAmountPerUserInWei(config.from)
   const postEthBalance = await getEtherBalance(buyer)
   const postTokenBalance = await poa.balanceOf(buyer)
-  const postFundedWei = await poa.fundedAmountInWei()
+  const postFundedWei = await poa.fundedEthAmountInWei()
 
   const expectedPostEthBalance = preEthBalance.sub(weiBuyAmount).sub(gasCost)
   const postFundedFiatCents = await poa.weiToFiatCents(postFundedWei)
@@ -813,7 +811,7 @@ const testBuyRemainingTokens = async (poa, config) => {
   assert.equal(
     postUserWeiInvested.sub(preUserWeiInvested).toString(),
     remainingBuyableEth.toString(),
-    'investmentAmountPerUserInWei should be incremented by remainingBuyableEth'
+    'fundedEthAmountPerUserInWei should be incremented by remainingBuyableEth'
   )
   assert.equal(
     expectedPostEthBalance.toString(),
@@ -833,7 +831,7 @@ const testBuyRemainingTokens = async (poa, config) => {
   assert.equal(
     postFundedWei.sub(preFundedWei).toString(),
     weiBuyAmount.toString(),
-    'fiat fundedAmountInWei should be incremented by fiatBuyAmount'
+    'fiat fundedEthAmountInWei should be incremented by fiatBuyAmount'
   )
   assert(
     areInRange(fundingGoalInCents, postFundedFiatCents, 1),
@@ -1140,15 +1138,15 @@ const testFirstReclaim = async (poa, config, shouldBeFundingSuccessful) => {
   )
 }
 
-const fundingTimeoutContract = async poa => {
-  const fundingTimeout = await poa.fundingTimeout()
-  await timeTravel(fundingTimeout.toNumber())
+const forcePoaTimeout = async poa => {
+  const endTimeForEthFunding = await poa.endTimeForEthFunding()
+  await timeTravel(endTimeForEthFunding.toNumber())
 }
 
 const activationTimeoutContract = async poa => {
   const activationTimeout = await poa.activationTimeout()
-  const fundingTimeout = await poa.fundingTimeout()
-  await timeTravel(fundingTimeout.add(activationTimeout).toNumber())
+  const endTimeForEthFunding = await poa.endTimeForEthFunding()
+  await timeTravel(endTimeForEthFunding.add(activationTimeout).toNumber())
 }
 
 const testSetStageToTimedOut = async (poa, shouldBeFundingSuccessful) => {
@@ -1200,8 +1198,8 @@ const testReclaim = async (poa, config, first = false) => {
   const preContractEtherBalance = await getEtherBalance(poa.address)
   const preClaimerTokenBalance = await poa.balanceOf(claimer)
   const preClaimerEtherBalance = await getEtherBalance(claimer)
-  const preFundedAmountInWei = await poa.fundedAmountInWei()
-  const preOutstandingEtherBalance = await poa.investmentAmountPerUserInWei(
+  const preFundedAmountInWei = await poa.fundedEthAmountInWei()
+  const preOutstandingEtherBalance = await poa.fundedEthAmountPerUserInWei(
     claimer
   )
 
@@ -1216,8 +1214,8 @@ const testReclaim = async (poa, config, first = false) => {
   const postContractEtherBalance = await getEtherBalance(poa.address)
   const postClaimerTokenBalance = await poa.balanceOf(claimer)
   const postClaimerEtherBalance = await getEtherBalance(claimer)
-  const postFundedAmountInWei = await poa.fundedAmountInWei()
-  const postOutstandingEtherBalance = await poa.investmentAmountPerUserInWei(
+  const postFundedAmountInWei = await poa.fundedEthAmountInWei()
+  const postOutstandingEtherBalance = await poa.fundedEthAmountPerUserInWei(
     claimer
   )
   const expectedClaimerEtherBalance = preClaimerEtherBalance
@@ -1251,7 +1249,7 @@ const testReclaim = async (poa, config, first = false) => {
   assert.equal(
     preFundedAmountInWei.sub(postFundedAmountInWei).toString(),
     preOutstandingEtherBalance.toString(),
-    'fundedAmountInWei should be decremented by claimed ether amount'
+    'fundedEthAmountInWei should be decremented by claimed ether amount'
   )
   assert.equal(
     preContractEtherBalance.sub(postContractEtherBalance).toString(),
@@ -1282,7 +1280,7 @@ const testReclaim = async (poa, config, first = false) => {
 
 const testReclaimAll = async (poa, tokenBuyers) => {
   for (const tokenBuyer of tokenBuyers) {
-    const claimableBalance = await poa.investmentAmountPerUserInWei(tokenBuyer)
+    const claimableBalance = await poa.fundedEthAmountPerUserInWei(tokenBuyer)
     if (claimableBalance.greaterThan(0)) {
       await testReclaim(poa, { from: tokenBuyer })
     }
@@ -1290,7 +1288,7 @@ const testReclaimAll = async (poa, tokenBuyers) => {
 
   const finalContractTotalSupply = await poa.totalSupply()
   const finalContractEtherBalance = await getEtherBalance(poa.address)
-  const finalFundedAmountInWei = await poa.fundedAmountInWei()
+  const finalFundedAmountInWei = await poa.fundedEthAmountInWei()
 
   assert.equal(
     finalContractTotalSupply.toString(),
@@ -1305,7 +1303,7 @@ const testReclaimAll = async (poa, tokenBuyers) => {
   assert.equal(
     bigZero.toString(),
     finalFundedAmountInWei.toString(),
-    'fundedAmountInWei should be 0 after all have reclaimed'
+    'fundedEthAmountInWei should be 0 after all have reclaimed'
   )
 }
 
@@ -1486,11 +1484,9 @@ const testResetCurrencyRate = async (exr, exp, currencyType, rate) => {
 
 const testActiveBalances = async (poa, commitments) => {
   const totalSupply = await poa.totalSupply()
-  const fundedAmountInWei = await poa.fundedAmountInWei()
-  const fundedAmountInTokensDuringFiatFunding = await poa.fundedAmountInTokensDuringFiatFunding()
-  const totalSupplyForEthInvestors = totalSupply.minus(
-    fundedAmountInTokensDuringFiatFunding
-  )
+  const fundedEthAmountInWei = await poa.fundedEthAmountInWei()
+  const fundedFiatAmountInTokens = await poa.fundedFiatAmountInTokens()
+  const totalSupplyForEthInvestors = totalSupply.minus(fundedFiatAmountInTokens)
   let tokenBalanceTotal = bigZero
 
   for (const commitment of commitments) {
@@ -1498,7 +1494,7 @@ const testActiveBalances = async (poa, commitments) => {
     const tokenBalance = await poa.balanceOf(address)
     const expectedBalance = amount
       .mul(totalSupplyForEthInvestors)
-      .div(fundedAmountInWei)
+      .div(fundedEthAmountInWei)
     tokenBalanceTotal = tokenBalanceTotal.add(tokenBalance)
 
     assert(
@@ -1543,11 +1539,11 @@ const testProxyUnchanged = async (poa, first, state) => {
       actualCustodian: await poa.custodian(),
       decimals: await poa.decimals(),
       feeRateInPermille: await poa.feeRateInPermille(),
-      startTime: await poa.startTime(),
-      fundingTimeout: await poa.fundingTimeout(),
+      startTimeForEthFunding: await poa.startTimeForEthFunding(),
+      endTimeForEthFunding: await poa.endTimeForEthFunding(),
       fundingGoalInCents: await poa.fundingGoalInCents(),
       totalPerTokenPayout: await poa.totalPerTokenPayout(),
-      fundedAmountInWei: await poa.fundedAmountInWei(),
+      fundedEthAmountInWei: await poa.fundedEthAmountInWei(),
       totalSupply: await poa.totalSupply(),
       contractBalance: await poa.balanceOf(await poa.address),
       stage: await poa.stage(),
@@ -1567,11 +1563,11 @@ const testProxyUnchanged = async (poa, first, state) => {
         actualCustodian: await poa.custodian(),
         decimals: await poa.decimals(),
         feeRateInPermille: await poa.feeRateInPermille(),
-        startTime: await poa.startTime(),
-        fundingTimeout: await poa.fundingTimeout(),
+        startTimeForEthFunding: await poa.startTimeForEthFunding(),
+        endTimeForEthFunding: await poa.endTimeForEthFunding(),
         fundingGoalInCents: await poa.fundingGoalInCents(),
         totalPerTokenPayout: await poa.totalPerTokenPayout(),
-        fundedAmountInWei: await poa.fundedAmountInWei(),
+        fundedEthAmountInWei: await poa.fundedEthAmountInWei(),
         totalSupply: await poa.totalSupply(),
         contractBalance: await poa.balanceOf(await poa.address),
         stage: await poa.stage(),
@@ -1613,7 +1609,7 @@ const testPercent = async ({
 
 const getRemainingAmountInCents = async poa => {
   const fundingGoalInCents = await poa.fundingGoalInCents()
-  const fundedAmount = await poa.fundedAmountInCentsDuringFiatFunding()
+  const fundedAmount = await poa.fundedFiatAmountInCents()
   const remainingAmount = fundingGoalInCents.sub(fundedAmount)
 
   return remainingAmount
@@ -1646,7 +1642,7 @@ module.exports = {
   defaultSymbol32,
   defaultTotalSupply,
   determineNeededTimeTravel,
-  fundingTimeoutContract,
+  forcePoaTimeout,
   getAccountInformation,
   getDefaultStartTime,
   owner,

@@ -63,8 +63,8 @@ contract PoaToken is PoaCommon {
     uint256 value
   );
   event Transfer(
-    address indexed from, 
-    address indexed to, 
+    address indexed from,
+    address indexed to,
     uint256 value
   );
 
@@ -221,8 +221,8 @@ contract PoaToken is PoaCommon {
 
   function transferOwnership(
     address _newOwner
-  ) 
-    public 
+  )
+    public
     onlyOwner
   {
     require(_newOwner != address(0));
@@ -468,15 +468,15 @@ contract PoaToken is PoaCommon {
       // and "Terminated" stage. Why also in "Terminated"?
       // Because there can still be pending payouts
       return uint256(stage) > 5
-        ? fiatInvestmentPerUserInTokens[_address]
+        ? fundedFiatAmountPerUserInTokens[_address]
         : 0;
     } else {
       return uint256(stage) > 5
-        ? investmentAmountPerUserInWei[_address]
+        ? fundedEthAmountPerUserInWei[_address]
           .mul(
-            totalSupply_.sub(fundedAmountInTokensDuringFiatFunding)
+            totalSupply_.sub(fundedFiatAmountInTokens)
           )
-          .div(fundedAmountInWei)
+          .div(fundedEthAmountInWei)
         : 0;
     }
   }

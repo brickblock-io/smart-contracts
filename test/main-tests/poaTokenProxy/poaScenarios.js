@@ -16,7 +16,7 @@ const {
   testPayout,
   testClaimAllPayouts,
   testFirstReclaim,
-  fundingTimeoutContract,
+  forcePoaTimeout,
   activationTimeoutContract,
   testSetStageToTimedOut,
   testTransfer,
@@ -132,7 +132,7 @@ describe('when handling unhappy paths', async () => {
       poa = contracts.poa
     })
 
-    it('should hit checkTimeout when reclaiming after fundingTimeout', async () => {
+    it('should hit checkTimeout when reclaiming after endTimeForEthFunding', async () => {
       const tokenBuyAmount = new BigNumber(1e18)
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
@@ -145,7 +145,7 @@ describe('when handling unhappy paths', async () => {
         gasPrice
       })
 
-      await fundingTimeoutContract(poa)
+      await forcePoaTimeout(poa)
       await testFirstReclaim(poa, { from: whitelistedPoaBuyers[0] })
     })
 
@@ -1013,7 +1013,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       })
 
       const postStage = await poa.stage()
-      const postFundedAmountCents = await poa.fundedAmountInCents()
+      const postFundedAmountCents = await poa.fundedEthAmountInCents()
 
       assert.equal(
         postStage.toString(),
@@ -1022,7 +1022,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       )
       assert(
         areInRange(postFundedAmountCents, fundingGoalFiatCents.div(2), 1e2),
-        'fundedAmountInCents should be half of fundingGoalFiatCents'
+        'fundedEthAmountInCents should be half of fundingGoalFiatCents'
       )
     })
 

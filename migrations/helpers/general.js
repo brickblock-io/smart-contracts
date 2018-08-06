@@ -11,7 +11,8 @@ let web3
 const setWeb3 = _web3 => (web3 = _web3)
 
 // given an offset in second, returns seconds since unix epoch
-const unixTimeWithOffset = offset => Math.floor(Date.now() / 1000) + offset
+const unixTimeWithOffsetInSec = (offset = 0) =>
+  Math.floor(Date.now() / 1000) + offset
 const gasAmountForPoa = 6612388
 
 const deployContracts = async (
@@ -61,7 +62,7 @@ const deployContracts = async (
   const act = await AccessToken.deployed()
 
   console.log(chalk.yellow('Deploying BrickblockAccount…'))
-  const releaseTime = unixTimeWithOffset(60 * 60 * 24 * 365 * 2) // 2 years in seconds
+  const releaseTime = unixTimeWithOffsetInSec(60 * 60 * 24 * 365 * 2) // 2 years in seconds
   await deployer.deploy(BrickblockAccount, reg.address, releaseTime, {
     from: owner
   })
@@ -261,5 +262,6 @@ module.exports = {
   setWeb3,
   deployContracts,
   addContractsToRegistry,
-  getEtherBalance
+  getEtherBalance,
+  unixTimeWithOffsetInSec
 }

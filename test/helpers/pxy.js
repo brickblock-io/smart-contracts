@@ -72,22 +72,22 @@ const parseCommonStorage = (storage, stageInitialized) => ({
     trimRightBytes(storage[6].data)
   ],
   commonTotalSupply: new BigNumber(storage[7].data),
-  fundedAmountInTokensDuringFiatFunding: new BigNumber(storage[8].data),
-  fiatInvestmentPerUserInTokens: storage[9].data,
-  fundedAmountInWei: new BigNumber(storage[10].data),
-  investmentAmountPerUserInWei: storage[11].data,
+  fundedFiatAmountInTokens: new BigNumber(storage[8].data),
+  fundedFiatAmountPerUserInTokens: storage[9].data,
+  fundedEthAmountInWei: new BigNumber(storage[10].data),
+  fundedEthAmountPerUserInWei: storage[11].data,
   unclaimedPayoutTotals: storage[12].data,
   crowdsaleInitialized: new BigNumber(storage[13].data.slice(0, 4)).toNumber(),
   tokenInitialized: new BigNumber(
     '0x' + storage[13].data.slice(4, 6)
   ).toNumber(),
   paused: new BigNumber('0x' + storage[13].data.slice(6, 8)).toNumber(),
-  startTime: new BigNumber(storage[14].data),
-  fundingTimeout: new BigNumber(storage[15].data),
+  startTimeForEthFunding: new BigNumber(storage[14].data),
+  endTimeForEthFunding: new BigNumber(storage[15].data),
   activationTimeout: new BigNumber(storage[16].data),
   actualFiatCurrency32: bytes32StorageToAscii(storage[17].data),
   fundingGoalInCents: new BigNumber(storage[18].data),
-  fundedAmountInCentsDuringFiatFunding: new BigNumber(storage[19].data)
+  fundedFiatAmountInCents: new BigNumber(storage[19].data)
 })
 
 const parseTokenStorage = storage => ({
@@ -137,17 +137,17 @@ const checkPostInitializedStorage = async (poa, reg) => {
     actualCustodian,
     proofOfCustody32,
     commonTotalSupply,
-    fundedAmountInTokensDuringFiatFunding,
-    fundedAmountInWei,
+    fundedFiatAmountInTokens,
+    fundedEthAmountInWei,
     paused,
     tokenInitialized,
     crowdsaleInitialized,
-    startTime,
-    fundingTimeout,
+    startTimeForEthFunding,
+    endTimeForEthFunding,
     activationTimeout,
     actualFiatCurrency32,
     fundingGoalInCents,
-    fundedAmountInCentsDuringFiatFunding
+    fundedFiatAmountInCents
   } = parseCommonStorage(storage, false)
 
   // token storage
@@ -180,14 +180,14 @@ const checkPostInitializedStorage = async (poa, reg) => {
     'commonTotalSupply should match defaultTotalSupply'
   )
   assert.equal(
-    fundedAmountInTokensDuringFiatFunding.toString(),
+    fundedFiatAmountInTokens.toString(),
     '0',
-    'fundedAmountInTokensDuringFiatFunding should be 0'
+    'fundedFiatAmountInTokens should be 0'
   )
   assert.equal(
-    fundedAmountInWei.toString(),
+    fundedEthAmountInWei.toString(),
     '0',
-    'fundedAmountInWei should be 0'
+    'fundedEthAmountInWei should be 0'
   )
   assert.equal(registry, reg.address, 'registry should match reg.address')
   assert(paused, 'paused should be true')
@@ -204,17 +204,17 @@ const checkPostInitializedStorage = async (poa, reg) => {
   )
   assert(crowdsaleInitialized, 'crowdsaleInitialized should be true')
   assert(
-    startTime.greaterThan(1530280851),
-    'startTime should be greater than 06/29/2018'
+    startTimeForEthFunding.greaterThan(1530280851),
+    'startTimeForEthFunding should be greater than 06/29/2018'
   )
   assert.equal(
-    fundingTimeout.toString(),
+    endTimeForEthFunding.toString(),
     defaultFundingTimeout.toString(),
-    'fundingTimeout should match defaultFundingTimeout'
+    'endTimeForEthFunding should match defaultFundingTimeout'
   )
   assert(
-    activationTimeout.greaterThan(fundingTimeout),
-    'activationTimeout should be greater than fundingTimeout'
+    activationTimeout.greaterThan(endTimeForEthFunding),
+    'activationTimeout should be greater than endTimeForEthFunding'
   )
   assert.equal(
     actualFiatCurrency32,
@@ -227,9 +227,9 @@ const checkPostInitializedStorage = async (poa, reg) => {
     'fundingGoalInCents should match defaultFundingGoal'
   )
   assert.equal(
-    fundedAmountInCentsDuringFiatFunding.toString(),
+    fundedFiatAmountInCents.toString(),
     '0',
-    'fundedAmountInCentsDuringFiatFunding should be 0'
+    'fundedFiatAmountInCents should be 0'
   )
   assert.equal(actualBroker, broker, 'actualBroker should match broker')
 
@@ -284,17 +284,17 @@ const checkPostActiveStorage = async (poa, reg) => {
     actualCustodian,
     proofOfCustody32,
     commonTotalSupply,
-    fundedAmountInTokensDuringFiatFunding,
-    fundedAmountInWei,
+    fundedFiatAmountInTokens,
+    fundedEthAmountInWei,
     paused,
     crowdsaleInitialized,
     tokenInitialized,
-    fundingTimeout,
+    endTimeForEthFunding,
     actualFiatCurrency32,
-    startTime,
+    startTimeForEthFunding,
     activationTimeout,
     fundingGoalInCents,
-    fundedAmountInCentsDuringFiatFunding
+    fundedFiatAmountInCents
   } = await parseCommonStorage(storage, true)
   // token storage
   const { allowed, actualOwner, name, symbol } = parseTokenStorage(storage)
@@ -334,13 +334,13 @@ const checkPostActiveStorage = async (poa, reg) => {
     'commonTotalSupply should match defaultTotalSupply'
   )
   assert.equal(
-    fundedAmountInTokensDuringFiatFunding.toString(),
+    fundedFiatAmountInTokens.toString(),
     '0',
-    'fundedAmountInTokensDuringFiatFunding should be 0'
+    'fundedFiatAmountInTokens should be 0'
   )
   assert(
-    fundedAmountInWei.greaterThan(0),
-    'fundedAmountInWei should be greater than 0'
+    fundedEthAmountInWei.greaterThan(0),
+    'fundedEthAmountInWei should be greater than 0'
   )
   assert.equal(registry, reg.address, 'registry should match reg.address')
   assert(!paused, 'paused should be false')
@@ -353,17 +353,17 @@ const checkPostActiveStorage = async (poa, reg) => {
 
   assert(crowdsaleInitialized, 'crowdsaleInitialized should be true')
   assert(
-    startTime.greaterThan(1530280851),
-    'startTime should be greater than 06/29/2018'
+    startTimeForEthFunding.greaterThan(1530280851),
+    'startTimeForEthFunding should be greater than 06/29/2018'
   )
   assert.equal(
-    fundingTimeout.toString(),
+    endTimeForEthFunding.toString(),
     defaultFundingTimeout.toString(),
-    'fundingTimeout should match defaultFundingTimeout'
+    'endTimeForEthFunding should match defaultFundingTimeout'
   )
   assert(
-    activationTimeout.greaterThan(fundingTimeout),
-    'activationTimeout should be greater than fundingTimeout'
+    activationTimeout.greaterThan(endTimeForEthFunding),
+    'activationTimeout should be greater than endTimeForEthFunding'
   )
   assert.equal(
     actualFiatCurrency32,
@@ -376,9 +376,9 @@ const checkPostActiveStorage = async (poa, reg) => {
     'fundingGoalInCents should match defaultFundingGoal'
   )
   assert.equal(
-    fundedAmountInCentsDuringFiatFunding.toString(),
+    fundedFiatAmountInCents.toString(),
     '0',
-    'fundedAmountInCentsDuringFiatFunding should be 0'
+    'fundedFiatAmountInCents should be 0'
   )
   assert.equal(actualBroker, broker, 'actualBroker should match broker')
 
@@ -426,17 +426,17 @@ const checkPostIsUpgradedStorage = async (poa, reg) => {
     actualCustodian,
     proofOfCustody32,
     commonTotalSupply,
-    fundedAmountInTokensDuringFiatFunding,
-    fundedAmountInWei,
+    fundedFiatAmountInTokens,
+    fundedEthAmountInWei,
     paused,
     tokenInitialized,
     crowdsaleInitialized,
-    startTime,
-    fundingTimeout,
+    startTimeForEthFunding,
+    endTimeForEthFunding,
     activationTimeout,
     actualFiatCurrency32,
     fundingGoalInCents,
-    fundedAmountInCentsDuringFiatFunding
+    fundedFiatAmountInCents
   } = await parseCommonStorage(storage, true)
   // token storage
   const { allowed, actualOwner, name, symbol } = parseTokenStorage(storage)
@@ -477,13 +477,13 @@ const checkPostIsUpgradedStorage = async (poa, reg) => {
     'commonTotalSupply should match defaultTotalSupply'
   )
   assert.equal(
-    fundedAmountInTokensDuringFiatFunding.toString(),
+    fundedFiatAmountInTokens.toString(),
     '0',
-    'fundedAmountInTokensDuringFiatFunding should be 0'
+    'fundedFiatAmountInTokens should be 0'
   )
   assert(
-    fundedAmountInWei.greaterThan(0),
-    'fundedAmountInWei should be greater than 0'
+    fundedEthAmountInWei.greaterThan(0),
+    'fundedEthAmountInWei should be greater than 0'
   )
   assert.equal(registry, reg.address, 'registry should match reg.address')
   assert(!paused, 'paused should be false')
@@ -501,17 +501,17 @@ const checkPostIsUpgradedStorage = async (poa, reg) => {
 
   assert(crowdsaleInitialized, 'crowdsaleInitialized should be true')
   assert(
-    startTime.greaterThan(1530280851),
-    'startTime should be greater than 06/29/2018'
+    startTimeForEthFunding.greaterThan(1530280851),
+    'startTimeForEthFunding should be greater than 06/29/2018'
   )
   assert.equal(
-    fundingTimeout.toString(),
+    endTimeForEthFunding.toString(),
     defaultFundingTimeout.toString(),
-    'fundingTimeout should match defaultFundingTimeout'
+    'endTimeForEthFunding should match defaultFundingTimeout'
   )
   assert(
-    activationTimeout.greaterThan(fundingTimeout),
-    'activationTimeout should be greater than fundingTimeout'
+    activationTimeout.greaterThan(endTimeForEthFunding),
+    'activationTimeout should be greater than endTimeForEthFunding'
   )
   assert.equal(
     actualFiatCurrency32,
@@ -524,9 +524,9 @@ const checkPostIsUpgradedStorage = async (poa, reg) => {
     'fundingGoalInCents should match defaultFundingGoal'
   )
   assert.equal(
-    fundedAmountInCentsDuringFiatFunding.toString(),
+    fundedFiatAmountInCents.toString(),
     '0',
-    'fundedAmountInCentsDuringFiatFunding should be 0'
+    'fundedFiatAmountInCents should be 0'
   )
   assert.equal(actualBroker, broker, 'actualBroker should match broker')
 

@@ -149,11 +149,11 @@ describe("when in 'PreFunding' stage", async () => {
       await testWillThrow(testStartFiatSale, [poa, { from: owner, gasPrice }])
     })
 
-    it('should NOT move to funding before startTime, EVEN if owner', async () => {
+    it('should NOT move to funding before startTimeForEthFunding, EVEN if owner', async () => {
       await testWillThrow(testStartEthSale, [poa, { from: owner }])
     })
 
-    it('should allow ANYONE to move to Stages.EthFunding when after startTime', async () => {
+    it('should allow ANYONE to move to Stages.EthFunding when after startTimeForEthFunding', async () => {
       const neededTime = await determineNeededTimeTravel(
         poa,
         whitelistedPoaBuyers[0]

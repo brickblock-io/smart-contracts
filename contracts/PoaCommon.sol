@@ -59,19 +59,19 @@ contract PoaCommon is PoaProxyCommon {
   uint256 internal totalSupply_;
 
   // Tracks the total amount of tokens sold during the FiatFunding stage
-  uint256 public fundedAmountInTokensDuringFiatFunding;
+  uint256 public fundedFiatAmountInTokens;
 
   // Tracks the Fiat investments per user raised during the FiatFunding stage
-  mapping(address => uint256) public fiatInvestmentPerUserInTokens;
+  mapping(address => uint256) public fundedFiatAmountPerUserInTokens;
 
   // Tracks the total amount of ETH raised during the EthFunding stage.
   // NOTE: We can't use `address(this).balance` because after activating the
   // POA contract, its balance will become `claimable` by the broker and can
   // therefore no longer be used to calculate balances.
-  uint256 public fundedAmountInWei;
+  uint256 public fundedEthAmountInWei;
 
   // Tracks the ETH investments per user raised during the EthFunding stage
-  mapping(address => uint256) public investmentAmountPerUserInWei;
+  mapping(address => uint256) public fundedEthAmountPerUserInWei;
 
   // Tracks unclaimed payouts per user
   mapping(address => uint256) public unclaimedPayoutTotals;
@@ -99,12 +99,12 @@ contract PoaCommon is PoaProxyCommon {
   bool public crowdsaleInitialized;
 
   // Used for checking when contract should move from PreFunding or FiatFunding to EthFunding stage
-  uint256 public startTime;
+  uint256 public startTimeForEthFunding;
 
-  // Amount of seconds (starting at startTime) until moving from EthFunding to TimedOut stage
-  uint256 public fundingTimeout;
+  // Amount of seconds (starting at startTimeForEthFunding) until moving from EthFunding to TimedOut stage
+  uint256 public endTimeForEthFunding;
 
-  // Amount of seconds (starting at startTime + fundingTimeout) until moving from FundingSuccessful stage to TimedOut
+  // Amount of seconds (starting at startTimeForEthFunding + endTimeForEthFunding) until moving from FundingSuccessful stage to TimedOut
   uint256 public activationTimeout;
 
   // bytes32 representation fiat currency symbol used to get rate
@@ -114,7 +114,7 @@ contract PoaCommon is PoaProxyCommon {
   uint256 public fundingGoalInCents;
 
   // Used for keeping track of actual funded amount in fiat during FiatFunding stage
-  uint256 public fundedAmountInCentsDuringFiatFunding;
+  uint256 public fundedFiatAmountInCents;
 
   /************************
   * End Crowdsale Storage *
@@ -241,7 +241,7 @@ contract PoaCommon is PoaProxyCommon {
     view
     returns(bool)
   {
-    return fiatInvestmentPerUserInTokens[_buyer] != 0;
+    return fundedFiatAmountPerUserInTokens[_buyer] != 0;
   }
 
   /// @notice Checks if a given address is whitelisted

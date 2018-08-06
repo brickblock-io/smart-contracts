@@ -29,14 +29,14 @@ contract PoaCrowdsale is PoaCommon {
 
   /// @notice Ensure that the contract has not timed out
   modifier checkTimeout() {
-    uint256 fundingTimeoutDeadline = startTime.add(fundingTimeout);
-    uint256 activationTimeoutDeadline = startTime
-      .add(fundingTimeout)
+    uint256 fundingDeadline = startTimeForEthFunding.add(endTimeForEthFunding);
+    uint256 activationDeadline = startTimeForEthFunding
+      .add(endTimeForEthFunding)
       .add(activationTimeout);
 
     if (
-      (uint256(stage) < 3 && block.timestamp >= fundingTimeoutDeadline) ||
-      (stage == Stages.FundingSuccessful && block.timestamp >= activationTimeoutDeadline)
+      (uint256(stage) < 3 && block.timestamp >= fundingDeadline) ||
+      (stage == Stages.FundingSuccessful && block.timestamp >= activationDeadline)
     ) {
       enterStage(Stages.TimedOut);
     }
@@ -58,16 +58,16 @@ contract PoaCrowdsale is PoaCommon {
     @notice Proxied contracts cannot have constructors. This works in place
     of the constructor in order to initialize the contract storage.
 
-    @param _fiatCurrency32     bytes32 of fiat currency string
-    @param _startTime          Beginning of the sale as unix timestamp
-    @param _fundingTimeout     Duration of the sale (starting from _startTime)
-    @param _activationTimeout  Timeframe for the custodian to activate the token (starting from _startTime + _fundingTimeout)
-    @param _fundingGoalInCents Funding goal in fiat cents (e.g. a €10,000 fundingGoal would be '10000000')
+    @param _fiatCurrency32         bytes32 of fiat currency string
+    @param _startTimeForEthFunding Beginning of the sale as unix timestamp
+    @param _endTimeForEthFunding   Duration of the sale (starting from _startTimeForEthFunding)
+    @param _activationTimeout      Timeframe for the custodian to activate the token (starting from _startTimeForEthFunding + _endTimeForEthFunding)
+    @param _fundingGoalInCents     Funding goal in fiat cents (e.g. a €10,000 fundingGoal would be '10000000')
   */
   function initializeCrowdsale(
     bytes32 _fiatCurrency32,
-    uint256 _startTime,
-    uint256 _fundingTimeout,
+    uint256 _startTimeForEthFunding,
+    uint256 _endTimeForEthFunding,
     uint256 _activationTimeout,
     uint256 _fundingGoalInCents
   )
@@ -81,16 +81,16 @@ contract PoaCrowdsale is PoaCommon {
 
     // validate initialize parameters
     require(_fiatCurrency32 != bytes32(0));
-    require(_startTime > block.timestamp);
-    require(_fundingTimeout >= 60 * 60 * 24);
+    require(_startTimeForEthFunding > block.timestamp);
+    require(_endTimeForEthFunding >= 60 * 60 * 24);
     require(_activationTimeout >= 60 * 60 * 24 * 7);
     require(_fundingGoalInCents > 0);
     require(totalSupply_ > _fundingGoalInCents);
 
     // initialize non-sequential storage
     fiatCurrency32 = _fiatCurrency32;
-    startTime = _startTime;
-    fundingTimeout = _fundingTimeout;
+    startTimeForEthFunding = _startTimeForEthFunding;
+    endTimeForEthFunding = _endTimeForEthFunding;
     activationTimeout = _activationTimeout;
     fundingGoalInCents = _fundingGoalInCents;
 
@@ -118,13 +118,13 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
-  /// @notice Used for starting ETH sale as long as startTime has passed
+  /// @notice Used for starting ETH sale as long as startTimeForEthFunding has passed
   function startEthSale()
     external
     atEitherStage(Stages.PreFunding, Stages.FiatFunding)
     returns (bool)
   {
-    require(block.timestamp >= startTime);
+    require(block.timestamp >= startTimeForEthFunding);
     enterStage(Stages.EthFunding);
     return true;
   }
@@ -143,7 +143,10 @@ contract PoaCrowdsale is PoaCommon {
     return totalSupply_.mul(_percentOfFundingGoal).div(10 ** precisionOfPercentCalc);
   }
 
-  /// @notice Used for funding through FIAT offchain during crowdsale. Balances are updated by custodian
+  /**
+    @notice Used for fiat investments during 'FiatFunding' stage.
+    All fiat balances are updated manually by the custodian.
+   */
   function buyFiat
   (
     address _contributor,
@@ -157,27 +160,27 @@ contract PoaCrowdsale is PoaCommon {
     // Do not allow funding less than 100 cents
     require(_amountInCents >= 100);
 
-    uint256 _newFundedAmount = fundedAmountInCentsDuringFiatFunding.add(_amountInCents);
+    uint256 _newFundedFiatAmountInCents = fundedFiatAmountInCents.add(_amountInCents);
 
-    // if the amount is smaller than remaining amount, continue the transaction
+    // Make sure, investment amount isn't higher than the funding goal.
+    // This is also a little protection against typos with one too many zeros :)
+    if (fundingGoalInCents.sub(_newFundedFiatAmountInCents) >= 0) {
 
-    if (fundingGoalInCents.sub(_newFundedAmount) >= 0) {
-      fundedAmountInCentsDuringFiatFunding = fundedAmountInCentsDuringFiatFunding
+      // update total fiat funded amount in cents
+      fundedFiatAmountInCents = fundedFiatAmountInCents
         .add(_amountInCents);
 
-
+      // update total fiat funded amount in tokens
       uint256 _tokenAmount = calculateTokenAmountForAmountInCents(_amountInCents);
-
-      // update total fiat funded amount
-      fundedAmountInTokensDuringFiatFunding = fundedAmountInTokensDuringFiatFunding
+      fundedFiatAmountInTokens = fundedFiatAmountInTokens
         .add(_tokenAmount);
 
-      // update balance of investor
-      fiatInvestmentPerUserInTokens[_contributor] = fiatInvestmentPerUserInTokens[_contributor]
+      // update balance of fiat investor
+      fundedFiatAmountPerUserInTokens[_contributor] = fundedFiatAmountPerUserInTokens[_contributor]
         .add(_tokenAmount);
 
       // if funded amount reaches the funding goal, enter FundingSuccessful stage
-      if (fundedAmountInCentsDuringFiatFunding >= fundingGoalInCents) {
+      if (fundedFiatAmountInCents >= fundingGoalInCents) {
         enterStage(Stages.FundingSuccessful);
       }
 
@@ -199,21 +202,19 @@ contract PoaCrowdsale is PoaCommon {
   {
     require(_amountInCents >= 0);
 
-    fundedAmountInCentsDuringFiatFunding = fundedAmountInCentsDuringFiatFunding.sub(_amountInCents);
-
     uint256 _tokenAmount = calculateTokenAmountForAmountInCents(_amountInCents);
 
-    // update total fiat funded amount
-    fundedAmountInTokensDuringFiatFunding = fundedAmountInTokensDuringFiatFunding.sub(_tokenAmount);
+    // update funded fiat amount totals
+    fundedFiatAmountInCents = fundedFiatAmountInCents.sub(_amountInCents);
+    fundedFiatAmountInTokens = fundedFiatAmountInTokens.sub(_tokenAmount);
 
     // update balance of investor
-    fiatInvestmentPerUserInTokens[_contributor] = fiatInvestmentPerUserInTokens[_contributor].sub(_tokenAmount);
+    fundedFiatAmountPerUserInTokens[_contributor] = fundedFiatAmountPerUserInTokens[_contributor].sub(_tokenAmount);
 
     return true;
-
   }
 
-  /// @notice Used for funding through ETH during crowdsale
+  /// @notice Used for funding through ETH during the 'EthFunding' stage
   function buy()
     external
     payable
@@ -222,14 +223,19 @@ contract PoaCrowdsale is PoaCommon {
     isBuyWhitelisted
     returns (bool)
   {
-    // prevent FiatFunding addresses from contributing to funding to keep total supply legit
+    // prevent FiatFunding addresses from contributing to funding to keep total supply correct
     if (isFiatInvestor(msg.sender)) {
       return false;
     }
 
-    // prevent case where buying after reaching fundingGoal results in buyer
-    // earning money on a buy
-    if (weiToFiatCents(fundedAmountInWei) > fundingGoalInCents) {
+    /*
+     * In case ETH went up in value against Fiat, weiToFiatCents(fundedEthAmountInWei)
+     * could have tipped us over the fundingGoal in which case we want to:
+     * 1. Enter the 'FundingSuccessful' stage
+     * 2. Refund the sent ETH amount immediately
+     * 3. Return 'false' to prevent a case where buying after reaching fundingGoal results in a buyer earning money
+     */
+    if (weiToFiatCents(fundedEthAmountInWei) > fundingGoalInCents) {
       enterStage(Stages.FundingSuccessful);
       if (msg.value > 0) {
         msg.sender.transfer(msg.value);
@@ -237,24 +243,25 @@ contract PoaCrowdsale is PoaCommon {
       return false;
     }
 
-    // get current funded amount + sent value in cents
-    // with most current rate available
-    uint256 _currentFundedCents = weiToFiatCents(fundedAmountInWei.add(msg.value))
-      .add(fundedAmountInCentsDuringFiatFunding);
-    // check if balance has met funding goal to move on to FundingSuccessful
-    if (_currentFundedCents < fundingGoalInCents) {
+    // Get total funded amount (Fiat funding + ETH funding incl. this investment)
+    // with the most current ETH <> Fiat exchange rate available
+    uint256 _totalFundedAmountInCents = weiToFiatCents(fundedEthAmountInWei.add(msg.value))
+      .add(fundedFiatAmountInCents);
+
+    // check if funding goal was met
+    if (_totalFundedAmountInCents < fundingGoalInCents) {
       // give a range due to fun fun integer division
-      if (fundingGoalInCents.sub(_currentFundedCents) > 1) {
-        // continue sale if more than 1 cent from goal in fiat
+      if (fundingGoalInCents.sub(_totalFundedAmountInCents) > 1) {
+        // continue sale if more than 1 fiat cent is missing from funding goal
         return buyAndContinueFunding(msg.value);
       } else {
-        // finish sale if within 1 cent of goal in fiat
-        // no refunds for overpayment should be given
+        // Finish sale if less than 1 fiat cent is missing from funding goal.
+        // No refunds for overpayment should be given for these tiny amounts.
         return buyAndEndFunding(false);
       }
     } else {
-      // finish sale, we are now over the funding goal
-      // a refund for overpaid amount should be given
+      // Finish sale if funding goal was met.
+      // A refund for overpayment should be given.
       return buyAndEndFunding(true);
     }
   }
@@ -264,11 +271,13 @@ contract PoaCrowdsale is PoaCommon {
     internal
     returns (bool)
   {
-    // save this for later in case needing to reclaim
-    investmentAmountPerUserInWei[msg.sender] = investmentAmountPerUserInWei[msg.sender]
+    // Track investment amount per user in case a user needs
+    // to reclaim their funds in case of a failed funding
+    fundedEthAmountPerUserInWei[msg.sender] = fundedEthAmountPerUserInWei[msg.sender]
       .add(_payAmount);
-    // increment the funded amount
-    fundedAmountInWei = fundedAmountInWei.add(_payAmount);
+
+    // Increment the funded amount
+    fundedEthAmountInWei = fundedEthAmountInWei.add(_payAmount);
 
     getContractAddress("Logger").call(
       bytes4(keccak256("logBuyEvent(address,uint256)")), msg.sender, _payAmount
@@ -286,11 +295,13 @@ contract PoaCrowdsale is PoaCommon {
   {
     enterStage(Stages.FundingSuccessful);
     uint256 _refundAmount = _shouldRefund ?
-      fundedAmountInWei.add(msg.value).sub(fiatCentsToWei(fundingGoalInCents)) :
+      fundedEthAmountInWei.add(msg.value).sub(fiatCentsToWei(fundingGoalInCents)) :
       0;
-    // transfer refund amount back to user
+
+    // Transfer refund amount back to user
     msg.sender.transfer(_refundAmount);
-    // actual Ξ amount to buy after refund
+
+    // Actual Ξ amount to buy after refund
     uint256 _payAmount = msg.value.sub(_refundAmount);
     buyAndContinueFunding(_payAmount);
 
@@ -301,9 +312,9 @@ contract PoaCrowdsale is PoaCommon {
   function checkFundingSuccessful()
     external
     atEitherStage(Stages.FiatFunding, Stages.EthFunding)
-    returns (bool) 
+    returns (bool)
   {
-    uint256 _currentFundedCents = weiToFiatCents(fundedAmountInWei);
+    uint256 _currentFundedCents = weiToFiatCents(fundedEthAmountInWei);
 
     if (_currentFundedCents >= fundingGoalInCents) {
       enterStage(Stages.FundingSuccessful);
@@ -340,7 +351,7 @@ contract PoaCrowdsale is PoaCommon {
     // can now be claimed by broker via claim function
     // should only be buy()s - fee. this ensures buy() dust is cleared
     unclaimedPayoutTotals[broker] = unclaimedPayoutTotals[broker]
-      .add(address(this).balance); 
+      .add(address(this).balance);
     // allow trading of tokens
     paused = false;
     // let world know that this token can now be traded.
@@ -351,7 +362,7 @@ contract PoaCrowdsale is PoaCommon {
 
   /**
    @notice Used for manually setting Stage to TimedOut when no users have bought any tokens
-   if no `buy()`s occurred before fundingTimeoutBlock token would be stuck in Funding
+   if no `buy()`s occurred before the funding deadline token would be stuck in Funding
    can also be used when activate is not called by custodian within activationTimeout
    lastly can also be used when no one else has called reclaim.
   */
@@ -367,7 +378,7 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
-  /// @notice Reclaim eth for sender if fundingGoalInCents is not met within fundingTimeoutBlock
+  /// @notice Users can reclaim their invested ETH if the funding goal was not met within the funding deadline
   function reclaim()
     external
     checkTimeout
@@ -376,10 +387,10 @@ contract PoaCrowdsale is PoaCommon {
   {
     require(!isFiatInvestor(msg.sender));
     totalSupply_ = 0;
-    uint256 _refundAmount = investmentAmountPerUserInWei[msg.sender];
-    investmentAmountPerUserInWei[msg.sender] = 0;
+    uint256 _refundAmount = fundedEthAmountPerUserInWei[msg.sender];
+    fundedEthAmountPerUserInWei[msg.sender] = 0;
     require(_refundAmount > 0);
-    fundedAmountInWei = fundedAmountInWei.sub(_refundAmount);
+    fundedEthAmountInWei = fundedEthAmountInWei.sub(_refundAmount);
     msg.sender.transfer(_refundAmount);
     getContractAddress("Logger").call(
       bytes4(keccak256("logReclaimEvent(address,uint256)")),
@@ -492,13 +503,13 @@ contract PoaCrowdsale is PoaCommon {
     return _cents.mul(1e18).div(getFiatRate());
   }
 
-  /// @notice Get funded amount in cents
-  function fundedAmountInCents()
+  /// @notice Get funded ETH amount in cents
+  function fundedEthAmountInCents()
     external
     view
     returns (uint256)
   {
-    return weiToFiatCents(fundedAmountInWei);
+    return weiToFiatCents(fundedEthAmountInWei);
   }
 
   /// @notice Get fundingGoal in wei

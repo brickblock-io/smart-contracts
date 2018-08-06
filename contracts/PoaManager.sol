@@ -211,22 +211,24 @@ contract PoaManager is Ownable {
     _proxyContract = new PoaProxy(_poaTokenMaster, _poaCrowdsaleMaster, address(registry));
   }
 
-  // Create a PoaToken contract with given parameters, and set active value to true
+  /**
+    @notice Creates a PoaToken contract with given parameters, and set active value to true
+    @param _fiatCurrency32 Fiat symbol used in ExchangeRates
+    @param _startTimeForEthFunding Given as unix time in seconds since 01.01.1970
+    @param _endTimeForEthFunding An offset against _startTimeForEthFunding, given in seconds
+    @param _activationTimeout An offset against _endTimeForEthFunding, given in seconds
+    @param _fundingGoalInCents Given as fiat cents
+   */
   function addToken
   (
     bytes32 _name32,
     bytes32 _symbol32,
-    // fiat symbol used in ExchangeRates
     bytes32 _fiatCurrency32,
     address _custodian,
     uint256 _totalSupply,
-    // given as unix time (seconds since 01.01.1970)
-    uint256 _startTime,
-    // given as seconds offset from startTime
-    uint256 _fundingTimeout,
-    // given as seconds offset from fundingTimeout
+    uint256 _startTimeForEthFunding,
+    uint256 _endTimeForEthFunding,
     uint256 _activationTimeout,
-    // given as fiat cents
     uint256 _fundingGoalInCents
   )
     public
@@ -246,8 +248,8 @@ contract PoaManager is Ownable {
 
     IPoaCrowdsale(_tokenAddress).initializeCrowdsale(
       _fiatCurrency32,
-      _startTime,
-      _fundingTimeout,
+      _startTimeForEthFunding,
+      _endTimeForEthFunding,
       _activationTimeout,
       _fundingGoalInCents
     );
