@@ -41,12 +41,12 @@ module.exports = {
     BrickblockAccount: '0x8f0483125fcb9aaaefa9209d8e9d7b9c8b9fb90f',
     BrickblockToken: '0x9fbda871d559710256a2502a2517b794b482db40',
     CentralLogger: '0x2c2b9c9a4a25e24b174f26114e8926a9f2128fe4',
-    ExchangeRateProvider: '0xfb88de099e13c3ed21f80a7a1e49f8caecf10df6',
-    ExchangeRates: '0xaa588d3737b611bafd7bd713445b314bd453a5c8',
-    FeeManager: '0xf204a4ef082f5c04bb89f7d5e6568b796096735a',
-    PoaCrowdsaleMaster: '0x75c35c980c0d37ef46df04d31a140b65503c0eed',
-    PoaManager: '0x82d50ad3c1091866e258fd0f1a7cc9674609d254',
-    PoaTokenMaster: '0xdda6327139485221633a1fcd65f4ac932e60a2e1',
-    Whitelist: '0xeec918d74c746167564401103096d45bbd494b74'
+    ExchangeRateProvider: '0x30753e4a8aad7f8597332e813735def5dd395028',
+    ExchangeRates: '0xfb88de099e13c3ed21f80a7a1e49f8caecf10df6',
+    FeeManager: '0xaa588d3737b611bafd7bd713445b314bd453a5c8',
+    PoaCrowdsaleMaster: '0xf204a4ef082f5c04bb89f7d5e6568b796096735a',
+    PoaManager: '0x75c35c980c0d37ef46df04d31a140b65503c0eed',
+    PoaTokenMaster: '0x82d50ad3c1091866e258fd0f1a7cc9674609d254',
+    Whitelist: '0xdda6327139485221633a1fcd65f4ac932e60a2e1'
   }
 }
