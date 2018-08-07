@@ -28,41 +28,11 @@ const deployedAddressesGroupedByContractName = R.toPairs(
     // if accumulator does not have contract yet, set as empty hashmap
     if (acc[contractName] == null) acc[contractName] = {}
 
-    // TODO: once CustomPOAToken is out, this can be removed
-    if (contractName === 'CustomPOAToken') {
-      const networkNames = {
-        1: 'mainnet',
-        4: 'rinkeby',
-        42: 'kovan',
-        4447: 'local'
-      }
-      // must be an array since CustomPOAToken is handle so "special" in platform
-      acc[contractName][networkNames[networkId]] = [].concat(
-        contractAddress.map(x => x.toLowerCase())
-      )
-      return
-    }
-
     acc[contractName][networkId] = { address: contractAddress.toLowerCase() }
   })
 
   return acc
 }, {})
-
-// TODO:
-// hopefully we never need to use CustomPOAToken and this can be removed soon
-const customPoaAddressFilename = path.resolve(
-  __dirname,
-  '../deployed-contracts/CustomPOAToken-addresses.json'
-)
-const customPoaTokenAddresses =
-  deployedAddressesGroupedByContractName.CustomPOAToken
-delete deployedAddressesGroupedByContractName.CustomPOAToken
-fs.writeFileSync(
-  customPoaAddressFilename,
-  JSON.stringify(customPoaTokenAddresses)
-)
-// end TODO: hope we remove real soon
 
 fs.readdirSync(contractBuildDirectory).forEach(contractArtifactFilename => {
   // this is the output from truffle compile

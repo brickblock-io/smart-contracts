@@ -4,7 +4,6 @@ const BrickblockAccount = artifacts.require('BrickblockAccount')
 const BrickblockToken = artifacts.require('BrickblockToken')
 const CentralLogger = artifacts.require('CentralLogger')
 const ContractRegistry = artifacts.require('ContractRegistry')
-const CustomPOAToken = artifacts.require('CustomPOAToken')
 const ExchangeRateProvider = artifacts.require('ExchangeRateProvider')
 const ExchangeRates = artifacts.require('ExchangeRates')
 const FeeManager = artifacts.require('FeeManager')
@@ -30,7 +29,6 @@ const contracts = {
   ExchangeRates,
   FeeManager,
   CentralLogger,
-  CustomPOAToken,
   PoaManager,
   PoaTokenMaster,
   PoaCrowdsaleMaster,

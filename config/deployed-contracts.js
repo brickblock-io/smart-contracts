@@ -19,7 +19,6 @@ module.exports = {
     BrickblockAccount: '0xbd26e373a943788f836498b302822e4b02f5c859',
     BrickblockToken: '0x9984fcd6af2df5ddf345cf5cae606c0780bf79ec',
     CentralLogger: '0xbf6b7a0866d5c712aadf47b2a9cf209f04151655',
-    CustomPOAToken: ['0xcbf23082233ebf2b97a986b4d05669472d744e3c'],
     ExchangeRateProvider: '0x5adf8fe37c57fdc98c6015e6aadbe8f6db8d7ea4',
     ExchangeRates: '0xf693138139b61e877c2c82fc7d2f3e8ab8dcbea2',
     FeeManager: '0x44678e12b4c66c00f7d56cc1d6dbe9f4c84caec4',
@@ -31,15 +30,6 @@ module.exports = {
 
   // kovan
   '42': {
-    // deployed many so that we can see different stages in the `platform` web client
-    // CustomPoaToken is "special" as PoaToken will be discovered through the PoaManager
-    CustomPOAToken: [
-      '0x5c49ac16796fce23c9e7a297ae17e6582e68519c',
-      '0x09058386ad38c724d90f19fa35734dec426e2e6b',
-      '0x99db07282c2d39b2ddda6484ebd04064cee73389',
-      '0xced255300197fe359f3b9924f36e6be62a8e70b9',
-      '0x9edf81ef84c828117b5bbfc42d44dfc5254522a1'
-    ],
     PoaManager: '0x73d2f7225781aa1f002a1694cdd56dccc0c3253f'
   },
 
@@ -51,7 +41,6 @@ module.exports = {
     BrickblockAccount: '0x8f0483125fcb9aaaefa9209d8e9d7b9c8b9fb90f',
     BrickblockToken: '0x9fbda871d559710256a2502a2517b794b482db40',
     CentralLogger: '0x2c2b9c9a4a25e24b174f26114e8926a9f2128fe4',
-    CustomPOAToken: ['0x30753e4a8aad7f8597332e813735def5dd395028'],
     ExchangeRateProvider: '0xfb88de099e13c3ed21f80a7a1e49f8caecf10df6',
     ExchangeRates: '0xaa588d3737b611bafd7bd713445b314bd453a5c8',
     FeeManager: '0xf204a4ef082f5c04bb89f7d5e6568b796096735a',
