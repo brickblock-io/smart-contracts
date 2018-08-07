@@ -18,12 +18,14 @@ const {
 const bbk = require('../helpers/bbk')
 const poaManager = require('../helpers/poa-manager')
 const exchangeRates = require('../helpers/exchange-rates')
+const whitelist = require('../helpers/whitelist')
 
 const localMigration = async (deployer, accounts, contracts, web3) => {
   const owner = accounts[0]
   const broker = accounts[1]
   const custodian = accounts[2]
   const contributors = accounts.slice(4, 6)
+  const whitelistedInvestor = accounts[4]
   const ownerPreEtherBalance = await getEtherBalance(owner)
   const brokerPreEtherBalance = await getEtherBalance(broker)
 
@@ -105,6 +107,19 @@ const localMigration = async (deployer, accounts, contracts, web3) => {
     }
   )
 
+  /*
+   * Whitelist accounts[4] to be able to buy POA tokens in platform
+   */
+  const { gasCost: whitelistAddressGasCost } = await whitelist.addAddress(
+    instances.wht,
+    {
+      addresses: {
+        owner,
+        investor: whitelistedInvestor
+      }
+    }
+  )
+
   const ownerPostEtherBalance = await getEtherBalance(owner)
   const brokerPostEtherBalance = await getEtherBalance(broker)
   const totalGasCost = ownerPreEtherBalance
@@ -142,6 +157,11 @@ const localMigration = async (deployer, accounts, contracts, web3) => {
       'Deploy POA Token',
       web3.fromWei(deployPoaTokenGasCost, 'gwei').toString(),
       `Ξ ${web3.fromWei(deployPoaTokenGasCost).toString()}`
+    ],
+    [
+      'Whitelist Investor',
+      web3.fromWei(whitelistAddressGasCost, 'gwei').toString(),
+      `Ξ ${web3.fromWei(whitelistAddressGasCost).toString()}`
     ],
     [
       chalk.bold('Total'),
