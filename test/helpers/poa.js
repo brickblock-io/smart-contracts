@@ -98,14 +98,17 @@ const determineNeededTimeTravel = async poa => {
 }
 
 // sets up all contracts needed in the ecosystem for poa to function
-const setupEcosystem = async () => {
+const setupEcosystem = async ({
+  _bbkContributors = bbkContributors,
+  _whitelistedPoaBuyers = whitelistedPoaBuyers
+} = {}) => {
   const reg = await ContractRegistry.new()
   const act = await AccessToken.new(reg.address)
   const bbk = await finalizedBBK(
     owner,
     bbkBonusAddress,
     act.address,
-    bbkContributors,
+    _bbkContributors,
     bbkTokenDistAmount
   )
   const exr = await ExchangeRates.new(reg.address)
@@ -115,7 +118,7 @@ const setupEcosystem = async () => {
   const pmr = await PoaManager.new(reg.address)
   const log = await PoaLogger.new(reg.address)
 
-  for (const buyer of whitelistedPoaBuyers) {
+  for (const buyer of _whitelistedPoaBuyers) {
     const preWhitelisted = await wht.whitelisted(buyer)
     await wht.addAddress(buyer)
     const postWhitelisted = await wht.whitelisted(buyer)
@@ -133,7 +136,7 @@ const setupEcosystem = async () => {
   await reg.updateContractAddress('PoaManager', pmr.address)
   await reg.updateContractAddress('PoaLogger', log.address)
 
-  testApproveAndLockMany(bbk, act, bbkContributors, bbkTokenDistAmount)
+  testApproveAndLockMany(bbk, act, _bbkContributors, bbkTokenDistAmount)
 
   return {
     reg,
@@ -168,8 +171,15 @@ const testSetCurrencyRate = async (exr, exp, currencyType, rate, config) => {
   await testSetRate(exr, exp, rate, false)
 }
 
-const setupPoaProxyAndEcosystem = async () => {
-  const { reg, act, bbk, exr, exp, fmr, wht, pmr, log } = await setupEcosystem()
+const setupPoaProxyAndEcosystem = async ({
+  _bbkContributors,
+  _whitelistedPoaBuyers,
+  _fundingGoal = defaultFundingGoal
+} = {}) => {
+  const { reg, act, bbk, exr, exp, fmr, wht, pmr, log } = await setupEcosystem({
+    _bbkContributors,
+    _whitelistedPoaBuyers
+  })
 
   await testSetCurrencyRate(exr, exp, defaultFiatCurrency, defaultFiatRate, {
     from: owner,
@@ -196,7 +206,7 @@ const setupPoaProxyAndEcosystem = async () => {
     await getDefaultStartTime(),
     defaultFundingTimeout,
     defaultActivationTimeout,
-    defaultFundingGoal,
+    _fundingGoal,
     {
       from: broker
     }

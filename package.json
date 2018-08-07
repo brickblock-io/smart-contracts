@@ -124,6 +124,8 @@
     "truffle": "4.1.13",
     "truffle-contract": "^3.0.1",
     "truffle-hdwallet-provider": "^0.0.6",
-    "web3": "^0.18.4"
+    "web3": "^0.18.4",
+    "bristol": "^0.4.0",
+    "palin": "^2.2.0"
   }
 }
