@@ -324,27 +324,56 @@ contract PoaCrowdsale is PoaCommon {
     return false;
   }
 
+  function calculateTotalFee()
+    public
+    view
+    atStage(Stages.FundingSuccessful)
+    returns(uint256)
+  {
+    uint256 _fundedFiatAmountInWei = fiatCentsToWei(fundedFiatAmountInCents);
+    uint256 _fiatFee = calculateFee(_fundedFiatAmountInWei);
+    uint256 _ethFee = calculateFee(fundedEthAmountInWei);
+
+    return _fiatFee.add(_ethFee);
+  }
+
+  function payActivationFee()
+    public
+    payable
+    atStage(Stages.FundingSuccessful)
+    returns(bool)
+  {
+    require(initialFeePaid == false);
+
+    uint256 _totalFee = calculateTotalFee();
+    uint256 payedAmountToCalculatedFeeRatio = percent(msg.value, _totalFee, precisionOfPercentCalc);
+
+    // percent of difference should be lower then 0.05%
+    require(payedAmountToCalculatedFeeRatio > 1e18 - 5e16);
+    require(payedAmountToCalculatedFeeRatio < 1e18 + 5e16);
+
+    // fee sent to FeeManager where fee gets
+    // turned into ACT for lockedBBK holders
+    payFee(msg.value);
+
+    initialFeePaid = true;
+
+    return true;
+  }
+
   /// @notice Activate token with proofOfCustody fee is taken from contract balance
   /// brokers must work this into their funding goals
-  function activate
-  (
-    bytes32[2] _ipfsHash
-  )
+  function activate()
     external
     checkTimeout
     onlyCustodian
     atStage(Stages.FundingSuccessful)
-    validIpfsHash(_ipfsHash)
     returns (bool)
   {
-    // calculate company fee charged for activation
-    uint256 _fee = calculateFee(address(this).balance);
     // if activated and fee paid: put in Active stage
+    require(initialFeePaid);
     enterStage(Stages.Active);
-    // fee sent to FeeManager where fee gets
-    // turned into ACT for lockedBBK holders
-    payFee(_fee);
-    proofOfCustody32_ = _ipfsHash;
+
     getContractAddress("PoaLogger")
       .call(bytes4(keccak256("logProofOfCustodyUpdatedEvent()")));
     // balance of contract (fundingGoalInCents) set to claimable by broker.

@@ -206,10 +206,17 @@ interface IPoaTokenCrowdsale {
     payable
     returns (bool);
 
-  function activate
-  (
-    bytes32[2] _ipfsHash
-  )
+  function calculateTotalFee()
+    external
+    view
+    returns(uint256);
+
+  function payActivationFee()
+    external
+    payable
+    returns(bool);
+
+  function activate()
     external
     returns (bool);
 
