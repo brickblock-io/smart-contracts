@@ -10,6 +10,7 @@ const {
   testBuyTokens,
   determineNeededTimeTravel,
   testBuyRemainingTokens,
+  testPayActivationFee,
   testActivate,
   testPayout,
   testClaim,
@@ -94,12 +95,10 @@ describe("when in 'FundingSuccessful' stage", () => {
       await testWillThrow(testClaim, [poa, { from: whitelistedPoaBuyers[0] }])
     })
 
-    it('should NOT updateProofOfCustody, even if valid and from custodian', async () => {
-      await testWillThrow(testUpdateProofOfCustody, [
-        poa,
-        defaultIpfsHashArray32,
-        { from: custodian }
-      ])
+    it('should updateProofOfCustody', async () => {
+      await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
+        from: custodian
+      })
     })
 
     it('should NOT transfer', async () => {
@@ -151,9 +150,16 @@ describe("when in 'FundingSuccessful' stage", () => {
     })
 
     // start core stage functionality
+    it('should pay activation fee', async () => {
+      await testPayActivationFee(poa, fmr)
+    })
+
+    it('should NOT allow paying initial fee more than once', async () => {
+      await testWillThrow(testPayActivationFee, [poa, fmr])
+    })
 
     it('should move into Active when activated', async () => {
-      await testActivate(poa, fmr, defaultIpfsHashArray32, {
+      await testActivate(poa, fmr, {
         from: custodian
       })
     })

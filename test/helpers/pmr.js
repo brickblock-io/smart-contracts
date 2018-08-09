@@ -22,7 +22,9 @@ const {
   testActivate,
   defaultIpfsHashArray32,
   stages,
-  whitelistedPoaBuyers
+  whitelistedPoaBuyers,
+  testUpdateProofOfCustody,
+  testPayActivationFee
 } = require('./poa')
 
 const { gasPrice } = require('./general')
@@ -89,8 +91,13 @@ const moveTokenToActive = async (poa, fmr) => {
     gasPrice
   })
 
-  // move into Active
-  await testActivate(poa, fmr, defaultIpfsHashArray32, {
+  await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
+    from: custodian
+  })
+
+  await testPayActivationFee(poa, fmr)
+
+  await testActivate(poa, fmr, {
     from: custodian
   })
 }

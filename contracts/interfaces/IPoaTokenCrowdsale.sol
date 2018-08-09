@@ -69,6 +69,11 @@ interface IPoaTokenCrowdsale {
     view
     returns (string);
 
+  function initialFeePaid()
+    external
+    view
+    returns (bool);
+
   function currentPayout
   (
     address _address,

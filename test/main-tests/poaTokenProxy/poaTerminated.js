@@ -22,7 +22,8 @@ const {
   testTransfer,
   testApprove,
   testTransferFrom,
-  testTerminate
+  testTerminate,
+  testPayActivationFee
 } = require('../../helpers/poa')
 const {
   testWillThrow,
@@ -62,8 +63,16 @@ describe("when in 'Terminated' stage", () => {
         gasPrice
       })
 
+      // Set proof of custody
+      await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
+        from: custodian
+      })
+
+      // Pay the initial fee
+      await testPayActivationFee(poa, fmr)
+
       // move into "Active" stage
-      await testActivate(poa, fmr, defaultIpfsHashArray32, {
+      await testActivate(poa, fmr, {
         from: custodian
       })
 
@@ -99,12 +108,7 @@ describe("when in 'Terminated' stage", () => {
     })
 
     it('should NOT activate, even if custodian', async () => {
-      await testWillThrow(testActivate, [
-        poa,
-        fmr,
-        defaultIpfsHashArray32,
-        { from: custodian }
-      ])
+      await testWillThrow(testActivate, [poa, fmr, { from: custodian }])
     })
 
     it('should NOT terminate, even if custodian', async () => {

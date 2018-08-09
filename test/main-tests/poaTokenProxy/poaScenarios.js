@@ -27,7 +27,9 @@ const {
   testResetCurrencyRate,
   testActiveBalances,
   testToggleWhitelistTransfers,
-  stages
+  stages,
+  testUpdateProofOfCustody,
+  testPayActivationFee
 } = require('../../helpers/poa')
 const {
   timeTravel,
@@ -76,8 +78,14 @@ describe('De-whitelisted POA holders', () => {
         from: owner
       })
 
+      await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
+        from: custodian
+      })
+
+      await testPayActivationFee(poa, fmr)
+
       // move into Active
-      await testActivate(poa, fmr, defaultIpfsHashArray32, {
+      await testActivate(poa, fmr, {
         from: custodian
       })
 
@@ -219,8 +227,14 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         gasPrice
       })
 
+      await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
+        from: custodian
+      })
+
+      await testPayActivationFee(poa, fmr)
+
       // move into Active
-      await testActivate(poa, fmr, defaultIpfsHashArray32, {
+      await testActivate(poa, fmr, {
         from: custodian
       })
 
@@ -949,7 +963,13 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       // this matches the first buyer's first purchase (whitelistedPoaBuers[0])
       commitments[0].amount = purchase
 
-      await testActivate(poa, fmr, defaultIpfsHashArray32, {
+      await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
+        from: custodian
+      })
+
+      await testPayActivationFee(poa, fmr)
+
+      await testActivate(poa, fmr, {
         from: custodian,
         gasPrice
       })
@@ -991,7 +1011,13 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       // this matches the first buyer's first purchase (whitelistedPoaBuers[0])
       commitments[0].amount = purchase
 
-      await testActivate(poa, fmr, defaultIpfsHashArray32, {
+      await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
+        from: custodian
+      })
+
+      await testPayActivationFee(poa, fmr)
+
+      await testActivate(poa, fmr, {
         from: custodian,
         gasPrice
       })

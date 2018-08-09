@@ -24,7 +24,9 @@ const {
   testBrokerClaim,
   whitelistedPoaBuyers,
   defaultIpfsHashArray32,
-  stages
+  stages,
+  testUpdateProofOfCustody,
+  testPayActivationFee
 } = require('./poa')
 const {
   getAllSequentialStorage,
@@ -78,10 +80,11 @@ const parseCommonStorage = (storage, stageInitialized) => ({
   fundedEthAmountPerUserInWei: storage[11].data,
   unclaimedPayoutTotals: storage[12].data,
   crowdsaleInitialized: new BigNumber(storage[13].data.slice(0, 4)).toNumber(),
+  initialFeePaid: new BigNumber(storage[13].data.slice(4, 6)).toNumber(),
   tokenInitialized: new BigNumber(
-    '0x' + storage[13].data.slice(4, 6)
+    '0x' + storage[13].data.slice(6, 8)
   ).toNumber(),
-  paused: new BigNumber('0x' + storage[13].data.slice(6, 8)).toNumber(),
+  paused: new BigNumber('0x' + storage[13].data.slice(8, 10)).toNumber(),
   startTimeForEthFunding: new BigNumber(storage[14].data),
   endTimeForEthFunding: new BigNumber(storage[15].data),
   activationTimeout: new BigNumber(storage[16].data),
@@ -255,8 +258,14 @@ const enterActiveStage = async (poa, fmr) => {
     gasPrice
   })
 
+  await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
+    from: custodian
+  })
+
+  await testPayActivationFee(poa, fmr)
+
   // move into "Active" stage
-  await testActivate(poa, fmr, defaultIpfsHashArray32, {
+  await testActivate(poa, fmr, {
     from: custodian
   })
 

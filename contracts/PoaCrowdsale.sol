@@ -324,6 +324,7 @@ contract PoaCrowdsale is PoaCommon {
     return false;
   }
 
+  ///@notice Returns the total amount of fee needed for activation
   function calculateTotalFee()
     public
     view
@@ -337,14 +338,18 @@ contract PoaCrowdsale is PoaCommon {
     return _fiatFee.add(_ethFee);
   }
 
+  /// @notice Used for paying initial activation fee.
+  /// proofOfCustody has to be updated before calling it
   function payActivationFee()
     public
     payable
     atStage(Stages.FundingSuccessful)
     returns(bool)
   {
+    // prevent paying more than once
     require(initialFeePaid == false);
-
+    // require proof of custody is not empty before paying
+    require(bytes(proofOfCustody()).length != 0);
     uint256 _totalFee = calculateTotalFee();
     uint256 payedAmountToCalculatedFeeRatio = percent(msg.value, _totalFee, precisionOfPercentCalc);
 
@@ -374,8 +379,6 @@ contract PoaCrowdsale is PoaCommon {
     require(initialFeePaid);
     enterStage(Stages.Active);
 
-    getContractAddress("PoaLogger")
-      .call(bytes4(keccak256("logProofOfCustodyUpdatedEvent()")));
     // balance of contract (fundingGoalInCents) set to claimable by broker.
     // can now be claimed by broker via claim function
     // should only be buy()s - fee. this ensures buy() dust is cleared

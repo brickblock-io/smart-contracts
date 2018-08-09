@@ -20,7 +20,9 @@ const {
   setupPoaProxyAndEcosystem,
   forcePoaTimeout,
   testReclaim,
-  stages
+  stages,
+  testUpdateProofOfCustody,
+  testPayActivationFee
 } = require('./poa')
 
 // change PoaManager reg entry to owner for easier testing...
@@ -144,17 +146,23 @@ const testActivateEvents = async (poa, reg, pmr, fmr, log) => {
   const PoaLoggerStageEvent = log.StageEvent()
   const PoaLoggerProofOfCustodyUpdatedEvent = log.ProofOfCustodyUpdatedEvent()
 
-  await testActivate(poa, fmr, defaultIpfsHashArray32, {
+  await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
+    from: custodian
+  })
+
+  const { args: triggeredLoggerProofEvent } = await waitForEvent(
+    LoggerProofOfCustodyUpdatedEvent
+  )
+
+  await testPayActivationFee(poa, fmr)
+
+  await testActivate(poa, fmr, {
     from: custodian,
     gasPrice
   })
 
   const { args: triggeredPoaLoggerStageEvent } = await waitForEvent(
     PoaLoggerStageEvent
-  )
-
-  const { args: triggeredPoaLoggerProofEvent } = await waitForEvent(
-    PoaLoggerProofOfCustodyUpdatedEvent
   )
 
   // change back so that other testing functions will work with owner...

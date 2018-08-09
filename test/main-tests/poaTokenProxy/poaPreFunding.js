@@ -60,12 +60,7 @@ describe("when in 'PreFunding' stage", async () => {
     })
 
     it('should NOT activate, even if custodian', async () => {
-      await testWillThrow(testActivate, [
-        poa,
-        fmr,
-        defaultIpfsHashArray32,
-        { from: custodian }
-      ])
+      await testWillThrow(testActivate, [poa, fmr, { from: custodian }])
     })
 
     it('should NOT terminate, even if custodian', async () => {

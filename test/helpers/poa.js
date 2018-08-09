@@ -841,27 +841,34 @@ const testBuyRemainingTokens = async (poa, config) => {
   return postUserWeiInvested
 }
 
-const testActivate = async (poa, fmr, ipfsHash32, config) => {
-  const contractBalance = await getEtherBalance(poa.address)
-  const calculatedFee = await poa.calculateFee(contractBalance)
-
+const testPayActivationFee = async (
+  poa,
+  fmr,
+  { value, from = broker } = {}
+) => {
+  const calculatedFee = value || (await poa.calculateTotalFee())
+  const preInitialFeePaid = await poa.initialFeePaid.call()
   const preFeeManagerBalance = await getEtherBalance(fmr.address)
-  const preStage = await poa.stage()
-  const preCustody = await poa.proofOfCustody()
-  const prePaused = await poa.paused()
-  const preBrokerPayouts = await poa.currentPayout(broker, true)
 
-  await poa.activate(ipfsHash32, config)
+  await poa.payActivationFee({
+    value: calculatedFee,
+    from
+  })
 
   const postFeeManagerBalance = await getEtherBalance(fmr.address)
-  const postStage = await poa.stage()
-  const postCustody = await poa.proofOfCustody()
-  const postPaused = await poa.paused()
-  const postBrokerPayouts = await poa.currentPayout(broker, true)
 
-  const expectedHash = ipfsHash32.reduce(
-    (acc, item) => acc.concat(web3.toAscii(item)),
-    ''
+  const postInitialFeePaid = await poa.initialFeePaid.call()
+
+  assert.equal(
+    preInitialFeePaid,
+    false,
+    'initialFeePaid must be false before activation'
+  )
+
+  assert.equal(
+    postInitialFeePaid,
+    true,
+    'initialFeePaid must be true after activation'
   )
 
   assert.equal(
@@ -869,6 +876,20 @@ const testActivate = async (poa, fmr, ipfsHash32, config) => {
     calculatedFee.toString(),
     'feeManager ether balance should be incremented by paid fee'
   )
+}
+
+const testActivate = async (poa, fmr, config) => {
+  const contractBalance = await getEtherBalance(poa.address)
+  const preStage = await poa.stage()
+  const prePaused = await poa.paused()
+  const preBrokerPayouts = await poa.currentPayout(broker, true)
+
+  await poa.activate(config)
+
+  const postStage = await poa.stage()
+  const postPaused = await poa.paused()
+  const postBrokerPayouts = await poa.currentPayout(broker, true)
+
   assert.equal(
     preStage.toString(),
     stages.FundingSuccessful,
@@ -879,17 +900,13 @@ const testActivate = async (poa, fmr, ipfsHash32, config) => {
     stages.Active,
     'postStage should be Active'
   )
-  assert.equal(preCustody, '', 'proofOfCustody should start empty')
-  assert.equal(
-    postCustody,
-    expectedHash,
-    'proofOfCustody should be set to expectedHash'
-  )
+
   assert(prePaused, 'should be paused before activation')
   assert(!postPaused, 'should not be paused after activation')
+
   assert.equal(
     postBrokerPayouts.sub(preBrokerPayouts).toString(),
-    contractBalance.sub(calculatedFee).toString(),
+    contractBalance.toString(),
     'contract balance after fee has been paid should be claimable by broker'
   )
 }
@@ -1319,7 +1336,7 @@ const testFallback = async config => {
 const testUpdateProofOfCustody = async (poa, ipfsHash, config) => {
   const preIpfsHash = await poa.proofOfCustody()
 
-  await poa.updateProofOfCustody(ipfsHash, config)
+  const tx = await poa.updateProofOfCustody(ipfsHash, config)
 
   const postIpfsHash = await poa.proofOfCustody()
   const expectedHash = ipfsHash.reduce(
@@ -1333,6 +1350,8 @@ const testUpdateProofOfCustody = async (poa, ipfsHash, config) => {
     expectedHash,
     'new ifpsHash should be set in contract'
   )
+
+  return tx
 }
 
 const testTransfer = async (poa, to, value, args) => {
@@ -1638,6 +1657,7 @@ module.exports = {
   owner,
   setupEcosystem,
   setupPoaProxyAndEcosystem,
+  testPayActivationFee,
   testActivate,
   testActiveBalances,
   testApprove,

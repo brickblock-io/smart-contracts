@@ -366,12 +366,9 @@ contract PoaToken is PoaCommon {
     external
     payable
     eitherBrokerOrCustodian
+    atEitherStage(Stages.Active, Stages.Terminated)
     returns (bool)
   {
-    require(
-      stage == Stages.Active || stage == Stages.FundingSuccessful || stage == Stages.Terminated
-    );
-
     // calculate fee based on feeRateInPermille
     uint256 _fee = calculateFee(msg.value);
     // ensure the value is high enough for a fee to be claimed
@@ -436,14 +433,16 @@ contract PoaToken is PoaCommon {
     bytes32[2] _ipfsHash
   )
     external
-    atEitherStage(Stages.Active, Stages.Terminated)
     onlyCustodian
     validIpfsHash(_ipfsHash)
     returns (bool)
   {
+    require(
+      stage == Stages.Active || stage == Stages.FundingSuccessful || stage == Stages.Terminated
+    );
     proofOfCustody32_ = _ipfsHash;
     getContractAddress("PoaLogger").call(
-      bytes4(keccak256("logProofOfCustodyUpdatedEvent(string)")),
+      bytes4(keccak256("logProofOfCustodyUpdatedEvent()")),
       _ipfsHash
     );
     return true;

@@ -27,7 +27,8 @@ const {
   testActiveBalances,
   defaultBuyAmount,
   testToggleWhitelistTransfers,
-  newIpfsHashArray32
+  newIpfsHashArray32,
+  testPayActivationFee
 } = require('../../helpers/poa')
 const {
   testWillThrow,
@@ -75,8 +76,16 @@ describe("when in 'Active' stage", () => {
         amount: commitAmount
       })
 
+      // Set proof of custody
+      await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
+        from: custodian
+      })
+
+      // Pay the initial fee
+      await testPayActivationFee(poa, fmr)
+
       // move into "Active" stage
-      await testActivate(poa, fmr, defaultIpfsHashArray32, {
+      await testActivate(poa, fmr, {
         from: custodian
       })
 
@@ -132,12 +141,7 @@ describe("when in 'Active' stage", () => {
     })
 
     it('should NOT activate, even if custodian', async () => {
-      await testWillThrow(testActivate, [
-        poa,
-        fmr,
-        defaultIpfsHashArray32,
-        { from: custodian }
-      ])
+      await testWillThrow(testActivate, [poa, fmr, { from: custodian }])
     })
 
     it('should NOT reclaim, even if owning tokens', async () => {

@@ -11,7 +11,9 @@ const {
   testActivate,
   testBrokerClaim,
   testPayout,
-  testClaimAllPayouts
+  testClaimAllPayouts,
+  testUpdateProofOfCustody,
+  testPayActivationFee
 } = require('../../helpers/poa')
 const { timeTravel, gasPrice } = require('../../helpers/general.js')
 
@@ -47,8 +49,18 @@ describe("when going through Poa's normal flow", async () => {
       })
     })
 
+    it('should update proof of custody', async () => {
+      await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
+        from: custodian
+      })
+    })
+
+    it('broker should pay initial fee', async () => {
+      await testPayActivationFee(poa, fmr)
+    })
+
     it('should activate with ipfs hash from custodian', async () => {
-      await testActivate(poa, fmr, defaultIpfsHashArray32, {
+      await testActivate(poa, fmr, {
         from: custodian
       })
     })
