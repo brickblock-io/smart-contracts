@@ -5,15 +5,16 @@ const BrickblockToken = artifacts.require('BrickblockToken')
 const CentralLogger = artifacts.require('CentralLogger')
 const ContractRegistry = artifacts.require('ContractRegistry')
 const ExchangeRateProvider = artifacts.require('ExchangeRateProvider')
-const ExchangeRates = artifacts.require('ExchangeRates')
-const FeeManager = artifacts.require('FeeManager')
-const PoaManager = artifacts.require('PoaManager')
-const PoaTokenMaster = artifacts.require('PoaToken')
-const PoaCrowdsaleMaster = artifacts.require('PoaCrowdsale')
-const Whitelist = artifacts.require('Whitelist')
 const ExchangeRateProviderStub = artifacts.require(
   'stubs/ExchangeRateProviderStub'
 )
+const ExchangeRates = artifacts.require('ExchangeRates')
+const FeeManager = artifacts.require('FeeManager')
+const PoaCrowdsaleMaster = artifacts.require('PoaCrowdsale')
+const PoaManager = artifacts.require('PoaManager')
+const PoaTokenMaster = artifacts.require('PoaToken')
+const Whitelist = artifacts.require('Whitelist')
+
 const { setWeb3 } = require('./helpers/general.js')
 setWeb3(web3)
 
@@ -24,17 +25,17 @@ const { testnetMigration } = require('./networks/testnetMigration')
 const contracts = {
   AccessToken,
   BrickblockAccount,
-  ContractRegistry,
   BrickblockToken,
+  CentralLogger,
+  ContractRegistry,
+  ExchangeRateProvider,
+  ExchangeRateProviderStub,
   ExchangeRates,
   FeeManager,
-  CentralLogger,
+  PoaCrowdsaleMaster,
   PoaManager,
   PoaTokenMaster,
-  PoaCrowdsaleMaster,
-  Whitelist,
-  ExchangeRateProvider,
-  ExchangeRateProviderStub
+  Whitelist
 }
 
 module.exports = (deployer, network, accounts) => {

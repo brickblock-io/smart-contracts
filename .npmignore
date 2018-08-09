@@ -2,3 +2,4 @@
 *
 !deployed-contracts/*.json
 !build/contracts/*.json
+!migrations/helpers/*

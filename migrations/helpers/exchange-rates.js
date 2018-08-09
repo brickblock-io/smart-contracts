@@ -1,21 +1,19 @@
 /* eslint-disable no-console */
 const chalk = require('chalk')
 
-const { getEtherBalance } = require('./general.js')
-
 const setFiatRate = async (
-  exr,
-  exp,
+  ExchangeRates,
+  ExchangeRateProvider,
   params = {
     currencyName: 'EUR',
     queryString: 'https://min-api.cryptocompare.com/data/price?fsym=ETH',
     callIntervalInSec: 30,
     callbackGasLimit: 150000,
-    useStub: true,
-    config: {
-      from: '',
-      value: 2e18
-    }
+    useStub: true
+  },
+  txConfig = {
+    from: null,
+    gas: null
   }
 ) => {
   const {
@@ -23,43 +21,61 @@ const setFiatRate = async (
     queryString,
     callIntervalInSec,
     callbackGasLimit,
-    useStub,
-    config: { from: owner }
+    useStub
   } = params
-  const ownerPreEtherBalance = await getEtherBalance(owner)
 
   console.log(
-    chalk.yellow(
-      `➡️  Setting up exchange rate fetching for "ETH <> ${currencyName}"…`
+    chalk.cyan(`\n--------------------------------------------------------`)
+  )
+  console.log(
+    chalk.cyan(
+      `🚀  Setting up exchange rate fetching for "ETH <> ${currencyName}"…`
     )
   )
-  await exr.setCurrencySettings(
+  console.log(
+    chalk.yellow('\n➡️   Setting currency settings in ExchangeRates contract…')
+  )
+  await ExchangeRates.setCurrencySettings(
     currencyName,
     queryString,
     callIntervalInSec,
     callbackGasLimit,
-    {
-      from: params.config.from
-    }
+    txConfig
   )
 
-  await exr.fetchRate(currencyName, params.config)
+  console.log(
+    chalk.yellow('\n➡️   Fetching latest rate from ExchangeRates contract…')
+  )
+  // This method needs some ETH to pay the Oraclize fees
+  await ExchangeRates.fetchRate(currencyName, { ...txConfig, value: 2e18 })
   if (useStub) {
-    const pendingQueryId = await exp.pendingTestQueryId()
-    await exp.simulate__callback(pendingQueryId, '50000', {
-      from: params.config.from
-    })
+    console.log(chalk.yellow('\n➡️   Using stub to generate a test queryId…'))
+    const pendingQueryId = await ExchangeRateProvider.pendingTestQueryId(
+      txConfig
+    )
+
+    console.log(
+      chalk.yellow(
+        '\n➡️   Using stub to simulate a successful callback from Oraclize…'
+      )
+    )
+    await ExchangeRateProvider.simulate__callback(
+      pendingQueryId,
+      '50000',
+      txConfig
+    )
   }
 
   console.log(
-    chalk.cyan(
-      `✅  Successfully set up exchange rate fetching for "ETH <> ${currencyName}"\n\n`
+    chalk.green(
+      `\n✅  Successfully set up exchange rate fetching for "ETH <> ${currencyName}"`
     )
   )
-
-  const ownerPostEtherBalance = await getEtherBalance(owner)
-  const gasCost = ownerPreEtherBalance.sub(ownerPostEtherBalance)
-  return { gasCost }
+  console.log(
+    chalk.green(
+      '-----------------------------------------------------------------\n\n'
+    )
+  )
 }
 
 module.exports = {

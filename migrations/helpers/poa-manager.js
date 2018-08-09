@@ -6,67 +6,66 @@ const {
   oneHundredThousandTokensInWei,
   oneWeekInSec,
   twoWeeksInSec
-} = require('../../config/constants')
-const { getEtherBalance, unixTimeWithOffsetInSec } = require('./general.js')
+} = require('./constants')
+const { unixTimeWithOffsetInSec } = require('./general.js')
 
 const addBroker = async (
   poaManager,
   params = {
-    addresses: {
-      owner: '',
-      broker: ''
-    }
-  }
+    broker: ''
+  },
+  txConfig
 ) => {
-  const { owner, broker } = params.addresses
+  const { broker } = params
 
-  const ownerPreEtherBalance = await getEtherBalance(owner)
-
-  console.log(chalk.yellow(`➡️  Adding broker "${broker}"…`))
-  await poaManager.addBroker(broker, { from: owner })
-  console.log(chalk.cyan(`✅  Successfully added broker "${broker}"\n\n`))
-
-  const ownerPostEtherBalance = await getEtherBalance(owner)
-  const gasCost = ownerPreEtherBalance.sub(ownerPostEtherBalance)
-  return { gasCost }
+  console.log(
+    chalk.cyan(
+      '\n--------------------------------------------------------------'
+    )
+  )
+  console.log(chalk.cyan(`🚀  Adding broker "${broker}"…\n`))
+  await poaManager.addBroker(broker, txConfig)
+  console.log(chalk.green(`\n✅  Successfully added broker "${broker}"`))
+  console.log(
+    chalk.green(
+      '------------------------------------------------------------------------\n\n'
+    )
+  )
 }
 
 const deployPoa = async (
   poaManager,
   params = {
-    addresses: {
-      broker: '',
-      custodian: ''
-    },
-    poa: {
-      name: 'POA Test Token',
-      symbol: 'BBK-RE-DE123',
-      fiatCurrency: 'EUR',
-      totalSupply: oneHundredThousandTokensInWei,
-      startTimeForEthFunding: unixTimeWithOffsetInSec(60),
-      endTimeForEthFunding: unixTimeWithOffsetInSec(oneWeekInSec),
-      activationTimeout: unixTimeWithOffsetInSec(twoWeeksInSec),
-      fundingGoalInCents: oneHundredThousandEuroInCents
-    }
-  }
+    name: 'POA Test Token',
+    symbol: 'BBK-RE-DE123',
+    fiatCurrency: 'EUR',
+    totalSupply: oneHundredThousandTokensInWei,
+    startTimeForEthFunding: unixTimeWithOffsetInSec(60),
+    endTimeForEthFunding: unixTimeWithOffsetInSec(oneWeekInSec),
+    activationTimeout: unixTimeWithOffsetInSec(twoWeeksInSec),
+    fundingGoalInCents: oneHundredThousandEuroInCents
+  },
+  txConfig = {}
 ) => {
-  const { broker, custodian } = params.addresses
   const {
-    poa: {
-      name,
-      symbol,
-      fiatCurrency,
-      totalSupply,
-      startTimeForEthFunding,
-      endTimeForEthFunding,
-      activationTimeout,
-      fundingGoalInCents
-    }
+    name,
+    symbol,
+    fiatCurrency,
+    custodian,
+    totalSupply,
+    startTimeForEthFunding,
+    endTimeForEthFunding,
+    activationTimeout,
+    fundingGoalInCents
   } = params
-  const brokerPreEtherBalance = await getEtherBalance(broker)
 
   console.log(
-    chalk.yellow(`➡️  Deploying POA "${name}" with symbol "${symbol}"…`)
+    chalk.cyan(
+      '\n--------------------------------------------------------------------'
+    )
+  )
+  console.log(
+    chalk.cyan(`🚀  Deploying POA "${name}" with symbol "${symbol}"…\n`)
   )
   const tx = await poaManager.addToken(
     name,
@@ -78,17 +77,19 @@ const deployPoa = async (
     endTimeForEthFunding,
     activationTimeout,
     fundingGoalInCents,
-    { from: broker }
+    txConfig
   )
   const poaAddress = tx.logs[0].args.token
   console.log(
-    chalk.cyan(
-      `✅  Successfully deployed POA "${symbol}" to "${poaAddress}"\n\n`
+    chalk.green(
+      `\n✅  Successfully deployed POA "${symbol}" to "${poaAddress}"`
     )
   )
-  const brokerPostEtherBalance = await getEtherBalance(broker)
-  const gasCost = brokerPreEtherBalance.sub(brokerPostEtherBalance)
-  return { gasCost, poaAddress }
+  console.log(
+    chalk.green(
+      '-------------------------------------------------------------------------------------------\n\n'
+    )
+  )
 }
 
 module.exports = {

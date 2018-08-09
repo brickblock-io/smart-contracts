@@ -1,30 +1,28 @@
 /* eslint-disable no-console */
 const chalk = require('chalk')
 
-const { getEtherBalance } = require('./general.js')
-
 const addAddress = async (
   whitelist,
-  params = {
-    addresses: {
-      owner: '',
-      investor: ''
-    }
-  }
+  params = { investor: null },
+  txConfig = {}
 ) => {
-  const { owner, investor } = params.addresses
+  const { investor } = params
 
-  const ownerPreEtherBalance = await getEtherBalance(owner)
-
-  console.log(chalk.yellow(`➡️  Whitelisting investor "${investor}"…`))
-  await whitelist.addAddress(investor, { from: owner })
   console.log(
-    chalk.cyan(`✅  Successfully whitelisted investor "${investor}"\n\n`)
+    chalk.cyan(
+      '\n---------------------------------------------------------------------------------'
+    )
   )
-
-  const ownerPostEtherBalance = await getEtherBalance(owner)
-  const gasCost = ownerPreEtherBalance.sub(ownerPostEtherBalance)
-  return { gasCost }
+  console.log(chalk.cyan(`🚀  Whitelisting investor "${investor}"…\n`))
+  await whitelist.addAddress(investor, txConfig)
+  console.log(
+    chalk.green(`\n✅  Successfully whitelisted investor "${investor}"`)
+  )
+  console.log(
+    chalk.green(
+      '----------------------------------------------------------------------------------\n\n'
+    )
+  )
 }
 
 module.exports = {

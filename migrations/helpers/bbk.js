@@ -1,43 +1,64 @@
 /* eslint-disable no-console */
 const chalk = require('chalk')
 
-const { getEtherBalance } = require('./general.js')
-
-const distributeBbkToMany = (bbk, accounts, amount) =>
-  Promise.all(accounts.map(account => bbk.distributeTokens(account, amount)))
-
-const finalizeBbk = async (
-  bbk,
-  owner,
-  fountainAddress,
+const distributeBbkToMany = (
+  BrickblockToken,
   contributors,
-  tokenDistAmount
+  amount,
+  txConfig = { from: null, gas: null }
+) =>
+  Promise.all(
+    contributors.map(address =>
+      BrickblockToken.distributeTokens(address, amount, txConfig)
+    )
+  )
+
+const finalizeBbkCrowdsale = async (
+  BrickblockToken,
+  params = {
+    contributors: [],
+    fountainAddress: null,
+    tokenAmountPerContributor: null
+  },
+  txConfig = {
+    from: null,
+    gas: null
+  }
 ) => {
-  const ownerPreEtherBalance = await getEtherBalance(owner)
+  const { contributors, fountainAddress, tokenAmountPerContributor } = params
 
-  console.log(chalk.yellow('➡️  Finalizing BBK crowdsale…'))
-
-  console.log(`Changing fountainContractAddress to ${fountainAddress}…`)
-  await bbk.changeFountainContractAddress(fountainAddress, { from: owner })
+  console.log(chalk.cyan('\n------------------------------'))
+  console.log(chalk.cyan('🚀  Finalizing BBK crowdsale…'))
 
   console.log(
-    `Distributing ${tokenDistAmount.toString()} BBK to ${contributors.toString()}…`
+    chalk.yellow(
+      `\n➡️   Changing fountainContractAddress to ${fountainAddress}…`
+    )
   )
-  await distributeBbkToMany(bbk, contributors, tokenDistAmount)
+  await BrickblockToken.changeFountainContractAddress(fountainAddress, txConfig)
 
-  console.log('Finalizing token sale…')
-  await bbk.finalizeTokenSale({ from: owner })
+  console.log(
+    chalk.yellow(
+      `\n➡️   Distributing ${tokenAmountPerContributor.toString()} BBK each to ${contributors.toString()}…`
+    )
+  )
+  await distributeBbkToMany(
+    BrickblockToken,
+    contributors,
+    tokenAmountPerContributor,
+    txConfig
+  )
 
-  console.log('Unpausing BBK…')
-  await bbk.unpause({ from: owner })
+  console.log(chalk.yellow('\n➡️   Finalizing token sale…'))
+  await BrickblockToken.finalizeTokenSale(txConfig)
 
-  console.log(chalk.cyan('✅  Successfully finalized BBK crowdsale\n\n'))
+  console.log(chalk.yellow('\n➡️   Unpausing BBK…'))
+  await BrickblockToken.unpause(txConfig)
 
-  const ownerPostEtherBalance = await getEtherBalance(owner)
-  const gasCost = ownerPreEtherBalance.sub(ownerPostEtherBalance)
-  return { gasCost }
+  console.log(chalk.green('\n✅  Successfully finalized BBK crowdsale'))
+  console.log(chalk.green('------------------------------------------\n\n'))
 }
 
 module.exports = {
-  finalizeBbk
+  finalizeBbkCrowdsale
 }
