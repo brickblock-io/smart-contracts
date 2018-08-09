@@ -48,5 +48,22 @@ module.exports = {
     PoaManager: '0x75c35c980c0d37ef46df04d31a140b65503c0eed',
     PoaTokenMaster: '0x82d50ad3c1091866e258fd0f1a7cc9674609d254',
     Whitelist: '0xdda6327139485221633a1fcd65f4ac932e60a2e1'
+  },
+
+  // local testnet (dedicated ganache when running `yarn ganache-cli --network 4448` in platform to run end-to-end tests against)
+  '4448': {
+    ContractRegistry: '0xd3aa556287afe63102e5797bfddd2a1e8dbb3ea5',
+
+    AccessToken: '0x32cf1f3a98aeaf57b88b3740875d19912a522c1a',
+    BrickblockAccount: '0xd17e1233a03affb9092d5109179b43d6a8828607',
+    BrickblockToken: '0x5cca2cf3f8a0e5a5af6a1e9a54a0c98510d92081',
+    CentralLogger: '0x559e01ac5e8fe78963998d632e510bef3e306a78',
+    ExchangeRateProvider: '0x1967d06b1faba91eaadb1be33b277447ea24fa0e',
+    ExchangeRates: '0x336e71dab0302774b1e4c53202bf3f2d1ad1a8e6',
+    FeeManager: '0x3635d6ae8610ea00b6ad8342b819fd21c7db77ed',
+    PoaCrowdsaleMaster: '0x3f3993d6a6ce7af16662fbcf2fc270683fc56345',
+    PoaManager: '0x9e2c43153aa0007e6172af3733021a227480f008',
+    PoaTokenMaster: '0xaef6182310e3d34b6ea138b60d36a245386f3201',
+    Whitelist: '0xb2443146ec9f5a1a5fd5c1c9c0fe5f5cc459a31a'
   }
 }

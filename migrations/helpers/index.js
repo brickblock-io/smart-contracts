@@ -17,6 +17,14 @@ const whitelist = require('./whitelist')
  * ) {
  *   contractInstanceToWorkWith.smartContractMethod(...params, txConfig)
  * }
+ *
+ *
+ * REAL EXAMPLE
+ *
+ * function addAddressToWhitelist(whitelist, params = { investor: null }, txConfig = {}) {
+ *   const { investor } = params
+ *   await whitelist.addAddress(investor, txConfig)
+ * }
  */
 
 module.exports = {
