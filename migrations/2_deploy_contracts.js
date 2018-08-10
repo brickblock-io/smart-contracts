@@ -2,7 +2,6 @@
 const AccessToken = artifacts.require('AccessToken')
 const BrickblockAccount = artifacts.require('BrickblockAccount')
 const BrickblockToken = artifacts.require('BrickblockToken')
-const CentralLogger = artifacts.require('CentralLogger')
 const ContractRegistry = artifacts.require('ContractRegistry')
 const ExchangeRateProvider = artifacts.require('ExchangeRateProvider')
 const ExchangeRateProviderStub = artifacts.require(
@@ -11,6 +10,7 @@ const ExchangeRateProviderStub = artifacts.require(
 const ExchangeRates = artifacts.require('ExchangeRates')
 const FeeManager = artifacts.require('FeeManager')
 const PoaCrowdsaleMaster = artifacts.require('PoaCrowdsale')
+const PoaLogger = artifacts.require('PoaLogger')
 const PoaManager = artifacts.require('PoaManager')
 const PoaTokenMaster = artifacts.require('PoaToken')
 const Whitelist = artifacts.require('Whitelist')
@@ -26,13 +26,13 @@ const contracts = {
   AccessToken,
   BrickblockAccount,
   BrickblockToken,
-  CentralLogger,
   ContractRegistry,
   ExchangeRateProvider,
   ExchangeRateProviderStub,
   ExchangeRates,
   FeeManager,
   PoaCrowdsaleMaster,
+  PoaLogger,
   PoaManager,
   PoaTokenMaster,
   Whitelist

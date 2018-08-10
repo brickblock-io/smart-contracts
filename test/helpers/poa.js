@@ -3,7 +3,7 @@ const ContractRegistry = artifacts.require('ContractRegistry')
 const ExchangeRateProvider = artifacts.require('ExchangeRateProviderStub')
 const ExchangeRates = artifacts.require('ExchangeRates')
 const FeeManager = artifacts.require('FeeManager')
-const Logger = artifacts.require('CentralLogger')
+const PoaLogger = artifacts.require('PoaLogger')
 const PoaManager = artifacts.require('PoaManager')
 const PoaToken = artifacts.require('PoaToken')
 const PoaCrowdsale = artifacts.require('PoaCrowdsale')
@@ -113,7 +113,7 @@ const setupEcosystem = async () => {
   const fmr = await FeeManager.new(reg.address)
   const wht = await Whitelist.new(reg.address)
   const pmr = await PoaManager.new(reg.address)
-  const log = await Logger.new(reg.address)
+  const log = await PoaLogger.new(reg.address)
 
   for (const buyer of whitelistedPoaBuyers) {
     const preWhitelisted = await wht.whitelisted(buyer)
@@ -131,7 +131,7 @@ const setupEcosystem = async () => {
   await reg.updateContractAddress('FeeManager', fmr.address)
   await reg.updateContractAddress('Whitelist', wht.address)
   await reg.updateContractAddress('PoaManager', pmr.address)
-  await reg.updateContractAddress('Logger', log.address)
+  await reg.updateContractAddress('PoaLogger', log.address)
 
   testApproveAndLockMany(bbk, act, bbkContributors, bbkTokenDistAmount)
 

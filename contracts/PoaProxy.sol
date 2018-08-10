@@ -15,7 +15,7 @@ import "./PoaProxyCommon.sol";
   PoaToken and PoaCrowdsale and sets the resulting storage
   here on PoaProxy.
 
-  @dev `getContractAddress("Logger").call()` does not use the return value
+  @dev `getContractAddress("PoaLogger").call()` does not use the return value
   because we would rather contract functions to continue even if the event
   did not successfully trigger on the logger contract.
 */
@@ -88,7 +88,7 @@ contract PoaProxy is PoaProxyCommon {
     poaTokenMaster = _newMaster;
 
     emit ProxyUpgradedEvent(_oldMaster, _newMaster);
-    getContractAddress("Logger").call(
+    getContractAddress("PoaLogger").call(
       bytes4(keccak256("logProxyUpgradedEvent(address,address)")),
       _oldMaster, _newMaster
     );
@@ -109,7 +109,7 @@ contract PoaProxy is PoaProxyCommon {
     poaCrowdsaleMaster = _newMaster;
 
     emit ProxyUpgradedEvent(_oldMaster, _newMaster);
-    getContractAddress("Logger").call(
+    getContractAddress("PoaLogger").call(
       bytes4(keccak256("logProxyUpgradedEvent(address,address)")),
       _oldMaster, _newMaster
     );

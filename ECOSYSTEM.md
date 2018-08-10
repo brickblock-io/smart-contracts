@@ -12,7 +12,7 @@ The ecosystem is powered by 13 different contracts. 1 additional contract is a s
 * [ExchangeRates](#exchangerates)
 * [ExchangeRateProvider](#exchangerateprovider)
 * [OraclizeAPI](#oraclizeapi)
-* [CentralLogger](#centrallogger)
+* [PoaLogger](#poalogger)
 * [PoaManager](#poamanager)
 * [PoaProxy](#poaproxy)
 * [PoaToken](#poatoken)
@@ -340,14 +340,14 @@ This is for the inevitable day when an upgrade will be needed. This will destroy
 ## OraclizeAPI
 This is a contract from [Oraclize](https://github.com/oraclize/ethereum-api/blob/aeea37a5232c981884e6f4c5be55d58a252a01f6/oraclizeAPI_0.5.sol). To learn more about Oraclize check the [documentation](https://docs.oraclize.it/)
 
-## CentralLogger
-`CentralLogger` mirrors events from each [PoaToken](#poatoken). One additional event parameter named `tokenAddress` is added for each event to keep track of different token's events. Having a central logging contract for all [PoaToken](#poatoken)'s greatly simplifies the tracking of events. For example, this allows us to more easily implement email notifications to investors on `BuyEvent`s.
+## PoaLogger
+`PoaLogger` mirrors events from each [PoaToken](#poatoken). One additional event parameter named `tokenAddress` is added for each event to keep track of different token's events. Having a central logging contract for all [PoaToken](#poatoken)'s greatly simplifies the tracking of events. For example, this allows us to more easily implement email notifications to investors on `BuyEvent`s.
 
 All events from the [PoaToken](#poatoken) are also implemented here (with the additional `TokenAddress` parameter previously mentioned). The corresponding functions for each event are prefixed with `log`. These functions are called by the [PoaToken](#poatoken) contract every time an event is emitted.
 
 There is a modifier for each `log` function which checks if the sender is a [PoaToken](#poatoken) listed on [PoaManager](#poamanager) (more on that in the next section). This restricts anything other than listed [PoaToken](#poatoken)s from emitting these events.
 
-`CentralLogger` uses several interfaces:
+`PoaLogger` uses several interfaces:
 * `IRegistry`
     * Used to talk to [ContractRegistry](#contractregistry) to talk to [PoaManager](#poamanager)
 * `IPoaManager`
@@ -355,7 +355,7 @@ There is a modifier for each `log` function which checks if the sender is a [Poa
 * `IPoaToken`
     * Used to retrieve `string ProofOfCustody` in order to avoid some messy assembly involving strings.
 
-## PoaManager [NOT READY FOR AUDIT]
+## PoaManager
 `PoaManager` is a central contract which is meant to keep track of and manage `broker`s and [PoaToken](#poatoken)s. This is needed because we'll need to keep track of all our [PoaToken](#poatoken)s in an easy way.
 
 `PoaManager`'s job is to:
@@ -471,7 +471,7 @@ There is no explicit `owner` but there is a single function, `proxyChangeTokenMa
 ### Fallback Function
 This is where the magic happens. This is where `delegatecall` is used to take code from `PoaMaster` and use it on the `PoaProxy`'s `storage`. This forms the concept of a `Proxy`. For more information on how this works, see the links previously listed above.
 
-## PoaToken [NOT READY FOR AUDIT]
+## PoaToken
 This contract is what most of the ecosystem is built around.
 
 `PoaToken` represents an asset in the real world. The primary usage at the moment is real estate. A broker will go through a vetting process before they can participate in the ecosystem. Once when a broker has been listed on `PoaManager` they are able to deploy new `PoaProxy`s.
@@ -700,7 +700,7 @@ All functions in this contract just do what any other user would do with BBK (ex
 ### Stateless Contracts
 The following contracts have no or very little state and can be upgraded through [ContractRegistry](#contractregistry) updates with no or minimal additional work:
 
-* [CentralLogger](#centrallogger)
+* [PoaLogger](#poalogger)
     1. Deploy new contract
     1. Update address in registry
 * [ExchangeRates](#exchangerates)

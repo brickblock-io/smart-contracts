@@ -23,7 +23,7 @@ const deployContracts = async (
     BrickblockToken: BrickblockTokenABI,
     ExchangeRates: ExchangeRatesABI,
     FeeManager: FeeManagerABI,
-    CentralLogger: CentralLoggerABI,
+    PoaLogger: PoaLoggerABI,
     PoaManager: PoaManagerABI,
     PoaTokenMaster: PoaTokenMasterABI,
     PoaCrowdsaleMaster: PoaCrowdsaleMasterABI,
@@ -70,11 +70,11 @@ const deployContracts = async (
   })
   const BrickblockToken = await BrickblockTokenABI.deployed()
 
-  console.log(chalk.yellow('\n➡️   Deploying CentralLogger…'))
-  await deployer.deploy(CentralLoggerABI, ContractRegistry.address, {
+  console.log(chalk.yellow('\n➡️   Deploying PoaLogger…'))
+  await deployer.deploy(PoaLoggerABI, ContractRegistry.address, {
     from: owner
   })
-  const CentralLogger = await CentralLoggerABI.deployed()
+  const PoaLogger = await PoaLoggerABI.deployed()
 
   console.log(chalk.yellow('\n➡️   Deploying ExchangeRateProvider…'))
   let ExchangeRateProvider
@@ -134,7 +134,7 @@ const deployContracts = async (
     AccessToken,
     BrickblockAccount,
     BrickblockToken,
-    CentralLogger,
+    PoaLogger,
     ContractRegistry,
     ExchangeRateProvider,
     ExchangeRates,
@@ -157,7 +157,7 @@ const addContractsToRegistry = async (
     AccessToken,
     BrickblockAccount,
     BrickblockToken,
-    CentralLogger,
+    PoaLogger,
     ContractRegistry,
     ExchangeRateProvider,
     ExchangeRates,
@@ -189,10 +189,10 @@ const addContractsToRegistry = async (
     txConfig
   )
 
-  console.log(chalk.yellow('\n➡️   Registering CentralLogger…'))
+  console.log(chalk.yellow('\n➡️   Registering PoaLogger…'))
   await ContractRegistry.updateContractAddress(
-    'CentralLogger',
-    CentralLogger.address,
+    'PoaLogger',
+    PoaLogger.address,
     txConfig
   )
 

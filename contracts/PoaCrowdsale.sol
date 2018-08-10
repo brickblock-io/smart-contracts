@@ -279,7 +279,7 @@ contract PoaCrowdsale is PoaCommon {
     // Increment the funded amount
     fundedEthAmountInWei = fundedEthAmountInWei.add(_payAmount);
 
-    getContractAddress("Logger").call(
+    getContractAddress("PoaLogger").call(
       bytes4(keccak256("logBuyEvent(address,uint256)")), msg.sender, _payAmount
     );
 
@@ -345,7 +345,7 @@ contract PoaCrowdsale is PoaCommon {
     // turned into ACT for lockedBBK holders
     payFee(_fee);
     proofOfCustody32_ = _ipfsHash;
-    getContractAddress("Logger")
+    getContractAddress("PoaLogger")
       .call(bytes4(keccak256("logProofOfCustodyUpdatedEvent()")));
     // balance of contract (fundingGoalInCents) set to claimable by broker.
     // can now be claimed by broker via claim function
@@ -392,7 +392,7 @@ contract PoaCrowdsale is PoaCommon {
     require(_refundAmount > 0);
     fundedEthAmountInWei = fundedEthAmountInWei.sub(_refundAmount);
     msg.sender.transfer(_refundAmount);
-    getContractAddress("Logger").call(
+    getContractAddress("PoaLogger").call(
       bytes4(keccak256("logReclaimEvent(address,uint256)")),
       msg.sender,
       _refundAmount

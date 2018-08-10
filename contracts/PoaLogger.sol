@@ -5,7 +5,7 @@ import "./interfaces/IPoaManager.sol";
 import "./interfaces/IPoaToken.sol";
 
 
-contract CentralLogger {
+contract PoaLogger {
   uint8 public constant version = 1;
   // registry instance to get other contract addresses
   IRegistry public registry;

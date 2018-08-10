@@ -184,7 +184,7 @@ contract PoaToken is PoaCommon {
     require(_newCustodian != custodian);
     address _oldCustodian = custodian;
     custodian = _newCustodian;
-    getContractAddress("Logger").call(
+    getContractAddress("PoaLogger").call(
       bytes4(keccak256("logCustodianChangedEvent(address,address)")),
       _oldCustodian,
       _newCustodian
@@ -206,7 +206,7 @@ contract PoaToken is PoaCommon {
     enterStage(Stages.Terminated);
     // pause. Cannot be unpaused now that in Stages.Terminated
     paused = true;
-    getContractAddress("Logger")
+    getContractAddress("PoaLogger")
       .call(bytes4(keccak256("logTerminatedEvent()")));
     return true;
   }
@@ -391,7 +391,7 @@ contract PoaToken is PoaCommon {
     uint256 _delta = (_payoutAmount.mul(1e18) % totalSupply_).div(1e18);
     // pay fee along with any dust to FeeManager
     payFee(_fee.add(_delta));
-    getContractAddress("Logger").call(
+    getContractAddress("PoaLogger").call(
       bytes4(keccak256("logPayoutEvent(uint256)")),
       _payoutAmount.sub(_delta)
     );
@@ -419,7 +419,7 @@ contract PoaToken is PoaCommon {
     unclaimedPayoutTotals[msg.sender] = 0;
     // transfer Ξ payable amount to sender
     msg.sender.transfer(_payoutAmount);
-    getContractAddress("Logger").call(
+    getContractAddress("PoaLogger").call(
       bytes4(keccak256("logClaimEvent(address,uint256)")),
       msg.sender,
       _payoutAmount
@@ -439,7 +439,7 @@ contract PoaToken is PoaCommon {
     returns (bool)
   {
     proofOfCustody32_ = _ipfsHash;
-    getContractAddress("Logger").call(
+    getContractAddress("PoaLogger").call(
       bytes4(keccak256("logProofOfCustodyUpdatedEvent(string)")),
       _ipfsHash
     );
