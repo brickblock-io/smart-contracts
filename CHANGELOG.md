@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.4.0"></a>
+# [3.4.0](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.3.15...v3.4.0) (2018-08-10)
+
+
+### Features
+
+* **POA:** change activation flow ([e17293e](https://git.brickblock-dev.io/platform/smart-contracts/commits/e17293e))
+* **POA:** change activation flow - update tests ([343b3c8](https://git.brickblock-dev.io/platform/smart-contracts/commits/343b3c8))
+
+
+
 <a name="3.3.15"></a>
 ## [3.3.15](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.3.14...v3.3.15) (2018-08-10)
 
