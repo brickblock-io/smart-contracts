@@ -347,7 +347,7 @@ contract PoaCrowdsale is PoaCommon {
     returns(bool)
   {
     // prevent paying more than once
-    require(initialFeePaid == false);
+    require(isActivationFeePaid == false);
     // require proof of custody is not empty before paying
     require(bytes(proofOfCustody()).length != 0);
     uint256 _totalFee = calculateTotalFee();
@@ -361,7 +361,7 @@ contract PoaCrowdsale is PoaCommon {
     // turned into ACT for lockedBBK holders
     payFee(msg.value);
 
-    initialFeePaid = true;
+    isActivationFeePaid = true;
 
     return true;
   }
@@ -376,7 +376,7 @@ contract PoaCrowdsale is PoaCommon {
     returns (bool)
   {
     // if activated and fee paid: put in Active stage
-    require(initialFeePaid);
+    require(isActivationFeePaid);
     enterStage(Stages.Active);
 
     // balance of contract (fundingGoalInCents) set to claimable by broker.

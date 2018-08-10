@@ -83,7 +83,7 @@ contract PoaCommon is PoaProxyCommon {
   bool public tokenInitialized;
 
   // Indicated if the initial fee paid after the crowdsale
-  bool public initialFeePaid;
+  bool public isActivationFeePaid;
 
   /*********************
   * End Common Storage *

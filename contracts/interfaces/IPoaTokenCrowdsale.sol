@@ -69,7 +69,7 @@ interface IPoaTokenCrowdsale {
     view
     returns (string);
 
-  function initialFeePaid()
+  function isActivationFeePaid()
     external
     view
     returns (bool);

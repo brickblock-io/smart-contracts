@@ -847,7 +847,7 @@ const testPayActivationFee = async (
   { value, from = broker } = {}
 ) => {
   const calculatedFee = value || (await poa.calculateTotalFee())
-  const preInitialFeePaid = await poa.initialFeePaid.call()
+  const preIsActivationFeePaid = await poa.isActivationFeePaid.call()
   const preFeeManagerBalance = await getEtherBalance(fmr.address)
 
   await poa.payActivationFee({
@@ -857,18 +857,18 @@ const testPayActivationFee = async (
 
   const postFeeManagerBalance = await getEtherBalance(fmr.address)
 
-  const postInitialFeePaid = await poa.initialFeePaid.call()
+  const postIsActivationFeePaid = await poa.isActivationFeePaid.call()
 
   assert.equal(
-    preInitialFeePaid,
+    preIsActivationFeePaid,
     false,
-    'initialFeePaid must be false before activation'
+    'isActivationFeePaid must be false before activation'
   )
 
   assert.equal(
-    postInitialFeePaid,
+    postIsActivationFeePaid,
     true,
-    'initialFeePaid must be true after activation'
+    'isActivationFeePaid must be true after activation'
   )
 
   assert.equal(

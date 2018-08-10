@@ -80,7 +80,7 @@ const parseCommonStorage = (storage, stageInitialized) => ({
   fundedEthAmountPerUserInWei: storage[11].data,
   unclaimedPayoutTotals: storage[12].data,
   crowdsaleInitialized: new BigNumber(storage[13].data.slice(0, 4)).toNumber(),
-  initialFeePaid: new BigNumber(storage[13].data.slice(4, 6)).toNumber(),
+  isActivationFeePaid: new BigNumber(storage[13].data.slice(4, 6)).toNumber(),
   tokenInitialized: new BigNumber(
     '0x' + storage[13].data.slice(6, 8)
   ).toNumber(),
