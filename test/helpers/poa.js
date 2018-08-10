@@ -850,7 +850,7 @@ const testPayActivationFee = async (
   const preIsActivationFeePaid = await poa.isActivationFeePaid.call()
   const preFeeManagerBalance = await getEtherBalance(fmr.address)
 
-  await poa.payActivationFee({
+  const tx = await poa.payActivationFee({
     value: calculatedFee,
     from
   })
@@ -876,6 +876,8 @@ const testPayActivationFee = async (
     calculatedFee.toString(),
     'feeManager ether balance should be incremented by paid fee'
   )
+
+  return tx
 }
 
 const testActivate = async (poa, fmr, config) => {

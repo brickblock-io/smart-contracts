@@ -357,11 +357,8 @@ contract PoaCrowdsale is PoaCommon {
     // Prevent paying more than once
     require(isActivationFeePaid == false);
 
-    // Calculate total fee
-    uint256 _totalFee = calculateTotalFee();
-
     // Calculate the percentage of the actual fee that was paid
-    uint256 paidAmountToCalculatedFeeRatio = percent(msg.value, _totalFee, precisionOfPercentCalc);
+    uint256 paidAmountToCalculatedFeeRatio = percent(msg.value, calculateTotalFee(), precisionOfPercentCalc);
 
     /*
      * Due to constant ETH <> Fiat price fluctuations, there can be small
@@ -374,8 +371,8 @@ contract PoaCrowdsale is PoaCommon {
      * that was paid in Wei is only worth €996 at the time of checking, we would
      * still accept it. €994.99 would throw because it's a deviation of more than 0.5%.
      */
-    require(paidAmountToCalculatedFeeRatio > 1e18 - 5e16);
-    require(paidAmountToCalculatedFeeRatio < 1e18 + 5e16);
+    require(paidAmountToCalculatedFeeRatio > 1e18 - 5e15);
+    require(paidAmountToCalculatedFeeRatio < 1e18 + 5e15);
 
     // Send fee to `FeeManager` where it gets converted into ACT and distributed to lockedBBK holders
     payFee(msg.value);
