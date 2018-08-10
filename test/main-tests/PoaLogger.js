@@ -11,13 +11,14 @@ const {
 } = require('../helpers/log')
 const { setupPoaProxyAndEcosystem } = require('../helpers/poa')
 
-describe('when using Brickblock logger to log PoaToken events', () => {
+describe('when using PoaLogger to log PoaToken events', () => {
   contract('PoaLogger', () => {
     let poa
     let log
     let pmr
     let reg
     let fmr
+
     before('setup contracts', async () => {
       const contracts = await setupPoaProxyAndEcosystem()
       poa = contracts.poa

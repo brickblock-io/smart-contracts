@@ -150,8 +150,8 @@ const testActivateEvents = async (poa, reg, pmr, fmr, log) => {
     from: custodian
   })
 
-  const { args: triggeredLoggerProofEvent } = await waitForEvent(
-    LoggerProofOfCustodyUpdatedEvent
+  const { args: triggeredPoaLoggerProofEvent } = await waitForEvent(
+    PoaLoggerProofOfCustodyUpdatedEvent
   )
 
   await testPayActivationFee(poa, fmr)
