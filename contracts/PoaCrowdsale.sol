@@ -338,36 +338,59 @@ contract PoaCrowdsale is PoaCommon {
     return _fiatFee.add(_ethFee);
   }
 
-  /// @notice Used for paying initial activation fee.
-  /// proofOfCustody has to be updated before calling it
+  /**
+   @notice Used for paying the activation fee.
+   It is public because we want to enable any party to pay the fee.
+   We need this flexibility because there are multiple scenarios:
+     • Crypto-savvy brokers could pay the fee in ETH directly into the contract
+     • Non-crypto-savvy brokers could pay the fee in Fiat to the custodian and
+       the custodian pays the fee in ETH into the contract on their behalf
+     • Non-crypto-savvy broker AND custodian could ask Brickblock to help, pay the fee
+       in Fiat to us, and we would then pay the fee in ETH into the contract for them
+   */
   function payActivationFee()
     public
     payable
     atStage(Stages.FundingSuccessful)
     returns(bool)
   {
-    // prevent paying more than once
+    // Prevent paying more than once
     require(isActivationFeePaid == false);
-    // require proof of custody is not empty before paying
-    require(bytes(proofOfCustody()).length != 0);
+
+    // Calculate total fee
     uint256 _totalFee = calculateTotalFee();
-    uint256 payedAmountToCalculatedFeeRatio = percent(msg.value, _totalFee, precisionOfPercentCalc);
 
-    // percent of difference should be lower then 0.05%
-    require(payedAmountToCalculatedFeeRatio > 1e18 - 5e16);
-    require(payedAmountToCalculatedFeeRatio < 1e18 + 5e16);
+    // Calculate the percentage of the actual fee that was paid
+    uint256 paidAmountToCalculatedFeeRatio = percent(msg.value, _totalFee, precisionOfPercentCalc);
 
-    // fee sent to FeeManager where fee gets
-    // turned into ACT for lockedBBK holders
+    /*
+     * Due to constant ETH <> Fiat price fluctuations, there can be small
+     * deviations between the total fee that must be paid, which is denominated
+     * in Fiat cents, and the actual fee that has been paid into the function,
+     * which is denominated in Wei.
+     *
+     * We allow the difference between totalFee and actualFee to be up to 0.5%
+     * For example, if the totalFee to be paid would be €1000 and the actual fee
+     * that was paid in Wei is only worth €996 at the time of checking, we would
+     * still accept it. €994.99 would throw because it's a deviation of more than 0.5%.
+     */
+    require(paidAmountToCalculatedFeeRatio > 1e18 - 5e16);
+    require(paidAmountToCalculatedFeeRatio < 1e18 + 5e16);
+
+    // Send fee to `FeeManager` where it gets converted into ACT and distributed to lockedBBK holders
     payFee(msg.value);
 
+    // Set flag to true so this function can't be called in the future anymore
     isActivationFeePaid = true;
 
     return true;
   }
 
-  /// @notice Activate token with proofOfCustody fee is taken from contract balance
-  /// brokers must work this into their funding goals
+  /**
+    @notice Activate token. This has the following effects:
+      • Contract's ETH balance will become claimable by the broker
+      • Token will become tradable (via ERC20's unpause() function)
+  */
   function activate()
     external
     checkTimeout
@@ -375,18 +398,31 @@ contract PoaCrowdsale is PoaCommon {
     atStage(Stages.FundingSuccessful)
     returns (bool)
   {
-    // if activated and fee paid: put in Active stage
+    // activation fee must be paid before activating
     require(isActivationFeePaid);
+
+    /*
+     * A proof-of-custody document must be provided before activating.
+     * This document will show investors that the custodian is in
+     * posession of the actual asset/equity/shares being tokenized.
+     */
+    require(bytes(proofOfCustody()).length != 0);
+
+    /*
+     * Move token to the "Active" stage which will enable investors
+     * to see their token balances via the `startingBalance()` function
+     */
     enterStage(Stages.Active);
 
-    // balance of contract (fundingGoalInCents) set to claimable by broker.
-    // can now be claimed by broker via claim function
-    // should only be buy()s - fee. this ensures buy() dust is cleared
+    /*
+     * Make raised ETH funds, which is the balance of this contract,
+     * claimable by the broker via the claim() function.
+     */
     unclaimedPayoutTotals[broker] = unclaimedPayoutTotals[broker]
       .add(address(this).balance);
-    // allow trading of tokens
+
+    // Allow trading of tokens
     paused = false;
-    // let world know that this token can now be traded.
     emit Unpause();
 
     return true;

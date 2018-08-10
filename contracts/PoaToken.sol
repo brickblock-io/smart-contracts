@@ -427,7 +427,15 @@ contract PoaToken is PoaCommon {
     return _payoutAmount;
   }
 
-  /// @notice allow ipfs hash to be updated when audit etc occurs
+  /**
+   @notice Allow proof-of-custody IPFS hash to be updated.
+     This is used for both initial upload as well as changing
+     or adding more documents later. The first proof-of-custody
+     will be a legal document in which the custodian certifies
+     that have received the actual securities that this contract
+     tokenizes.
+   */
+
   function updateProofOfCustody
   (
     bytes32[2] _ipfsHash
