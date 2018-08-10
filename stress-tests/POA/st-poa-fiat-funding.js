@@ -17,9 +17,10 @@ const {
   broker,
   custodian,
   testBuyTokensWithFiat,
-  getRemainingAmountInCents,
-  getExpectedTokenAmount
+  getRemainingAmountInCents
 } = require('../../test/helpers/poa')
+
+const { InvestmentRegistry } = require('../helpers/st-poa-helper')
 
 describe('POAToken Stress Tests', () => {
   describe('test fiat funding only', () => {
@@ -52,35 +53,6 @@ describe('POAToken Stress Tests', () => {
       })
 
       it('Should fund -> payout -> claim with random amounts with many contributors', async () => {
-        const fundingCount = 0
-
-        class InvestmentRegistry {
-          constructor() {
-            this.investors = {}
-          }
-
-          async add(poaToken, address, amountInCents) {
-            const investor = this.investors[address]
-            const tokens = await getExpectedTokenAmount(poaToken, amountInCents)
-            if (investor) {
-              investor.amountInCents = investor.amountInCents.plus(
-                amountInCents
-              )
-              investor.tokens = investor.tokens.plus(tokens)
-            } else {
-              this.investors[address] = {
-                amountInCents,
-                tokens
-              }
-            }
-          }
-
-          list() {
-            return this.investors
-          }
-        }
-
-
         const investmentRegistry = new InvestmentRegistry()
 
         const fundUntilRemainingTarget = async (
