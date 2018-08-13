@@ -115,6 +115,14 @@ Deploying with truffle will execute the [migrations/2_deploy_contracts.js](https
         })
     ```
 
+#### Helpers! :robot:
+Using POA token is a **bit** complicated. :computer: :monkey:  
+But fear not, we have a helper:
+
+1. On `truffle` console with fresh contracts deployed.
+1. Call the helper with `exec ./migrations/helpers/poa-token.js`
+1. Follow the interactive prompt :shell: 
+
 #### To deploy on a local ganache
 1. Start the [Ganache app](http://truffleframework.com/ganache/) (make sure it's running on `8545`in the settings!) or run `yarn ganache-cli -p 8545`
 1. Run `yarn truffle migrate --reset --network dev`
