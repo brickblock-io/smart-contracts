@@ -373,16 +373,4 @@ contract PoaManager is Ownable {
   {
     return IPoaToken(_tokenAddress).toggleWhitelistTransfers();
   }
-
-  //
-  // Fallback
-  //
-
-  // prevent anyone from sending funds other than selfdestructs of course :)
-  function()
-    public
-    payable
-  {
-    revert();
-  }
 }

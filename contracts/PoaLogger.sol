@@ -180,12 +180,4 @@ contract PoaLogger {
       _upgradedTo
     );
   }
-
-  // keep money from entering this contract, unless selfdestruct of course :)
-  function()
-    public
-    payable
-  {
-    revert();
-  }
 }

@@ -322,12 +322,4 @@ contract AccessToken is PausableToken {
     emit BurnEvent(_address, _value);
     return true;
   }
-
-  /// @notice prevent anyone from sending funds
-  function()
-    public
-    payable
-  {
-    revert();
-  }
 }

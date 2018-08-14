@@ -37,12 +37,4 @@ contract ContractRegistry is Ownable {
     require(contractAddresses[_name32] != address(0));
     return contractAddresses[_name32];
   }
-
-  // prevent anyone from sending funds other than selfdestructs of course :)
-  function()
-    public
-    payable
-  {
-    revert();
-  }
 }

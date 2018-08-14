@@ -63,13 +63,4 @@ contract FeeManager {
     msg.sender.transfer(actToWei(_value));
     return true;
   }
-
-  // prevent anyone from sending funds other than selfdestructs of course :)
-  function()
-    public
-    payable
-  {
-    revert();
-  }
-
 }

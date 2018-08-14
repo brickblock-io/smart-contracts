@@ -157,12 +157,4 @@ contract BrickblockToken is PausableToken {
     // everything went well return true
     return true;
   }
-
-  // fallback function - do not allow any eth transfers to this contract
-  function()
-    external
-  {
-    revert();
-  }
-
 }

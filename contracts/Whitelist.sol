@@ -27,12 +27,4 @@ contract Whitelist is Ownable {
     whitelisted[_address] = false;
     emit WhitelistedEvent(_address, false);
   }
-
-  // prevent anyone from sending funds other than selfdestructs of course :)
-  function()
-    public
-    payable
-  {
-    revert();
-  }
 }
