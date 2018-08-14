@@ -11,7 +11,7 @@ logger.addTarget('console').withFormatter(palin, {
 
 logger.addTransform(function(elem) {
   // check if elem is BigNumber
-  if (elem.s && elem.e && elem.c) {
+  if (elem && elem.s && elem.e && elem.c) {
     return elem.toString()
   }
 

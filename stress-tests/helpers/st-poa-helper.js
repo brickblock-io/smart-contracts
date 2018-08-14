@@ -22,6 +22,14 @@ class InvestmentRegistry {
   list() {
     return this.investors
   }
+
+  get length() {
+    return Object.keys(this.investors).length
+  }
+
+  getInvestorAddresses() {
+    return Object.keys(this.investors)
+  }
 }
 
 module.exports = {

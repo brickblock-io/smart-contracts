@@ -1,3 +1,4 @@
+const logger = require('../../scripts/lib/logger')
 const AccessToken = artifacts.require('AccessToken')
 const ContractRegistry = artifacts.require('ContractRegistry')
 const ExchangeRateProvider = artifacts.require('ExchangeRateProviderStub')
@@ -857,6 +858,9 @@ const testPayActivationFee = async (
   { value, from = broker } = {}
 ) => {
   const calculatedFee = value || (await poa.calculateTotalFee())
+  logger.debug('calculatedFee', calculatedFee, {
+    scope: 'testPayActivationFee'
+  })
   const preIsActivationFeePaid = await poa.isActivationFeePaid.call()
   const preFeeManagerBalance = await getEtherBalance(fmr.address)
 
