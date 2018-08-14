@@ -12,7 +12,7 @@ const {
   testWithdrawBbkFunds
 } = require('../helpers/bat')
 
-const { timeTravel } = require('../helpers/general')
+const { timeTravel } = require('helpers')
 const { testPayFee } = require('../helpers/act')
 
 // 2 years defaultTimeLock

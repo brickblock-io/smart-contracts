@@ -2,6 +2,7 @@ const PoaManager = artifacts.require('PoaManager.sol')
 const PoaToken = artifacts.require('PoaToken.sol')
 const PoaCrowdsale = artifacts.require('PoaCrowdsale')
 
+const { timeTravel } = require('helpers')
 const {
   setupEcosystem,
   testSetCurrencyRate,
@@ -16,7 +17,6 @@ const {
   defaultFiatRate,
   getDefaultStartTime,
   determineNeededTimeTravel,
-  timeTravel,
   testStartEthSale,
   testBuyRemainingTokens,
   testActivate,

@@ -1,11 +1,11 @@
 const BigNumber = require('bignumber.js')
+const { timeTravel } = require('helpers')
 const { waitForEvent, gasPrice } = require('./general')
 const {
   owner,
   broker,
   custodian,
   determineNeededTimeTravel,
-  timeTravel,
   testStartEthSale,
   whitelistedPoaBuyers,
   testBuyTokens,

@@ -24,11 +24,8 @@ const {
   testTransferFrom,
   testTerminate
 } = require('../../helpers/poa')
-const {
-  testWillThrow,
-  timeTravel,
-  gasPrice
-} = require('../../helpers/general.js')
+const { testWillThrow, gasPrice } = require('../../helpers/general.js')
+const { timeTravel } = require('helpers')
 
 describe("when in 'FundingSuccessful' stage", () => {
   contract('PoaTokenProxy', () => {

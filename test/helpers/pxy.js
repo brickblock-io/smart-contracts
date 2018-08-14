@@ -1,5 +1,6 @@
 const assert = require('assert')
 const BigNumber = require('bignumber.js')
+const { timeTravel } = require('helpers')
 const { gasPrice } = require('../helpers/general')
 const {
   owner,
@@ -16,7 +17,6 @@ const {
   defaultFundingTimeout,
   defaultActivationTimeout,
   defaultFundingGoal,
-  timeTravel,
   testStartEthSale,
   determineNeededTimeTravel,
   testBuyRemainingTokens,

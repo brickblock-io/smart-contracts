@@ -15,7 +15,8 @@ const {
   testUpdateProofOfCustody,
   testPayActivationFee
 } = require('../../helpers/poa')
-const { timeTravel, gasPrice } = require('../../helpers/general.js')
+const { gasPrice } = require('../../helpers/general.js')
+const { timeTravel } = require('helpers')
 
 describe("when going through Poa's normal flow", async () => {
   contract('PoaTokenProxy', () => {

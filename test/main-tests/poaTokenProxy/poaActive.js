@@ -30,11 +30,8 @@ const {
   newIpfsHashArray32,
   testPayActivationFee
 } = require('../../helpers/poa')
-const {
-  testWillThrow,
-  timeTravel,
-  gasPrice
-} = require('../../helpers/general.js')
+const { testWillThrow, gasPrice } = require('../../helpers/general.js')
+const { timeTravel } = require('helpers')
 
 describe("when in 'Active' stage", () => {
   contract('PoaTokenProxy', () => {

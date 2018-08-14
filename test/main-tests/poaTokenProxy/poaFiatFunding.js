@@ -1,4 +1,3 @@
-const BigNumber = require('bignumber.js')
 const {
   owner,
   broker,
@@ -30,11 +29,8 @@ const {
   getRemainingAmountInCents,
   stages
 } = require('../../helpers/poa')
-const {
-  testWillThrow,
-  timeTravel,
-  gasPrice
-} = require('../../helpers/general.js')
+const { testWillThrow, gasPrice } = require('../../helpers/general.js')
+const { timeTravel } = require('helpers')
 
 describe("when in 'FiatFunding' stage", () => {
   contract('PoaToken', accounts => {

@@ -22,6 +22,7 @@ const stages = {
   Active: '6',
   Terminated: '7'
 }
+const { timeTravel } = require('helpers')
 const {
   areInRange,
   bigZero,
@@ -30,7 +31,6 @@ const {
   getGasUsed,
   sendTransaction,
   testWillThrow,
-  timeTravel,
   percentBigInt
 } = require('./general')
 const { finalizedBBK } = require('./bbk')
@@ -1699,7 +1699,6 @@ module.exports = {
   testUnpause,
   testUpdateProofOfCustody,
   testWeiToFiatCents,
-  timeTravel,
   whitelistedPoaBuyers,
   emptyBytes32,
   stages,

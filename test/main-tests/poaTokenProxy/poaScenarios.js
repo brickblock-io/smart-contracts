@@ -32,12 +32,12 @@ const {
   testPayActivationFee
 } = require('../../helpers/poa')
 const {
-  timeTravel,
   gasPrice,
   areInRange,
   getEtherBalance,
   testWillThrow
 } = require('../../helpers/general.js')
+const { timeTravel } = require('helpers')
 const BigNumber = require('bignumber.js')
 
 describe('De-whitelisted POA holders', () => {

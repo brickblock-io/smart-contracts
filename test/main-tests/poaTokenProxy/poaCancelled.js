@@ -23,11 +23,8 @@ const {
   testBuyTokensWithFiat,
   testCancelFunding
 } = require('../../helpers/poa')
-const {
-  testWillThrow,
-  timeTravel,
-  gasPrice
-} = require('../../helpers/general.js')
+const { testWillThrow, gasPrice } = require('../../helpers/general.js')
+const { timeTravel } = require('helpers')
 
 describe("when in 'FundingCancelled' stage", () => {
   contract('PoaToken', accounts => {
