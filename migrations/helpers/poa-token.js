@@ -1,20 +1,58 @@
 /* eslint-disable no-console */
+
 // Ecosystem
-const poaTokenProxyABI = require('../../build/contracts/IPoaTokenCrowdsale.json')
+const ContractAddresses = require('config/deployed-contracts')
+const ContractRegistryAbi = require('build/contracts/ContractRegistry.json').abi
+const IPoaTokenCrowdsaleAbi = require('build/contracts/IPoaTokenCrowdsale.json')
   .abi
+const PoaManagerAbi = require('build/contracts/PoaManager.json').abi
 
 // Utils
 const chalk = require('chalk')
 const readline = require('readline')
 
+// Helpers
+const { timeTravel } = require('helpers')
+
+const LOCAL_TESTNET_ID = '4447'
+const contractRegistryAddress =
+  ContractAddresses[LOCAL_TESTNET_ID].ContractRegistry
+
+const makeTransactionConfig = config =>
+  Object.assign(
+    {
+      // 20 GWei
+      gasPrice: 20e9,
+      /*
+       * Mainnet has a gas limit of roughly 8e6 at the time of writing
+       * (source: https://ethstats.net )
+       *
+       * Truffle's gas limit defaults to 6721975
+       * (source: https://github.com/trufflesuite/ganache-cli/blob/develop/args.js#L133 )
+       *
+       * We could tune this per contract, but here we just want to deploy contracts and
+       * set up their state for e2e testing
+       */
+      gas: 6721975
+    },
+    config
+  )
+
 const instantiatePoaProxy = async () => {
-  const poaTokenProxyAddress = '0x1ecced27e8ac1256a9f7f19004735d27d729203c'
-  const poaToken = web3.eth.contract(poaTokenProxyABI).at(poaTokenProxyAddress)
+  const ContractRegistry = web3.eth
+    .contract(ContractRegistryAbi)
+    .at(contractRegistryAddress)
+  const poaManagerAddress = await ContractRegistry.getContractAddress(
+    'PoaManager'
+  )
+  const PoaManager = web3.eth.contract(PoaManagerAbi).at(poaManagerAddress)
+  const poaAddresses = await PoaManager.getTokenAddressList()
+  const Poa = web3.eth.contract(IPoaTokenCrowdsaleAbi).at(poaAddresses[0])
 
-  const initialStage = await poaToken.stage()
-  console.log(chalk.yellow(`➡️  paoToken has initialStage: ${initialStage}`))
+  const initialStage = await Poa.stage()
+  console.log(chalk.yellow(`➡️  PaoToken has "initialStage": ${initialStage}`))
 
-  return poaToken
+  return Poa
 }
 
 /*
@@ -22,78 +60,72 @@ const instantiatePoaProxy = async () => {
  */
 const startFiatSale = async () => {
   try {
-    const poaToken = await instantiatePoaProxy(web3)
+    const Poa = await instantiatePoaProxy()
 
-    console.log(chalk.yellow('➡️  call startFiatSale on poaCrowdSale…'))
+    console.log(chalk.yellow('➡️  Call "startFiatSale()" on Poa…'))
     const brokerAddress = '0xf17f52151ebef6c7334fad080c5704d77216b732'
-    await poaToken.startFiatSale({ from: brokerAddress, gasPrice: 1e9 })
-    const finalStage = await poaToken.stage()
+    await Poa.startFiatSale(makeTransactionConfig({ from: brokerAddress }))
+    const finalStage = await Poa.stage()
 
     console.log(
-      chalk.cyan(
-        `✅ Successfully moved POA token contract stage to "${finalStage}"\n\n`
-      )
+      chalk.green(`✅ Successfully moved POA stage to "${finalStage}"\n\n`)
     )
   } catch (e) {
-    console.log(chalk.red('poa-token helper startFiatSale 💥\n\n'), e)
+    console.log(
+      chalk.red('Error in poa-token helper "startFiatSale()" 💥\n\n'),
+      e
+    )
   }
 }
-
-// TODO this does not really work, and I'm not suyre why :(
 
 /*
  * Helper to Skip to stage 2
  */
 const startEthSale = async () => {
   try {
-    const poaToken = await instantiatePoaProxy(web3)
-    const startTimeForEthFunding = await poaToken.startTimeForEthFunding()
+    /*
+     * NOTE: This hack is required because the web3 objected only gets
+     * injected into the first file that is being called from within the
+     * truffle console. If any downstream functions in other files are
+     * called, the web3 object won't be available.
+     *
+     * For example, without this line, the `timeTravel()` helper would fail
+     * because web3 would be undefined in its context.
+     */
+    global.web3 = web3
 
-    console.log(
-      chalk.yellow(
-        `➡️  timetravel ${startTimeForEthFunding}ms to startTimeForEthFunding…`
-      )
-    )
-    await web3.currentProvider.send({
-      jsonrpc: '2.0',
-      method: 'evm_increaseTime',
-      params: [startTimeForEthFunding],
-      id: new Date().getSeconds()
-    })
-    console.log(chalk.yellow('➡️  mine latest block…'))
-    await web3.currentProvider.send({
-      jsonrpc: '2.0',
-      method: 'evm_mine',
-      params: [],
-      id: new Date().getSeconds()
-    })
+    const Poa = await instantiatePoaProxy()
+    const startTimeForEthFunding = await Poa.startTimeForEthFunding().toNumber()
 
-    console.log(chalk.yellow('➡️  call startEthSale on poaCrowdSale…'))
+    await timeTravel(startTimeForEthFunding)
+
+    console.log(chalk.yellow('➡️  Call "startEthSale()" on Poa…'))
     const brokerAddress = '0xf17f52151ebef6c7334fad080c5704d77216b732'
-    await poaToken.startEthSale({ from: brokerAddress, gasPrice: 1e9 })
-    const finalStage = await poaToken.stage()
+    await Poa.startEthSale(makeTransactionConfig({ from: brokerAddress }))
+    const finalStage = await Poa.stage()
 
     console.log(
-      chalk.cyan(
-        `✅ Successfully moved POA token contract stage to "${finalStage}"\n\n`
-      )
+      chalk.green(`✅ Successfully moved POA stage to "${finalStage}"\n\n`)
     )
   } catch (e) {
-    console.log(chalk.red('poa-token helper startEthSale 💥\n\n'), e)
+    console.log(
+      chalk.red('Error in poa-token helper "startEthSale()" 💥\n\n'),
+      e
+    )
   }
 }
 
-// TODO async makes the cli duplicate letters :P
 module.exports = function(cb) {
   const prompt = readline.createInterface({
     input: process.stdin,
-    output: process.stdout
+    output: process.stdout,
+    terminal: false
   })
   prompt.question(
-    'Which stage should poa Token "BBK-RE-DE123" should be moved to? (FiatFunding | EthFunding)',
+    'Which stage should poa Token "BBK-RE-DE123" be moved to? (FiatFunding | EthFunding)\n➡️   ',
     async input => {
       console.log(input)
-      console.log(chalk.yellow(`Jumping to stage: ${input}`))
+      console.log(chalk.cyan(`\n🚀 Jumping to stage: ${input}`))
       switch (input) {
         case 'FiatFunding':
           await startFiatSale()
@@ -105,7 +137,7 @@ module.exports = function(cb) {
         default:
           console.log(
             chalk.red(
-              `Stage "${input}" is not valid.\n\n\
+              `Stage "${input}" is invalid.\n\n\
               Supported stages are: FiatFunding | EthFunding.`
             )
           )
