@@ -92,6 +92,7 @@
     "chai": "^4.1.1",
     "chalk": "^2.4.0",
     "concurrently": "^3.5.0",
+    "env-cmd": "^8.0.2",
     "eslint": "^5.2.0",
     "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-compat": "^2.2.0",

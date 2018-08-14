@@ -12,6 +12,14 @@
 * [Python 3](https://www.python.org) for running [mythril](https://github.com/ConsenSys/mythril)
 
 ## Installing
+1. Create local `.env`:
+    
+    ```sh
+    cp .env.example .env
+    ```
+    
+    This is necessary to configure the right `$NODE_PATH` for easier pathing, for example.
+
 1. Install dependencies:
 
     ```sh

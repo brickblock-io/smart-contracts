@@ -36,6 +36,7 @@ test:
   cache:
     policy: pull
   script:
+    - cp .env.example .env
     - yarn test
 
 ###############
