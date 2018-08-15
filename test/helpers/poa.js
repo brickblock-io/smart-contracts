@@ -731,7 +731,6 @@ const testBuyTokens = async (poa, config) => {
   const preTokenBalance = await poa.balanceOf(buyer)
   const preFundedAmount = await poa.fundedEthAmountInWei()
   const preUserWeiInvested = await poa.fundedEthAmountPerUserInWei(buyer)
-
   const tx = await poa.buy(config)
   const gasUsed = await getGasUsed(tx)
   const gasCost = new BigNumber(gasUsed).mul(config.gasPrice)
@@ -1634,12 +1633,26 @@ const testPercent = async ({
   )
 }
 
-const getRemainingAmountInCents = async poa => {
+const getRemainingAmountInCentsDuringFiatFunding = async poa => {
   const fundingGoalInCents = await poa.fundingGoalInCents()
-  const fundedAmount = await poa.fundedFiatAmountInCents()
-  const remainingAmount = fundingGoalInCents.sub(fundedAmount)
+  const fundedFiatAmount = await poa.fundedFiatAmountInCents()
+  const remainingAmount = fundingGoalInCents.sub(fundedFiatAmount)
 
   return remainingAmount
+}
+
+const getRemainingAmountInWeiDuringEthFunding = async poa => {
+  const fundingGoalInCents = await poa.fundingGoalInCents()
+  const fundingGoalInWei = await poa.fiatCentsToWei(fundingGoalInCents)
+  const fundedFiatAmount = await poa.fundedFiatAmountInCents()
+  const fundedFiatAmountInWei = await poa.fiatCentsToWei(fundedFiatAmount)
+  const fundedEthAmount = await poa.fundedEthAmountInWei()
+
+  const remainingAmountInWei = fundingGoalInWei
+    .sub(fundedFiatAmountInWei)
+    .sub(fundedEthAmount)
+
+  return remainingAmountInWei
 }
 
 module.exports = {
@@ -1720,5 +1733,6 @@ module.exports = {
   stages,
   getExpectedTokenAmount,
   testPercent,
-  getRemainingAmountInCents
+  getRemainingAmountInCentsDuringFiatFunding,
+  getRemainingAmountInWeiDuringEthFunding
 }
