@@ -385,7 +385,7 @@ describe('when initializing PoaToken', () => {
       ])
     })
 
-    it('should NOT initialize with startTimeForEthFunding before now', async () => {
+    it('should NOT initialize with startTimeForEthFundingPeriod before now', async () => {
       await testSetCurrencyRate(
         exr,
         exp,
@@ -416,7 +416,7 @@ describe('when initializing PoaToken', () => {
       ])
     })
 
-    it('should NOT initialize with endTimeForEthFunding less than 1 day', async () => {
+    it('should NOT initialize with durationForEthFundingPeriod less than 1 day', async () => {
       await testSetCurrencyRate(
         exr,
         exp,
@@ -450,7 +450,7 @@ describe('when initializing PoaToken', () => {
       ])
     })
 
-    it('should NOT initialize with activationTimeout less than 7 days', async () => {
+    it('should NOT initialize with durationForActivationPeriod less than 7 days', async () => {
       await testSetCurrencyRate(
         exr,
         exp,

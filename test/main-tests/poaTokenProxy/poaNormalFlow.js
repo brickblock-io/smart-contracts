@@ -29,7 +29,7 @@ describe("when going through Poa's normal flow", async () => {
       fmr = contracts.fmr
     })
 
-    it('should move from PreFunding to EthFunding after startTimeForEthFunding', async () => {
+    it('should move from PreFunding to EthFunding after startTimeForEthFundingPeriod', async () => {
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
       await testStartEthSale(poa)

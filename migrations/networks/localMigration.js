@@ -107,10 +107,10 @@ const localMigration = async (deployer, accounts, contracts, web3) => {
       fiatCurrency: 'EUR',
       custodian,
       totalSupply: oneHundredThousandTokensInWei,
-      // startTimeForEthFunding needs a little offset so that it isn't too close to `block.timestamp` which would fail
-      startTimeForEthFunding: unixTimeWithOffsetInSec(60),
-      endTimeForEthFunding: unixTimeWithOffsetInSec(oneWeekInSec),
-      activationTimeout: unixTimeWithOffsetInSec(twoWeeksInSec),
+      // startTimeForEthFundingPeriod needs a little offset so that it isn't too close to `block.timestamp` which would fail
+      startTimeForEthFundingPeriod: unixTimeWithOffsetInSec(60),
+      durationForEthFundingPeriod: oneWeekInSec,
+      durationForActivationPeriod: twoWeeksInSec,
       fundingGoalInCents: oneHundredThousandEuroInCents
     },
     { from: broker }

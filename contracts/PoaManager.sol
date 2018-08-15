@@ -214,9 +214,9 @@ contract PoaManager is Ownable {
   /**
     @notice Creates a PoaToken contract with given parameters, and set active value to true
     @param _fiatCurrency32 Fiat symbol used in ExchangeRates
-    @param _startTimeForEthFunding Given as unix time in seconds since 01.01.1970
-    @param _endTimeForEthFunding An offset against _startTimeForEthFunding, given in seconds
-    @param _activationTimeout An offset against _endTimeForEthFunding, given in seconds
+    @param _startTimeForEthFundingPeriod Given as unix time in seconds since 01.01.1970
+    @param _durationForEthFundingPeriod How long eth funding can last, given in seconds
+    @param _durationForActivationPeriod How long a custodian has to activate token, given in seconds
     @param _fundingGoalInCents Given as fiat cents
    */
   function addToken
@@ -226,9 +226,9 @@ contract PoaManager is Ownable {
     bytes32 _fiatCurrency32,
     address _custodian,
     uint256 _totalSupply,
-    uint256 _startTimeForEthFunding,
-    uint256 _endTimeForEthFunding,
-    uint256 _activationTimeout,
+    uint256 _startTimeForEthFundingPeriod,
+    uint256 _durationForEthFundingPeriod,
+    uint256 _durationForActivationPeriod,
     uint256 _fundingGoalInCents
   )
     public
@@ -248,9 +248,9 @@ contract PoaManager is Ownable {
 
     IPoaCrowdsale(_tokenAddress).initializeCrowdsale(
       _fiatCurrency32,
-      _startTimeForEthFunding,
-      _endTimeForEthFunding,
-      _activationTimeout,
+      _startTimeForEthFundingPeriod,
+      _durationForEthFundingPeriod,
+      _durationForActivationPeriod,
       _fundingGoalInCents
     );
 

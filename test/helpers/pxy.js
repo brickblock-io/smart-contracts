@@ -85,9 +85,9 @@ const parseCommonStorage = (storage, stageInitialized) => ({
     '0x' + storage[13].data.slice(6, 8)
   ).toNumber(),
   paused: new BigNumber('0x' + storage[13].data.slice(8, 10)).toNumber(),
-  startTimeForEthFunding: new BigNumber(storage[14].data),
-  endTimeForEthFunding: new BigNumber(storage[15].data),
-  activationTimeout: new BigNumber(storage[16].data),
+  startTimeForEthFundingPeriod: new BigNumber(storage[14].data),
+  durationForEthFundingPeriod: new BigNumber(storage[15].data),
+  durationForActivationPeriod: new BigNumber(storage[16].data),
   actualFiatCurrency32: bytes32StorageToAscii(storage[17].data),
   fundingGoalInCents: new BigNumber(storage[18].data),
   fundedFiatAmountInCents: new BigNumber(storage[19].data)
@@ -145,9 +145,9 @@ const checkPostInitializedStorage = async (poa, reg) => {
     paused,
     tokenInitialized,
     crowdsaleInitialized,
-    startTimeForEthFunding,
-    endTimeForEthFunding,
-    activationTimeout,
+    startTimeForEthFundingPeriod,
+    durationForEthFundingPeriod,
+    durationForActivationPeriod,
     actualFiatCurrency32,
     fundingGoalInCents,
     fundedFiatAmountInCents
@@ -207,17 +207,17 @@ const checkPostInitializedStorage = async (poa, reg) => {
   )
   assert(crowdsaleInitialized, 'crowdsaleInitialized should be true')
   assert(
-    startTimeForEthFunding.greaterThan(1530280851),
-    'startTimeForEthFunding should be greater than 06/29/2018'
+    startTimeForEthFundingPeriod.greaterThan(1530280851),
+    'startTimeForEthFundingPeriod should be greater than 06/29/2018'
   )
   assert.equal(
-    endTimeForEthFunding.toString(),
+    durationForEthFundingPeriod.toString(),
     defaultFundingTimeout.toString(),
-    'endTimeForEthFunding should match defaultFundingTimeout'
+    'durationForEthFundingPeriod should match defaultFundingTimeout'
   )
   assert(
-    activationTimeout.greaterThan(endTimeForEthFunding),
-    'activationTimeout should be greater than endTimeForEthFunding'
+    durationForActivationPeriod.greaterThan(durationForEthFundingPeriod),
+    'durationForActivationPeriod should be greater than durationForEthFundingPeriod'
   )
   assert.equal(
     actualFiatCurrency32,
@@ -298,10 +298,10 @@ const checkPostActiveStorage = async (poa, reg) => {
     paused,
     crowdsaleInitialized,
     tokenInitialized,
-    endTimeForEthFunding,
+    durationForEthFundingPeriod,
     actualFiatCurrency32,
-    startTimeForEthFunding,
-    activationTimeout,
+    startTimeForEthFundingPeriod,
+    durationForActivationPeriod,
     fundingGoalInCents,
     fundedFiatAmountInCents
   } = await parseCommonStorage(storage, true)
@@ -362,17 +362,17 @@ const checkPostActiveStorage = async (poa, reg) => {
 
   assert(crowdsaleInitialized, 'crowdsaleInitialized should be true')
   assert(
-    startTimeForEthFunding.greaterThan(1530280851),
-    'startTimeForEthFunding should be greater than 06/29/2018'
+    startTimeForEthFundingPeriod.greaterThan(1530280851),
+    'startTimeForEthFundingPeriod should be greater than 06/29/2018'
   )
   assert.equal(
-    endTimeForEthFunding.toString(),
+    durationForEthFundingPeriod.toString(),
     defaultFundingTimeout.toString(),
-    'endTimeForEthFunding should match defaultFundingTimeout'
+    'durationForEthFundingPeriod should match defaultFundingTimeout'
   )
   assert(
-    activationTimeout.greaterThan(endTimeForEthFunding),
-    'activationTimeout should be greater than endTimeForEthFunding'
+    durationForActivationPeriod.greaterThan(durationForEthFundingPeriod),
+    'durationForActivationPeriod should be greater than durationForEthFundingPeriod'
   )
   assert.equal(
     actualFiatCurrency32,
@@ -440,9 +440,9 @@ const checkPostIsUpgradedStorage = async (poa, reg) => {
     paused,
     tokenInitialized,
     crowdsaleInitialized,
-    startTimeForEthFunding,
-    endTimeForEthFunding,
-    activationTimeout,
+    startTimeForEthFundingPeriod,
+    durationForEthFundingPeriod,
+    durationForActivationPeriod,
     actualFiatCurrency32,
     fundingGoalInCents,
     fundedFiatAmountInCents
@@ -510,17 +510,17 @@ const checkPostIsUpgradedStorage = async (poa, reg) => {
 
   assert(crowdsaleInitialized, 'crowdsaleInitialized should be true')
   assert(
-    startTimeForEthFunding.greaterThan(1530280851),
-    'startTimeForEthFunding should be greater than 06/29/2018'
+    startTimeForEthFundingPeriod.greaterThan(1530280851),
+    'startTimeForEthFundingPeriod should be greater than 06/29/2018'
   )
   assert.equal(
-    endTimeForEthFunding.toString(),
+    durationForEthFundingPeriod.toString(),
     defaultFundingTimeout.toString(),
-    'endTimeForEthFunding should match defaultFundingTimeout'
+    'durationForEthFundingPeriod should match defaultFundingTimeout'
   )
   assert(
-    activationTimeout.greaterThan(endTimeForEthFunding),
-    'activationTimeout should be greater than endTimeForEthFunding'
+    durationForActivationPeriod.greaterThan(durationForEthFundingPeriod),
+    'durationForActivationPeriod should be greater than durationForEthFundingPeriod'
   )
   assert.equal(
     actualFiatCurrency32,

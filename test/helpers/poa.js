@@ -86,12 +86,12 @@ const getDefaultStartTime = async () => {
 }
 
 const determineNeededTimeTravel = async poa => {
-  const startTimeForEthFunding = await poa.startTimeForEthFunding()
+  const startTimeForEthFundingPeriod = await poa.startTimeForEthFundingPeriod()
   const currentBlock = await web3.eth.getBlock(web3.eth.blockNumber)
   const blockNow = new BigNumber(currentBlock.timestamp)
-  return blockNow.greaterThan(startTimeForEthFunding)
+  return blockNow.greaterThan(startTimeForEthFundingPeriod)
     ? 0
-    : startTimeForEthFunding
+    : startTimeForEthFundingPeriod
         .sub(blockNow)
         .add(1)
         .toNumber()
@@ -252,8 +252,8 @@ const testProxyInitialization = async (reg, pmr, args) => {
   const actualCustodian = await poa.custodian()
   const decimals = await poa.decimals()
   const feeRateInPermille = await poa.feeRateInPermille()
-  const startTimeForFiatFunding = await poa.startTimeForEthFunding()
-  const endTimeForEthFunding = await poa.endTimeForEthFunding()
+  const startTimeForFiatFunding = await poa.startTimeForEthFundingPeriod()
+  const durationForEthFundingPeriod = await poa.durationForEthFundingPeriod()
   const fundingGoalInCents = await poa.fundingGoalInCents()
   const totalPerTokenPayout = await poa.totalPerTokenPayout()
   const fundedEthAmountInWei = await poa.fundedEthAmountInWei()
@@ -298,9 +298,9 @@ const testProxyInitialization = async (reg, pmr, args) => {
     'fee rate should be a constant of 5'
   )
   assert.equal(
-    endTimeForEthFunding.toString(),
+    durationForEthFundingPeriod.toString(),
     defaultFundingTimeout.toString(),
-    'endTimeForEthFunding should match that given in constructor'
+    'durationForEthFundingPeriod should match that given in constructor'
   )
   assert.equal(
     fundingGoalInCents.toString(),
@@ -386,8 +386,8 @@ const testInitialization = async (exr, exp, reg, pmr) => {
   const actualCustodian = await poa.custodian()
   const decimals = await poa.decimals()
   const feeRateInPermille = await poa.feeRateInPermille()
-  const startTimeForEthFunding = await poa.startTimeForEthFunding()
-  const endTimeForEthFunding = await poa.endTimeForEthFunding()
+  const startTimeForEthFundingPeriod = await poa.startTimeForEthFundingPeriod()
+  const durationForEthFundingPeriod = await poa.durationForEthFundingPeriod()
   const fundingGoalInCents = await poa.fundingGoalInCents()
   const totalPerTokenPayout = await poa.totalPerTokenPayout()
   const fundedEthAmountInWei = await poa.fundedEthAmountInWei()
@@ -432,14 +432,14 @@ const testInitialization = async (exr, exp, reg, pmr) => {
     'fee rate should be a constant of 5'
   )
   assert.equal(
-    startTimeForEthFunding.toString(),
+    startTimeForEthFundingPeriod.toString(),
     defaultStartTime.toString(),
-    'startTimeForEthFunding should match startTimeForEthFunding given in constructor'
+    'startTimeForEthFundingPeriod should match startTimeForEthFundingPeriod given in constructor'
   )
   assert.equal(
-    endTimeForEthFunding.toString(),
+    durationForEthFundingPeriod.toString(),
     defaultFundingTimeout.toString(),
-    'endTimeForEthFunding should match that given in constructor'
+    'durationForEthFundingPeriod should match that given in constructor'
   )
   assert.equal(
     fundingGoalInCents.toString(),
@@ -1148,14 +1148,16 @@ const testFirstReclaim = async (poa, config, shouldBeFundingSuccessful) => {
 }
 
 const forcePoaTimeout = async poa => {
-  const endTimeForEthFunding = await poa.endTimeForEthFunding()
-  await timeTravel(endTimeForEthFunding.toNumber())
+  const durationForEthFundingPeriod = await poa.durationForEthFundingPeriod()
+  await timeTravel(durationForEthFundingPeriod.toNumber())
 }
 
 const activationTimeoutContract = async poa => {
-  const activationTimeout = await poa.activationTimeout()
-  const endTimeForEthFunding = await poa.endTimeForEthFunding()
-  await timeTravel(endTimeForEthFunding.add(activationTimeout).toNumber())
+  const durationForActivationPeriod = await poa.durationForActivationPeriod()
+  const durationForEthFundingPeriod = await poa.durationForEthFundingPeriod()
+  await timeTravel(
+    durationForEthFundingPeriod.add(durationForActivationPeriod).toNumber()
+  )
 }
 
 const testSetStageToTimedOut = async (poa, shouldBeFundingSuccessful) => {
@@ -1550,8 +1552,8 @@ const testProxyUnchanged = async (poa, first, state) => {
       actualCustodian: await poa.custodian(),
       decimals: await poa.decimals(),
       feeRateInPermille: await poa.feeRateInPermille(),
-      startTimeForEthFunding: await poa.startTimeForEthFunding(),
-      endTimeForEthFunding: await poa.endTimeForEthFunding(),
+      startTimeForEthFundingPeriod: await poa.startTimeForEthFundingPeriod(),
+      durationForEthFundingPeriod: await poa.durationForEthFundingPeriod(),
       fundingGoalInCents: await poa.fundingGoalInCents(),
       totalPerTokenPayout: await poa.totalPerTokenPayout(),
       fundedEthAmountInWei: await poa.fundedEthAmountInWei(),
@@ -1574,8 +1576,8 @@ const testProxyUnchanged = async (poa, first, state) => {
         actualCustodian: await poa.custodian(),
         decimals: await poa.decimals(),
         feeRateInPermille: await poa.feeRateInPermille(),
-        startTimeForEthFunding: await poa.startTimeForEthFunding(),
-        endTimeForEthFunding: await poa.endTimeForEthFunding(),
+        startTimeForEthFundingPeriod: await poa.startTimeForEthFundingPeriod(),
+        durationForEthFundingPeriod: await poa.durationForEthFundingPeriod(),
         fundingGoalInCents: await poa.fundingGoalInCents(),
         totalPerTokenPayout: await poa.totalPerTokenPayout(),
         fundedEthAmountInWei: await poa.fundedEthAmountInWei(),

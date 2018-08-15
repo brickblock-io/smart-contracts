@@ -140,7 +140,7 @@ describe('when handling unhappy paths', async () => {
       poa = contracts.poa
     })
 
-    it('should hit checkTimeout when reclaiming after endTimeForEthFunding', async () => {
+    it('should hit checkTimeout when reclaiming after durationForEthFundingPeriod', async () => {
       const tokenBuyAmount = new BigNumber(1e18)
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
@@ -157,7 +157,7 @@ describe('when handling unhappy paths', async () => {
       await testFirstReclaim(poa, { from: whitelistedPoaBuyers[0] })
     })
 
-    it('should hit checkTimeout when reclaiming after activationTimeout', async () => {
+    it('should hit checkTimeout when reclaiming after durationForActivationPeriod', async () => {
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
       await testStartEthSale(poa)
@@ -173,7 +173,7 @@ describe('when handling unhappy paths', async () => {
       await testFirstReclaim(poa, { from: whitelistedPoaBuyers[0] }, true)
     })
 
-    it('should setStageToTimedOut by anyone when activationTimeout has occured', async () => {
+    it('should setStageToTimedOut by anyone when durationForActivationPeriod has occured', async () => {
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
       await testStartEthSale(poa)

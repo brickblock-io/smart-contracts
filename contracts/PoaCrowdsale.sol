@@ -29,10 +29,10 @@ contract PoaCrowdsale is PoaCommon {
 
   /// @notice Ensure that the contract has not timed out
   modifier checkTimeout() {
-    uint256 fundingDeadline = startTimeForEthFunding.add(endTimeForEthFunding);
-    uint256 activationDeadline = startTimeForEthFunding
-      .add(endTimeForEthFunding)
-      .add(activationTimeout);
+    uint256 fundingDeadline = startTimeForEthFundingPeriod.add(durationForEthFundingPeriod);
+    uint256 activationDeadline = startTimeForEthFundingPeriod
+      .add(durationForEthFundingPeriod)
+      .add(durationForActivationPeriod);
 
     if (
       (uint256(stage) < 3 && block.timestamp >= fundingDeadline) ||
@@ -58,17 +58,17 @@ contract PoaCrowdsale is PoaCommon {
     @notice Proxied contracts cannot have constructors. This works in place
     of the constructor in order to initialize the contract storage.
 
-    @param _fiatCurrency32         bytes32 of fiat currency string
-    @param _startTimeForEthFunding Beginning of the sale as unix timestamp
-    @param _endTimeForEthFunding   Duration of the sale (starting from _startTimeForEthFunding)
-    @param _activationTimeout      Timeframe for the custodian to activate the token (starting from _startTimeForEthFunding + _endTimeForEthFunding)
-    @param _fundingGoalInCents     Funding goal in fiat cents (e.g. a €10,000 fundingGoal would be '10000000')
+    @param _fiatCurrency32 bytes32 of fiat currency string
+    @param _startTimeForEthFundingPeriod beginning of the sale as unix timestamp
+    @param _durationForEthFundingPeriod duration of the sale (starting from _startTimeForEthFundingPeriod)
+    @param _durationForActivationPeriod timeframe for the custodian to activate the token (starting from _startTimeForEthFundingPeriod + _durationForEthFundingPeriod)
+    @param _fundingGoalInCents funding goal in fiat cents (e.g. a €10,000 fundingGoal would be '10000000')
   */
   function initializeCrowdsale(
     bytes32 _fiatCurrency32,
-    uint256 _startTimeForEthFunding,
-    uint256 _endTimeForEthFunding,
-    uint256 _activationTimeout,
+    uint256 _startTimeForEthFundingPeriod,
+    uint256 _durationForEthFundingPeriod,
+    uint256 _durationForActivationPeriod,
     uint256 _fundingGoalInCents
   )
     external
@@ -81,17 +81,17 @@ contract PoaCrowdsale is PoaCommon {
 
     // validate initialize parameters
     require(_fiatCurrency32 != bytes32(0));
-    require(_startTimeForEthFunding > block.timestamp);
-    require(_endTimeForEthFunding >= 60 * 60 * 24);
-    require(_activationTimeout >= 60 * 60 * 24 * 7);
+    require(_startTimeForEthFundingPeriod > block.timestamp);
+    require(_durationForEthFundingPeriod >= 60 * 60 * 24);
+    require(_durationForActivationPeriod >= 60 * 60 * 24 * 7);
     require(_fundingGoalInCents > 0);
     require(totalSupply_ > _fundingGoalInCents);
 
     // initialize non-sequential storage
     fiatCurrency32 = _fiatCurrency32;
-    startTimeForEthFunding = _startTimeForEthFunding;
-    endTimeForEthFunding = _endTimeForEthFunding;
-    activationTimeout = _activationTimeout;
+    startTimeForEthFundingPeriod = _startTimeForEthFundingPeriod;
+    durationForEthFundingPeriod = _durationForEthFundingPeriod;
+    durationForActivationPeriod = _durationForActivationPeriod;
     fundingGoalInCents = _fundingGoalInCents;
 
     // run getRate once in order to see if rate is initialized, throws if not
@@ -118,13 +118,13 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
-  /// @notice Used for starting ETH sale as long as startTimeForEthFunding has passed
+  /// @notice Used for starting ETH sale as long as startTimeForEthFundingPeriod has passed
   function startEthSale()
     external
     atEitherStage(Stages.PreFunding, Stages.FiatFunding)
     returns (bool)
   {
-    require(block.timestamp >= startTimeForEthFunding);
+    require(block.timestamp >= startTimeForEthFundingPeriod);
     enterStage(Stages.EthFunding);
     return true;
   }
@@ -428,7 +428,7 @@ contract PoaCrowdsale is PoaCommon {
   /**
    @notice Used for manually setting Stage to TimedOut when no users have bought any tokens
    if no `buy()`s occurred before the funding deadline token would be stuck in Funding
-   can also be used when activate is not called by custodian within activationTimeout
+   can also be used when activate is not called by custodian within durationForActivationPeriod
    lastly can also be used when no one else has called reclaim.
   */
   function setStageToTimedOut()

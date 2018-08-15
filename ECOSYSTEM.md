@@ -411,13 +411,13 @@ address _custodian,
 uint256 _totalSupply,
 
 // given as unix time (seconds since 01.01.1970)
-uint256 _startTimeForEthFunding,
+uint256 _startTimeForEthFundingPeriod,
 
-// given as seconds offset from startTimeForEthFunding
-uint256 _endTimeForEthFunding,
+// given as seconds offset from startTimeForEthFundingPeriod
+uint256 _durationForEthFundingPeriod,
 
-// given as seconds offset from endTimeForEthFunding
-uint256 _activationTimeout,
+// given as seconds offset from startTimeForEthFundingPeriod + durationForEthFundingPeriod
+uint256 _durationForActivationPeriod,
 
 // given as fiat cents
 uint256 _fundingGoalInCents
@@ -534,18 +534,18 @@ token holders can:
 ### Deadlines
 There are 3 time related storage variables in the contract, they are all unix timestamps:
 
-1. `startTimeForEthFunding`
+1. `startTimeForEthFundingPeriod`
     * timestamp for when the "crowdsale" should start.
-    * once past `startTimeForEthFunding` anyone can start the "crowdsale" by running `startEthSale()`
+    * once past `startTimeForEthFundingPeriod` anyone can start the "crowdsale" by running `startEthSale()`
         * `startEthSale()` moves the contract from `PreFunding` stage to `FundingStage`
-1. `endTimeForEthFunding`
-    * is an offset from `startTimeForEthFunding`
+1. `durationForEthFundingPeriod`
+    * is an offset from `startTimeForEthFundingPeriod`
     * must be a minimum of 24 hours
     * deadline for when `fundingGoalInCents` must be met.
     * if not met, anyone can call `setFailed()`
         * `setFailed()` moves contract from `Funding` to `Failed`
-1. `activationTimeout`
-    * is an offset from `startTimeForEthFunding + endTimeForEthFunding`
+1. `durationForActivationPeriod`
+    * is an offset from `startTimeForEthFundingPeriod + durationForEthFundingPeriod`
     * must be a minimum of 7 days
     * deadline by which custodian must `activate()`
     * if not met, anyone can call `setFailed()`
@@ -554,18 +554,18 @@ There are 3 time related storage variables in the contract, they are all unix ti
 There are multiple stages for each POA contract. Each stage enables or restricts certain functionality:
 
 1. `PreFunding`
-    * starting stage, nothing can happen until `startTimeForEthFunding` has passed
+    * starting stage, nothing can happen until `startTimeForEthFundingPeriod` has passed
 1. `FiatFunding`
     * window between calling `startFiatSale` (start) and `startEthSale` (end)
     * If `fundingGoalInCents` is met, will move directly to `FundingSuccessful`
     * If `fundingGoalInCents` is NOT met, will move to `EthFunding`
 1. `EthFunding`
-    * window between `startTimeForEthFunding` and `startTimeForEthFunding + endTimeForEthFunding`
+    * window between `startTimeForEthFundingPeriod` and `startTimeForEthFundingPeriod + durationForEthFundingPeriod`
     * `fundingGoalInCents` must be met or will result in moving to `Failed` stage
 1. `FundingSuccessful`
     * stage where `fundingGoalInCents` has been met
-    * waiting on custodian to `activate()` during window between `startTimeForEthFunding` and `startTimeForEthFunding + endTimeForEthFunding + activationTimeout`
-    * must be activated during window or will go to `Failed` stage
+    * waiting on custodian to `activate()` during period between `startTimeForEthFundingPeriod` and `startTimeForEthFundingPeriod + durationForEthFundingPeriod + durationForActivationPeriod`
+    * must be activated during period or will go to `Failed` stage
 1. `TimedOut`
     * stage where deadlines were not met
     * can be entered through `reclaim()` or `setStageToTimedOut()` or the `checkTimeout()` modifier that gets called before certain functions such as `buy()`, `activate()` or `reclaim()`

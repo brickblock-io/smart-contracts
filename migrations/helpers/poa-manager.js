@@ -40,9 +40,9 @@ const deployPoa = async (
     symbol: 'BBK-RE-DE123',
     fiatCurrency: 'EUR',
     totalSupply: oneHundredThousandTokensInWei,
-    startTimeForEthFunding: unixTimeWithOffsetInSec(60),
-    endTimeForEthFunding: unixTimeWithOffsetInSec(oneWeekInSec),
-    activationTimeout: unixTimeWithOffsetInSec(twoWeeksInSec),
+    startTimeForEthFundingPeriod: unixTimeWithOffsetInSec(60),
+    durationForEthFundingPeriod: oneWeekInSec,
+    durationForActivationPeriod: twoWeeksInSec,
     fundingGoalInCents: oneHundredThousandEuroInCents
   },
   txConfig = {}
@@ -53,9 +53,9 @@ const deployPoa = async (
     fiatCurrency,
     custodian,
     totalSupply,
-    startTimeForEthFunding,
-    endTimeForEthFunding,
-    activationTimeout,
+    startTimeForEthFundingPeriod,
+    durationForEthFundingPeriod,
+    durationForActivationPeriod,
     fundingGoalInCents
   } = params
 
@@ -73,9 +73,9 @@ const deployPoa = async (
     fiatCurrency,
     custodian,
     totalSupply,
-    startTimeForEthFunding,
-    endTimeForEthFunding,
-    activationTimeout,
+    startTimeForEthFundingPeriod,
+    durationForEthFundingPeriod,
+    durationForActivationPeriod,
     fundingGoalInCents,
     txConfig
   )

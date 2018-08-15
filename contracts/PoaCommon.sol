@@ -102,13 +102,13 @@ contract PoaCommon is PoaProxyCommon {
   bool public crowdsaleInitialized;
 
   // Used for checking when contract should move from PreFunding or FiatFunding to EthFunding stage
-  uint256 public startTimeForEthFunding;
+  uint256 public startTimeForEthFundingPeriod;
 
-  // Amount of seconds (starting at startTimeForEthFunding) until moving from EthFunding to TimedOut stage
-  uint256 public endTimeForEthFunding;
+  // Amount of seconds (starting at startTimeForEthFundingPeriod) until moving from EthFunding to TimedOut stage
+  uint256 public durationForEthFundingPeriod;
 
-  // Amount of seconds (starting at startTimeForEthFunding + endTimeForEthFunding) until moving from FundingSuccessful stage to TimedOut
-  uint256 public activationTimeout;
+  // Amount of seconds (starting at startTimeForEthFundingPeriod + durationForEthFundingPeriod) until moving from FundingSuccessful stage to TimedOut
+  uint256 public durationForActivationPeriod;
 
   // bytes32 representation fiat currency symbol used to get rate
   bytes32 public fiatCurrency32;
