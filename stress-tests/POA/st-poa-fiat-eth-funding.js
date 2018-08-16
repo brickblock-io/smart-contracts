@@ -1,13 +1,10 @@
 const logger = require('../../scripts/lib/logger')
 const BigNumber = require('bignumber.js')
-const { table } = require('table')
 const {
   getRandomBigInt,
   timeTravel,
-  gasPrice,
-  testWillThrow
+  gasPrice
 } = require('../../test/helpers/general')
-const chalk = require('chalk')
 
 const {
   determineNeededTimeTravel,
@@ -23,35 +20,41 @@ const {
   testBrokerClaim,
   testClaimAllPayouts,
   testPayout,
-  testBuyRemainingTokens,
-  defaultFiatCurrency
+  defaultFiatCurrency,
+  defaultFiatRate,
+  testBuyTokens,
+  getRemainingAmountInWeiDuringEthFunding
 } = require('../../test/helpers/poa')
 
 const {
   InvestmentRegistry,
   fundFiatUntilRemainingTarget,
-  fundEthUntilRemainingTarget
+  fundEthUntilRemainingTarget,
+  getFundingGoal,
+  displaySummary
 } = require('../helpers/st-poa-helper')
 
 describe('POAToken Stress Tests - test eth funding only', () => {
   contract('PoaToken', accounts => {
     const investors = accounts.slice(4, accounts.length)
-    const ethInvestorEnds = Math.floor(accounts.length / 4)
-    const ethInvestors = investors.slice(0, ethInvestorEnds)
-    const fiatInvestors = investors.slice(ethInvestorEnds, accounts.length)
-
-    logger.debug(ethInvestors)
-    logger.debug(fiatInvestors)
-
-    const fundingGoal = new BigNumber(1e8) // 1.000.000 EUR
+    const fiatInvestorEnds = Math.floor(accounts.length / 4)
+    const fiatInvestors = investors.slice(0, fiatInvestorEnds)
+    const ethInvestors = investors.slice(fiatInvestorEnds, accounts.length)
     const investmentRegistry = new InvestmentRegistry()
 
+    let paidActivationFee
+    let fundingGoal
     let fmr
     let poa
-
     let totalPayout = new BigNumber(0)
 
     before('setup contracts', async () => {
+      fundingGoal = await getFundingGoal({
+        defaultFiatRate,
+        defaultfundingGoal: new BigNumber(1e8), // 1.000.000 EUR
+        investors: ethInvestors
+      })
+
       const contracts = await setupPoaProxyAndEcosystem({
         _fundingGoal: fundingGoal,
         _whitelistedPoaBuyers: ethInvestors
@@ -66,43 +69,67 @@ describe('POAToken Stress Tests - test eth funding only', () => {
     })
 
     it('Should fund fiat with random amounts with many investors', async () => {
+      const target = fundingGoal
+        .div(100)
+        .mul(50) // 50% should remain for eth funding
+        .floor()
+
+      logger.info(
+        `Funding with fiat investors until ${target
+          .div(100)
+          .toString()} ${defaultFiatCurrency} remains`
+      )
+
       await testStartFiatSale(poa, { from: broker, gasPrice })
       await fundFiatUntilRemainingTarget(
         poa,
-        fundingGoal
-          .div(100)
-          .mul(50)
-          .floor(),
+        target,
         custodian,
         gasPrice,
         fiatInvestors,
         investmentRegistry
       )
+
+      logger.info('Fiat Funding finished')
     })
 
     it('Should fund eth with random amounts with many investors', async () => {
+      const target = new BigNumber(2e18)
+      logger.info(
+        `Funding with ETH investors until ${target
+          .div(1e18)
+          .toString()} ETH remains`
+      )
       await testStartEthSale(poa, { gasPrice })
       await fundEthUntilRemainingTarget(
         poa,
-        fundingGoal
-          .div(100)
-          .mul(2)
-          .floor(),
+        target,
         gasPrice,
         ethInvestors,
         investmentRegistry
       )
 
-      logger.info('buying remaining tokens with eth')
+      let remainingBuyableAmount = await getRemainingAmountInWeiDuringEthFunding(
+        poa
+      )
+      logger.info('buying remaining tokens with eth', remainingBuyableAmount)
 
-      await testBuyRemainingTokens(poa, {
+      await testBuyTokens(poa, {
         from: ethInvestors[0],
+        value: remainingBuyableAmount,
         gasPrice
       })
+
+      remainingBuyableAmount = await getRemainingAmountInWeiDuringEthFunding(
+        poa
+      )
+      logger.info('Eth funding finished')
     }).timeout(1000 * 60 * 20) // set timeout to 20 minutes
 
     it('should activate', async () => {
-      await testPayActivationFee(poa, fmr)
+      const res = await testPayActivationFee(poa, fmr)
+
+      paidActivationFee = res.paidFeeAmount
 
       await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
         from: custodian
@@ -119,10 +146,11 @@ describe('POAToken Stress Tests - test eth funding only', () => {
 
     it('should payout many times', async () => {
       for (let i = 0; i < 10; i++) {
+        // A random amount between 1 ETH and 3 ETH
         const payout = getRandomBigInt(new BigNumber(1e18), new BigNumber(3e18))
         await testPayout(poa, fmr, {
           from: broker,
-          value: getRandomBigInt(new BigNumber(1e18), new BigNumber(3e18)),
+          value: payout,
           gasPrice
         })
         totalPayout = totalPayout.add(payout)
@@ -130,36 +158,22 @@ describe('POAToken Stress Tests - test eth funding only', () => {
     })
 
     it('should let investors claim', async () => {
-      await testClaimAllPayouts(poa, investmentRegistry.getInvestorAddresses())
+      await testClaimAllPayouts(
+        poa,
+        investmentRegistry.getAllInvestorAddresses()
+      )
     })
 
     it('should display summary data', async () => {
-      const data = [
-        [
-          'Funding Goal',
-          `${fundingGoal.div(100).toString()} ${defaultFiatCurrency}`
-        ]
-      ]
-
-      data.push([chalk.yellow('Total Investors'), investmentRegistry.length])
-      data.push([
-        chalk.yellow('Total Payout'),
-        `${totalPayout.div(1e18).toString()} ETH`
-      ])
-      data.push([
-        chalk.yellow(
-          `Total funded amount during FIAT in ${defaultFiatCurrency}`
-        ),
-        (await poa.fundedFiatAmountInCents()).div(100).toString()
-      ])
-      data.push([
-        chalk.yellow(
-          `Total funded amount during ETH in ${defaultFiatCurrency}`
-        ),
-        (await poa.fundedEthAmountInWei()).div(1e18).toString()
-      ])
-      // eslint-disable-next-line
-      console.log(table(data))
+      await displaySummary({
+        poa,
+        fundingGoal,
+        defaultFiatCurrency,
+        defaultFiatRate,
+        investmentRegistry,
+        totalPayout,
+        paidActivationFee
+      })
     })
   })
 })

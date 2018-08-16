@@ -235,7 +235,7 @@ contract PoaCrowdsale is PoaCommon {
      * 2. Refund the sent ETH amount immediately
      * 3. Return 'false' to prevent a case where buying after reaching fundingGoal results in a buyer earning money
      */
-    if (weiToFiatCents(fundedEthAmountInWei) > fundingGoalInCents) {
+    if (weiToFiatCents(fundedEthAmountInWei).add(fundedFiatAmountInCents) > fundingGoalInCents) {
       enterStage(Stages.FundingSuccessful);
       if (msg.value > 0) {
         msg.sender.transfer(msg.value);
@@ -294,9 +294,13 @@ contract PoaCrowdsale is PoaCommon {
     returns (bool)
   {
     enterStage(Stages.FundingSuccessful);
-    uint256 _refundAmount = _shouldRefund ?
-      fundedEthAmountInWei.add(msg.value).sub(fiatCentsToWei(fundingGoalInCents)) :
-      0;
+    uint256 _refundAmount = _shouldRefund
+      ? fiatCentsToWei(fundedFiatAmountInCents)
+        .add(fundedEthAmountInWei)
+        .add(msg.value)
+        .sub(fiatCentsToWei(fundingGoalInCents))
+      : 0; 
+
 
     // Transfer refund amount back to user
     msg.sender.transfer(_refundAmount);

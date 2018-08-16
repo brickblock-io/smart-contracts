@@ -1,13 +1,11 @@
 const logger = require('../../scripts/lib/logger')
 const BigNumber = require('bignumber.js')
-const { table } = require('table')
 const {
   getRandomBigInt,
   timeTravel,
   gasPrice,
   testWillThrow
 } = require('../../test/helpers/general')
-const chalk = require('chalk')
 
 const {
   determineNeededTimeTravel,
@@ -23,27 +21,34 @@ const {
   testActivate,
   testBrokerClaim,
   testClaimAllPayouts,
-  testPayout
+  testPayout,
+  defaultFiatCurrency,
+  defaultFiatRate
 } = require('../../test/helpers/poa')
 
 const {
   InvestmentRegistry,
-  fundFiatUntilRemainingTarget
+  fundFiatUntilRemainingTarget,
+  displaySummary,
+  getFundingGoal
 } = require('../helpers/st-poa-helper')
 
 describe('POAToken Stress Tests - test fiat funding only', () => {
   contract('PoaToken', accounts => {
     const fiatInvestors = accounts.slice(4, accounts.length)
-
-    const fundingGoal = new BigNumber(1e9) // 10.000.000 EUR
     const investmentRegistry = new InvestmentRegistry()
-
+    let paidActivationFee
+    let fundingGoal
     let fmr
     let poa
-
     let totalPayout = new BigNumber(0)
 
     before('setup contracts', async () => {
+      fundingGoal = await getFundingGoal({
+        defaultFiatRate,
+        defaultfundingGoal: new BigNumber(1e8), // 1.000.000 EUR
+        investors: fiatInvestors
+      })
       const contracts = await setupPoaProxyAndEcosystem({
         _fundingGoal: fundingGoal
       })
@@ -93,7 +98,9 @@ describe('POAToken Stress Tests - test fiat funding only', () => {
     })
 
     it('should activate', async () => {
-      await testPayActivationFee(poa, fmr)
+      const res = await testPayActivationFee(poa, fmr)
+
+      paidActivationFee = res.paidFeeAmount
 
       await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
         from: custodian
@@ -121,17 +128,22 @@ describe('POAToken Stress Tests - test fiat funding only', () => {
     })
 
     it('should let investors claim', async () => {
-      await testClaimAllPayouts(poa, investmentRegistry.getInvestorAddresses())
+      await testClaimAllPayouts(
+        poa,
+        investmentRegistry.getAllInvestorAddresses()
+      )
     })
 
-    it('should siplay analytics data', () => {
-      const data = [['Funding Goal', fundingGoal.div(100).toString()]]
-
-      data.push(['Total Investors', investmentRegistry.length])
-      data.push(['Total Payout', totalPayout.toString()])
-
-      // eslint-disable-next-line
-      console.log(table(data))
+    it('should display summary data', async () => {
+      await displaySummary({
+        poa,
+        fundingGoal,
+        defaultFiatCurrency,
+        defaultFiatRate,
+        investmentRegistry,
+        totalPayout,
+        paidActivationFee
+      })
     })
   })
 })

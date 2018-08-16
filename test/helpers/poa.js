@@ -609,12 +609,21 @@ const testBuyTokensWithFiat = async (poa, buyer, amountInCents, config) => {
   assert(!!config.gasPrice, 'gasPrice must be given')
   assert(!!config.from, 'from must be given')
 
+  let { expectedTokenDifferenceTolerance } = config
+
+  if (typeof config.expectedTokenDifferenceTolerance === 'undefined') {
+    expectedTokenDifferenceTolerance = 0
+  }
+
   const preInvestedTokenAmountPerUser = await poa.fundedFiatAmountPerUserInTokens(
     buyer
   )
   const preFundedAmountInTokens = await poa.fundedFiatAmountInTokens()
   const preFundedAmountInCents = await poa.fundedFiatAmountInCents()
-  await poa.buyFiat(buyer, amountInCents, config)
+  await poa.buyFiat(buyer, amountInCents, {
+    from: config.from,
+    gasPrice: config.gasPrice
+  })
 
   const postInvestedTokenAmountPerUser = await poa.fundedFiatAmountPerUserInTokens(
     buyer
@@ -627,6 +636,13 @@ const testBuyTokensWithFiat = async (poa, buyer, amountInCents, config) => {
     poa,
     amountInCents
   )
+  const actualInvestedTokenAmountPerUser = postInvestedTokenAmountPerUser.sub(
+    preInvestedTokenAmountPerUser
+  )
+
+  const actualFundedAmountInTokens = postFundedAmountInTokens.sub(
+    preFundedAmountInTokens
+  )
 
   assert.equal(
     expectedFundedAmountInCents.toString(),
@@ -634,17 +650,21 @@ const testBuyTokensWithFiat = async (poa, buyer, amountInCents, config) => {
     'Funded Amount In Cents should match expected value'
   )
 
-  assert.equal(
-    expectedUserTokenAmount.toString(),
-    postFundedAmountInTokens.sub(preFundedAmountInTokens).toString(),
-    'Token amount should match the expected value'
+  assert(
+    areInRange(
+      actualFundedAmountInTokens,
+      expectedUserTokenAmount,
+      expectedTokenDifferenceTolerance
+    ),
+    `Token amount should match the expected value expected: ${expectedUserTokenAmount.toString()}, actual: ${actualFundedAmountInTokens.toString()} `
   )
 
-  assert.equal(
-    postInvestedTokenAmountPerUser
-      .sub(preInvestedTokenAmountPerUser)
-      .toString(),
-    expectedUserTokenAmount.toString(),
+  assert(
+    areInRange(
+      actualInvestedTokenAmountPerUser,
+      expectedUserTokenAmount,
+      expectedTokenDifferenceTolerance
+    ),
     'Investor token amount should match the expected value'
   )
 }
@@ -786,7 +806,7 @@ const testBuyRemainingTokens = async (poa, config) => {
   const fundingGoalInCents = await poa.fundingGoalInCents()
   const fundingGoalWei = await poa.fiatCentsToWei(fundingGoalInCents)
   const remainingBuyableEth = fundingGoalWei.sub(fundedEthAmountInWei)
-
+  logger.debug('remainingBuyableEth', remainingBuyableEth)
   config.value = remainingBuyableEth
   const buyer = config.from
   const weiBuyAmount = new BigNumber(config.value)
@@ -856,15 +876,15 @@ const testPayActivationFee = async (
   fmr,
   { value, from = broker } = {}
 ) => {
-  const calculatedFee = value || (await poa.calculateTotalFee())
-  logger.debug('calculatedFee', calculatedFee, {
+  const paidFeeAmount = value || (await poa.calculateTotalFee())
+  logger.debug('calculatedFee', paidFeeAmount, {
     scope: 'testPayActivationFee'
   })
   const preIsActivationFeePaid = await poa.isActivationFeePaid.call()
   const preFeeManagerBalance = await getEtherBalance(fmr.address)
 
   const tx = await poa.payActivationFee({
-    value: calculatedFee,
+    value: paidFeeAmount,
     from
   })
 
@@ -886,11 +906,14 @@ const testPayActivationFee = async (
 
   assert.equal(
     postFeeManagerBalance.sub(preFeeManagerBalance).toString(),
-    calculatedFee.toString(),
+    paidFeeAmount.toString(),
     'feeManager ether balance should be incremented by paid fee'
   )
 
-  return tx
+  return {
+    tx,
+    paidFeeAmount
+  }
 }
 
 const testActivate = async (poa, fmr, config) => {
@@ -1642,17 +1665,17 @@ const getRemainingAmountInCentsDuringFiatFunding = async poa => {
 }
 
 const getRemainingAmountInWeiDuringEthFunding = async poa => {
+  const fundedEthAmountInWei = await poa.fundedEthAmountInWei()
   const fundingGoalInCents = await poa.fundingGoalInCents()
   const fundingGoalInWei = await poa.fiatCentsToWei(fundingGoalInCents)
   const fundedFiatAmount = await poa.fundedFiatAmountInCents()
   const fundedFiatAmountInWei = await poa.fiatCentsToWei(fundedFiatAmount)
-  const fundedEthAmount = await poa.fundedEthAmountInWei()
 
-  const remainingAmountInWei = fundingGoalInWei
+  const remainingBuyableEth = fundingGoalInWei
+    .sub(fundedEthAmountInWei)
     .sub(fundedFiatAmountInWei)
-    .sub(fundedEthAmount)
 
-  return remainingAmountInWei
+  return remainingBuyableEth
 }
 
 module.exports = {
