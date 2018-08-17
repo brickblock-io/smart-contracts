@@ -47,13 +47,16 @@ yarn test
 
 #### Stress Tests
 
+Stress tests are implemented to mimic real world scenarios, such as creating reasonable random transaction amounts with maximum available iterations and users. That's why it is recomended to run these tests using an external ganache with the config mentioned below to assure there is enough money and users to put contracts under pressure.
 The stress tests throw random values at those contracts where integer division can result in minor inaccuracies. These tests ensure that this "dust" doesn't get too big to be of significance.
 They are split out of the normal tests because they take a very long time to run due to the amount of transactions being performed.
 
-Run them with:
+Run them with:   
 
-```sh
-yarn test:stress-tests
+- (Optional but recommended step) Run an external ganache with the following config, users: 100, default ether balance: 1000
+- Each stress test should be run individually. To run a stress test:
+```
+yarn test:stress-test stress-tests/[testFilename.js]
 ```
 
 #### Frozen Contract Tests
@@ -97,12 +100,12 @@ yarn lint:js
 Deploying with truffle will execute the [migrations/2_deploy_contracts.js](https://git.brickblock-dev.io/platform/smart-contracts/blob/master/migrations/2_deploy_contracts.js) which does the following:
 
 1. Choose the right network configuration (depends on the `--network` argument)
-1. Deploy registry
-1. Deploy other contracts
-1. Add all contracts to registry
-1. Set ETH/EUR exchange rate
-1. Run `finalizeTokenSale` on BBK contract in order to activate the BBK/ACT/FMR ecosystem
-1. Distribute BBK tokens to `accounts[2-5]`
+2. Deploy registry
+3. Deploy other contracts
+4. Add all contracts to registry
+5. Set ETH/EUR exchange rate
+6. Run `finalizeTokenSale` on BBK contract in order to activate the BBK/ACT/FMR ecosystem
+7. Distribute BBK tokens to `accounts[2-5]`
 
 **Note: Make sure you have at least 6 accounts on your node setup**
 

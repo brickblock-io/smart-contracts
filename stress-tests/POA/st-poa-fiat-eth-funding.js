@@ -1,10 +1,10 @@
-const logger = require('../../scripts/lib/logger')
+const logger = require('scripts/lib/logger')
 const BigNumber = require('bignumber.js')
 const {
   getRandomBigInt,
   timeTravel,
   gasPrice
-} = require('../../test/helpers/general')
+} = require('test/helpers/general')
 
 const {
   determineNeededTimeTravel,
@@ -24,7 +24,7 @@ const {
   defaultFiatRate,
   testBuyTokens,
   getRemainingAmountInWeiDuringEthFunding
-} = require('../../test/helpers/poa')
+} = require('test/helpers/poa')
 
 const {
   InvestmentRegistry,
@@ -34,7 +34,7 @@ const {
   displaySummary
 } = require('../helpers/st-poa-helper')
 
-describe('POAToken Stress Tests - test eth funding only', () => {
+describe('PoaToken Stress Tests - test fiat & eth funding only', () => {
   contract('PoaToken', accounts => {
     const investors = accounts.slice(4, accounts.length)
     const fiatInvestorEnds = Math.floor(accounts.length / 4)
@@ -68,7 +68,7 @@ describe('POAToken Stress Tests - test eth funding only', () => {
       await timeTravel(neededTime)
     })
 
-    it('Should fund fiat with random amounts with many investors', async () => {
+    it('should fund fiat with random amounts with many investors', async () => {
       const target = fundingGoal
         .div(100)
         .mul(50) // 50% should remain for eth funding
@@ -93,7 +93,7 @@ describe('POAToken Stress Tests - test eth funding only', () => {
       logger.info('Fiat Funding finished')
     })
 
-    it('Should fund eth with random amounts with many investors', async () => {
+    it('should fund eth with random amounts with many investors', async () => {
       const target = new BigNumber(2e18)
       logger.info(
         `Funding with ETH investors until ${target
@@ -164,7 +164,7 @@ describe('POAToken Stress Tests - test eth funding only', () => {
       )
     })
 
-    it('should display summary data', async () => {
+    after('should display summary data', async () => {
       await displaySummary({
         poa,
         fundingGoal,

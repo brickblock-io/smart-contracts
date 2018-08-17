@@ -43,7 +43,7 @@
     "---SECTION:TEST---": "-------------------- HOW TO TEST THE SMART CONTRACTS --------------------",
     "test": "yarn build && env-cmd .env truffle test",
     "test:gas-reporter": "GAS_REPORTER=true yarn test",
-    "test:stress-test": "env-cmd .env truffle test stress-tests/*",
+    "test:stress-test": "env-cmd .env truffle test",
     "test:frozen": "env-cmd .env node scripts/test-frozen.js",
     "test:coverage:comment": "Because solidity-coverage is still experimental we won't fail CI if it fails for now",
     "test:coverage": "( yarn solidity-coverage || true ) && open coverage/contracts/index.html",

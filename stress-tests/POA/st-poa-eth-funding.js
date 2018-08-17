@@ -1,10 +1,7 @@
-const logger = require('../../scripts/lib/logger')
+const logger = require('scripts/lib/logger')
 const BigNumber = require('bignumber.js')
-const {
-  getRandomBigInt,
-  timeTravel,
-  gasPrice
-} = require('../../test/helpers/general')
+const { timeTravel } = require('helpers')
+const { getRandomBigInt, gasPrice } = require('test/helpers/general')
 
 const {
   determineNeededTimeTravel,
@@ -23,7 +20,7 @@ const {
   defaultFiatCurrency,
   defaultFiatRate,
   testBuyTokens
-} = require('../../test/helpers/poa')
+} = require('test/helpers/poa')
 
 const {
   InvestmentRegistry,
@@ -64,7 +61,7 @@ describe('PoaToken Stress Tests - test eth funding only', () => {
       await testStartEthSale(poa, { gasPrice })
     })
 
-    it('Should fund with random amounts with many investors', async () => {
+    it('should fund with random amounts with many investors', async () => {
       const target = new BigNumber(2e18)
       logger.info(
         `Funding with ETH investors until ${target
@@ -105,7 +102,7 @@ describe('PoaToken Stress Tests - test eth funding only', () => {
       })
     })
 
-    it('should let Broker Claim', async () => {
+    it('should let broker claim', async () => {
       await testBrokerClaim(poa)
     })
 
@@ -129,7 +126,7 @@ describe('PoaToken Stress Tests - test eth funding only', () => {
       )
     })
 
-    it('should display summary data', async () => {
+    after('should display summary data', async () => {
       await displaySummary({
         poa,
         fundingGoal,

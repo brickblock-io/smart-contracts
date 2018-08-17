@@ -802,11 +802,8 @@ const testBuyRemainingTokens = async (poa, config) => {
   assert(!!config.from, 'from must be given')
 
   const preUserWeiInvested = await poa.fundedEthAmountPerUserInWei(config.from)
-  const fundedEthAmountInWei = await poa.fundedEthAmountInWei()
   const fundingGoalInCents = await poa.fundingGoalInCents()
-  const fundingGoalWei = await poa.fiatCentsToWei(fundingGoalInCents)
-  const remainingBuyableEth = fundingGoalWei.sub(fundedEthAmountInWei)
-  logger.debug('remainingBuyableEth', remainingBuyableEth)
+  const remainingBuyableEth = getRemainingAmountInWeiDuringEthFunding(poa)
   config.value = remainingBuyableEth
   const buyer = config.from
   const weiBuyAmount = new BigNumber(config.value)

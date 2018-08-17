@@ -1,11 +1,11 @@
-const logger = require('../../scripts/lib/logger')
+const logger = require('scripts/lib/logger')
 const BigNumber = require('bignumber.js')
 const {
   getRandomBigInt,
   timeTravel,
   gasPrice,
   testWillThrow
-} = require('../../test/helpers/general')
+} = require('test/helpers/general')
 
 const {
   determineNeededTimeTravel,
@@ -24,7 +24,7 @@ const {
   testPayout,
   defaultFiatCurrency,
   defaultFiatRate
-} = require('../../test/helpers/poa')
+} = require('test/helpers/poa')
 
 const {
   InvestmentRegistry,
@@ -33,7 +33,7 @@ const {
   getFundingGoal
 } = require('../helpers/st-poa-helper')
 
-describe('POAToken Stress Tests - test fiat funding only', () => {
+describe('PoaToken Stress Tests - test fiat funding only', () => {
   contract('PoaToken', accounts => {
     const fiatInvestors = accounts.slice(4, accounts.length)
     const investmentRegistry = new InvestmentRegistry()
@@ -62,7 +62,7 @@ describe('POAToken Stress Tests - test fiat funding only', () => {
       await testStartFiatSale(poa, { from: broker, gasPrice })
     })
 
-    it('Should fund with random amounts with many investors', async () => {
+    it('should fund with random amounts with many investors', async () => {
       await fundFiatUntilRemainingTarget(
         poa,
         fundingGoal
@@ -111,7 +111,7 @@ describe('POAToken Stress Tests - test fiat funding only', () => {
       })
     })
 
-    it('should payout amny times', async () => {
+    it('should payout many times', async () => {
       for (let i = 0; i < 10; i++) {
         const payout = getRandomBigInt(new BigNumber(1e18), new BigNumber(3e18))
         await testPayout(poa, fmr, {
@@ -123,7 +123,7 @@ describe('POAToken Stress Tests - test fiat funding only', () => {
       }
     })
 
-    it('should NOT let Broker Claim, because there are no ETH funders', async () => {
+    it('should NOT let broker claim, because there are no ETH funders', async () => {
       await testWillThrow(testBrokerClaim, [poa])
     })
 
@@ -134,7 +134,7 @@ describe('POAToken Stress Tests - test fiat funding only', () => {
       )
     })
 
-    it('should display summary data', async () => {
+    after('should display summary data', async () => {
       await displaySummary({
         poa,
         fundingGoal,

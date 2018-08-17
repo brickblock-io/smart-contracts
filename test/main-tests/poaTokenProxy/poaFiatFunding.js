@@ -26,7 +26,7 @@ const {
   testTransferFrom,
   testTerminate,
   testPercent,
-  getRemainingAmountInCents,
+  getRemainingAmountInCentsDuringFiatFunding,
   stages
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
@@ -161,7 +161,9 @@ describe("when in 'FiatFunding' stage", () => {
     })
 
     it('should increment the token amount if the same investor buys again', async () => {
-      const remainingAmountInCents = await getRemainingAmountInCents(poa)
+      const remainingAmountInCents = await getRemainingAmountInCentsDuringFiatFunding(
+        poa
+      )
       const investmentAmountInCents = remainingAmountInCents
         .div(2)
         .floor()
@@ -231,7 +233,9 @@ describe('when in FIAT Funding (stage 1) and funding goal is met during the fiat
 
     it('Should set correct amount of tokens for investor if invested amount equals funding goal', async () => {
       const totalSupply = await poa.totalSupply()
-      const investmentAmountInCents = await getRemainingAmountInCents(poa)
+      const investmentAmountInCents = await getRemainingAmountInCentsDuringFiatFunding(
+        poa
+      )
 
       await testBuyTokensWithFiat(poa, fiatInvestor, investmentAmountInCents, {
         from: custodian,
@@ -288,7 +292,7 @@ describe('when in FIAT Funding (stage 1) and funding goal is met during the fiat
     })
 
     it('should remove fiat after adding incorrect amount', async () => {
-      const investmentAmountInCents = (await getRemainingAmountInCents(
+      const investmentAmountInCents = (await getRemainingAmountInCentsDuringFiatFunding(
         poa
       )).div(2)
 
@@ -309,7 +313,7 @@ describe('when in FIAT Funding (stage 1) and funding goal is met during the fiat
     })
 
     it('should NOT remove fiat more than invested', async () => {
-      const investmentAmountInCents = (await getRemainingAmountInCents(
+      const investmentAmountInCents = (await getRemainingAmountInCentsDuringFiatFunding(
         poa
       )).div(2)
 
@@ -325,7 +329,7 @@ describe('when in FIAT Funding (stage 1) and funding goal is met during the fiat
     })
 
     it('buyFiat should be callable by only custodian', async () => {
-      const investmentAmountInCents = (await getRemainingAmountInCents(
+      const investmentAmountInCents = (await getRemainingAmountInCentsDuringFiatFunding(
         poa
       )).div(5)
 
@@ -346,7 +350,7 @@ describe('when in FIAT Funding (stage 1) and funding goal is met during the fiat
     })
 
     it('removeFiat should be callable by only custodian', async () => {
-      const investmentAmountInCents = (await getRemainingAmountInCents(
+      const investmentAmountInCents = (await getRemainingAmountInCentsDuringFiatFunding(
         poa
       )).div(5)
 
