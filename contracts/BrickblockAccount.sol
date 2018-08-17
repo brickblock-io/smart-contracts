@@ -92,7 +92,7 @@ contract BrickblockAccount is Ownable {
     onlyOwner
     returns (bool)
   {
-    require(address(this).balance > 0);
+    require(address(this).balance >= _value);
     _address.transfer(_value);
     return true;
   }
