@@ -803,7 +803,8 @@ const testBuyRemainingTokens = async (poa, config) => {
 
   const preUserWeiInvested = await poa.fundedEthAmountPerUserInWei(config.from)
   const fundingGoalInCents = await poa.fundingGoalInCents()
-  const remainingBuyableEth = getRemainingAmountInWeiDuringEthFunding(poa)
+  const fundedFiatAmount = await poa.fundedFiatAmountInCents()
+  const remainingBuyableEth = await getRemainingAmountInWeiDuringEthFunding(poa)
   config.value = remainingBuyableEth
   const buyer = config.from
   const weiBuyAmount = new BigNumber(config.value)
@@ -822,7 +823,10 @@ const testBuyRemainingTokens = async (poa, config) => {
   const postFundedWei = await poa.fundedEthAmountInWei()
 
   const expectedPostEthBalance = preEthBalance.sub(weiBuyAmount).sub(gasCost)
-  const postFundedFiatCents = await poa.weiToFiatCents(postFundedWei)
+
+  const postFundedFiatCents = (await poa.weiToFiatCents(postFundedWei)).add(
+    fundedFiatAmount
+  )
   const postStage = await poa.stage()
 
   assert.equal(
@@ -852,7 +856,7 @@ const testBuyRemainingTokens = async (poa, config) => {
   )
   assert(
     areInRange(fundingGoalInCents, postFundedFiatCents, 1),
-    'fundedAmount in fiat cents should be within 1 cent of fundingGoalCents'
+    `fundedAmount in fiat cents should be within 1 cent of fundingGoalCents. fundingGoalInCents: ${fundingGoalInCents}, postFundedFiatCents: ${postFundedFiatCents}`
   )
   assert.equal(
     preStage.toString(),
