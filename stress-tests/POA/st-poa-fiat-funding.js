@@ -2,11 +2,10 @@ const logger = require('scripts/lib/logger')
 const BigNumber = require('bignumber.js')
 const {
   getRandomBigInt,
-  timeTravel,
   gasPrice,
   testWillThrow
 } = require('test/helpers/general')
-
+const { timeTravel } = require('helpers')
 const {
   determineNeededTimeTravel,
   setupPoaProxyAndEcosystem,
@@ -92,7 +91,8 @@ describe('PoaToken Stress Tests - test fiat funding only', () => {
         remainingFundableAmount,
         {
           from: custodian,
-          gasPrice
+          gasPrice,
+          expectedTokenDifferenceTolerance: 100000
         }
       )
     })
@@ -130,7 +130,7 @@ describe('PoaToken Stress Tests - test fiat funding only', () => {
     it('should let investors claim', async () => {
       await testClaimAllPayouts(
         poa,
-        investmentRegistry.getAllInvestorAddresses()
+        investmentRegistry.getFiatInvestorAddresses()
       )
     })
 

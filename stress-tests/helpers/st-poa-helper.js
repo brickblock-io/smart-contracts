@@ -50,10 +50,18 @@ class InvestmentRegistry {
     }
   }
 
+  getFiatInvestorAddresses() {
+    return Object.keys(this.fiatInvestors)
+  }
+
+  getEthInvestorAddresses() {
+    return Object.keys(this.ethInvestors)
+  }
+
   getAllInvestorAddresses() {
     return [
-      ...Object.keys(this.fiatInvestors),
-      ...Object.keys(this.ethInvestors)
+      ...this.getFiatInvestorAddresses(),
+      ...this.getEthInvestorAddresses()
     ]
   }
 
@@ -114,7 +122,7 @@ const fundFiatUntilRemainingTarget = async (
       await testBuyTokensWithFiat(poa, investor, randomAmount, {
         from: _custodian,
         gasPrice: _gasPrice,
-        expectedTokenDifferenceTolerance: 200000
+        expectedTokenDifferenceTolerance: 100000
       })
 
       remainingFundableAmount = await getRemainingAmountInCentsDuringFiatFunding(
@@ -148,11 +156,9 @@ const fundEthUntilRemainingTarget = async (
   investors,
   investmentRegistry
 ) => {
-  logger.debug(1)
   let remainingFundableAmount = await getRemainingAmountInWeiDuringEthFunding(
     poa
   )
-  logger.debug(2)
   for (let index = 0; index < investors.length; index++) {
     const investor = investors[index]
     let maxAmount = new BigNumber(1e19) // 10 Eth
@@ -163,7 +169,6 @@ const fundEthUntilRemainingTarget = async (
     }
 
     const randomAmount = getRandomBigInt(minAmount, maxAmount)
-    logger.debug('amount', randomAmount)
     if (remainingFundableAmount.lte(targetAsWei)) {
       logger.debug(
         'Target achived stepping out!',

@@ -656,7 +656,10 @@ const testBuyTokensWithFiat = async (poa, buyer, amountInCents, config) => {
       expectedUserTokenAmount,
       expectedTokenDifferenceTolerance
     ),
-    `Token amount should match the expected value expected: ${expectedUserTokenAmount.toString()}, actual: ${actualFundedAmountInTokens.toString()} `
+    `Token amount should match the expected value.
+      expected: ${expectedUserTokenAmount.toString()}, 
+      actual  : ${actualFundedAmountInTokens.toString()}, 
+      tolerance: ${expectedTokenDifferenceTolerance.toString()}`
   )
 
   assert(

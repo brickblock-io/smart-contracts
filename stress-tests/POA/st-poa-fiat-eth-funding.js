@@ -1,11 +1,7 @@
 const logger = require('scripts/lib/logger')
 const BigNumber = require('bignumber.js')
-const {
-  getRandomBigInt,
-  timeTravel,
-  gasPrice
-} = require('test/helpers/general')
-
+const { getRandomBigInt, gasPrice } = require('test/helpers/general')
+const { timeTravel } = require('helpers')
 const {
   determineNeededTimeTravel,
   setupPoaProxyAndEcosystem,
