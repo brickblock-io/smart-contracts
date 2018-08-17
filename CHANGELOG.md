@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.4.4"></a>
+## [3.4.4](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.4.3...v3.4.4) (2018-08-17)
+
+
+### Bug Fixes
+
+* **audit:** Fixed audit issue 3.12 by removing unnecessary fallback functions ([d7d27f4](https://git.brickblock-dev.io/platform/smart-contracts/commits/d7d27f4))
+
+
+
 <a name="3.4.3"></a>
 ## [3.4.3](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.4.2...v3.4.3) (2018-08-15)
 
