@@ -153,18 +153,18 @@ contract PoaProxy is PoaProxyCommon {
         0 // outsize = mem outsize  mem[out..(out+outsize)
       )
 
+      // Check if the call was successful
+      if iszero(result) {
+        // Revert if call failed
+        revert(0, 0)
+      }
+
       // returndatacopy(t, f, s)
       returndatacopy(
         0x0, // t = mem position to
         0x0,  // f = mem position from
         returndatasize // s = size bytes
       )
-
-      // Check if the call was successful
-      if iszero(result) {
-        // Revert if call failed
-        revert(0, 0)
-      }
         // Return if call succeeded
         return(
           0x0,

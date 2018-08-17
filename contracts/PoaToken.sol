@@ -660,17 +660,17 @@ contract PoaToken is PoaCommon {
         0 // outsize = mem outsize  mem[out..(out+outsize)
       )
 
+      // check if call was a success and return if no errors & revert if errors
+      if iszero(result) {
+        revert(0, 0)
+      }
+
       // returndatacopy(t, f, s)
       returndatacopy(
         0x0, // t = mem position to
         0x0,  // f = mem position from
         returndatasize // s = size bytes
       )
-
-      // check if call was a success and return if no errors & revert if errors
-      if iszero(result) {
-        revert(0, 0)
-      }
 
       return(
         0x0,
