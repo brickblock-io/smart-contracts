@@ -125,7 +125,7 @@
     "truffle-contract": "^3.0.1",
     "truffle-hdwallet-provider": "^0.0.6",
     "web3": "^0.18.4",
-    "bristol": "^0.4.0",
-    "palin": "^2.2.0"
+    "bunyan": "^1.8.12",
+    "bunyan-format": "^0.2.1"
   }
 }

@@ -131,7 +131,7 @@ const fundFiatUntilRemainingTarget = async (
 
       investmentRegistry.addFiatInvestor(poa, investor, randomAmount)
 
-      logger.trace('invested in fiat', investor, randomAmount)
+      logger.debug('invested in fiat:', randomAmount.toString())
     }
   }
 

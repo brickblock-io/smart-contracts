@@ -79,7 +79,10 @@ describe('PoaToken Stress Tests - test eth funding only', () => {
         poa
       )
 
-      logger.info('buying remaining tokens with eth', remainingBuyableAmount)
+      logger.info(
+        'buying remaining tokens with eth',
+        remainingBuyableAmount.toString()
+      )
 
       await testBuyTokens(poa, {
         from: ethInvestors[0],

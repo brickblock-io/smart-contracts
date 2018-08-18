@@ -1,21 +1,14 @@
-const logger = require('bristol')
-const palin = require('palin')
-const path = require('path')
-
-const projectFolderArr = process.env.PWD.split(path.sep)
-const projectFolderName = projectFolderArr[projectFolderArr.length - 1]
-
-logger.addTarget('console').withFormatter(palin, {
-  rootFolderName: projectFolderName
+const bunyan = require('bunyan')
+const bformat = require('bunyan-format')
+const formatOut = bformat({ outputMode: 'long' })
+const logger = bunyan.createLogger({
+  name: 'smartContracts',
+  src: true,
+  stream: formatOut
 })
 
-logger.addTransform(function(elem) {
-  // check if elem is BigNumber
-  if (elem && elem.s && elem.e && elem.c) {
-    return elem.toString()
-  }
-
-  return elem
-})
+process.env.LOG_LEVEL
+  ? logger.level(process.env.LOG_LEVEL)
+  : logger.level('info')
 
 module.exports = logger

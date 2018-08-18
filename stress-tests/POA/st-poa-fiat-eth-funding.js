@@ -108,7 +108,10 @@ describe('PoaToken Stress Tests - test fiat & eth funding only', () => {
       let remainingBuyableAmount = await getRemainingAmountInWeiDuringEthFunding(
         poa
       )
-      logger.info('buying remaining tokens with eth', remainingBuyableAmount)
+      logger.info(
+        'buying remaining tokens with eth',
+        remainingBuyableAmount.toString()
+      )
 
       await testBuyTokens(poa, {
         from: ethInvestors[0],
