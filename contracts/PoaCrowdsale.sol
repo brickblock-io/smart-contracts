@@ -380,7 +380,7 @@ contract PoaCrowdsale is PoaCommon {
     require(paidAmountToCalculatedFeeRatio > 1e18 - 5e15);
     require(paidAmountToCalculatedFeeRatio < 1e18 + 5e15);
 
-    // Send fee to `FeeManager` where it gets converted into ACT and distributed to lockedBBK holders
+    // Send fee to `FeeManager` where it gets converted into ACT and distributed to lockedBbk holders
     payFee(msg.value);
 
     // Set flag to true so this function can't be called in the future anymore

@@ -88,7 +88,7 @@ const testLockBBK = async (bbk, act, bat, amount) => {
   assert.equal(
     postActLockedBalance.sub(preActLockedBalance).toString(),
     value.toString(),
-    'lockedBBK of AccountManager should be incremented by locked in amount'
+    'lockedBbk of AccountManager should be incremented by locked in amount'
   )
 }
 
@@ -117,7 +117,7 @@ const testUnlockBBK = async (bbk, act, bat, amount) => {
   assert.equal(
     preBatLockedBalance.sub(postBatLockedBalance).toString(),
     value.toString(),
-    'lockedBBK of AccountManager should be decremented by unlocked amount'
+    'lockedBbk of AccountManager should be decremented by unlocked amount'
   )
 }
 

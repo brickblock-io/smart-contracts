@@ -68,9 +68,9 @@ const lockAllBbk = async reg => {
     const balance = await bbk.balanceOf(account)
     await bbk.approve(act.address, balance, { from: account })
     await act.lockBBK(balance, { from: account })
-    const lockedBBK = await act.lockedBbkOf(account)
+    const lockedBbk = await act.lockedBbkOf(account)
     assert.equal(
-      lockedBBK.toString(),
+      lockedBbk.toString(),
       balance.toString(),
       'each account should lock BBK token balance'
     )

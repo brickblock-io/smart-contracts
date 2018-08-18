@@ -25,16 +25,16 @@ contract AccessTokenUpgradeExample is AccessToken {
     view
     returns (uint256)
   {
-    return totalMintedPerToken == 0
+    return totalMintedActPerLockedBbkToken == 0
       ? 0
       : AccessToken(
         registry.getContractAddress("AccessTokenOld")
       ).balanceOf(_address)
-      .add(lockedBBK[_address])
-      .mul(totalMintedPerToken.sub(distributedPerBBK[_address]))
+      .add(lockedBbkPerUser[_address])
+      .mul(totalMintedActPerLockedBbkToken.sub(mintedActPerUser[_address]))
       .div(1e18)
-      .add(securedTokenDistributions[_address])
-      .add(receivedBalances[_address])
-      .sub(spentBalances[_address]);
+      .add(mintedActFromPastLockPeriodsPerUser[_address])
+      .add(receivedAct[_address])
+      .sub(spentAct[_address]);
   }
 }

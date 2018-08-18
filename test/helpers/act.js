@@ -80,7 +80,7 @@ const testApproveAndLockBBK = async (bbk, act, bbkHolder, amount) => {
     amount.minus(postLockedBBK.minus(preLockedBBK)).abs(),
     defaultRange.min,
     defaultRange.max,
-    'bbkHolder lockedBBK should be incremented by amount'
+    'bbkHolder lockedBbk should be incremented by amount'
   )
 
   return postLockedBBK
@@ -104,7 +104,7 @@ const testUnlockBBK = async (bbk, act, bbkHolder, amount) => {
   assert.equal(
     preLockedBBK.minus(postLockedBBK).toString(),
     amount.toString(),
-    'bbkHolder lockedBBK should be decremented by amount'
+    'bbkHolder lockedBbk should be decremented by amount'
   )
 
   assert.equal(
@@ -139,10 +139,10 @@ const testPayFee = async (
   const preContributorsActBalances = {}
   for (const bbkHolder of bbkHolders) {
     const actBalance = await act.balanceOf(bbkHolder)
-    const lockedBBK = await act.lockedBbkOf(bbkHolder)
+    const lockedBbk = await act.lockedBbkOf(bbkHolder)
     preContributorsActBalances[bbkHolder] = {
       actBalance,
-      lockedBBK
+      lockedBbk
     }
   }
 
@@ -162,17 +162,17 @@ const testPayFee = async (
   const postContributorsActBalance = {}
   for (const bbkHolder of bbkHolders) {
     const actBalance = await act.balanceOf(bbkHolder)
-    const lockedBBK = await act.lockedBbkOf(bbkHolder)
+    const lockedBbk = await act.lockedBbkOf(bbkHolder)
     postContributorsActBalance[bbkHolder] = {
       actBalance,
-      lockedBBK
+      lockedBbk
     }
 
     const expectedPerTokenRate = weiAsAct
       .mul(1e18)
       .div(totalLockedBBK)
       .floor()
-    const expectedActBalance = lockedBBK.mul(expectedPerTokenRate).div(1e18)
+    const expectedActBalance = lockedBbk.mul(expectedPerTokenRate).div(1e18)
     if (actBalance.equals(0)) {
       // eslint-disable-next-line
       console.warn(`⚠️  ${bbkHolder} has ACT balance of 0 during testPayFee`)
