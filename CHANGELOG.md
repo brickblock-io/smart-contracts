@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.5.0"></a>
+# [3.5.0](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.4.4...v3.5.0) (2018-08-18)
+
+
+### Features
+
+* **POA:** add stress tests for POA ([120d78d](https://git.brickblock-dev.io/platform/smart-contracts/commits/120d78d))
+* **POA:** Add STRESS-TESTS.md documentation ([d26f256](https://git.brickblock-dev.io/platform/smart-contracts/commits/d26f256))
+* **POA:** fiat funding stress test ([400d2da](https://git.brickblock-dev.io/platform/smart-contracts/commits/400d2da))
+* **POA:** finalize stress tests ([6646898](https://git.brickblock-dev.io/platform/smart-contracts/commits/6646898))
+* **POA:** implement stress test for eth funding ([bc5348a](https://git.brickblock-dev.io/platform/smart-contracts/commits/bc5348a))
+
+
+
 <a name="3.4.4"></a>
 ## [3.4.4](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.4.3...v3.4.4) (2018-08-17)
 
