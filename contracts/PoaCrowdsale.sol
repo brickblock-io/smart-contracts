@@ -303,7 +303,9 @@ contract PoaCrowdsale is PoaCommon {
 
 
     // Transfer refund amount back to user
-    msg.sender.transfer(_refundAmount);
+    if (_refundAmount > 0) {
+      msg.sender.transfer(_refundAmount);
+    }
 
     // Actual Ξ amount to buy after refund
     uint256 _payAmount = msg.value.sub(_refundAmount);
