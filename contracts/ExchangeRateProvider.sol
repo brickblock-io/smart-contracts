@@ -20,6 +20,12 @@ contract ExchangeRateProvider is usingOraclize {
     _;
   }
 
+  modifier onlyOraclizer()
+  {
+    require(msg.sender == oraclize_cbAddress());
+    _;
+  }
+
   modifier onlyExchangeRates()
   {
     require(msg.sender == registry.getContractAddress("ExchangeRates"));
@@ -95,9 +101,8 @@ contract ExchangeRateProvider is usingOraclize {
   // solium-disable-next-line mixedcase
   function __callback(bytes32 _queryId, string _result)
     public
+    onlyOraclizer
   {
-    // make sure that the caller is oraclize
-    require(msg.sender == oraclize_cbAddress());
     // get currency address of ContractRegistry
     IExchangeRates _exchangeRates = IExchangeRates(
       registry.getContractAddress("ExchangeRates")
