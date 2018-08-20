@@ -253,21 +253,21 @@ contract PoaCrowdsale is PoaCommon {
       // give a range due to fun fun integer division
       if (fundingGoalInCents.sub(_totalFundedAmountInCents) > 1) {
         // continue sale if more than 1 fiat cent is missing from funding goal
-        return buyAndContinueFunding(msg.value);
+        return applyFunding(msg.value);
       } else {
         // Finish sale if less than 1 fiat cent is missing from funding goal.
         // No refunds for overpayment should be given for these tiny amounts.
-        return buyAndEndFunding(false);
+        return endFunding(false);
       }
     } else {
       // Finish sale if funding goal was met.
       // A refund for overpayment should be given.
-      return buyAndEndFunding(true);
+      return endFunding(true);
     }
   }
 
   /// @notice Buy and continue funding process (when funding goal not met)
-  function buyAndContinueFunding(uint256 _payAmount)
+  function applyFunding(uint256 _payAmount)
     internal
     returns (bool)
   {
@@ -287,7 +287,7 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /// @notice Buy and finish funding process (when funding goal met)
-  function buyAndEndFunding(
+  function endFunding(
     bool _shouldRefund
   )
     internal
@@ -307,7 +307,7 @@ contract PoaCrowdsale is PoaCommon {
 
     // Actual Ξ amount to buy after refund
     uint256 _payAmount = msg.value.sub(_refundAmount);
-    buyAndContinueFunding(_payAmount);
+    applyFunding(_payAmount);
 
     return true;
   }
