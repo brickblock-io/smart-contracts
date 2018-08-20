@@ -134,10 +134,10 @@ contract AccessToken is PausableToken {
     external
     returns (bool)
   {
+    require(_amount > 0);
     IBrickblockToken _bbk = IBrickblockToken(
       registry.getContractAddress("BrickblockToken")
     );
-    require(_amount > 0);
     require(settlePerTokenToSecured(msg.sender));
     lockedBBK[msg.sender] = lockedBBK[msg.sender].add(_amount);
     totalLockedBBK = totalLockedBBK.add(_amount);
