@@ -294,46 +294,28 @@ contract PoaCommon is PoaProxyCommon {
     pure
     returns (string)
   {
-    // Create new empty bytes array with same length as input
+    // create a new empty bytes array with same max length as input
     bytes memory _bytesString = new bytes(32);
 
-    // Keep track of string length for later usage in trimming
-    uint256 _stringLength;
+    // an assembly block is necessary to directly change memory layout
+    assembly {
+      mstore(add(_bytesString, 0x20), _data)
+    }
 
-    // Loop through each byte in bytes32
-    for (uint _bytesCounter = 0; _bytesCounter < 32; _bytesCounter++) {
-      /*
-        Convert bytes32 data to uint256 in order to increase the number enough to
-        shift bytes further left while pushing out leftmost bytes.
-        Then convert uint256 data back to bytes32.
-        Then convert bytes32 data to bytes1 where everything but the leftmost hex value (byte)
-        is cut off, leaving only the leftmost byte.
-
-        TL;DR: Takes a single character from a bytes32 based on a counter
-      */
-      bytes1 _char = bytes1(
-        bytes32(
-          uint(_data) * 2 ** (8 * _bytesCounter)
-        )
-      );
-
-      // Add the character if not empty
-      if (_char != 0) {
-        _bytesString[_stringLength] = _char;
-        _stringLength += 1;
+    // measure string by searching for first occurrance of empty byte
+    for (uint256 _bytesCounter = 0; _bytesCounter < 32; _bytesCounter++) {
+      if (_bytesString[_bytesCounter] == 0x00) {
+        break;
       }
     }
 
-    // New bytes with matching string length
-    bytes memory _bytesStringTrimmed = new bytes(_stringLength);
-
-    // Loop through _bytesStringTrimmed throwing in non empty data from _bytesString
-    for (_bytesCounter = 0; _bytesCounter < _stringLength; _bytesCounter++) {
-      _bytesStringTrimmed[_bytesCounter] = _bytesString[_bytesCounter];
+    // directly set the length of bytes array through assembly
+    assembly { 
+      mstore(_bytesString, _bytesCounter)
     }
 
-    // Return trimmed bytes array converted to string
-    return string(_bytesStringTrimmed);
+    // cast bytes array to string
+    return string(_bytesString);
   }
 
   /// @notice Needed for longer strings up to 64 chars long
@@ -345,50 +327,29 @@ contract PoaCommon is PoaProxyCommon {
     pure
     returns (string)
   {
-    // Create new empty bytes array with same length as input
-    bytes memory _bytesString = new bytes(_data.length * 32);
+    // create a new empty bytes array with same max length as input
+    bytes memory _bytesString = new bytes(64);
 
-    // Keep track of string length for later usage in trimming
-    uint256 _stringLength;
+    // store both of the 32 byte items packed, leave space for length at first 32 bytes
+    assembly {
+      mstore(add(_bytesString, 0x20), mload(_data))
+      mstore(add(_bytesString, 0x40), mload(add(_data, 0x20)))
+    }
 
-    // Loop through each bytes32 in the array
-    for (uint _arrayCounter = 0; _arrayCounter < _data.length; _arrayCounter++) {
-
-      // Loop through each byte in the bytes32
-      for (uint _bytesCounter = 0; _bytesCounter < 32; _bytesCounter++) {
-        /*
-          Convert bytes32 data to uint in order to increase the number enough to
-          shift bytes further left while pushing out leftmost bytes.
-          Then convert uint256 data back to bytes32
-          Then convert bytes32 data to bytes1 where everything but the leftmost hex value (byte)
-          is cut off, leaving only the leftmost byte.
-
-          TL;DR: Takes a single character from a bytes32 based on a counter
-        */
-        bytes1 _char = bytes1(
-          bytes32(
-            uint(_data[_arrayCounter]) * 2 ** (8 * _bytesCounter)
-          )
-        );
-
-        // Add the character if not empty
-        if (_char != 0) {
-          _bytesString[_stringLength] = _char;
-          _stringLength += 1;
-        }
+    // measure string by searching for first occurrance of empty byte
+    for (uint256 _bytesCounter = 0; _bytesCounter < 64; _bytesCounter++) {
+      if (_bytesString[_bytesCounter] == 0x00) {
+        break;
       }
     }
 
-    // New bytes with correct matching string length
-    bytes memory _bytesStringTrimmed = new bytes(_stringLength);
-
-    // Loop through _bytesStringTrimmed throwing in non empty data from _bytesString
-    for (_bytesCounter = 0; _bytesCounter < _stringLength; _bytesCounter++) {
-      _bytesStringTrimmed[_bytesCounter] = _bytesString[_bytesCounter];
+    // directly set the length of bytes array through assembly
+    assembly {
+      mstore(_bytesString, _bytesCounter)
     }
 
-    // Return trimmed bytes array converted to string
-    return string(_bytesStringTrimmed);
+    // cast bytes array to string
+    return string (_bytesString);
   }
 
   /*******************************
