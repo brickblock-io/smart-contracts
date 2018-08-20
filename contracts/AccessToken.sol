@@ -25,7 +25,7 @@ import "./interfaces/IBrickblockToken.sol";
         is transferred to a separate balance sheet, called 'mintedActFromPastLockPeriodsPerUser'
         * Upon migrating this balance to 'mintedActFromPastLockPeriodsPerUser', this balance sheet is essentially
           zeroed out by setting 'mintedActPerUser' to 'totalMintedActPerLockedBbkToken'
-          * "42 totalLockedBBK * (100 totalMintedActPerLockedBbkToken - 100 mintedActPerUser) === 0"
+        * ie. "42 totalLockedBBK * (100 totalMintedActPerLockedBbkToken - 100 mintedActPerUser) === 0"
       * All newly minted ACT per user are tracked through this until an unlock event occurs
 
     Past Lock Periods Balance Sheet:
@@ -42,7 +42,7 @@ import "./interfaces/IBrickblockToken.sol";
       * The balance sheet for tracking balance changes caused by transfer() and transferFrom()
       * Needed to accurately track balanceOf after transfers
       * Formula:
-        * "receivedAct[adr] - spentAct[adr]"
+        * "receivedAct[address] - spentAct[address]"
       * receivedAct is incremented after an address receives ACT via a transfer() or transferFrom()
         * increments balanceOf
       * spentAct is incremented after an address spends ACT via a transfer() or transferFrom()
@@ -192,7 +192,7 @@ contract AccessToken is PausableToken {
     @notice Distribute ACT tokens to all BBK token holders, that have currently locked their BBK tokens into this contract.
     Adds the tiny delta, caused by integer division remainders, to the owner's mintedActFromPastLockPeriodsPerUser balance.
     @param _amount Amount of fee to be distributed to ACT holders
-    @dev Accepts calls only fomr out `FeeManager` contract
+    @dev Accepts calls only from our `FeeManager` contract
   */
   function distribute(
     uint256 _amount
@@ -276,7 +276,7 @@ contract AccessToken is PausableToken {
 
   /**
     @notice Same as the default ERC20 transfer() with two differences:
-    1. Uses "balanceOf(adr)" rather than "balances[adr]" to check the balance of msg.sender
+    1. Uses "balanceOf(address)" rather than "balances[address]" to check the balance of msg.sender
        ("balances" is inaccurate, see above).
     2. Updates the Transfers Balance Sheet.
 
@@ -302,7 +302,7 @@ contract AccessToken is PausableToken {
 
   /**
     @notice Same as the default ERC20 transferFrom() with two differences:
-    1. Uses "balanceOf(adr)" rather than "balances[adr]" to check the balance of msg.sender
+    1. Uses "balanceOf(address)" rather than "balances[address]" to check the balance of msg.sender
        ("balances" is inaccurate, see above).
     2. Updates the Transfers Balance Sheet.
 
@@ -335,7 +335,7 @@ contract AccessToken is PausableToken {
   ***********************/
 
   /**
-    @notice Burns tokens through decrementing "totalSupply" and incrementing "spentAct[adr]"
+    @notice Burns tokens through decrementing "totalSupply" and incrementing "spentAct[address]"
     @dev Callable only by FeeManager contract
     @param _address Sender Address
     @param _value Amount

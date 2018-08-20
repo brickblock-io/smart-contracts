@@ -105,14 +105,14 @@ This was mostly covered above, but there are a few things worth mentioning. To u
 
 Using the [ERC223 Standard](https://github.com/Dexaran/ERC223-token-standard) would have been great here, but it was not known about at the time of deploying [BrickblockToken](#brickblocktoken) in 2017.
 
-#### ACT distribution or minting
-There is a noteworthy way of token balances in this contract.
+#### ACT minting
+There is a noteworthy way of how ACT token balances are determined in this contract.
 
-Imagine that there are 10 BBK tokens locked into the ACT contract; you own 2 of those 5.
-Now 10 ACT tokens are minted. What `AccessToken` does is simply take the minted amount (10)
-and divide it by `totalLockedBBK` (5). This will result in a distribution of 2 ACT per locked
-BBK token. This is `uint256 totalMintedActPerLockedBbkToken` in the contract. So you would be
-allocated **4 ACT** in this distribution.
+Imagine that there are 5 BBK tokens locked into the ACT contract; you own 2 of those 5.
+
+Next 10 ACT tokens are minted.
+
+What `AccessToken` does is take the minted amount (10 ACT) and divide it by `totalLockedBBK` (5 BBK). This will result in a distribution of 2 ACT per locked BBK token. This is the value `uint256 totalMintedActPerLockedBbkToken` in the contract. So you would be allocated **4 ACT** in this distribution.
 
 ```js
 // js pseudo code
@@ -145,9 +145,8 @@ const yourActBalance = totalMintedActPerLockedBbkToken * yourLockedBBK // = 8
 ```
 
 But what happens if you want to withdraw some of these ACT tokens and transfer them?
-We need to account for that. Every time a user transfers or receives ACT, we keep track
-of those balances via `spentAct[adr]` and `receivedAct[adr]` to get correct current `balanceOf()`
-of a given user.
+
+We need to account for that. Every time a user transfers or receives ACT, we keep track of those balances via `spentAct[address]` and `receivedAct[address]` to get the correct current `balanceOf()` of a given user.
 
 ```js
 // js pseudo code
@@ -170,13 +169,9 @@ totalMintedActPerLockedBbkToken = (totalMintedActRound1 + totalMintedActRound2) 
 yourActBalance = (totalMintedActPerLockedBbkToken * yourLockedBBK) + yourReceivedAct - yourSpentAct // = 2
 ```
 
-There is one last piece to the puzzle that is missing. What happens when you
-unlock your BBK and then transfer them to another person? Wouldn't that lead
-to an inaccurate ACT balance when it's calculated based on tokens? We handle this via the
-`settleCurrentLockPeriod()` method in the `AccessToken` contract. It's called before every
-`lockBBK()` or `unlockBBK()` transaction. It's setting a user's `yourTotalMintedAct` to the
-maximum of `totalMintedActPerLockedBbkToken` and tracking the remainder of the balance
-*prior* to the BBK unlocking in another variable called `mintedActFromPastLockPeriodsPerUser`.
+There is one final scenario to consider. What happens when you unlock your BBK and then transfer them to another person? Wouldn't that lead to an inaccurate ACT balance when it's calculated based on tokens?
+
+We handle this via the `settleCurrentLockPeriod()` method in the `AccessToken` contract. It's called before every `lockBBK()` or `unlockBBK()` transaction. It's setting a user's `mintedActPerUser` to the maximum value (`totalMintedActPerLockedBbkToken`) and tracking the remainder of the balance *prior* to the BBK unlocking in another variable called `mintedActFromPastLockPeriodsPerUser`.
 
 
 ```js
