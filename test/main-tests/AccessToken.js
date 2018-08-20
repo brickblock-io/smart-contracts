@@ -56,8 +56,7 @@ describe('when interacting with BBK', () => {
     })
 
     it('should lock BBK when approved', async () => {
-      const lockAmount = await bbk.balanceOf(contributor)
-      await testApproveAndLockBBK(bbk, act, contributor, lockAmount)
+      await testApproveAndLockBBK(bbk, act, contributor, new BigNumber(1e18))
     })
 
     it('should NOT unlock more BBK than currently locked', async () => {
@@ -66,8 +65,16 @@ describe('when interacting with BBK', () => {
       await testWillThrow(testUnlockBBK, [bbk, act, contributor, unlockAmount])
     })
 
+    it('should not unlock zero amount', async () => {
+      await testWillThrow(act.unlockBBK, [0, { from: contributor }])
+    })
+
+    it('should not lock zero amount', async () => {
+      await testWillThrow(act.lockBBK, [0, { from: contributor }])
+    })
+
     it('should unlock BBK', async () => {
-      const unlockAmount = await bbk.balanceOf(contributor)
+      const unlockAmount = await act.lockedBbkOf(contributor)
       await testUnlockBBK(bbk, act, contributor, unlockAmount)
     })
   })

@@ -533,18 +533,20 @@ const testUpgradeAct = async (
       'balances for both old and new contracts should match'
     )
     const oldLockedAmount = await act.lockedBbkOf(address)
-    await testUnlockBBK(bbk, act, address, oldLockedAmount)
-    const newLockedAmount = await testApproveAndLockBBK(
-      bbk,
-      actu,
-      address,
-      oldLockedAmount
-    )
-    assert.deepEqual(
-      oldLockedAmount,
-      newLockedAmount,
-      'locked BBK should be the same as old contract'
-    )
+    if (oldLockedAmount.gt(0)) {
+      await testUnlockBBK(bbk, act, address, oldLockedAmount)
+      const newLockedAmount = await testApproveAndLockBBK(
+        bbk,
+        actu,
+        address,
+        oldLockedAmount
+      )
+      assert.deepEqual(
+        oldLockedAmount,
+        newLockedAmount,
+        'locked BBK should be the same as old contract'
+      )
+    }
   }
 
   await testPayFee(actu, fmr, feePayer, contributors, feeValue, actRate)
