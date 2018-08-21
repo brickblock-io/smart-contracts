@@ -183,7 +183,7 @@ describe('when testing events', async () => {
       const log = tx.logs[0].event
       assert.equal(
         log,
-        'QuerySentEvent',
+        'QuerySent',
         'event log even should match QuerySentEvent'
       )
     })
@@ -202,7 +202,7 @@ describe('when testing events', async () => {
       const log = tx.logs[0].event
       assert.equal(
         log,
-        'QueryNoMinBalanceEvent',
+        'QueryNoMinBalance',
         'event log even should match QueryNoMinBalanceEvent'
       )
     })

@@ -12,10 +12,10 @@ contract EmployeeTokenSalaryPayout is Ownable {
   using SafeMath for uint256;
 
   // Events
-  event DistributeEvent(uint256 timestamp, uint256 amount);
-  event AddEmployeeEvent(address indexed _address, uint256 timestamp);
-  event RemoveEmployeeEvent(address indexed _address, uint256 timestamp);
-  event ChangeQuarterlyAmountEvent(address indexed _address, uint256 timestamp, uint256 newAmount);
+  event Distribute(uint256 timestamp, uint256 amount);
+  event AddEmployee(address indexed _address, uint256 timestamp);
+  event RemoveEmployee(address indexed _address, uint256 timestamp);
+  event ChangeQuarterlyAmount(address indexed _address, uint256 timestamp, uint256 newAmount);
 
   struct Employee {
     uint256 initialPayoutAmount;
@@ -58,7 +58,7 @@ contract EmployeeTokenSalaryPayout is Ownable {
     _employee.index = employeeAddressList.length-1;
 
     // solium-disable-next-line security/no-block-members
-    emit AddEmployeeEvent(_beneficiary, block.timestamp);
+    emit AddEmployee(_beneficiary, block.timestamp);
 
     return true;
   }
@@ -84,7 +84,7 @@ contract EmployeeTokenSalaryPayout is Ownable {
     delete employees[_beneficiary];
     employeeAddressList.length--;
     // solium-disable-next-line security/no-block-members
-    emit RemoveEmployeeEvent(_beneficiary, block.timestamp);
+    emit RemoveEmployee(_beneficiary, block.timestamp);
 
     return true;
   }
@@ -99,7 +99,7 @@ contract EmployeeTokenSalaryPayout is Ownable {
     employees[_beneficiary].quarterlyAmount = newAmount;
 
     // solium-disable-next-line security/no-block-members
-    emit ChangeQuarterlyAmountEvent(_beneficiary, block.timestamp, newAmount);
+    emit ChangeQuarterlyAmount(_beneficiary, block.timestamp, newAmount);
 
     return true;
   }
@@ -150,7 +150,7 @@ contract EmployeeTokenSalaryPayout is Ownable {
     }
 
     // solium-disable-next-line security/no-block-members
-    emit DistributeEvent(block.timestamp, _totalAmount);
+    emit Distribute(block.timestamp, _totalAmount);
   }
 
   function claimAll()

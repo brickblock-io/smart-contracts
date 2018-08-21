@@ -153,8 +153,8 @@ const testPayout = async (
   const postBonusContractBbkBalance = await bbk.balanceOf(
     employeeTokenSalaryPayoutContract.address
   )
-  const { args: distributeEvent } = await waitForEvent(
-    employeeTokenSalaryPayoutContract.DistributeEvent()
+  const { args: distribute } = await waitForEvent(
+    employeeTokenSalaryPayoutContract.Distribute()
   )
   const expectedBonusContractBalance = preBonusContractBbkBalance.minus(
     expectedTotalDistroAmount
@@ -178,13 +178,13 @@ const testPayout = async (
   )
 
   assert.equal(
-    distributeEvent.amount.toString(),
+    distribute.amount.toString(),
     expectedTotalDistroAmount.toString(),
     'Total distributed payout amount should match the expected'
   )
 
   return {
-    payoutAmount: distributeEvent.amount,
+    payoutAmount: distribute.amount,
     gasUsed: tx.gasUsed
   }
 }

@@ -30,151 +30,151 @@ contract PoaLogger {
   }
 
   // possible events from a PoaToken
-  event StageEvent(
+  event Stage(
     address indexed tokenAddress,
     uint256 stage
   );
-  event BuyEvent(
+  event Buy(
     address indexed tokenAddress,
     address indexed buyer,
     uint256 amount
   );
-  event ProofOfCustodyUpdatedEvent(
+  event ProofOfCustodyUpdated(
     address indexed tokenAddress,
     string ipfsHash
   );
-  event PayoutEvent(
+  event Payout(
     address indexed tokenAddress,
     uint256 amount
   );
-  event ClaimEvent(
+  event Claim(
     address indexed tokenAddress,
     address indexed claimer,
     uint256 payout
   );
-  event TerminatedEvent(
+  event Terminated(
     address indexed tokenAddress
   );
-  event CustodianChangedEvent(
+  event CustodianChanged(
     address indexed tokenAddress,
     address oldAddress,
     address newAddress
   );
-  event ReclaimEvent(
+  event ReClaim(
     address indexed tokenAddress,
     address indexed reclaimer,
     uint256 amount
   );
 
   // possible events from PoaProxy
-  event ProxyUpgradedEvent(
+  event ProxyUpgraded(
     address indexed tokenAddress,
     address upgradedFrom,
     address upgradedTo
   );
 
   // event triggers for each event
-  function logStageEvent(
+  function logStage(
     uint256 stage
   )
     external
     onlyActivePoaToken
   {
-    emit StageEvent(msg.sender, stage);
+    emit Stage(msg.sender, stage);
   }
 
-  function logBuyEvent(
+  function logBuy(
     address buyer,
     uint256 amount
   )
     external
     onlyActivePoaToken
   {
-    emit BuyEvent(msg.sender, buyer, amount);
+    emit Buy(msg.sender, buyer, amount);
   }
 
-  function logProofOfCustodyUpdatedEvent()
+  function logProofOfCustodyUpdated()
     external
     onlyActivePoaToken
   {
     // easier to get the set ipfsHash from contract rather than send over string
     string memory _realIpfsHash = IPoaToken(msg.sender).proofOfCustody();
 
-    emit ProofOfCustodyUpdatedEvent(
+    emit ProofOfCustodyUpdated(
       msg.sender,
       _realIpfsHash
     );
   }
 
-  function logPayoutEvent(
+  function logPayout(
     uint256 _amount
   )
     external
     onlyActivePoaToken
   {
-    emit PayoutEvent(
+    emit Payout(
       msg.sender,
       _amount
     );
   }
 
-  function logClaimEvent(
+  function logClaim(
     address _claimer,
     uint256 _payout
     )
     external
     onlyActivePoaToken
   {
-    emit ClaimEvent(
+    emit Claim(
       msg.sender,
       _claimer,
       _payout
     );
   }
 
-  function logTerminatedEvent()
+  function logTerminated()
     external
     onlyActivePoaToken
   {
-    emit TerminatedEvent(msg.sender);
+    emit Terminated(msg.sender);
   }
 
-  function logCustodianChangedEvent(
+  function logCustodianChanged(
     address _oldAddress,
     address _newAddress
   )
     external
     onlyActivePoaToken
   {
-    emit CustodianChangedEvent(
+    emit CustodianChanged(
       msg.sender,
       _oldAddress,
       _newAddress
     );
   }
 
-  function logReclaimEvent(
+  function logReClaim(
     address _reclaimer,
     uint256 _amount
   )
     external
     onlyActivePoaToken
   {
-    emit ReclaimEvent(
+    emit ReClaim(
       msg.sender,
       _reclaimer,
       _amount
     );
   }
 
-  function logProxyUpgradedEvent(
+  function logProxyUpgraded(
     address _upgradedFrom,
     address _upgradedTo
   )
     external
     onlyActivePoaToken
   {
-    emit ProxyUpgradedEvent(
+    emit ProxyUpgraded(
       msg.sender,
       _upgradedFrom,
       _upgradedTo

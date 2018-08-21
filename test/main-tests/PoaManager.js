@@ -51,9 +51,9 @@ describe('when calling broker functions', () => {
     })
 
     describe('when adding a broker', () => {
-      it('should emit BrokerAddedEvent', async () => {
+      it('should emit BrokerAdded', async () => {
         checkForEvent(
-          'BrokerAddedEvent',
+          'BrokerAdded',
           {
             broker: addedBroker
           },
@@ -104,9 +104,9 @@ describe('when calling broker functions', () => {
     })
 
     describe('when delisting a broker', () => {
-      it('should emit BrokerStatusChangedEvent', async () => {
+      it('should emit BrokerStatusChanged', async () => {
         checkForEvent(
-          'BrokerStatusChangedEvent',
+          'BrokerStatusChanged',
           {
             broker: addedBroker,
             active: false
@@ -140,9 +140,9 @@ describe('when calling broker functions', () => {
     })
 
     describe('when listing a broker', () => {
-      it('should emit BrokerStatusChangedEvent', async () => {
+      it('should emit BrokerStatusChanged', async () => {
         checkForEvent(
-          'BrokerStatusChangedEvent',
+          'BrokerStatusChanged',
           {
             broker: addedBroker,
             active: true
@@ -176,9 +176,9 @@ describe('when calling broker functions', () => {
     })
 
     describe('when removing a broker', () => {
-      it('should emit BrokerRemovedEvent', async () => {
+      it('should emit BrokerRemoved', async () => {
         checkForEvent(
-          'BrokerRemovedEvent',
+          'BrokerRemoved',
           {
             broker: addedBroker
           },
@@ -256,7 +256,7 @@ describe('when calling token functions', () => {
     })
 
     describe('when adding a token', () => {
-      it('should emit TokenAddedEvent', async () => {
+      it('should emit TokenAdded', async () => {
         const { txReceipt, tokenAddress } = await addToken(pmr, {
           from: listedBroker
         })
@@ -265,7 +265,7 @@ describe('when calling token functions', () => {
         addedToken = tokenAddress
 
         checkForEvent(
-          'TokenAddedEvent',
+          'TokenAdded',
           {
             token: addedToken
           },
@@ -336,9 +336,9 @@ describe('when calling token functions', () => {
     })
 
     describe('when listing a token', () => {
-      it('should emit TokenStatusChangedEvent', async () => {
+      it('should emit TokenStatusChanged', async () => {
         checkForEvent(
-          'TokenStatusChangedEvent',
+          'TokenStatusChanged',
           {
             token: addedToken,
             active: true
@@ -372,9 +372,9 @@ describe('when calling token functions', () => {
     })
 
     describe('when delisting a token', () => {
-      it('should emit TokenStatusChangedEvent', async () => {
+      it('should emit TokenStatusChanged', async () => {
         checkForEvent(
-          'TokenStatusChangedEvent',
+          'TokenStatusChanged',
           {
             token: addedToken,
             active: false
@@ -408,9 +408,9 @@ describe('when calling token functions', () => {
     })
 
     describe('when removing a token', () => {
-      it('should emit TokenRemovedEvent', async () => {
+      it('should emit TokenRemoved', async () => {
         checkForEvent(
-          'TokenRemovedEvent',
+          'TokenRemoved',
           {
             token: addedToken
           },

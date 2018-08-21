@@ -46,10 +46,10 @@ contract ExchangeRates is Ownable {
   // accessed and used by ExchangeRateProvider
   mapping (string => Settings) private currencySettings;
 
-  event RateUpdatedEvent(string currency, uint256 rate);
-  event QueryNoMinBalanceEvent();
-  event QuerySentEvent(string currency);
-  event SettingsUpdatedEvent(string currency);
+  event RateUpdated(string currency, uint256 rate);
+  event QueryNoMinBalance();
+  event QuerySent(string currency);
+  event SettingsUpdated(string currency);
 
   // used to only allow specific contract to call specific functions
   modifier onlyContract(string _contractName)
@@ -128,10 +128,10 @@ contract ExchangeRates is Ownable {
     returns (bool)
   {
     if (_queryId[0] != 0x0 && bytes(_queryType)[0] != 0x0) {
-      emit QuerySentEvent(_queryType);
+      emit QuerySent(_queryType);
       queryTypes[_queryId] = _queryType;
     } else {
-      emit QueryNoMinBalanceEvent();
+      emit QueryNoMinBalance();
     }
     return true;
   }
@@ -157,7 +157,7 @@ contract ExchangeRates is Ownable {
     // set currency rate depending on _queryType (USD, EUR, etc.)
     rates[keccak256(abi.encodePacked(_queryType))] = _result;
     // event for particular rate that was updated
-    emit RateUpdatedEvent(
+    emit RateUpdated(
       _queryType,
       _result
     );
@@ -193,7 +193,7 @@ contract ExchangeRates is Ownable {
       _callInterval,
       _callbackGasLimit
     );
-    emit SettingsUpdatedEvent(_currencyName);
+    emit SettingsUpdated(_currencyName);
     return true;
   }
 
@@ -208,7 +208,7 @@ contract ExchangeRates is Ownable {
   {
     Settings storage _settings = currencySettings[toUpperCase(_currencyName)];
     _settings.queryString = _queryString;
-    emit SettingsUpdatedEvent(_currencyName);
+    emit SettingsUpdated(_currencyName);
     return true;
   }
 
@@ -223,7 +223,7 @@ contract ExchangeRates is Ownable {
   {
     Settings storage _settings = currencySettings[toUpperCase(_currencyName)];
     _settings.callInterval = _callInterval;
-    emit SettingsUpdatedEvent(_currencyName);
+    emit SettingsUpdated(_currencyName);
     return true;
   }
 
@@ -238,7 +238,7 @@ contract ExchangeRates is Ownable {
   {
     Settings storage _settings = currencySettings[toUpperCase(_currencyName)];
     _settings.callbackGasLimit = _callbackGasLimit;
-    emit SettingsUpdatedEvent(_currencyName);
+    emit SettingsUpdated(_currencyName);
     return true;
   }
 
@@ -253,7 +253,7 @@ contract ExchangeRates is Ownable {
       registry.getContractAddress("ExchangeRateProvider")
     );
     provider.setCallbackGasPrice(_gasPrice);
-    emit SettingsUpdatedEvent("ALL");
+    emit SettingsUpdated("ALL");
     return true;
   }
 
@@ -265,7 +265,7 @@ contract ExchangeRates is Ownable {
     returns (bool)
   {
     ratesActive = !ratesActive;
-    emit SettingsUpdatedEvent("ALL");
+    emit SettingsUpdated("ALL");
     return true;
   }
 

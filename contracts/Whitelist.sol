@@ -8,7 +8,7 @@ contract Whitelist is Ownable {
 
   mapping (address => bool) public whitelisted;
 
-  event WhitelistedEvent(address indexed account, bool isWhitelisted);
+  event Whitelisted(address indexed account, bool isWhitelisted);
 
   function addAddress(address _address)
     public
@@ -16,7 +16,7 @@ contract Whitelist is Ownable {
   {
     require(whitelisted[_address] != true);
     whitelisted[_address] = true;
-    emit WhitelistedEvent(_address, true);
+    emit Whitelisted(_address, true);
   }
 
   function removeAddress(address _address)
@@ -25,6 +25,6 @@ contract Whitelist is Ownable {
   {
     require(whitelisted[_address] != false);
     whitelisted[_address] = false;
-    emit WhitelistedEvent(_address, false);
+    emit Whitelisted(_address, false);
   }
 }

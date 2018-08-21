@@ -279,7 +279,7 @@ contract PoaCrowdsale is PoaCommon {
     fundedEthAmountInWei = fundedEthAmountInWei.add(_payAmount);
 
     getContractAddress("PoaLogger").call(
-      bytes4(keccak256("logBuyEvent(address,uint256)")), msg.sender, _payAmount
+      bytes4(keccak256("logBuy(address,uint256)")), msg.sender, _payAmount
     );
 
     return true;
@@ -463,7 +463,7 @@ contract PoaCrowdsale is PoaCommon {
     fundedEthAmountInWei = fundedEthAmountInWei.sub(_refundAmount);
     msg.sender.transfer(_refundAmount);
     getContractAddress("PoaLogger").call(
-      bytes4(keccak256("logReclaimEvent(address,uint256)")),
+      bytes4(keccak256("logReClaim(address,uint256)")),
       msg.sender,
       _refundAmount
     );

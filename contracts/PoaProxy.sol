@@ -22,7 +22,7 @@ import "./PoaProxyCommon.sol";
 contract PoaProxy is PoaProxyCommon {
   uint8 public constant version = 1;
 
-  event ProxyUpgradedEvent(address upgradedFrom, address upgradedTo);
+  event ProxyUpgraded(address upgradedFrom, address upgradedTo);
 
   /**
     @notice Stores addresses of our contract registry
@@ -87,9 +87,9 @@ contract PoaProxy is PoaProxyCommon {
     address _oldMaster = poaTokenMaster;
     poaTokenMaster = _newMaster;
 
-    emit ProxyUpgradedEvent(_oldMaster, _newMaster);
+    emit ProxyUpgraded(_oldMaster, _newMaster);
     getContractAddress("PoaLogger").call(
-      bytes4(keccak256("logProxyUpgradedEvent(address,address)")),
+      bytes4(keccak256("logProxyUpgraded(address,address)")),
       _oldMaster, _newMaster
     );
 
@@ -108,9 +108,9 @@ contract PoaProxy is PoaProxyCommon {
     address _oldMaster = poaCrowdsaleMaster;
     poaCrowdsaleMaster = _newMaster;
 
-    emit ProxyUpgradedEvent(_oldMaster, _newMaster);
+    emit ProxyUpgraded(_oldMaster, _newMaster);
     getContractAddress("PoaLogger").call(
-      bytes4(keccak256("logProxyUpgradedEvent(address,address)")),
+      bytes4(keccak256("logProxyUpgraded(address,address)")),
       _oldMaster, _newMaster
     );
 

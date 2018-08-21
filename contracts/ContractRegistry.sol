@@ -9,7 +9,7 @@ contract ContractRegistry is Ownable {
   address public owner;
   mapping (bytes32 => address) private contractAddresses;
 
-  event UpdateContractEvent(string name, address indexed contractAddress);
+  event UpdateContract(string name, address indexed contractAddress);
 
   function updateContractAddress(string _name, address _address)
     public
@@ -17,7 +17,7 @@ contract ContractRegistry is Ownable {
     returns (address)
   {
     contractAddresses[keccak256(_name)] = _address;
-    emit UpdateContractEvent(_name, _address);
+    emit UpdateContract(_name, _address);
   }
 
   function getContractAddress(string _name)
