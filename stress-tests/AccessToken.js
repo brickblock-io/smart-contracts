@@ -31,7 +31,7 @@ describe('AccessToken Stress Tests', () => {
       const actRate = new BigNumber(1000)
       const counters = {
         totalLocksUnlocks: 0,
-        totalFeePayed: new BigNumber(0),
+        totalFeePaid: new BigNumber(0),
         contributorsPreBalance: [],
         totalLockPayClaimRound: 0,
         totalLockPayTransferClaimRound: 0
@@ -115,7 +115,7 @@ describe('AccessToken Stress Tests', () => {
             break
           }
 
-          counters.totalFeePayed = counters.totalFeePayed.plus(feeValue)
+          counters.totalFeePaid = counters.totalFeePaid.plus(feeValue)
           // Lock random amount of BBK Tokens first
           await testApproveAndLockManyWithIndividualAmounts(
             bbk,
@@ -155,7 +155,7 @@ describe('AccessToken Stress Tests', () => {
             rounds: randomLockUnlockCountAfterClaimFee
           })
           counters.totalLocksUnlocks += randomLockUnlockCountAfterClaimFee
-          counters.totalFeePayed = counters.totalFeePayed.plus(feeValue)
+          counters.totalFeePaid = counters.totalFeePaid.plus(feeValue)
           // eslint-disable-next-line
           console.log(chalk.green(`Passed ${i + 1} times`))
           // eslint-disable-next-line
@@ -243,7 +243,7 @@ describe('AccessToken Stress Tests', () => {
           )
 
           counters.totalLockPayTransferClaimRound = i + 1
-          counters.totalFeePayed = counters.totalFeePayed.plus(feeValue)
+          counters.totalFeePaid = counters.totalFeePaid.plus(feeValue)
           // eslint-disable-next-line
           console.log(chalk.green(`Passed ${i + 1} times`))
         }
@@ -293,8 +293,8 @@ describe('AccessToken Stress Tests', () => {
         ])
 
         data.push([
-          'Total Fee Payed',
-          web3.fromWei(counters.totalFeePayed).toString(),
+          'Total Fee Paid',
+          web3.fromWei(counters.totalFeePaid).toString(),
           '',
           ''
         ])

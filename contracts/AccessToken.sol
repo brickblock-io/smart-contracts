@@ -5,90 +5,105 @@ import "./interfaces/IRegistry.sol";
 import "./interfaces/IBrickblockToken.sol";
 
 
-/**
-  @title glossary:
-    dividendParadigm: the way of handling dividends, and the per token data structures
-      * totalLockedBBK * (totalMintedPerToken - distributedPerBBK) / 1e18
-      * this is the typical way of handling dividends.
-      * per token data structures are stored * 1e18 (for more accuracy)
-      * this works fine until BBK is locked or unlocked.
-        * need to still know the amount they HAD locked before a change.
-        * securedFundsParadigm solves this (read below)
-      * when BBK is locked or unlocked, current funds for the relevant
-        account are bumped to a new paradigm for balance tracking.
-      * when bumped to new paradigm, dividendParadigm is essentially zeroed out
-        by setting distributedPerBBK to totalMintedPerToken
-          * (100 * (100 - 100) === 0)
-      * all minting activity related balance increments are tracked through this
+/// @title The utility token used for paying fees in the Brickblock ecosystem
 
-    securedFundsParadigm: funds that are bumped out of dividends during lock / unlock
-      * securedTokenDistributions (mapping)
-      * needed in order to track ACT balance after lock/unlockBBK
-      * tracks funds that have been bumped from dividendParadigm
-      * works as a regular balance (not per token)
+/** @dev Explanation of terms and patterns:
+    General:
+      * Units of account: All per-token balances are stored in wei (1e18), for the greatest possible accuracy
+      * ERC20 "balances":
+        * "balances" per default is not updated unless a transfer/transferFrom happens
+        * That's why it's set to "internal" because we can't guarantee its accuracy
 
-    doubleEntryParadigm: taking care of transfer and transferFroms
-      * receivedBalances[adr] - spentBalances[adr]
-      * needed in order to track correct balance after transfer/transferFrom
-      * receivedBalances used to increment any transfers to an account
+    Current Lock Period Balance Sheet:
+      * The balance sheet for tracking ACT balances for the _current_ lock period is 'mintedActFromCurrentLockPeriodPerUser'
+      * Formula:
+        * "totalLockedBBK * (totalMintedActPerLockedBbkToken - mintedActPerUser) / 1e18"
+      * The period in which a BBK token has been locked uninterruptedly
+      * For example, if a token has been locked for 30 days, then unlocked for 13 days, then locked again
+        for 5 days, the current lock period would be 5 days
+      * When a BBK is locked or unlocked, the ACT balance for the respective BBK holder
+        is transferred to a separate balance sheet, called 'mintedActFromPastLockPeriodsPerUser'
+        * Upon migrating this balance to 'mintedActFromPastLockPeriodsPerUser', this balance sheet is essentially
+          zeroed out by setting 'mintedActPerUser' to 'totalMintedActPerLockedBbkToken'
+        * ie. "42 totalLockedBBK * (100 totalMintedActPerLockedBbkToken - 100 mintedActPerUser) === 0"
+      * All newly minted ACT per user are tracked through this until an unlock event occurs
+
+    Past Lock Periods Balance Sheet:
+      * The balance sheet for tracking ACT balances for the _past_ lock periods is 'mintedActFromPastLockPeriodsPerUser'
+      * Formula:
+        * The sum of all minted ACT from all past lock periods
+      * All periods in which a BBK token has been locked _before_ the current lock period
+      * For example, if a token has been locked for 10 days, then unlocked for 13 days, then locked again for 5 days,
+        then unlocked for 7 days, then locked again for 30 days, the past lock periods would add up to 15 days
+      * So essentially we're summing all locked periods that happened _before_ the current lock period
+      * Needed to track ACT balance per user after a lock or unlock event occurred
+
+    Transfers Balance Sheet:
+      * The balance sheet for tracking balance changes caused by transfer() and transferFrom()
+      * Needed to accurately track balanceOf after transfers
+      * Formula:
+        * "receivedAct[address] - spentAct[address]"
+      * receivedAct is incremented after an address receives ACT via a transfer() or transferFrom()
         * increments balanceOf
-        * needed to accurately track balanceOf after transfers and transferFroms
-      * spentBalances
+      * spentAct is incremented after an address spends ACT via a transfer() or transferFrom()
         * decrements balanceOf
-        * needed to accurately track balanceOf after transfers and transferFroms
 
-    dividendParadigm, securedFundsParadigm, doubleEntryParadigm combined
-      * when all combined, should correctly:
-        * show balance using balanceOf
-          * balances is set to private (cannot guarantee accuracy of this)
-          * balances not updated to correct values unless a
-            transfer/transferFrom happens
-      * dividendParadigm + securedFundsParadigm + doubleEntryParadigm
-        * totalLockedBBK * (totalMintedPerToken - distributedPerBBK[adr]) / 1e18
-          + securedTokenDistributions[adr]
-          + receivedBalances[adr] - spentBalances[adr]
+    All 3 Above Balance Sheets Combined:
+      * When combining the Current Lock Period Balance, the Past Lock Periods Balance and the Transfers Balance:
+        * We should get the correct total balanceOf for a given address
+        * mintedActFromCurrentLockPeriodPerUser[addr]  // Current Lock Period Balance Sheet
+          + mintedActFromPastLockPeriodsPerUser[addr]  // Past Lock Periods Balance Sheet
+          + receivedAct[addr] - spentAct[addr]     // Transfers Balance Sheet
 */
+
 contract AccessToken is PausableToken {
   uint8 public constant version = 1;
-  // instance of registry contract to get contract addresses
+
+  // Instance of registry contract to get contract addresses
   IRegistry internal registry;
   string public constant name = "AccessToken";
   string public constant symbol = "ACT";
   uint8 public constant decimals = 18;
 
-  // total amount of minted ACT that a single BBK token is entitled to
-  uint256 internal totalMintedPerToken;
-  // total amount of BBK that is currently locked into ACT contract
-  // used to calculate how much to increment totalMintedPerToken during minting
+  // Total amount of minted ACT that a single locked BBK token is entitled to
+  uint256 internal totalMintedActPerLockedBbkToken;
+
+  // Total amount of BBK that is currently locked into the ACT contract
   uint256 public totalLockedBBK;
 
-  // used to save information on who has how much BBK locked in
-  // used in dividendParadigm (see glossary)
-  mapping(address => uint256) internal lockedBBK;
-  // used to decrement totalMintedPerToken by amounts that have already been moved to securedTokenDistributions
-  // used in dividendParadigm (see glossary)
-  mapping(address => uint256) internal distributedPerBBK;
-  // used to store ACT balances that have been moved off of:
-  // dividendParadigm (see glossary) to securedFundsParadigm
-  mapping(address => uint256) internal securedTokenDistributions;
-  // ERC20 override... keep private and only use balanceOf instead
+  // Amount of locked BBK per user
+  mapping(address => uint256) internal lockedBbkPerUser;
+
+  /*
+   * Total amount of minted ACT per user
+   * Used to decrement totalMintedActPerLockedBbkToken by amounts that have already been moved to mintedActFromPastLockPeriodsPerUser
+   */
+  mapping(address => uint256) internal mintedActPerUser;
+
+  // Track minted ACT tokens per user for the current BBK lock period
+  mapping(address => uint256) internal mintedActFromCurrentLockPeriodPerUser;
+
+  // Track minted ACT tokens per user for past BBK lock periods
+  mapping(address => uint256) internal mintedActFromPastLockPeriodsPerUser;
+
+  // ERC20 override to keep balances private and use balanceOf instead
   mapping(address => uint256) internal balances;
-  // mapping tracking incoming balances in order to have correct balanceOf
-  // used in doubleEntryParadigm (see glossary)
-  mapping(address => uint256) public receivedBalances;
-  // mapping tracking outgoing balances in order to have correct balanceOf
-  // used in doubleEntryParadigm (see glossary)
-  mapping(address => uint256) public spentBalances;
+
+  // Track received ACT via transfer or transferFrom in order to calculate the correct balanceOf
+  mapping(address => uint256) public receivedAct;
+
+  // Track spent ACT via transfer or transferFrom in order to calculate the correct balanceOf
+  mapping(address => uint256) public spentAct;
 
 
-  event MintEvent(uint256 amount);
-  event BurnEvent(address indexed burner, uint256 value);
-  event BBKLockedEvent(
+  event Mint(uint256 amount);
+  event Burn(address indexed burner, uint256 value);
+  event BBKLocked(
     address indexed locker,
     uint256 lockedAmount,
     uint256 totalLockedAmount
   );
-  event BBKUnlockedEvent(
+  event BBKUnlocked(
     address indexed locker,
     uint256 lockedAmount,
     uint256 totalLockedAmount
@@ -120,12 +135,13 @@ contract AccessToken is PausableToken {
     view
     returns (uint256)
   {
-    return lockedBBK[_address];
+    return lockedBbkPerUser[_address];
   }
 
-  /** @notice Transfers BBK from an account to this contract.
-    Uses settlePerTokenToSecured to move funds in `dividendParadigm` to `securedFundsParadigm`.
-    Keeps a record of transfers in lockedBBK (securedFundsParadigm)
+  /** @notice Transfers BBK from an account owning BBK to this contract.
+    1. Uses settleCurrentLockPeriod to transfer funds from the "Current Lock Period"
+       balance sheet to the "Past Lock Periods" balance sheet.
+    2. Keeps a record of BBK transfers via events
     @param _amount BBK token amount to lock
   */
   function lockBBK(
@@ -138,17 +154,19 @@ contract AccessToken is PausableToken {
     IBrickblockToken _bbk = IBrickblockToken(
       registry.getContractAddress("BrickblockToken")
     );
-    require(settlePerTokenToSecured(msg.sender));
-    lockedBBK[msg.sender] = lockedBBK[msg.sender].add(_amount);
+
+    require(settleCurrentLockPeriod(msg.sender));
+    lockedBbkPerUser[msg.sender] = lockedBbkPerUser[msg.sender].add(_amount);
     totalLockedBBK = totalLockedBBK.add(_amount);
     require(_bbk.transferFrom(msg.sender, this, _amount));
-    emit BBKLockedEvent(msg.sender, _amount, totalLockedBBK);
+    emit BBKLocked(msg.sender, _amount, totalLockedBBK);
     return true;
   }
 
   /** @notice Transfers BBK from this contract to an account
-    Uses settlePerTokenToSecured to move funds in `dividendParadigm` to `securedFundsParadigm`.
-    Keeps a record of transfers in lockedBBK (securedFundsParadigm).
+    1. Uses settleCurrentLockPeriod to transfer funds from the "Current Lock Period"
+       balance sheet to the "Past Lock Periods" balance sheet.
+    2. Keeps a record of BBK transfers via events
     @param _amount BBK token amount to unlock
   */
   function unlockBBK(
@@ -161,21 +179,20 @@ contract AccessToken is PausableToken {
     IBrickblockToken _bbk = IBrickblockToken(
       registry.getContractAddress("BrickblockToken")
     );
-    require(_amount <= lockedBBK[msg.sender]);
-    require(settlePerTokenToSecured(msg.sender));
-    lockedBBK[msg.sender] = lockedBBK[msg.sender].sub(_amount);
+    require(_amount <= lockedBbkPerUser[msg.sender]);
+    require(settleCurrentLockPeriod(msg.sender));
+    lockedBbkPerUser[msg.sender] = lockedBbkPerUser[msg.sender].sub(_amount);
     totalLockedBBK = totalLockedBBK.sub(_amount);
     require(_bbk.transfer(msg.sender, _amount));
-    emit BBKUnlockedEvent(msg.sender, _amount, totalLockedBBK);
+    emit BBKUnlocked(msg.sender, _amount, totalLockedBBK);
     return true;
   }
 
   /**
-    @notice Distribute tokens to all BBK token holders.
-    Uses dividendParadigm to distribute ACT to lockedBBK holders.
-    Adds delta (integer division remainders) to owner securedFundsParadigm balance.
+    @notice Distribute ACT tokens to all BBK token holders, that have currently locked their BBK tokens into this contract.
+    Adds the tiny delta, caused by integer division remainders, to the owner's mintedActFromPastLockPeriodsPerUser balance.
     @param _amount Amount of fee to be distributed to ACT holders
-    @dev Accepts calls from only `FeeManager` contract
+    @dev Accepts calls only from our `FeeManager` contract
   */
   function distribute(
     uint256 _amount
@@ -184,7 +201,7 @@ contract AccessToken is PausableToken {
     onlyContract("FeeManager")
     returns (bool)
   {
-    totalMintedPerToken = totalMintedPerToken
+    totalMintedActPerLockedBbkToken = totalMintedActPerLockedBbkToken
       .add(
         _amount
           .mul(1e18)
@@ -192,28 +209,42 @@ contract AccessToken is PausableToken {
       );
 
     uint256 _delta = (_amount.mul(1e18) % totalLockedBBK).div(1e18);
-    securedTokenDistributions[owner] = securedTokenDistributions[owner].add(_delta);
+    mintedActFromPastLockPeriodsPerUser[owner] = mintedActFromPastLockPeriodsPerUser[owner].add(_delta);
     totalSupply_ = totalSupply_.add(_amount);
-    emit MintEvent(_amount);
+    emit Mint(_amount);
     return true;
   }
 
-  // bumps dividendParadigm balance to securedFundsParadigm
-  // ensures that BBK transfers will not affect ACT balance accrued
-  function settlePerTokenToSecured(
+  /**
+    @notice Calculates minted ACT from "Current Lock Period" for a given address
+    @param _address ACT holder address
+   */
+  function getMintedActFromCurrentLockPeriod(
+    address _address
+  )
+    private
+    view
+    returns (uint256)
+  {
+    return lockedBbkPerUser[_address]
+      .mul(totalMintedActPerLockedBbkToken.sub(mintedActPerUser[_address]))
+      .div(1e18);
+  }
+
+  /**
+    @notice Transfers "Current Lock Period" balance sheet to "Past Lock Periods" balance sheet.
+    Ensures that BBK transfers won't affect accrued ACT balances.
+   */
+  function settleCurrentLockPeriod(
     address _address
   )
     private
     returns (bool)
   {
-
-    securedTokenDistributions[_address] = securedTokenDistributions[_address]
-      .add(
-        lockedBBK[_address]
-        .mul(totalMintedPerToken.sub(distributedPerBBK[_address]))
-        .div(1e18)
-      );
-    distributedPerBBK[_address] = totalMintedPerToken;
+    mintedActFromCurrentLockPeriodPerUser[_address] = getMintedActFromCurrentLockPeriod(_address);
+    mintedActFromPastLockPeriodsPerUser[_address] = mintedActFromPastLockPeriodsPerUser[_address]
+      .add(mintedActFromCurrentLockPeriodPerUser[_address]);
+    mintedActPerUser[_address] = totalMintedActPerLockedBbkToken;
 
     return true;
   }
@@ -222,8 +253,7 @@ contract AccessToken is PausableToken {
   * Start ERC20 overrides *
   ************************/
 
-  /** @notice combines dividendParadigm, securedFundsParadigm
-    and doubleEntryParadigm in order to give a correct balance
+  /** @notice Combines all balance sheets to calculate the correct balance (see explanation on top)
     @param _address Sender address
     @return uint256
   */
@@ -234,21 +264,22 @@ contract AccessToken is PausableToken {
     view
     returns (uint256)
   {
+    mintedActFromCurrentLockPeriodPerUser[_address] = getMintedActFromCurrentLockPeriod(_address);
 
-    return totalMintedPerToken == 0
+    return totalMintedActPerLockedBbkToken == 0
       ? 0
-      : lockedBBK[_address]
-      .mul(totalMintedPerToken.sub(distributedPerBBK[_address]))
-      .div(1e18)
-      .add(securedTokenDistributions[_address])
-      .add(receivedBalances[_address])
-      .sub(spentBalances[_address]);
+      : mintedActFromCurrentLockPeriodPerUser[_address]
+      .add(mintedActFromPastLockPeriodsPerUser[_address])
+      .add(receivedAct[_address])
+      .sub(spentAct[_address]);
   }
 
   /**
-    @notice does the same thing as ERC20 transfer but,
-    uses balanceOf rather than balances[adr] (balances is inaccurate see above)
-    sets correct values for doubleEntryParadigm (see glossary)
+    @notice Same as the default ERC20 transfer() with two differences:
+    1. Uses "balanceOf(address)" rather than "balances[address]" to check the balance of msg.sender
+       ("balances" is inaccurate, see above).
+    2. Updates the Transfers Balance Sheet.
+
     @param _to Receiver address
     @param _value Amount
     @return bool
@@ -263,16 +294,18 @@ contract AccessToken is PausableToken {
   {
     require(_to != address(0));
     require(_value <= balanceOf(msg.sender));
-    spentBalances[msg.sender] = spentBalances[msg.sender].add(_value);
-    receivedBalances[_to] = receivedBalances[_to].add(_value);
+    spentAct[msg.sender] = spentAct[msg.sender].add(_value);
+    receivedAct[_to] = receivedAct[_to].add(_value);
     emit Transfer(msg.sender, _to, _value);
     return true;
   }
 
   /**
-    @notice Does the same thing as ERC20 transferFrom but...
-    Uses balanceOf rather than balances[adr] (balances is inaccurate see above)
-    Sets correct values for doubleEntryParadigm (see glossary)
+    @notice Same as the default ERC20 transferFrom() with two differences:
+    1. Uses "balanceOf(address)" rather than "balances[address]" to check the balance of msg.sender
+       ("balances" is inaccurate, see above).
+    2. Updates the Transfers Balance Sheet.
+
     @param _from Sender Address
     @param _to Receiver address
     @param _value Amount
@@ -290,8 +323,8 @@ contract AccessToken is PausableToken {
     require(_to != address(0));
     require(_value <= balanceOf(_from));
     require(_value <= allowed[_from][msg.sender]);
-    spentBalances[_from] = spentBalances[_from].add(_value);
-    receivedBalances[_to] = receivedBalances[_to].add(_value);
+    spentAct[_from] = spentAct[_from].add(_value);
+    receivedAct[_to] = receivedAct[_to].add(_value);
     allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
     emit Transfer(_from, _to, _value);
     return true;
@@ -302,9 +335,8 @@ contract AccessToken is PausableToken {
   ***********************/
 
   /**
-    @notice Callable only by FeeManager contract
-    Burns tokens through incrementing spentBalances[adr] and decrements totalSupply
-    Works with doubleEntryParadigm (see glossary)
+    @notice Burns tokens through decrementing "totalSupply" and incrementing "spentAct[address]"
+    @dev Callable only by FeeManager contract
     @param _address Sender Address
     @param _value Amount
     @return bool
@@ -318,9 +350,9 @@ contract AccessToken is PausableToken {
     returns (bool)
   {
     require(_value <= balanceOf(_address));
-    spentBalances[_address] = spentBalances[_address].add(_value);
+    spentAct[_address] = spentAct[_address].add(_value);
     totalSupply_ = totalSupply_.sub(_value);
-    emit BurnEvent(_address, _value);
+    emit Burn(_address, _value);
     return true;
   }
 }

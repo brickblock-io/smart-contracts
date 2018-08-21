@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.5.8"></a>
+## [3.5.8](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.5.7...v3.5.8) (2018-08-21)
+
+
+
+<a name="3.5.7"></a>
+## [3.5.7](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.5.6...v3.5.7) (2018-08-21)
+
+
+### Bug Fixes
+
+* **audit:** fixed audit issue 3.10 by moving rewuire to to it's modifier ([a7f92be](https://git.brickblock-dev.io/platform/smart-contracts/commits/a7f92be))
+
+
+
 <a name="3.5.6"></a>
 ## [3.5.6](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.5.5...v3.5.6) (2018-08-21)
 

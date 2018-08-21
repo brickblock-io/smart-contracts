@@ -74,7 +74,7 @@ There is a `toggleDead` function which sets a cosmetic `bool` variable. It is a 
 
 ## AccessToken (ACT)
 
-The `AccessToken` contract allows for locking (or "activating") BBK through `transferFrom` and allows distributions of ACT to be triggered from [FeeManager](#feemanager). Distributions are handled through manipulating the `balanceOf()` function as well as some neat dividend tricks. ETH redemption is done through burning ACT on the [FeeManager](#feemanager) contract.
+The `AccessToken` contract allows for locking (think "activating") BBK through the BBK contract's `transferFrom` function, and allows distributions of ACT to be triggered from [FeeManager](#feemanager). Distributions are carried out by updating the calculation parameters in the `balanceOf()` function. ACTs can be redeemed for ETH through burning ACT on the [FeeManager](#feemanager) contract.
 
 ### General Overview
 `AccessToken` (ACT) is an ERC20 compliant token which is redeemable for ETH at a **"1000 ACT : 1 ETH"** ratio. This redemption is handled by the [FeeManager](#feemanager) contract. ACT can only be acquired through locking in [BBK](#brickblocktoken).
@@ -89,7 +89,7 @@ Calling the `AccessToken` contract function `unlockBBK()` with a given amount th
 
 ---
 
-Every time a fee is paid in the Brickblock network, ACT is distributed through the `AccessToken` contract by [FeeManager](#feemanager). **Only [FeeManager](#feemanager) can distribute (or "mint") ACT.**
+Every time a fee is paid in the Brickblock network, ACTs are minted through the `AccessToken` contract by [FeeManager](#feemanager). **Only [FeeManager](#feemanager) can mint ACT.**
 
 Locking tokens puts the user into the distribution pool for ACT when they are minted during fee payment events in the ecosystem. BBK tokens must be locked *before* a fee is paid to receive ACT from a given distribution.
 
@@ -99,82 +99,112 @@ The amount of ACT a user gets is a proportion of their own locked BBK to the tot
 There are a few key concepts here that need to be explained to fully understand the `AccessToken` contract.
 
 #### Locking & Unlocking BBK
-This was mostly covered above, but there are a few things worth mentioning. To `lockBBK()`, a user must `approve()` the `AccessToken` for at least the amount the user wants to lock. The user must then call `lockBBK()` *after* the `allowance` has been set. `lockBBK()` is essentially calling a `transferFrom()` on the [BrickblockToken](#brickblocktoken) contract along with recording ownership of the `lockedBBK`.
+This was mostly covered above, but there are a few things worth mentioning. To use `lockBBK()`, a user must `approve()` the `AccessToken` for at least the amount the user wants to lock. The user must then call `lockBBK()` *after* the `allowance` has been set. `lockBBK()` is essentially calling a `transferFrom()` on the [BrickblockToken](#brickblocktoken) contract along with recording ownership of the `lockedBbk`.
 
 `unlockBBK()` simply transfers locked BBK tokens back to the owner's wallet.
 
 Using the [ERC223 Standard](https://github.com/Dexaran/ERC223-token-standard) would have been great here, but it was not known about at the time of deploying [BrickblockToken](#brickblocktoken) in 2017.
 
-#### ACT distribution or minting
-There is a somewhat unique way of handling dividends in this contract.
+#### ACT minting
+There is a noteworthy way of how ACT token balances are determined in this contract.
 
-Imagine that there are 5 BBK tokens locked into the contract; you own 2 of those 5. Now 10 ACT tokens are distributed to the contract. What `AccessToken` does is simply take this amount (10) and divide that by `totalLockedBBK` (5). This will result in 2 ACT per locked in BBK token. This is the `uint256 totalMintedPerToken` in the contract. So you would be allocated 4 ACT in this distribution.
+Imagine that there are 5 BBK tokens locked into the ACT contract; you own 2 of those 5.
 
-```js
-// js pseudo code
-const yourLockedBBK = 2
-const totalMintedPerToken = 10ACT / 5BBK = 2
-const yourBalance = totalMintedPerToken * yourLockedBBK = 4
-```
+Next 10 ACT tokens are minted.
 
-Now, what happens if there are multiple distributions? Perhaps another distribution of 10 ACT? `totalMintedPerToken` is now 4
+What `AccessToken` does is take the minted amount (10 ACT) and divide it by `totalLockedBBK` (5 BBK). This will result in a distribution of 2 ACT per locked BBK token. This is the value `uint256 totalMintedActPerLockedBbkToken` in the contract. So you would be allocated **4 ACT** in this distribution.
 
 ```js
 // js pseudo code
 const yourLockedBBK = 2
+const totalLockedBBK = 5
 
 // distribution 1
-const totalMintedPerToken = 10ACT / 5BBK = 2
-const yourBalance = totalMintedPerToken * yourLockedBBK = 4
+const totalMintedAct = 10
+const totalMintedActPerLockedBbkToken = totalMintedAct / totalLockedBBK // = 2
+
+const yourActBalance = totalMintedActPerLockedBbkToken * yourLockedBBK // = 4
+```
+
+Now, what happens if there is another distribution of 10 ACT? `totalMintedActPerLockedBbkToken` will now equal `4`
+
+```js
+// js pseudo code
+const yourLockedBBK = 2
+const totalLockedBBK = 5
+
+// distribution 1
+const totalMintedActRound1 = 10
+const totalMintedActPerLockedBbkToken = totalMintedActRound1 / totalLockedBBK // = 2
+const yourActBalance = totalMintedActPerLockedBbkToken * yourLockedBBK // = 4
 
 // distribution 2
-const totalMintedPerToken = (10 + 10)ACT / 5BBK = 4
-const yourBalance = totalMintedPerToken * yourLockedBBK = 8
+const totalMintedActRound2 = 10
+const totalMintedActPerLockedBbkToken = (totalMintedActRound1 + totalMintedActRound2) / totalLockedBBK // = 4
+const yourActBalance = totalMintedActPerLockedBbkToken * yourLockedBBK // = 8
 ```
 
-But, what happens if you want to claim some of these tokens and move them? We need to account for that. That is what `distributedPerBBK` handles. We deduct the distributed amount per user to get the real amount of ACT readily available. When a user transfers or redeems ACT.
+But what happens if you want to withdraw some of these ACT tokens and transfer them?
+
+We need to account for that. Every time a user transfers or receives ACT, we keep track of those balances via `spentAct[address]` and `receivedAct[address]` to get the correct current `balanceOf()` of a given user.
 
 ```js
 // js pseudo code
 const yourLockedBBK = 2
-const totalMintedPerToken = 10ACT / 5BBK = 2
-const yourBalance = totalMintedPerToken * yourLockedBBK = 4
+const totalLockedBBK = 5
 
-// you withdraw/claim last round of distributions
-const distributedPerBBK = 4
-const yourBalance = (totalMintedPerToken * yourLockedBBK) - distributedPerBBK = 0
+// distribution 1
+const totalMintedActRound1 = 10
+let totalMintedActPerLockedBbkToken = totalMintedActRound1 / totalLockedBBK // = 2
+let yourActBalance = totalMintedActPerLockedBbkToken * yourLockedBBK // = 4
 
-// distribution after claiming
-const totalMintedPerToken = (10 + 10)ACT / 5BBK = 4
-const yourBalance = (totalMintedPerToken * yourLockedBBK) - distributedPerBBK = 4
+// you transfer your minted ACT from the first distribution to someone else
+const yourSpentAct = 4
+const yourReceivedAct = 0
+yourActBalance = (totalMintedActPerLockedBbkToken * yourLockedBBK) + yourReceivedAct - yourSpentAct // = 0
+
+// distribution 2 (after transferring)
+const totalMintedActRound2 = 5
+totalMintedActPerLockedBbkToken = (totalMintedActRound1 + totalMintedActRound2) / totalLockedBBK // = 3
+yourActBalance = (totalMintedActPerLockedBbkToken * yourLockedBBK) + yourReceivedAct - yourSpentAct // = 2
 ```
 
-There is one last piece to the puzzle that is missing. What happens when you transfer BBK to another address? Won't you have an inaccurate balance when it's based on tokens? We handle that by setting a user's `distributedPerBBK` to `max` and using another variable to store the rest of the balance that was there before the transfer. This is done for both the receiver and the sender. This is called `securedTokenDistributions` in the `AccessToken` contract.
+There is one final scenario to consider. What happens when you unlock your BBK and then transfer them to another person? Wouldn't that lead to an inaccurate ACT balance when it's calculated based on tokens?
+
+We handle this via the `settleCurrentLockPeriod()` method in the `AccessToken` contract. It's called before every `lockBBK()` or `unlockBBK()` transaction. It's setting a user's `mintedActPerUser` to the maximum value (`totalMintedActPerLockedBbkToken`) and tracking the remainder of the balance *prior* to the BBK unlocking in another variable called `mintedActFromPastLockPeriodsPerUser`.
+
 
 ```js
 // js pseudo code
-const yourLockedBBK = 2
-const totalMintedPerToken = 10ACT / 5BBK = 2
-const yourBalance = totalMintedPerToken * yourLockedBBK = 4
+let totalLockedBBK = 5
+let yourLockedBBK = 2
+let totalMintedActPerLockedBbkToken = 0
+let yourMintedActFromCurrentLockPeriod = 0
+let yourMintedActFromPastLockPeriods = 0
+let yourActBalance = 0
 
-// you withdraw/claim last round of distributions
-let distributedPerBBK = 4
-const yourBalance = (totalMintedPerToken * yourLockedBBK) - distributedPerBBK = 0
+// distribution 1
+const totalMintedActRound1 = 10
+totalMintedActPerLockedBbkToken = totalMintedActRound1 / totalLockedBBK // = 2
+yourMintedActFromCurrentLockPeriod = totalMintedActPerLockedBbkToken * yourLockedBBK // = 4
+yourActBalance = yourMintedActFromCurrentLockPeriod + yourMintedActFromPastLockPeriods // 4 + 0 = 4
 
-// distribution after claiming
-const totalMintedPerToken = (10 + 10)ACT / 5BBK = 4
-const yourBalance = (totalMintedPerToken * yourLockedBBK) - distributedPerBBK = 4
+// you unlock your BBK tokens and transfer them to another address
+yourLockedBBK = 0
+yourMintedActFromCurrentLockPeriod = 0
+yourMintedActFromPastLockPeriods = 4
 
-// transfer 4 ACT token away
-distributedPerBBK = 8
-const securedTokenDistributions = (totalMintedPerToken * yourLockedBBK) - distributedPerBBK = 0
-const yourBalance = (totalMintedPerToken * yourLockedBBK) - distributedPerBBK + securedTokenDistributions = 0
+// distribution 2 (after unlocking)
+const totalMintedActRound2 = 10
+totalMintedActPerLockedBbkToken = (totalMintedActRound1 + totalMintedActRound2) / totalLockedBBK // = 4
+yourMintedActFromCurrentLockPeriod = totalMintedActPerLockedBbkToken * yourLockedBBK // = 0
+yourActBalance = yourMintedActFromCurrentLockPeriod + yourMintedActFromPastLockPeriods // 0 + 4 = 4
 ```
 
 For further reading, please see the [commented glossary](https://git.brickblock-dev.io/platform/smart-contracts/blob/master/contracts/AccessToken.sol#L8-50) at the top of the `AccessToken.sol` file.
 
 #### `balanceOf()` Override & Additional ERC20 Overrides
-It is almost never a great idea to run a huge `for`-loop in solidity. But we need a way to distribute all of these ACT to `lockedBBK` holders. How is that done? Enter `balanceOf()` as an algorithm.
+It is almost never a great idea to run a huge `for`-loop in solidity. But we need a way to distribute all of these ACT to `lockedBbk` holders. How is that done? Enter `balanceOf()` as an algorithm.
 
 The easiest way to understand this is through a simplified version of this concept: [NoobCoin](https://github.com/TovarishFin/NoobCoin). NoobCoin is a project which implements this and only this. It is a good starting point for understanding this concept.
 
@@ -183,19 +213,21 @@ Essentially, instead of just returning a number, we are giving a starting balanc
 ```sol
 // solidity pseudo code
 
-// how much BBK you have locked in
-totalMintedPerToken = lockedBBK[_address]
-    // multiplying by totalPerToken minus distributedPerBBK
-    .mul(totalMintedPerToken.sub(distributedPerBBK[_address]))
+mintedActFromCurrentLockPeriodPerUser[_address] = lockedBbkPerUser[_address]
+  .mul(totalMintedActPerLockedBbkToken.sub(claimedActPerUser[_address]))
+  .div(1e18);
 
-    // add any balances bumped during transfers
-    .add(securedTokenDistributions[_address])
+// ACT balances from your currently locked in BBK tokens
+totalMintedActPerLockedBbkToken = mintedActFromCurrentLockPeriodPerUser[_address]
 
-    // deduct everything you already spent from transfers/transferFroms
-    .add(receivedBalances[_address])
+  // add any balances bumped during transfers
+  .add(mintedActFromPastLockPeriodsPerUser[_address])
 
-    // add everything you received from transfers/transferFroms
-    .sub(spentBalances[_address]);
+  // deduct everything you already spent from transfers/transferFroms
+  .add(receivedAct[_address])
+
+  // add everything you received from transfers/transferFroms
+  .sub(spentAct[_address]);
 ```
 
 With this algorithm, we can allocate ACT to users without actually distributing. A consequence is that we need to make the `balances` mapping private, unlike the ERC20 standard, to ensure that the correct balances are being returned rather than the `balances` mapping which is no longer accurate or used. So consequently, `transfer` and `transferFrom` are modified to use the `balanceOf()` function rather than `balances` mapping.
@@ -212,7 +244,7 @@ It has two primary functions and two supporting utility functions. It holds all 
 A payable function that calls the [AccessToken](#accesstoken) contract's `distribute()` which mints and distributes ACT at a ratio corresponding to the following ACT:WEI rate:
 **1000ACT: 1ETH = 1000ACT: 1E18WEI**
 
-This is how `lockedBBK` holders receive ACT.
+This is how `lockedBbk` holders receive ACT.
 
 This function can be called by anyone. Meaning anyone can pay a fee if they really wanted to. For the ecosystem, it is used by [PoaToken](#poatoken)s when a fee must be paid.
 
@@ -580,7 +612,7 @@ There are multiple stages for each POA contract. Each stage enables or restricts
     * end of lifecycle
 
 ### Concepts
-This contract makes use of `balanceOf()` as an algorithm and dividend payouts much like `AccessToken`.
+This contract makes use of `balanceOf()` as an algorithm.
 
 #### `balanceOf()` Override & Additional ERC20 Overrides
 It is almost never a great idea to run a huge for loop in solidity. But we need a way to distribute all of these access tokens to locked BBK holders. How is that done? Enter `balanceOf()` as an algorithm.
@@ -626,9 +658,7 @@ This is the same concept as NoobCoin except the startingBalance is not a static 
 `transfer()` and `transferFrom()` both use overrides very similar to NoobCoin, where `receivedBalances` and `spentBalances` are updated and `balanceOf()` is used instead of `balances`.
 
 #### Dividends
-The method of calculating dividends is also very much like `AccessToken`. Please read the AccessToken section before continuing.
-
-The only difference here is that instead of balances being taken care of during locking and unlocking BBK in `AccessToken`, the balance is instead taken care of when a `transfer` or `transferFrom` occurs.
+Instead of balances being taken care of during locking and unlocking BBK in `AccessToken`, the balance is instead taken care of when a `transfer` or `transferFrom` occurs.
 
 This balance is kept track of in `unclaimedPayoutTotals`.
 
