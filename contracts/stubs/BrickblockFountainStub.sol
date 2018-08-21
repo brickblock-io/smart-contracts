@@ -58,9 +58,9 @@ contract BrickblockFountainStub is Ownable {
     returns (bool)
   {
     BrickblockToken _bbt = BrickblockToken(brickBlockTokenAddress);
-    uint256 _value = _bbt.allowance(brickBlockTokenAddress, this);
+    uint256 _value = _bbt.allowance(brickBlockTokenAddress, address(this));
     require(_value > 0);
-    _bbt.transferFrom(brickBlockTokenAddress, this, _value);
+    _bbt.transferFrom(brickBlockTokenAddress, address(this), _value);
     updateAccount(brickBlockTokenAddress, balances[brickBlockTokenAddress].tokens.add(_value));
     emit BBTLocked(brickBlockTokenAddress, _value);
     return true;
@@ -73,9 +73,9 @@ contract BrickblockFountainStub is Ownable {
   {
     address user = msg.sender;
     BrickblockToken _bbt = BrickblockToken(brickBlockTokenAddress);
-    _value = _bbt.allowance(user, this);
+    _value = _bbt.allowance(user, address(this));
     require(_value > 0);
-    _bbt.transferFrom(user, this, _value);
+    _bbt.transferFrom(user, address(this), _value);
     updateAccount(user, balances[user].tokens.add(_value));
     emit BBTLocked(user, _value);
   }
@@ -89,7 +89,7 @@ contract BrickblockFountainStub is Ownable {
     require(block.number > companyShareReleaseBlock);
     BrickblockToken _bbt = BrickblockToken(brickBlockTokenAddress);
     uint256 _companyTokens = balanceOf(_bbt);
-    balances[this].tokens = balances[this].tokens.sub(_companyTokens);
+    balances[address(this)].tokens = balances[address(this)].tokens.sub(_companyTokens);
     balances[owner].tokens = balances[owner].tokens.add(_companyTokens);
     updateAccount(brickBlockTokenAddress, 0);
     _bbt.transfer(owner, _companyTokens);

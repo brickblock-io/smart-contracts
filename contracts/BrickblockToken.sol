@@ -30,7 +30,7 @@ contract BrickblockToken is PausableToken {
 
   // This modifier is used in `distributeTokens()` and ensures that no more than 51% of the total supply can be distributed
   modifier supplyAvailable(uint256 _value) {
-    uint256 _distributedTokens = initialSupply.sub(balances[this].add(bonusTokens));
+    uint256 _distributedTokens = initialSupply.sub(balances[address(this)].add(bonusTokens));
     uint256 _maxDistributedAmount = initialSupply.mul(contributorsShare).div(100);
     require(_distributedTokens.add(_value) <= _maxDistributedAmount);
     _;
@@ -46,12 +46,12 @@ contract BrickblockToken is PausableToken {
     companyTokens = initialSupply.mul(companyShare).div(100);
     bonusDistributionAddress = _bonusDistributionAddress;
     totalSupply_ = initialSupply;
-    balances[this] = initialSupply;
-    emit Transfer(address(0), this, initialSupply);
+    balances[address(this)] = initialSupply;
+    emit Transfer(address(0), address(this), initialSupply);
     // distribute bonusTokens to bonusDistributionAddress
-    balances[this] = balances[this].sub(bonusTokens);
+    balances[address(this)] = balances[address(this)].sub(bonusTokens);
     balances[bonusDistributionAddress] = balances[bonusDistributionAddress].add(bonusTokens);
-    emit Transfer(this, bonusDistributionAddress, bonusTokens);
+    emit Transfer(address(this), bonusDistributionAddress, bonusTokens);
     // we need to start with trading paused to make sure that there can be no transfers while the token sale is still ongoing
     // we will unpause the contract manually after finalizing the token sale by calling `unpause()` which is a function inherited from PausableToken
     paused = true;
@@ -102,9 +102,9 @@ contract BrickblockToken is PausableToken {
     require(tokenSaleActive == true);
     require(_contributor != address(0));
     require(_contributor != owner);
-    balances[this] = balances[this].sub(_value);
+    balances[address(this)] = balances[address(this)].sub(_value);
     balances[_contributor] = balances[_contributor].add(_value);
-    emit Transfer(this, _contributor, _value);
+    emit Transfer(address(this), _contributor, _value);
     return true;
   }
 
@@ -133,16 +133,16 @@ contract BrickblockToken is PausableToken {
     // ensure that fountainContractAddress has been set
     require(fountainContractAddress != address(0));
     // calculate new total supply. need to do this in two steps in order to have accurate totalSupply due to integer division
-    uint256 _distributedTokens = initialSupply.sub(balances[this].add(bonusTokens));
+    uint256 _distributedTokens = initialSupply.sub(balances[address(this)].add(bonusTokens));
     uint256 _newTotalSupply = _distributedTokens.add(bonusTokens.add(companyTokens));
     // unpurchased amount of tokens which will be burned
     uint256 _burnAmount = totalSupply_.sub(_newTotalSupply);
     // leave remaining balance for company to be claimed at later date
-    balances[this] = balances[this].sub(_burnAmount);
-    emit Burn(this, _burnAmount);
+    balances[address(this)] = balances[address(this)].sub(_burnAmount);
+    emit Burn(address(this), _burnAmount);
     // allow our fountain contract to transfer the company tokens to itself
-    allowed[this][fountainContractAddress] = companyTokens;
-    emit Approval(this, fountainContractAddress, companyTokens);
+    allowed[address(this)][fountainContractAddress] = companyTokens;
+    emit Approval(address(this), fountainContractAddress, companyTokens);
     // set new totalSupply
     totalSupply_ = _newTotalSupply;
     // prevent this function from ever running again after finalizing the token sale

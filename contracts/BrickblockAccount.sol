@@ -35,7 +35,7 @@ contract BrickblockAccount is Ownable {
       registry.getContractAddress("BrickblockToken")
     );
     uint256 _companyFunds = bbk.balanceOf(address(bbk));
-    return bbk.transferFrom(address(bbk), this, _companyFunds);
+    return bbk.transferFrom(address(bbk), address(this), _companyFunds);
   }
 
   function lockBBK
