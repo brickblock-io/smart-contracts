@@ -1,3 +1,4 @@
+const BigNumber = require('bignumber.js')
 const {
   owner,
   broker,
@@ -21,9 +22,15 @@ const {
   testTransfer,
   testApprove,
   testTransferFrom,
-  testTerminate
+  testTerminate,
+  getRemainingAmountInWeiDuringEthFunding
 } = require('../../helpers/poa')
-const { testWillThrow, gasPrice } = require('../../helpers/general.js')
+const {
+  testWillThrow,
+  gasPrice,
+  getGasUsed,
+  getEtherBalance
+} = require('../../helpers/general.js')
 const { timeTravel } = require('helpers')
 
 describe("when in 'EthFunding' stage", () => {
@@ -147,6 +154,80 @@ describe("when in 'EthFunding' stage", () => {
         from: whitelistedPoaBuyers[1],
         gasPrice
       })
+    })
+  })
+})
+
+describe("when in 'EthFunding' stage", () => {
+  contract('PoaTokenProxy', () => {
+    let poa
+
+    beforeEach('setup contracts', async () => {
+      const contracts = await setupPoaProxyAndEcosystem()
+      poa = contracts.poa
+      const neededTime = await determineNeededTimeTravel(poa)
+      await timeTravel(neededTime)
+      await testStartEthSale(poa)
+      await testBuyTokens(poa, {
+        from: whitelistedPoaBuyers[0],
+        value: 5e17,
+        gasPrice
+      })
+    })
+
+    it('should refund the extra amount if it exceeds the funding goal', async () => {
+      const buyer = whitelistedPoaBuyers[0]
+      const extraAmount = new BigNumber(1e18)
+      const remainingBuyableEth = await getRemainingAmountInWeiDuringEthFunding(
+        poa
+      )
+      const amount = remainingBuyableEth.plus(extraAmount)
+      const preBalance = await getEtherBalance(buyer)
+      const tx = await poa.buy({
+        from: buyer,
+        value: amount,
+        gasPrice
+      })
+      const postBalance = await getEtherBalance(buyer)
+      const gasUsed = await getGasUsed(tx)
+      const gasCost = new BigNumber(gasUsed).mul(gasPrice)
+
+      const expectedRefundAmount = extraAmount.sub(gasCost)
+      const expectedPostBalance = preBalance
+        .sub(amount)
+        .plus(expectedRefundAmount)
+
+      assert.equal(
+        postBalance.toString(),
+        expectedPostBalance.toString(),
+        'Actual balance should match the expected.'
+      )
+    })
+
+    it('should NOT refund if the amount does not exceeds the funding goal', async () => {
+      const buyer = whitelistedPoaBuyers[0]
+      const remainingBuyableEth = await getRemainingAmountInWeiDuringEthFunding(
+        poa
+      )
+      const preBalance = await getEtherBalance(buyer)
+      const tx = await poa.buy({
+        from: buyer,
+        value: remainingBuyableEth,
+        gasPrice
+      })
+      const postBalance = await getEtherBalance(buyer)
+      const gasUsed = await getGasUsed(tx)
+      const gasCost = new BigNumber(gasUsed).mul(gasPrice)
+
+      const expectedPostBalance = preBalance
+        .sub(remainingBuyableEth)
+        .sub(gasCost)
+
+      assert.equal(
+        postBalance.toString(),
+        expectedPostBalance.toString(),
+        'Actual balance should match the expected.'
+      )
     })
   })
 })
