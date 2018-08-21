@@ -27,7 +27,7 @@ contract PoaToken is PoaCommon {
   // ERC20 symbol
   bytes32 private symbol32;
   // ERC0 decimals
-  uint256 public constant decimals = 18;
+  uint8 public constant decimals = 18;
   // the total per token payout rate: accumulates as payouts are received
   uint256 public totalPerTokenPayout;
   // the onwer of the contract
