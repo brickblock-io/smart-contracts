@@ -212,7 +212,7 @@ contract PoaManager is Ownable {
   }
 
   /**
-    @notice Creates a PoaToken contract with given parameters, and set active value to true
+    @notice Creates a PoaToken contract with given parameters, and set active value to false
     @param _fiatCurrency32 Fiat symbol used in ExchangeRates
     @param _startTimeForEthFundingPeriod Given as unix time in seconds since 01.01.1970
     @param _durationForEthFundingPeriod How long eth funding can last, given in seconds
