@@ -148,11 +148,11 @@ describe("when in 'FiatFunding' stage", () => {
       })
     })
 
-    it('should NOT allow FIAT buying less than 100 cents', async () => {
+    it('should NOT allow FIAT buying less than 1 cents', async () => {
       await testWillThrow(testBuyTokensWithFiat, [
         poa,
         fiatInvestor,
-        99,
+        0,
         {
           from: custodian,
           gasPrice
