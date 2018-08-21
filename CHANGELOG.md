@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.5.4"></a>
+## [3.5.4](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.5.3...v3.5.4) (2018-08-21)
+
+
+### Bug Fixes
+
+* **audit:** fixed audit issue 3.14 by renaming internal buy functions ([5c68e4e](https://git.brickblock-dev.io/platform/smart-contracts/commits/5c68e4e))
+
+
+
 <a name="3.5.3"></a>
 ## [3.5.3](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.5.2...v3.5.3) (2018-08-20)
 
