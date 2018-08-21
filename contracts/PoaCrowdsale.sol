@@ -157,8 +157,7 @@ contract PoaCrowdsale is PoaCommon {
     onlyCustodian
     returns (bool)
   {
-    // Do not allow funding less than 100 cents
-    require(_amountInCents >= 100);
+    require(_amountInCents > 0);
 
     uint256 _newFundedFiatAmountInCents = fundedFiatAmountInCents.add(_amountInCents);
 
@@ -180,7 +179,7 @@ contract PoaCrowdsale is PoaCommon {
         .add(_tokenAmount);
 
       // if funded amount reaches the funding goal, enter FundingSuccessful stage
-      if (fundedFiatAmountInCents >= fundingGoalInCents) {
+      if (fundedFiatAmountInCents == fundingGoalInCents) {
         enterStage(Stages.FundingSuccessful);
       }
 
