@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.5.13"></a>
+## [3.5.13](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.5.12...v3.5.13) (2018-08-22)
+
+
+### Bug Fixes
+
+* **audit:** fixed audit issue 3.25 remove 'event' from event names ([4ef8955](https://git.brickblock-dev.io/platform/smart-contracts/commits/4ef8955))
+
+
+
 <a name="3.5.12"></a>
 ## [3.5.12](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.5.11...v3.5.12) (2018-08-22)
 
