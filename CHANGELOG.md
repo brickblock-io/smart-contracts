@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.5.14"></a>
+## [3.5.14](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.5.13...v3.5.14) (2018-08-22)
+
+
+### Bug Fixes
+
+* **audit:** fixed audit issue 3.26 by fixing argument name of 'BbkUnlocked' event ([349d9ff](https://git.brickblock-dev.io/platform/smart-contracts/commits/349d9ff))
+
+
+
 <a name="3.5.13"></a>
 ## [3.5.13](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.5.12...v3.5.13) (2018-08-22)
 
