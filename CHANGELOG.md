@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.5.9"></a>
+## [3.5.9](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.5.8...v3.5.9) (2018-08-22)
+
+
+### Bug Fixes
+
+* **audit:** fixed audit issue 3.19 by changing buyFiat condition ([de19b8a](https://git.brickblock-dev.io/platform/smart-contracts/commits/de19b8a))
+* **audit:** fixed audit issue 3.19 by changing buyFiat condition ([269ca33](https://git.brickblock-dev.io/platform/smart-contracts/commits/269ca33))
+
+
+
 <a name="3.5.8"></a>
 ## [3.5.8](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.5.7...v3.5.8) (2018-08-21)
 
