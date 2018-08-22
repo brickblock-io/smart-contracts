@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.5.12"></a>
+## [3.5.12](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.5.11...v3.5.12) (2018-08-22)
+
+
+### Bug Fixes
+
+* **audit:** fixed audit issue 3.24 by changing PoaToken decimals type to uint8 ([4c4fad8](https://git.brickblock-dev.io/platform/smart-contracts/commits/4c4fad8))
+
+
+
 <a name="3.5.11"></a>
 ## [3.5.11](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.5.10...v3.5.11) (2018-08-22)
 
