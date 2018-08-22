@@ -98,14 +98,14 @@ contract AccessToken is PausableToken {
 
   event Mint(uint256 amount);
   event Burn(address indexed burner, uint256 value);
-  event BBKLocked(
+  event BbkLocked(
     address indexed locker,
     uint256 lockedAmount,
     uint256 totalLockedAmount
   );
-  event BBKUnlocked(
+  event BbkUnlocked(
     address indexed locker,
-    uint256 lockedAmount,
+    uint256 unlockedAmount,
     uint256 totalLockedAmount
   );
 
@@ -159,7 +159,7 @@ contract AccessToken is PausableToken {
     lockedBbkPerUser[msg.sender] = lockedBbkPerUser[msg.sender].add(_amount);
     totalLockedBBK = totalLockedBBK.add(_amount);
     require(_bbk.transferFrom(msg.sender, this, _amount));
-    emit BBKLocked(msg.sender, _amount, totalLockedBBK);
+    emit BbkLocked(msg.sender, _amount, totalLockedBBK);
     return true;
   }
 
@@ -184,7 +184,7 @@ contract AccessToken is PausableToken {
     lockedBbkPerUser[msg.sender] = lockedBbkPerUser[msg.sender].sub(_amount);
     totalLockedBBK = totalLockedBBK.sub(_amount);
     require(_bbk.transfer(msg.sender, _amount));
-    emit BBKUnlocked(msg.sender, _amount, totalLockedBBK);
+    emit BbkUnlocked(msg.sender, _amount, totalLockedBBK);
     return true;
   }
 
