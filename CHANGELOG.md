@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.5.10"></a>
+## [3.5.10](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.5.9...v3.5.10) (2018-08-22)
+
+
+### Bug Fixes
+
+* **audit:** fixed audit issue 3.18 by casting 'this' to 'address' ([4c7bc6d](https://git.brickblock-dev.io/platform/smart-contracts/commits/4c7bc6d))
+
+
+
 <a name="3.5.9"></a>
 ## [3.5.9](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.5.8...v3.5.9) (2018-08-22)
 
