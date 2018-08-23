@@ -2,8 +2,9 @@ pragma solidity 0.4.24;
 
 /*
  * This is an example of how we would upgrade the AccessToken contract if we had to.
- * Instead of doing a full data migration from ACTv1 to ACTv2 we could make
- * use of inheritance and just access the state on the old contract.
+ * Instead of doing a full data migration from ACTv1 to ACTv2, we could make
+ * use of inheritance to keep the old functionality we want and change what is needed.
+ * We could then contact the old contract to retrieve old balances.
  *
  * NOTE: This should probably only be done once because every subsequent
  * update will get more confusing. If we really have to update the ACT
