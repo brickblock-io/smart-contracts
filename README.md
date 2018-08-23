@@ -156,12 +156,6 @@ Mainnet deployment is done through the mainnet version of the migration file in 
     * do everything the testnet deployments do
     * take into account the already deployed BrickblockToken (DO NOT DEPLOY A NEW ONE!)
     * change the owner to cold store owner address when everything else has been completed
-    * double check manually all important aspects of the ecosystem such as
-        * exchange rate fetching
-        * locking in BBK
-        * fee payments
-        * poa creation
-        * all stages & aspects of poas
 - [ ] Make sure that the first account in the mnemonic wallet has enough ether (check previous testnet in order to get a cost estimate, make sure to take into acccount gas prices)
 - [ ] double check current gas prices and make sure that the correct gas price is set in truffle.js
 - [ ] double check mnemonic is correct (DO NOT USE TESTNET MNEMONIC)
