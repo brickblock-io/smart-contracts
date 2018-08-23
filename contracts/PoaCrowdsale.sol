@@ -431,11 +431,13 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /**
-   @notice Used for manually setting Stage to TimedOut when no users have bought any tokens
-   if no `buy()`s occurred before the funding deadline token would be stuck in Funding
-   can also be used when activate is not called by custodian within durationForActivationPeriod
-   lastly can also be used when no one else has called reclaim.
+   @notice Used for manually setting Stage to TimedOut when no users have bought any tokens;
+   if no `buy()`s occurred before the funding deadline, the token would be stuck in Funding.
+   It can also optionally be used when activate is not called by custodian within 
+   durationForActivationPeriod or when no one else has called reclaim after a timeout.
+
   */
+
   function setStageToTimedOut()
     external
     atEitherStage(Stages.EthFunding, Stages.FundingSuccessful)
