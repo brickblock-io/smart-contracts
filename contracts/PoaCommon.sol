@@ -4,6 +4,7 @@ pragma solidity 0.4.24;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./PoaProxyCommon.sol";
+import "./tools/SafeMathPower.sol";
 
 
 /**
@@ -20,6 +21,7 @@ import "./PoaProxyCommon.sol";
 */
 contract PoaCommon is PoaProxyCommon {
   using SafeMath for uint256;
+  using SafeMathPower for uint256;
 
   // The fee paid to the BBK network per crowdsale investment and per payout
   // NOTE: Tracked in permille (and NOT percent) to reduce dust and

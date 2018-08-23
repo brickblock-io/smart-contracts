@@ -513,9 +513,9 @@ contract PoaCrowdsale is PoaCommon {
   {
 
     // caution, check safe-to-multiply here
-    uint256 _safeNumerator = _numerator.mul(10 ** (_precision + 1));
+    uint256 _safeNumerator = _numerator.mul(uint256(10e27).rpow(_precision.add(1)));
     // with rounding of last digit
-    uint256 _quotient = _safeNumerator.div(_denominator).add(5).div(10);
+    uint256 _quotient = _safeNumerator.div(_denominator).add(5).div(10e27);
     return (_quotient);
   }
 
