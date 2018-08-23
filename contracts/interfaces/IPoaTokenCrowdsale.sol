@@ -360,11 +360,6 @@ interface IPoaTokenCrowdsale {
     view
     returns (uint256 _stage);
 
-  function proofOfCustody32()
-    external
-    view
-    returns (bytes32[2]);
-
   function totalSupply()
     external
     view

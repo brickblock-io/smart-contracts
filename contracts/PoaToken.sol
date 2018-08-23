@@ -459,7 +459,7 @@ contract PoaToken is PoaCommon {
   /*******************************
   * end payout related functions *
   *******************************/
-  // tovar
+
   /************************
   * start ERC20 overrides *
   ************************/
