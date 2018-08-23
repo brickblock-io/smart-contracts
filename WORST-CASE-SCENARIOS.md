@@ -190,3 +190,19 @@ If Oraclize goes out of business, changes its fees or we want to use another ora
 - Ensure the expected fiat exchange rates are active in the new `ExchangeRates` contract
 - Update the `ContractRegistry` with the new `ExchangeRates`'s address
 - Call `toggleRatesActive` on old `ExchangeRate`
+
+## Force Majeure Scenarios
+
+### There is a hard fork on Ethereum Blockchain
+
+| Probability | Severity |
+| ----------- | -------- |
+| Medium      | Low      |
+
+As there is no possibility to clone a real world asset, Brickblock will choose on which blockchain to operate.
+
+#### Mitigation Steps: Interface Remains Unchanged
+- Warn users about the blockchain change
+- Call `killProvider` on old `ExchangeRate` with an address to receive any leftover ETH
+- Pause `BBK Token`, `ACT token` on old blockchain
+- Terminate all active POA Tokens on old blockchain
