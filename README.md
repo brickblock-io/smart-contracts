@@ -139,25 +139,44 @@ To move a POA token through different stages manually, we've built a little CLI 
 
 ### Testnet
 #### To deploy on Rinkeby or Kovan
-Run `yarn truffle migrate --reset --network [network name]`.
-The network name can be `rinkeby` or `kovan`
+Run: 
+```
+yarn truffle migrate --reset --network [network name]
+```
+The network name can be `rinkeby`, `kovan`, or `ropsten`
 
-#### Steps to deploy on Rinkeby
-1. Install `geth` (MacOs users can run `brew install geth` on terminal)
-1. Create or import 6 accounts for geth. See [Managing Accounts On Geth](https://github.com/ethereum/go-ethereum/wiki/Managing-your-accounts) for details.
-1. Create a password file where each line is an account password in the same order as the created accounts.
-2. 1. Run `geth` with the following arguments
-    ```
-    geth --rinkeby --rpc --unlock "0,1,2,3,4,5,6" --password "path to password file"
-    ```
-3. Wait for geth node to synchronize blocks.
-4. On another terminal window, go to project folder and run
-    ```
-    yarn truffle migrate --network rinkeby
-    ```
 
 ### Mainnet
-Mainnet deployment is done through offline signing of transactions. See our [cold-store](https://git.brickblock-dev.io/core/cold-store) repo for the process.
+Mainnet deployment is done through the mainnet version of the migration file in truffle. The mainnet migration file:
+* does everything the rinkeby migration does
+* then transfers ownership to our coldstore account
+
+#### Mainnet Checklist
+- [ ] Perform migration on rinkeby or kovan using exact same script. The script should:
+    * do everything the testnet deployments do
+    * take into account the already deployed BrickblockToken (DO NOT DEPLOY A NEW ONE!)
+    * change the owner to cold store owner address when everything else has been completed
+    * double check manually all important aspects of the ecosystem such as
+        * exchange rate fetching
+        * locking in BBK
+        * fee payments
+        * poa creation
+        * all stages & aspects of poas
+- [ ] Make sure that the first account in the mnemonic wallet has enough ether (check previous testnet in order to get a cost estimate, make sure to take into acccount gas prices)
+- [ ] double check current gas prices and make sure that the correct gas price is set in truffle.js
+- [ ] double check mnemonic is correct (DO NOT USE TESTNET MNEMONIC)
+ 
+#### Deploy to mainnet
+In order to deploy the ecosystem to mainnet run the following: 
+```
+yarn truffle migrate --reset --network mainnet
+```
+
+#### Post Deployment Checklist
+- [ ] Owner is cold store address
+- [ ] check that each contract is deployed
+- [ ] check that exchange rates works (fund it if needed)
+- [ ] remove any remaining ether from deployment accounts and send somewhere secure
 
 ### Interacting with deployed contracts
 When you'd like to interact with deployed contracts on a local testnet, check that `truffle.js` setting for `dev` matches your local testrpc / ganache-cli settings and run:

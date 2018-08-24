@@ -1,4 +1,7 @@
 const HDWalletProvider = require('truffle-hdwallet-provider')
+const testnetMnemonic = process.env.TESTNET_MNEMONIC
+const mainnetMnemonic = process.env.MAINNET_MNEMONIC
+const providerUrl = process.env.PROVIDER_URL
 
 module.exports = {
   networks: {
@@ -16,25 +19,44 @@ module.exports = {
       gas: 6300000
     },
     ropsten: {
-      host: 'localhost',
-      port: 8545,
       network_id: 3,
       gas: 4.6e6,
-      gasPrice: 23e9
+      gasPrice: 5e9,
+      provider: () =>
+        new HDWalletProvider(
+          testnetMnemonic,
+          providerUrl || 'https://ropsten.infura.io'
+        )
     },
     kovan: {
-      host: 'localhost',
-      port: 8545,
       network_id: 42,
-      gas: 4.7e6,
-      gasPrice: 20e9
+      gas: 6.5e6,
+      gasPrice: 5e9,
+      provider: () =>
+        new HDWalletProvider(
+          testnetMnemonic,
+          providerUrl || 'https://kovan.infura.io'
+        )
     },
     rinkeby: {
-      host: 'localhost',
-      port: 8545,
       network_id: 4,
-      gas: 4.7e6,
-      gasPrice: 1e10
+      gas: 4.5e6,
+      gasPrice: 5e9,
+      provider: () =>
+        new HDWalletProvider(
+          testnetMnemonic,
+          providerUrl || 'https://rinkeby.infura.io'
+        )
+    },
+    mainnet: {
+      network_id: 1,
+      gas: 6.5e6,
+      gasPrice: 5e9,
+      provider: () =>
+        new HDWalletProvider(
+          mainnetMnemonic,
+          providerUrl || 'https://mainnet.infura.io'
+        )
     },
     // to be used when we want to interact in a local truffle console session
     hdwallet: {
