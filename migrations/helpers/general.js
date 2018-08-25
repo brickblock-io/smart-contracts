@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 const chalk = require('chalk')
+const truffleConfig = require('../../truffle')
 
 let web3
 
@@ -259,10 +260,24 @@ const getEtherBalance = address => {
   })
 }
 
+const getDefaultGasPrice = networkName => {
+  const networkProperties = truffleConfig.networks[networkName]
+
+  return networkProperties.gasPrice
+}
+
+const calculateUsedGasFromCost = (networkName, totalcost) => {
+  const gasPrice = getDefaultGasPrice(networkName)
+
+  return totalcost.div(gasPrice)
+}
+
 module.exports = {
   setWeb3,
   deployContracts,
   addContractsToRegistry,
   getEtherBalance,
-  unixTimeWithOffsetInSec
+  unixTimeWithOffsetInSec,
+  getDefaultGasPrice,
+  calculateUsedGasFromCost
 }

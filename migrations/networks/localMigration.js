@@ -1,11 +1,9 @@
 /* eslint-disable no-console */
-const chalk = require('chalk')
 const BigNumber = require('bignumber.js')
-const { table } = require('table')
 
 const migrationHelpers = require('../helpers')
 
-const localMigration = async (deployer, accounts, contracts, web3) => {
+const localMigration = async (deployer, accounts, contracts, web3, network) => {
   const {
     brickblockToken,
     constants: {
@@ -22,7 +20,8 @@ const localMigration = async (deployer, accounts, contracts, web3) => {
       unixTimeWithOffsetInSec
     },
     poaManager,
-    whitelist
+    whitelist,
+    statistics
   } = migrationHelpers
 
   const owner = accounts[0]
@@ -31,7 +30,7 @@ const localMigration = async (deployer, accounts, contracts, web3) => {
   const contributors = accounts.slice(4, 6)
   const whitelistedInvestor = accounts[4]
   const ownerStartEtherBalance = await getEtherBalance(owner)
-  const brokerStartEtherBalance = await getEtherBalance(owner)
+  const brokerStartEtherBalance = await getEtherBalance(broker)
   let ownerPreEtherBalance, ownerPostEtherBalance, brokerPostEtherBalance
 
   /*
@@ -145,51 +144,22 @@ const localMigration = async (deployer, accounts, contracts, web3) => {
     .sub(ownerPostEtherBalance)
     .add(brokerStartEtherBalance.sub(brokerPostEtherBalance))
 
-  const tableData = [
-    ['Action Name', 'Gas Cost GWei', 'Gas Cost Ether'],
-    [
-      'Deploy Contracts',
-      web3.fromWei(deployContractsGasCost, 'gwei').toString(),
-      `Ξ ${web3.fromWei(deployContractsGasCost).toString()}`
-    ],
-    [
-      'Register Contracts',
-      web3.fromWei(addToRegistryGasCost, 'gwei').toString(),
-      `Ξ ${web3.fromWei(addToRegistryGasCost).toString()}`
-    ],
-    [
-      'Finalize BBK',
-      web3.fromWei(finalizeBbkCrowdsaleGasCost, 'gwei').toString(),
-      `Ξ ${web3.fromWei(finalizeBbkCrowdsaleGasCost).toString()}`
-    ],
-    [
-      'Set Fiat Rate',
-      web3.fromWei(setFiatRateGasCost, 'gwei').toString(),
-      `Ξ ${web3.fromWei(setFiatRateGasCost).toString()}`
-    ],
-    [
-      'Add Broker',
-      web3.fromWei(addBrokerGasCost, 'gwei').toString(),
-      `Ξ ${web3.fromWei(addBrokerGasCost).toString()}`
-    ],
-    [
-      'Deploy POA Token',
-      web3.fromWei(deployPoaTokenGasCost, 'gwei').toString(),
-      `Ξ ${web3.fromWei(deployPoaTokenGasCost).toString()}`
-    ],
-    [
-      'Whitelist Investor',
-      web3.fromWei(whitelistAddressGasCost, 'gwei').toString(),
-      `Ξ ${web3.fromWei(whitelistAddressGasCost).toString()}`
-    ],
-    [
-      chalk.bold('Total'),
-      web3.fromWei(totalGasCost, 'gwei').toString(),
-      `Ξ ${web3.fromWei(totalGasCost).toString()}`
-    ]
-  ]
-
-  console.log(table(tableData))
+  statistics.showStatistics(
+    {
+      deployContractsGasCost,
+      addToRegistryGasCost,
+      finalizeBbkCrowdsaleGasCost,
+      setFiatRateGasCost,
+      addBrokerGasCost,
+      deployPoaTokenGasCost,
+      whitelistAddressGasCost,
+      totalGasCost
+    },
+    {
+      web3,
+      network
+    }
+  )
 }
 
 module.exports = {

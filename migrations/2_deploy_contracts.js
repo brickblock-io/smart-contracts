@@ -47,12 +47,12 @@ module.exports = (deployer, network, accounts) => {
         case 'test':
           return true
         case 'dev':
-          await localMigration(deployer, accounts, contracts, web3)
+          await localMigration(deployer, accounts, contracts, web3, network)
           return true
         case 'rinkeby':
         case 'kovan':
         case 'hdwallet':
-          await testnetMigration(deployer, accounts, contracts, web3)
+          await testnetMigration(deployer, accounts, contracts, web3, network)
           return true
         default:
           console.log(

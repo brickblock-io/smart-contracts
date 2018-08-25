@@ -1,4 +1,5 @@
 const HDWalletProvider = require('truffle-hdwallet-provider')
+const infuraApiKey = process.env.INFURA_API_KEY
 const testnetMnemonic = process.env.TESTNET_MNEMONIC
 const mainnetMnemonic = process.env.MAINNET_MNEMONIC
 const providerUrl = process.env.PROVIDER_URL
@@ -25,7 +26,9 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(
           testnetMnemonic,
-          providerUrl || 'https://ropsten.infura.io'
+          providerUrl || 'https://ropsten.infura.io/v3/' + infuraApiKey,
+          0,
+          10
         )
     },
     kovan: {
@@ -35,17 +38,21 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(
           testnetMnemonic,
-          providerUrl || 'https://kovan.infura.io'
+          providerUrl || 'https://kovan.infura.io/v3/' + infuraApiKey,
+          0,
+          10
         )
     },
     rinkeby: {
       network_id: 4,
-      gas: 4.5e6,
-      gasPrice: 5e9,
+      gas: 6.5e6,
+      gasPrice: 1e9,
       provider: () =>
         new HDWalletProvider(
           testnetMnemonic,
-          providerUrl || 'https://rinkeby.infura.io'
+          providerUrl || 'https://rinkeby.infura.io/v3/' + infuraApiKey,
+          0,
+          10
         )
     },
     mainnet: {
@@ -55,7 +62,7 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(
           mainnetMnemonic,
-          providerUrl || 'https://mainnet.infura.io'
+          providerUrl || 'https://mainnet.infura.iov3/' + infuraApiKey
         )
     },
     // to be used when we want to interact in a local truffle console session
