@@ -51,20 +51,17 @@ const index = async (deployer, accounts, contracts, web3, network) => {
     deployPoa: argv.deployPoa,
     addToWhiteList: argv.addToWhiteList
   }
-  console.log('arguments', argv)
 
   let hasParams = false
   Object.keys(actions).forEach(key => {
     hasParams = hasParams || actions[key]
   })
 
-  if (argv.all || !hasParams) {
+  if (argv.all) {
     Object.keys(actions).forEach(key => {
       actions[key] = true
     })
   }
-
-  console.log('actions', actions)
 
   /*
    * Get deployed contract instances first
