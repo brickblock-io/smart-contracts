@@ -15,7 +15,7 @@ module.exports = {
     devGeth: {
       host: 'localhost',
       port: 8545,
-      network_id: 4448,
+      network_id: '*',
       // Values below 6000000 fail often because of the required minimum block gas amount.
       gas: 6300000
     },
@@ -62,7 +62,7 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(
           mainnetMnemonic,
-          providerUrl || 'https://mainnet.infura.iov3/' + infuraApiKey
+          providerUrl || 'https://mainnet.infura.io/v3/' + infuraApiKey
         )
     },
     // to be used when we want to interact in a local truffle console session
@@ -74,7 +74,9 @@ module.exports = {
           // NOTE: this is the network you want to connect to; if you are running a local network you
           // can connect to that instead of infura but then you probably want to use:
           // `truffle console --network dev`
-          process.env.INFURA_URL
+          providerUrl,
+          0,
+          10
         )
       },
       network_id: '*'

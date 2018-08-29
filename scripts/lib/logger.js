@@ -3,7 +3,7 @@ const bformat = require('bunyan-format')
 const formatOut = bformat({ outputMode: 'long' })
 const logger = bunyan.createLogger({
   name: 'smartContracts',
-  src: true,
+  //src: true,
   stream: formatOut
 })
 

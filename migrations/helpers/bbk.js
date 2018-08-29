@@ -25,7 +25,12 @@ const finalizeBbkCrowdsale = async (
     gas: null
   }
 ) => {
-  const { contributors, fountainAddress, tokenAmountPerContributor } = params
+  const {
+    contributors,
+    fountainAddress,
+    tokenAmountPerContributor,
+    network
+  } = params
 
   console.log(chalk.cyan('\n------------------------------'))
   console.log(chalk.cyan('🚀  Finalizing BBK crowdsale…'))
@@ -37,17 +42,19 @@ const finalizeBbkCrowdsale = async (
   )
   await BrickblockToken.changeFountainContractAddress(fountainAddress, txConfig)
 
-  console.log(
-    chalk.yellow(
-      `\n➡️   Distributing ${tokenAmountPerContributor.toString()} BBK each to ${contributors.toString()}…`
+  if (network !== 'mainnet') {
+    console.log(
+      chalk.yellow(
+        `\n➡️   Distributing ${tokenAmountPerContributor.toString()} BBK each to ${contributors.toString()}…`
+      )
     )
-  )
-  await distributeBbkToMany(
-    BrickblockToken,
-    contributors,
-    tokenAmountPerContributor,
-    txConfig
-  )
+    await distributeBbkToMany(
+      BrickblockToken,
+      contributors,
+      tokenAmountPerContributor,
+      txConfig
+    )
+  }
 
   console.log(chalk.yellow('\n➡️   Finalizing token sale…'))
   await BrickblockToken.finalizeTokenSale(txConfig)

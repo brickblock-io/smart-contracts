@@ -18,8 +18,7 @@ const Whitelist = artifacts.require('Whitelist')
 const { setWeb3 } = require('./helpers/general.js')
 setWeb3(web3)
 
-const { localMigration } = require('./networks/localMigration')
-const { testnetMigration } = require('./networks/testnetMigration')
+const actions = require('./actions')
 
 // artifacts is not available in other files...
 const contracts = {
@@ -43,21 +42,10 @@ module.exports = (deployer, network, accounts) => {
   deployer
     .then(async () => {
       switch (network) {
-        case 'devGeth':
         case 'test':
           return true
-        case 'dev':
-          await localMigration(deployer, accounts, contracts, web3, network)
-          return true
-        case 'rinkeby':
-        case 'kovan':
-        case 'hdwallet':
-          await testnetMigration(deployer, accounts, contracts, web3, network)
-          return true
         default:
-          console.log(
-            `unsupported network: ${network}, default deployment will skip`
-          )
+          await actions(deployer, accounts, contracts, web3, network)
           return true
       }
     })

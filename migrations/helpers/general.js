@@ -1,6 +1,8 @@
 /* eslint-disable no-console */
+const logger = require('../../scripts/lib/logger')
 const chalk = require('chalk')
 const truffleConfig = require('../../truffle')
+const deployedContracts = require('../../config/deployed-contracts')
 
 let web3
 
@@ -15,7 +17,7 @@ const deployContracts = async (
   deployer,
   accounts,
   contracts,
-  { useExpStub = true } = {}
+  { useExpStub = true, useExistingContracts, network } = {}
 ) => {
   const {
     AccessToken: AccessTokenABI,
@@ -35,101 +37,121 @@ const deployContracts = async (
   const owner = accounts[0]
   const bonusAddress = accounts[1]
 
-  console.log(chalk.cyan('\n-------------------------'))
-  console.log(chalk.cyan('🚀  Deploying contracts…'))
+  logger.info(chalk.cyan('\n-------------------------'))
+  logger.info(chalk.cyan('🚀  Deploying contracts…'))
+
+  const defaultParams = [
+    network,
+    deployer,
+    { from: owner },
+    useExistingContracts
+  ]
 
   /*
    * Registry needs to be deployed first because all other contracts depend on it
    */
-  console.log(chalk.yellow('\n➡️   Deploying ContractRegistry…'))
-  await deployer.deploy(ContractRegistryABI, {
-    from: owner
-  })
-  const ContractRegistry = await ContractRegistryABI.deployed()
 
-  console.log(chalk.yellow('\n➡️   Deploying AccessToken…'))
-  await deployer.deploy(AccessTokenABI, ContractRegistry.address, {
-    from: owner
-  })
-  const AccessToken = await AccessTokenABI.deployed()
-
-  console.log(chalk.yellow('\n➡️   Deploying BrickblockAccount…'))
-  const releaseTime = unixTimeWithOffsetInSec(60 * 60 * 24 * 365 * 2) // 2 years in seconds
-  await deployer.deploy(
-    BrickblockAccountABI,
-    ContractRegistry.address,
-    releaseTime,
-    {
-      from: owner
-    }
+  const ContractRegistry = await conditionalDeploy(
+    'ContractRegistry',
+    ContractRegistryABI,
+    null,
+    ...defaultParams
   )
-  const BrickblockAccount = await BrickblockAccountABI.deployed()
 
-  console.log(chalk.yellow('\n➡️   Deploying BrickblockToken…'))
-  await deployer.deploy(BrickblockTokenABI, bonusAddress, {
-    from: owner
-  })
-  const BrickblockToken = await BrickblockTokenABI.deployed()
+  const AccessToken = await conditionalDeploy(
+    'AccessToken',
+    AccessTokenABI,
+    [ContractRegistry.address],
+    ...defaultParams
+  )
 
-  console.log(chalk.yellow('\n➡️   Deploying PoaLogger…'))
-  await deployer.deploy(PoaLoggerABI, ContractRegistry.address, {
-    from: owner
-  })
-  const PoaLogger = await PoaLoggerABI.deployed()
+  const releaseTime = unixTimeWithOffsetInSec(60 * 60 * 24 * 365 * 2) // 2 years in seconds
+  const BrickblockAccount = await conditionalDeploy(
+    'BrickblockAccount',
+    BrickblockAccountABI,
+    [ContractRegistry.address, releaseTime],
+    ...defaultParams
+  )
 
-  console.log(chalk.yellow('\n➡️   Deploying ExchangeRateProvider…'))
+  const BrickblockToken = await conditionalDeploy(
+    'BrickblockToken',
+    BrickblockTokenABI,
+    [bonusAddress],
+    ...defaultParams
+  )
+
+  const PoaLogger = await conditionalDeploy(
+    'PoaLogger',
+    PoaLoggerABI,
+    [ContractRegistry.address],
+    ...defaultParams
+  )
+
   let ExchangeRateProvider
   if (useExpStub) {
-    console.log(chalk.magenta('using stub'))
-    await deployer.deploy(
+    logger.info(chalk.magenta('using stub'))
+    ExchangeRateProvider = await conditionalDeploy(
+      'PoaLogger',
       ExchangeRateProviderStubABI,
-      ContractRegistry.address,
-      {
-        from: owner
-      }
+      [ContractRegistry.address],
+      ...defaultParams
     )
-    ExchangeRateProvider = await ExchangeRateProviderStubABI.deployed()
   } else {
-    await deployer.deploy(ExchangeRateProviderABI, ContractRegistry.address, {
-      from: owner
-    })
-    ExchangeRateProvider = await ExchangeRateProviderABI.deployed()
+    ExchangeRateProvider = await conditionalDeploy(
+      'PoaLogger',
+      ExchangeRateProviderABI,
+      [ContractRegistry.address],
+      ...defaultParams
+    )
   }
 
-  console.log(chalk.yellow('\n➡️   Deploying ExchangeRates…'))
-  await deployer.deploy(ExchangeRatesABI, ContractRegistry.address, {
-    from: owner
-  })
-  const ExchangeRates = await ExchangeRatesABI.deployed()
+  const ExchangeRates = await conditionalDeploy(
+    'ExchangeRates',
+    ExchangeRatesABI,
+    [ContractRegistry.address],
+    ...defaultParams
+  )
 
-  console.log(chalk.yellow('\n➡️   Deploying FeeManager…'))
-  await deployer.deploy(FeeManagerABI, ContractRegistry.address, {
-    from: owner
-  })
-  const FeeManager = await FeeManagerABI.deployed()
+  const FeeManager = await conditionalDeploy(
+    'FeeManager',
+    FeeManagerABI,
+    [ContractRegistry.address],
+    ...defaultParams
+  )
 
-  console.log(chalk.yellow('\n➡️   Deploying PoaCrowdsale Master…'))
-  const PoaCrowdsaleMaster = await deployer.deploy(PoaCrowdsaleMasterABI)
+  const PoaCrowdsaleMaster = await conditionalDeploy(
+    'PoaCrowdsaleMaster',
+    PoaCrowdsaleMasterABI,
+    null,
+    ...defaultParams
+  )
 
-  console.log(chalk.yellow('\n➡️   Deploying PoaManager…'))
-  await deployer.deploy(PoaManagerABI, ContractRegistry.address, {
-    from: owner
-  })
-  const PoaManager = await PoaManagerABI.deployed()
+  const PoaTokenMaster = await conditionalDeploy(
+    'PoaTokenMaster',
+    PoaTokenMasterABI,
+    null,
+    network,
+    deployer,
+    { from: owner, gas: gasAmountForPoa },
+    useExistingContracts
+  )
 
-  console.log(chalk.yellow('\n➡️   Deploying PoaTokenMaster…'))
-  const PoaTokenMaster = await deployer.deploy(PoaTokenMasterABI, {
-    gas: gasAmountForPoa
-  })
+  const PoaManager = await conditionalDeploy(
+    'PoaManager',
+    PoaManagerABI,
+    [ContractRegistry.address],
+    ...defaultParams
+  )
 
-  console.log(chalk.yellow('\n➡️   Deploying Whitelist…'))
-  await deployer.deploy(WhitelistABI, {
-    from: owner
-  })
-  const Whitelist = await WhitelistABI.deployed()
+  const Whitelist = await conditionalDeploy(
+    'Whitelist',
+    WhitelistABI,
+    null,
+    ...defaultParams
+  )
 
-  console.log(chalk.green('\n✅  Successfully deployed all contracts'))
-  console.log(chalk.green('----------------------------------------\n\n'))
+  logger.info(chalk.green('\n✅  Successfully deployed all contracts'))
+  logger.info(chalk.green('----------------------------------------\n\n'))
 
   return {
     AccessToken,
@@ -151,8 +173,8 @@ const addContractsToRegistry = async (
   contracts = {},
   txConfig = { from: null, gas: null }
 ) => {
-  console.log(chalk.cyan('\n-----------------------------------------'))
-  console.log(chalk.cyan('🚀  Adding contracts to ContractRegistry…'))
+  logger.info(chalk.cyan('\n-----------------------------------------'))
+  logger.info(chalk.cyan('🚀  Adding contracts to ContractRegistry…'))
 
   const {
     AccessToken,
@@ -169,85 +191,85 @@ const addContractsToRegistry = async (
     Whitelist
   } = contracts
 
-  console.log(chalk.yellow('\n➡️   Registering AccessToken…'))
+  logger.info(chalk.yellow('\n➡️   Registering AccessToken…'))
   await ContractRegistry.updateContractAddress(
     'AccessToken',
     AccessToken.address,
     txConfig
   )
 
-  console.log(chalk.yellow('\n➡️   Registering BrickblockAccount…'))
+  logger.info(chalk.yellow('\n➡️   Registering BrickblockAccount…'))
   await ContractRegistry.updateContractAddress(
     'BrickblockAccount',
     BrickblockAccount.address,
     txConfig
   )
 
-  console.log(chalk.yellow('\n➡️   Registering BrickblockToken…'))
+  logger.info(chalk.yellow('\n➡️   Registering BrickblockToken…'))
   await ContractRegistry.updateContractAddress(
     'BrickblockToken',
     BrickblockToken.address,
     txConfig
   )
 
-  console.log(chalk.yellow('\n➡️   Registering PoaLogger…'))
+  logger.info(chalk.yellow('\n➡️   Registering PoaLogger…'))
   await ContractRegistry.updateContractAddress(
     'PoaLogger',
     PoaLogger.address,
     txConfig
   )
 
-  console.log(chalk.yellow('\n➡️   Registering ExchangeRates…'))
+  logger.info(chalk.yellow('\n➡️   Registering ExchangeRates…'))
   await ContractRegistry.updateContractAddress(
     'ExchangeRates',
     ExchangeRates.address,
     txConfig
   )
 
-  console.log(chalk.yellow('\n➡️   Registering ExchangeRateProvider…'))
+  logger.info(chalk.yellow('\n➡️   Registering ExchangeRateProvider…'))
   await ContractRegistry.updateContractAddress(
     'ExchangeRateProvider',
     ExchangeRateProvider.address,
     txConfig
   )
 
-  console.log(chalk.yellow('\n➡️   Registering FeeManager…'))
+  logger.info(chalk.yellow('\n➡️   Registering FeeManager…'))
   await ContractRegistry.updateContractAddress(
     'FeeManager',
     FeeManager.address,
     txConfig
   )
 
-  console.log(chalk.yellow('\n➡️   Registering PoaManager…'))
+  logger.info(chalk.yellow('\n➡️   Registering PoaManager…'))
   await ContractRegistry.updateContractAddress(
     'PoaManager',
     PoaManager.address,
     txConfig
   )
 
-  console.log(chalk.yellow('\n➡️   Registering PoaCrowdsaleMaster…'))
+  logger.info(chalk.yellow('\n➡️   Registering PoaCrowdsaleMaster…'))
   await ContractRegistry.updateContractAddress(
     'PoaCrowdsaleMaster',
     PoaCrowdsaleMaster.address,
     txConfig
   )
 
-  console.log(chalk.yellow('\n➡️   Registering PoaTokenMaster…'))
+  logger.info(chalk.yellow('\n➡️   Registering PoaTokenMaster…'))
   await ContractRegistry.updateContractAddress(
     'PoaTokenMaster',
     PoaTokenMaster.address,
     txConfig
   )
 
-  console.log(chalk.yellow('\n➡️   Registering Whitelist…'))
+  logger.info(chalk.yellow('\n➡️   Registering Whitelist…'))
   await ContractRegistry.updateContractAddress(
     'Whitelist',
     Whitelist.address,
     txConfig
   )
 
-  console.log(chalk.green('\n✅  Successfully updated ContractRegistry'))
-  console.log(chalk.green('------------------------------------------\n\n'))
+  logger.info(chalk.green('\n✅  Successfully updated ContractRegistry'))
+  logger.info(chalk.green('------------------------------------------\n\n'))
 }
 
 const getEtherBalance = address => {
@@ -270,6 +292,79 @@ const calculateUsedGasFromCost = (networkName, totalcost) => {
   const gasPrice = getDefaultGasPrice(networkName)
 
   return totalcost.div(gasPrice)
+}
+
+const getDeployedContractAddress = (contractName, networkName) => {
+  const networkConfig = truffleConfig.networks[networkName]
+
+  if (typeof networkConfig === 'undefined') {
+    return false
+  }
+
+  const address = deployedContracts[networkConfig.network_id][contractName]
+
+  return address || false
+}
+
+const conditionalDeploy = async (
+  contractName,
+  contractAbi,
+  contractParams,
+  network,
+  deployer,
+  config,
+  useExistingContracts
+) => {
+  let contractInstance
+
+  if (useExistingContracts) {
+    const contractAddress = getDeployedContractAddress(contractName, network)
+
+    if (contractAddress) {
+      contractInstance = contractAbi.at(contractAddress)
+
+      logger.info(
+        chalk.yellow(
+          `\n➡️   Using current '${contractName}' at ${contractAddress}`
+        )
+      )
+    } else {
+      contractInstance = await deployContract(
+        contractName,
+        contractAbi,
+        contractParams,
+        deployer,
+        config
+      )
+    }
+  } else {
+    contractInstance = await deployContract(
+      contractName,
+      contractAbi,
+      contractParams,
+      deployer,
+      config
+    )
+  }
+
+  return contractInstance
+}
+
+const deployContract = async (
+  contractName,
+  contractAbi,
+  contractParams,
+  deployer,
+  config
+) => {
+  logger.info(chalk.yellow(`\n➡️   Deploying ${contractName}...`))
+  if (contractParams) {
+    await deployer.deploy(contractAbi, ...contractParams, config)
+  } else {
+    await deployer.deploy(contractAbi, config)
+  }
+
+  return await contractAbi.deployed()
 }
 
 module.exports = {
