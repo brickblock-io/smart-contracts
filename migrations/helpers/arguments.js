@@ -40,6 +40,11 @@ const yargs = require('yargs')
       'Uses existing contracts instead of a new deploy if they exist in "config/deployed-contracts.js"',
     default: false
   })
+  .option('changeOwner', {
+    alias: 'co',
+    describe: 'Changes owner to "NEW_OWNER" given in .env file',
+    default: false
+  })
   .help()
 
 module.exports = yargs.argv

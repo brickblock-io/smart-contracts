@@ -1,17 +1,17 @@
 /* eslint-disable no-console */
 const chalk = require('chalk')
 
-const distributeBbkToMany = (
+const distributeBbkToMany = async (
   BrickblockToken,
   contributors,
   amount,
   txConfig = { from: null, gas: null }
-) =>
-  Promise.all(
-    contributors.map(address =>
-      BrickblockToken.distributeTokens(address, amount, txConfig)
-    )
-  )
+) => {
+  for (let index = 0; index < contributors.length; index++) {
+    const address = contributors[index]
+    await BrickblockToken.distributeTokens(address, amount, txConfig)
+  }
+}
 
 const finalizeBbkCrowdsale = async (
   BrickblockToken,

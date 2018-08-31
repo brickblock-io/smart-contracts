@@ -282,6 +282,18 @@ const getEtherBalance = address => {
   })
 }
 
+const sendTransaction = args => {
+  return new Promise(function(resolve, reject) {
+    web3.eth.sendTransaction(args, (err, res) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve(res)
+      }
+    })
+  })
+}
+
 const getDefaultGasPrice = networkName => {
   const networkProperties = truffleConfig.networks[networkName]
 
@@ -374,5 +386,6 @@ module.exports = {
   getEtherBalance,
   unixTimeWithOffsetInSec,
   getDefaultGasPrice,
-  calculateUsedGasFromCost
+  calculateUsedGasFromCost,
+  sendTransaction
 }

@@ -12,6 +12,7 @@ const showStatistics = (costs, globals) => {
     addBrokerGasCost,
     deployPoaTokenGasCost,
     whitelistAddressGasCost,
+    changeOwnerGasCost,
     totalGasCost
   } = costs
 
@@ -81,6 +82,15 @@ const showStatistics = (costs, globals) => {
       web3.fromWei(whitelistAddressGasCost, 'gwei').toString(),
       `Ξ ${web3.fromWei(whitelistAddressGasCost).toString()}`,
       calculateUsedGasFromCost(network, whitelistAddressGasCost).toString()
+    ])
+  }
+
+  if (changeOwnerGasCost) {
+    tableData.push([
+      'Change Owner',
+      web3.fromWei(changeOwnerGasCost, 'gwei').toString(),
+      `Ξ ${web3.fromWei(changeOwnerGasCost).toString()}`,
+      calculateUsedGasFromCost(network, changeOwnerGasCost).toString()
     ])
   }
 

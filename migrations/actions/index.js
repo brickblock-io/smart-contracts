@@ -18,18 +18,20 @@ const index = async (deployer, accounts, contracts, web3, network) => {
       addContractsToRegistry,
       deployContracts,
       getEtherBalance,
-      unixTimeWithOffsetInSec
+      unixTimeWithOffsetInSec,
+      sendTransaction
     },
     poaManager,
     whitelist,
-    statistics
+    statistics,
+    ownerManagement: { transferOwnershipOfAllContracts }
   } = migrationHelpers
 
   const owner = accounts[0]
   const broker = accounts[1]
   const custodian = accounts[2]
   const contributors = accounts.slice(4, 6)
-  const whitelistedInvestor = accounts[4]
+  const whitelistedInvestor = accounts[3]
   const ownerStartEtherBalance = await getEtherBalance(owner)
   const brokerStartEtherBalance = await getEtherBalance(broker)
   let ownerPreEtherBalance,
@@ -40,7 +42,8 @@ const index = async (deployer, accounts, contracts, web3, network) => {
     finalizeBbkCrowdsaleGasCost,
     addBrokerGasCost,
     deployPoaTokenGasCost,
-    whitelistAddressGasCost
+    whitelistAddressGasCost,
+    changeOwnerGasCost
   const useStub = network.search('dev') > -1
 
   const actions = {
@@ -95,9 +98,10 @@ const index = async (deployer, accounts, contracts, web3, network) => {
       instances.ExchangeRateProvider,
       {
         currencyName: 'EUR',
-        queryString: 'https://min-api.cryptocompare.com/data/price?fsym=ETH',
-        callIntervalInSec: 30,
-        callbackGasLimit: 150000,
+        queryString:
+          'json(https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=EUR).EUR',
+        callIntervalInSec: 60,
+        callbackGasLimit: 1500000,
         useStub
       },
       { from: owner }
@@ -146,6 +150,14 @@ const index = async (deployer, accounts, contracts, web3, network) => {
     * Deploy new POA token from the previously added broker address
     */
     const brokerPreEtherBalance = await getEtherBalance(broker)
+    if (brokerPreEtherBalance.lt('3.25e16')) {
+      await sendTransaction({
+        from: owner,
+        to: broker,
+        value: new BigNumber(3.25e16)
+      })
+    }
+
     await poaManager.deployPoa(
       instances.PoaManager,
       {
@@ -155,7 +167,7 @@ const index = async (deployer, accounts, contracts, web3, network) => {
         custodian,
         totalSupply: oneHundredThousandTokensInWei,
         // startTimeForEthFundingPeriod needs a little offset so that it isn't too close to `block.timestamp` which would fail
-        startTimeForEthFundingPeriod: unixTimeWithOffsetInSec(60),
+        startTimeForEthFundingPeriod: unixTimeWithOffsetInSec(600),
         durationForEthFundingPeriod: oneWeekInSec,
         durationForActivationPeriod: twoWeeksInSec,
         fundingGoalInCents: oneHundredThousandEuroInCents
@@ -182,6 +194,19 @@ const index = async (deployer, accounts, contracts, web3, network) => {
     whitelistAddressGasCost = ownerPreEtherBalance.sub(ownerPostEtherBalance)
   }
 
+  if (argv.changeOwner) {
+    /*
+    * Used for changing ownership of all contracts to the real owner 
+    * Usually used on mainnet deployment
+    */
+    ownerPreEtherBalance = await getEtherBalance(owner)
+
+    const newOwner = process.env.NEW_OWNER
+    await transferOwnershipOfAllContracts(instances, owner, newOwner)
+    ownerPostEtherBalance = await getEtherBalance(owner)
+    changeOwnerGasCost = ownerPreEtherBalance.sub(ownerPostEtherBalance)
+  }
+
   /*
    * Display gas cost for deploying full ecosystem
    */
@@ -200,6 +225,7 @@ const index = async (deployer, accounts, contracts, web3, network) => {
       addBrokerGasCost,
       deployPoaTokenGasCost,
       whitelistAddressGasCost,
+      changeOwnerGasCost,
       totalGasCost
     },
     {

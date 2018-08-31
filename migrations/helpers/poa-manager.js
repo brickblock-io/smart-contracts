@@ -40,7 +40,7 @@ const deployPoa = async (
     symbol: 'BBK-RE-DE123',
     fiatCurrency: 'EUR',
     totalSupply: oneHundredThousandTokensInWei,
-    startTimeForEthFundingPeriod: unixTimeWithOffsetInSec(60),
+    startTimeForEthFundingPeriod: unixTimeWithOffsetInSec(600),
     durationForEthFundingPeriod: oneWeekInSec,
     durationForActivationPeriod: twoWeeksInSec,
     fundingGoalInCents: oneHundredThousandEuroInCents
@@ -58,7 +58,6 @@ const deployPoa = async (
     durationForActivationPeriod,
     fundingGoalInCents
   } = params
-
   console.log(
     chalk.cyan(
       '\n--------------------------------------------------------------------'

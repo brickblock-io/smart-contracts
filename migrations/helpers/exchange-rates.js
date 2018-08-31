@@ -6,7 +6,8 @@ const setFiatRate = async (
   ExchangeRateProvider,
   params = {
     currencyName: 'EUR',
-    queryString: 'https://min-api.cryptocompare.com/data/price?fsym=ETH',
+    queryString:
+      'json(https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=EUR).EUR',
     callIntervalInSec: 30,
     callbackGasLimit: 150000,
     useStub: true
@@ -47,7 +48,7 @@ const setFiatRate = async (
     chalk.yellow('\n➡️   Fetching latest rate from ExchangeRates contract…')
   )
   // This method needs some ETH to pay the Oraclize fees
-  await ExchangeRates.fetchRate(currencyName, { ...txConfig, value: 2e18 })
+  await ExchangeRates.fetchRate(currencyName, { ...txConfig, value: 1e17 })
   if (useStub) {
     console.log(chalk.yellow('\n➡️   Using stub to generate a test queryId…'))
     const pendingQueryId = await ExchangeRateProvider.pendingTestQueryId(

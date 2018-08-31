@@ -133,23 +133,66 @@ To move a POA token through different stages manually, we've built a little CLI 
 1. Call the helper with `exec ./migrations/helpers/poa-token.js`
 1. Follow the interactive prompt :shell:
 
-#### To deploy on a local ganache
-1. Start the [Ganache app](http://truffleframework.com/ganache/) (make sure it's running on `8545`in the settings!) or run `yarn ganache-cli -p 8545`
-1. Run `yarn truffle migrate --reset --network dev`
+#### To deploy eco-system using migrations
+##### Actions
+There are pre-defined actions you can call with migrations
+- --register, -r: Registers deployed contracts to Contract Registry
+- --setRate, --sr: Updates ExchangeRate Contract to fetch 'EUR' currency from oraclize api (on ganache it uses a constant value instead of a real one) 
+- --finalizeBbk, --fb: on BBK contract:
+    - calls `changeFountainContractAddress` 
+    - if the network is not mainnet, it distributes BBK token to Accounts[4,6]
+    - calls `finalizeTokenSale`
+    - calls `unpause`
+- --addBroker, --ab: Adds accounts[1] as broker to PoaManager
+- --deployPoa, --dp: Deploys a sample PoaToken with Broker account
+- --addToWhiteList, --aw: Adds accounts[3] to whitelist
+- --all, -a: Executes `register`, `setRate`, `finalizeBbk`, `addBroker`, `deployPoa`, `addToWhitelist` with the same order.
+- --useExistingContracts, --uec: Uses existing contracts instead of deploy if they exist in "config/deployed-contracts.js"' with the chosen network. If it cannot find a pre-defined address, it deploys a new contract.
+- --changeOwner, --co: Changes owner to `NEW_OWNER` given in `.env` file. Only useful if it deploys to mainnet.
+- --help: Displays posible options
 
-### Testnet
-#### To deploy on Rinkeby or Kovan
-Run: 
+NOTES: 
+- If no action specified, migration only deploys contracts without taking any further action.
+- Only essential actions are grouped by `all` action to keep it more flexible
+
+examples:   
 ```
-yarn truffle migrate --reset --network [network name]
+# Deploy with all actions
+yarn migrate:dev --all
+
+# Use pre-deployed contracts
+yarn migrate:dev --all --useExistingContracts
+# short version
+yarn migrate:dev -a --uec
+
+# Deploy with some actions
+yarn migrate:dev --register --setRate --finalizeBbk
+
+# Ask for help
+yarn migrate:dev --help
+```
+
+1. Start the [Ganache app](http://truffleframework.com/ganache/) (make sure it's running on `8545`in the settings!) or run `yarn ganache-cli -p 8545`
+2. Run `yarn migrate:dev --[action name]`
+
+#### To deploy on Rinkeby, Kovan or Ropsten
+1. Make sure you set `TESTNET_MNEMONIC` and `INFURA_API_KEY` in `.env` file for your HD wallet
+2. Run
+```
+yarn migrate:[network name] --all
 ```
 The network name can be `rinkeby`, `kovan`, or `ropsten`
 
-
-### Mainnet
-Mainnet deployment is done through the mainnet version of the migration file in truffle. The mainnet migration file:
-* does everything the rinkeby migration does
+#### To deploy on Mainnet
+The mainnet migration steps are:
+* Deploys everything except Brickblock Contract
 * then transfers ownership to our coldstore account
+
+1. Make sure you set `MAINNET_MNEMONIC`, `INFURA_API_KEY` and `NEW_OWNER` in `.env` file for your HD wallet
+2. Run:
+```
+yarn migrate:mainnet --register --finalizeBbk --changeOwner --useExistingContracts
+```
 
 #### Mainnet Checklist
 - [ ] Perform migration on rinkeby or kovan using exact same script. The script should:

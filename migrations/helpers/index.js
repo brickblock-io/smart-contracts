@@ -5,6 +5,7 @@ const poaManager = require('./poa-manager')
 const exchangeRates = require('./exchange-rates')
 const whitelist = require('./whitelist')
 const statistics = require('./statistics')
+const ownerManagement = require('./ownerManagement')
 
 /*
  * IMPORTANT CONVENTION
@@ -35,5 +36,6 @@ module.exports = {
   general,
   poaManager,
   whitelist,
-  statistics
+  statistics,
+  ownerManagement
 }
