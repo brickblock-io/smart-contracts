@@ -16,11 +16,11 @@ const index = async (deployer, accounts, contracts, web3, network) => {
     exchangeRates,
     general: {
       addContractsToRegistry,
-      deployContracts,
       getEtherBalance,
       unixTimeWithOffsetInSec,
       sendTransaction
     },
+    deployment: { deployContracts },
     poaManager,
     whitelist,
     statistics,

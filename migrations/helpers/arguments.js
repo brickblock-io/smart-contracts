@@ -1,4 +1,5 @@
 const yargs = require('yargs')
+  .version(require('../../package.json').version)
   .option('all', {
     alias: 'a',
     describe: 'Deploys eco-system with all options',
@@ -44,6 +45,27 @@ const yargs = require('yargs')
     alias: 'co',
     describe: 'Changes owner to "NEW_OWNER" given in .env file',
     default: false
+  })
+  .option('deployOnly', {
+    alias: 'do',
+    describe:
+      'deploys specified contracts given as parameters seperated by space. Ex: --do ContractRegistry AccessToken',
+    type: 'array',
+    choices: [
+      'AccessToken',
+      'BrickblockAccount',
+      'ContractRegistry',
+      'BrickblockToken',
+      'ExchangeRates',
+      'FeeManager',
+      'PoaLogger',
+      'PoaManager',
+      'PoaTokenMaster',
+      'PoaCrowdsaleMaster',
+      'Whitelist',
+      'ExchangeRateProvider',
+      'ExchangeRateProviderStub'
+    ]
   })
   .help()
 
