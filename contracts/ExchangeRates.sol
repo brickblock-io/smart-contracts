@@ -298,7 +298,7 @@ contract ExchangeRates is Ownable {
     returns (uint256)
   {
     uint256 _rate = rates[keccak256(abi.encodePacked(toUpperCase(_queryTypeString)))];
-    require(_rate > 0, "Fiat rate should be higher than zero");
+    require(_rate > 0);
     return _rate;
   }
 
@@ -310,7 +310,7 @@ contract ExchangeRates is Ownable {
     returns (uint256)
   {
     uint256 _rate = rates[_queryType32];
-    require(_rate > 0, "Fiat rate should be higher than zero");
+    require(_rate > 0);
     return _rate;
   }
 
