@@ -10,13 +10,31 @@ contract ContractRegistry is Ownable {
 
   event UpdateContract(string name, address indexed contractAddress);
 
+  /**
+    @notice Ensures that a given address is a contract by making sure it has code.
+   */
+  function isContract(address _address)
+    private
+    view
+    returns (bool)
+  {
+    uint256 _size;
+    assembly { _size := extcodesize(_address) }
+    return _size > 0;
+  }
+
   function updateContractAddress(string _name, address _address)
     public
     onlyOwner
     returns (address)
   {
+    require(isContract(_address));
+    require(_address != contractAddresses[keccak256(_name)]);
+
     contractAddresses[keccak256(_name)] = _address;
     emit UpdateContract(_name, _address);
+
+    return _address;
   }
 
   function getContractAddress(string _name)

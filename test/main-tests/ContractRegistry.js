@@ -13,6 +13,7 @@ describe('when using the contract registry', () => {
   contract('ContractRegistry', accounts => {
     const initialTestNumber = new BigNumber(123)
     const notOwner = accounts[1]
+    const contractNameInRegistry = 'TestName'
     let reg
     let brokenGrc
     let fixedGrc
@@ -25,20 +26,20 @@ describe('when using the contract registry', () => {
     })
 
     it('should error when no address for string key', async () => {
-      await testWillThrow(reg.getContractAddress, ['TestName'])
+      await testWillThrow(reg.getContractAddress, [contractNameInRegistry])
     })
 
     it('should NOT set an address if NOT owner', async () => {
       await testWillThrow(reg.updateContractAddress, [
-        'TestName',
+        contractNameInRegistry,
         brokenGrc.address,
         { from: notOwner }
       ])
     })
 
     it('should set an address', async () => {
-      await reg.updateContractAddress('TestName', brokenGrc.address)
-      const postValue = await reg.getContractAddress('TestName')
+      await reg.updateContractAddress(contractNameInRegistry, brokenGrc.address)
+      const postValue = await reg.getContractAddress(contractNameInRegistry)
       assert.equal(
         postValue,
         brokenGrc.address,
@@ -81,8 +82,13 @@ describe('when using the contract registry', () => {
     describe('when updating the broken contract in the registry', () => {
       it('should change the contract address in registry', async () => {
         fixedGrc = await RemoteContractStub.new(initialTestNumber)
-        await reg.updateContractAddress('TestName', fixedGrc.address)
-        const updatedAddress = await reg.getContractAddress('TestName')
+        await reg.updateContractAddress(
+          contractNameInRegistry,
+          fixedGrc.address
+        )
+        const updatedAddress = await reg.getContractAddress(
+          contractNameInRegistry
+        )
 
         assert.equal(
           updatedAddress,
@@ -98,6 +104,20 @@ describe('when using the contract registry', () => {
           new BigNumber(2).toString(),
           'the value should match the expected value'
         )
+      })
+
+      it('should not allow updating with the same address', async () => {
+        await testWillThrow(reg.updateContractAddress, [
+          contractNameInRegistry,
+          fixedGrc.address
+        ])
+      })
+
+      it('should not allow updating when the address is not a contract', async () => {
+        await testWillThrow(reg.updateContractAddress, [
+          contractNameInRegistry,
+          '0x00000000000000000000000000000000'
+        ])
       })
     })
   })
