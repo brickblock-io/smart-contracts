@@ -165,11 +165,11 @@ contract PoaProxy is PoaProxyCommon {
         0x0,  // f = mem position from
         returndatasize // s = size bytes
       )
-        // Return if call succeeded
-        return(
-          0x0,
-          returndatasize
-        )
+      // Return if call succeeded
+      return(
+        0x0,
+        returndatasize
+      )
     }
   }
 }
