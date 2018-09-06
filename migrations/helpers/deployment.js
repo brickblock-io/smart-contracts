@@ -7,12 +7,12 @@ const truffleConfig = require('../../truffle')
 const argv = require('../helpers/arguments')
 const gasAmountForPoa = 6612388
 
-const isDeployOnly = contractName => {
-  const deployOnly = argv.deployOnly
+const isForceDeploy = contractName => {
+  const forceDeploy = argv.forceDeploy
 
   return (
-    (Array.isArray(deployOnly) && deployOnly.includes(contractName)) ||
-    !deployOnly
+    Array.isArray(argv.forceDeploy) &&
+    (forceDeploy.includes(contractName) || forceDeploy.includes('all'))
   )
 }
 
@@ -47,7 +47,8 @@ const deployContracts = async (
     network,
     deployer,
     { from: owner },
-    useExistingContracts
+    useExistingContracts,
+    ContractRegistryABI
   ]
 
   /*
@@ -138,7 +139,8 @@ const deployContracts = async (
     network,
     deployer,
     { from: owner, gas: gasAmountForPoa },
-    useExistingContracts
+    useExistingContracts,
+    ContractRegistryABI
   )
 
   instances.PoaManager = await conditionalDeploy(
@@ -174,50 +176,68 @@ const conditionalDeploy = async (
   network,
   deployer,
   config,
-  useExistingContracts
+  useExistingContracts,
+  ContractRegistryABI
 ) => {
-  let contractInstance
-  if (isDeployOnly(contractName)) {
-    contractInstance = await deployContract(
+  // --forceDeploy is high priority and overrides --useExistingContract param
+  if (isForceDeploy(contractName)) {
+    return await deployContract(
       contractName,
       contractAbi,
       contractParams,
       deployer,
       config
     )
-  } else if (useExistingContracts) {
-    const contractAddress = getDeployedContractAddress(contractName, network)
+  }
+
+  if (useExistingContracts) {
+    let contractAddress
+    if (
+      contractName === 'ContractRegistry' ||
+      contractName === 'BrickblockToken'
+    ) {
+      contractAddress = await getDeployedContractAddressFromFile(
+        contractName,
+        network
+      )
+    } else {
+      // If the contract is not 'Contract Registry', find the Contract Registry first
+      const contractRegistryAddress = await getDeployedContractAddressFromFile(
+        'ContractRegistry',
+        network
+      )
+      const contractRegistry = ContractRegistryABI.at(contractRegistryAddress)
+
+      // Get the address from Contract Registry
+      contractAddress = await contractRegistry.getContractAddress(contractName)
+    }
 
     if (contractAddress) {
-      contractInstance = contractAbi.at(contractAddress)
-
       console.log(
         chalk.yellow(
           `\n➡️   Using current '${contractName}' at ${contractAddress}`
         )
       )
-    } else {
-      contractInstance = await deployContract(
-        contractName,
-        contractAbi,
-        contractParams,
-        deployer,
-        config
-      )
-    }
-  }
 
-  return contractInstance
+      return contractAbi.at(contractAddress)
+    }
+
+    // If it doesn't exist, deploy a new one
+    return await deployContract(
+      contractName,
+      contractAbi,
+      contractParams,
+      deployer,
+      config
+    )
+  }
 }
 
-const getDeployedContractAddress = (contractName, networkName) => {
+const getDeployedContractAddressFromFile = (contractName, networkName) => {
   const envFileContractName = toUnderscoreCapitalCase(contractName)
   const envContractAddress = process.env[envFileContractName]
 
   if (envContractAddress) {
-    console.log(
-      chalk.yellow(`\n⚠️   Fetching ${contractName} address from .env file`)
-    )
     return envContractAddress
   }
 
@@ -228,7 +248,7 @@ const getDeployedContractAddress = (contractName, networkName) => {
   }
 
   const address = deployedContracts[networkConfig.network_id][contractName]
-
+  logger.debug(`address found for ${contractName} at ${address}`)
   return address || false
 }
 
@@ -240,10 +260,15 @@ const deployContract = async (
   config
 ) => {
   console.log(chalk.yellow(`\n➡️   Deploying ${contractName}...`))
+  console.log(config)
   if (contractParams) {
-    await deployer.deploy(contractAbi, ...contractParams, config)
+    await deployer.deploy.apply(deployer, [
+      contractAbi,
+      ...contractParams,
+      config
+    ])
   } else {
-    await deployer.deploy(contractAbi, config)
+    await deployer.deploy.apply(deployer, [contractAbi, config])
   }
 
   return await contractAbi.deployed()
@@ -272,7 +297,7 @@ const printAddressesForJson = contracts => {
   Object.keys(contracts).forEach(contractName => {
     const contract = contracts[contractName]
     if (contract) {
-      str += `${chalk.cyan(contractName)}: ${contract.address}\n`
+      str += `${chalk.cyan(contractName)}: '${contract.address}',\n`
     }
   })
 

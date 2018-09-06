@@ -6,7 +6,6 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 contract ContractRegistry is Ownable {
 
   uint8 public constant version = 1;
-  address public owner;
   mapping (bytes32 => address) private contractAddresses;
 
   event UpdateContract(string name, address indexed contractAddress);

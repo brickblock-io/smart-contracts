@@ -51,7 +51,6 @@ const index = async (deployer, accounts, contracts, web3, network) => {
     setRate: argv.setRate,
     finalizeBbk: argv.finalizeBbk,
     addBroker: argv.addBroker,
-    deployPoa: argv.deployPoa,
     addToWhiteList: argv.addToWhiteList
   }
 
@@ -145,7 +144,7 @@ const index = async (deployer, accounts, contracts, web3, network) => {
     addBrokerGasCost = ownerPreEtherBalance.sub(ownerPostEtherBalance)
   }
 
-  if (actions.deployPoa) {
+  if (argv.deployPoa) {
     /*
     * Deploy new POA token from the previously added broker address
     */

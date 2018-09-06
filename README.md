@@ -136,6 +136,7 @@ To move a POA token through different stages manually, we've built a little CLI 
 #### To deploy eco-system using migrations
 ##### Actions
 There are pre-defined actions you can call with migrations
+- --forceDeploy, --fd: Deploys contracts given as parameters. 'all' means deploy everything. Can be used with --uec to deploy only selected contracts and use the rest from the registry.
 - --register, -r: Registers deployed contracts to Contract Registry
 - --setRate, --sr: Updates ExchangeRate Contract to fetch 'EUR' currency from oraclize api (on ganache it uses a constant value instead of a real one) 
 - --finalizeBbk, --fb: on BBK contract:
@@ -146,7 +147,7 @@ There are pre-defined actions you can call with migrations
 - --addBroker, --ab: Adds accounts[1] as broker to PoaManager
 - --deployPoa, --dp: Deploys a sample PoaToken with Broker account
 - --addToWhiteList, --aw: Adds accounts[3] to whitelist
-- --all, -a: Executes `register`, `setRate`, `finalizeBbk`, `addBroker`, `deployPoa`, `addToWhitelist` with the same order.
+- --default, -a: Executes `register`, `setRate`, `finalizeBbk`, `addBroker`, `addToWhitelist` with the same order.
 - --useExistingContracts, --uec: Uses existing contracts instead of deploy if they exist in "config/deployed-contracts.js"' with the chosen network. If it cannot find a pre-defined address, it deploys a new contract.
 - --changeOwner, --co: Changes owner to `NEW_OWNER` given in `.env` file. Only useful if it deploys to mainnet.
 - --help: Displays posible options
@@ -157,19 +158,23 @@ NOTES:
 
 examples:   
 ```
-# Deploy with all actions
-yarn migrate:dev --all
+# Deploy with default actions
+yarn migrate:dev --default --fd all
 
 # Use pre-deployed contracts
-yarn migrate:dev --all --useExistingContracts
+yarn migrate:dev --default --useExistingContracts
 # short version
-yarn migrate:dev -a --uec
+yarn migrate:dev -def --uec
 
 # Deploy with some actions
-yarn migrate:dev --register --setRate --finalizeBbk
+yarn migrate:dev --fd all --register --setRate --finalizeBbk
 
 # Ask for help
 yarn migrate:dev --help
+
+# To deploy POA Token
+# make sure everything is deployed first
+yarn migrate:dev --uec -dp
 ```
 
 1. Start the [Ganache app](http://truffleframework.com/ganache/) (make sure it's running on `8545`in the settings!) or run `yarn ganache-cli -p 8545`
@@ -179,7 +184,7 @@ yarn migrate:dev --help
 1. Make sure you set `TESTNET_MNEMONIC` and `INFURA_API_KEY` in `.env` file for your HD wallet
 2. Run
 ```
-yarn migrate:[network name] --all
+yarn migrate:[network name] --def --fd all
 ```
 The network name can be `rinkeby`, `kovan`, or `ropsten`
 

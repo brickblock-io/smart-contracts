@@ -30,19 +30,7 @@ module.exports = {
 
   // kovan
   '42': {
-    ContractRegistry: '0x138d5bb1eef88dad0b6dde5e46a746ef31a22f6e',
-
-    AccessToken: '0x2f854aba8e7822ea6880cc3e35b92aec06b0f16e',
-    BrickblockAccount: '0x5fd7c1ca9491f78542175f8d92dc5baaa6c2d7ce',
-    BrickblockToken: '0x6904934d6ea0e2f717623fc56ef4b59122d2e4f2',
-    ExchangeRateProvider: '0xbcaed751ea9d96bba5abf6e90c0bdd6fa08bf0b4',
-    ExchangeRates: '0xe5231d3b5da1a1ae7b13042eb5db98abd1f07518',
-    FeeManager: '0x1c6b37d8f111597b9209e75cf33eef3d5d803a82',
-    PoaCrowdsaleMaster: '0x101a06ee287ce407ac6aa4abc0f849e9b9c9ec95',
-    PoaLogger: '0x9d20d0f8cdcf012f7dcc08754d366dc708db0b48',
-    PoaManager: '0x98aae9f2be3198d25e50885fcccf7ffb1e254777',
-    PoaTokenMaster: '0x93682e53665d31027598e911c80deb4eee6aa22f',
-    Whitelist: '0x9d7ea0021fa6bc0d72d98f3d57b7d0f48a91c789'
+    ContractRegistry: '0x553681e929fdb1549ba6cac3d16067bf6e0a2ee3'
   },
 
   // local testnet (default ganache when running `truffle develop --network dev`)

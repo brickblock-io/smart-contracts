@@ -1,8 +1,9 @@
 const yargs = require('yargs')
   .version(require('../../package.json').version)
-  .option('all', {
-    alias: 'a',
-    describe: 'Deploys eco-system with all options',
+  .option('default', {
+    alias: 'def',
+    describe:
+      'Deploys eco-system with default actions (register, finalizeBbk, setRate, addBroker, addToWhiteList)',
     default: false
   })
   .option('register', {
@@ -46,12 +47,13 @@ const yargs = require('yargs')
     describe: 'Changes owner to "NEW_OWNER" given in .env file',
     default: false
   })
-  .option('deployOnly', {
-    alias: 'do',
+  .option('forceDeploy', {
+    alias: 'fd',
     describe:
-      'deploys specified contracts given as parameters seperated by space. Ex: --do ContractRegistry AccessToken',
+      'deploys specified contracts given as parameters seperated by space. Ex: --do ContractRegistry AccessToken. "all" means deploy everything. Can be used with --uec to deploy only selected contracts and use the rest from the registry.',
     type: 'array',
     choices: [
+      'all',
       'AccessToken',
       'BrickblockAccount',
       'ContractRegistry',
