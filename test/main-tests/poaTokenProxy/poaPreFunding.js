@@ -1,11 +1,10 @@
 const {
-  owner,
+  bbkContributors,
   broker,
   custodian,
-  bbkContributors,
-  whitelistedPoaBuyers,
   defaultIpfsHashArray32,
   determineNeededTimeTravel,
+  owner,
   setupPoaProxyAndEcosystem,
   testActivate,
   testApprove,
@@ -21,7 +20,8 @@ const {
   testTransfer,
   testTransferFrom,
   testUnpause,
-  testUpdateProofOfCustody
+  testUpdateProofOfCustody,
+  whitelistedPoaBuyers
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
 const { timeTravel } = require('helpers')
@@ -30,11 +30,13 @@ describe("when in 'PreFunding' stage", async () => {
   contract('PoaTokenProxy', () => {
     let poa
     let fmr
+    let pmr
 
     before('setup contracts', async () => {
       const contracts = await setupPoaProxyAndEcosystem()
       poa = contracts.poa
       fmr = contracts.fmr
+      pmr = contracts.pmr
     })
 
     it('should start paused', async () => {
@@ -42,7 +44,12 @@ describe("when in 'PreFunding' stage", async () => {
     })
 
     it('should NOT unpause, even if owner', async () => {
-      await testWillThrow(testUnpause, [poa, { from: owner }])
+      await testWillThrow(testUnpause, [
+        poa,
+        pmr,
+        { from: owner },
+        { callPoaDirectly: false }
+      ])
     })
 
     it('should NOT buy, even if whitelisted', async () => {
@@ -61,7 +68,12 @@ describe("when in 'PreFunding' stage", async () => {
     })
 
     it('should NOT terminate, even if custodian', async () => {
-      await testWillThrow(testTerminate, [poa, { from: custodian }])
+      await testWillThrow(testTerminate, [
+        poa,
+        pmr,
+        { from: custodian },
+        { callPoaDirectly: true }
+      ])
     })
 
     it('should NOT reclaim', async () => {

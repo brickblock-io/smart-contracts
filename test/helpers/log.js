@@ -2,40 +2,30 @@ const BigNumber = require('bignumber.js')
 const { timeTravel } = require('helpers')
 const { waitForEvent, gasPrice } = require('./general')
 const {
-  owner,
   broker,
   custodian,
-  determineNeededTimeTravel,
-  testStartEthSale,
-  whitelistedPoaBuyers,
-  testBuyTokens,
-  testBuyRemainingTokens,
-  testActivate,
-  defaultIpfsHashArray32,
   defaultIpfsHash,
-  testPayout,
-  testClaim,
-  testTerminate,
-  testChangeCustodianAddress,
-  setupPoaProxyAndEcosystem,
+  defaultIpfsHashArray32,
+  determineNeededTimeTravel,
   forcePoaTimeout,
-  testReclaim,
+  setupPoaProxyAndEcosystem,
   stages,
+  testActivate,
+  testBuyRemainingTokens,
+  testBuyTokens,
+  testChangeCustodianAddress,
+  testClaim,
+  testPayActivationFee,
+  testPayout,
+  testReclaim,
+  testStartEthSale,
+  testTerminate,
   testUpdateProofOfCustody,
-  testPayActivationFee
+  whitelistedPoaBuyers
 } = require('./poa')
-
-// change PoaManager reg entry to owner for easier testing...
-const poaManagerToOwner = reg => reg.updateContractAddress('PoaManager', owner)
-
-// change PoaManager reg entry back to correct contract
-const poaManagerToPoaManager = (reg, addr) =>
-  reg.updateContractAddress('PoaManager', addr)
 
 // only meant to be used for transition from stage 0 to stage 1
 const testPreFundingToFundingEvent = async (poa, reg, pmr, log) => {
-  // change to actual PoaManager contract so that logger validation works...
-  await poaManagerToPoaManager(reg, pmr.address)
   const PoaLoggerStageEvent = log.Stage()
 
   const neededTime = await determineNeededTimeTravel(
@@ -46,9 +36,6 @@ const testPreFundingToFundingEvent = async (poa, reg, pmr, log) => {
   await testStartEthSale(poa)
 
   const { args: triggeredPoaLogger } = await waitForEvent(PoaLoggerStageEvent)
-
-  // change back so that other testing functions will work with owner...
-  await poaManagerToOwner(reg)
 
   assert.equal(
     triggeredPoaLogger.tokenAddress,
@@ -66,9 +53,6 @@ const testBuyTokensEvents = async (poa, reg, pmr, log) => {
   const from = whitelistedPoaBuyers[0]
   const value = new BigNumber(1e18)
 
-  // change to actual PoaManager contract so that logger validation works...
-  await poaManagerToPoaManager(reg, pmr.address)
-
   const PoaLoggerBuyEvent = log.Buy()
 
   await testBuyTokens(poa, {
@@ -78,9 +62,6 @@ const testBuyTokensEvents = async (poa, reg, pmr, log) => {
   })
 
   const { args: triggeredPoaLogger } = await waitForEvent(PoaLoggerBuyEvent)
-
-  // change back so that other testing functions will work with owner...
-  await poaManagerToOwner(reg)
 
   assert.equal(
     triggeredPoaLogger.tokenAddress,
@@ -102,9 +83,6 @@ const testBuyTokensEvents = async (poa, reg, pmr, log) => {
 const testBuyRemainingTokensEvents = async (poa, reg, pmr, log) => {
   const from = whitelistedPoaBuyers[1]
 
-  // change to actual PoaManager contract so that logger validation works...
-  await poaManagerToPoaManager(reg, pmr.address)
-
   const PoaLoggerBuyEvent = log.Buy()
 
   const value = await testBuyRemainingTokens(poa, {
@@ -113,9 +91,6 @@ const testBuyRemainingTokensEvents = async (poa, reg, pmr, log) => {
   })
 
   const { args: triggeredPoaLogger } = await waitForEvent(PoaLoggerBuyEvent)
-
-  // change back so that other testing functions will work with owner...
-  await poaManagerToOwner(reg)
 
   assert.equal(
     triggeredPoaLogger.tokenAddress,
@@ -135,8 +110,6 @@ const testBuyRemainingTokensEvents = async (poa, reg, pmr, log) => {
 }
 
 const testActivateEvents = async (poa, reg, pmr, fmr, log) => {
-  // change to actual PoaManager contract so that logger validation works...
-  await poaManagerToPoaManager(reg, pmr.address)
   const PoaLoggerStageEvent = log.Stage()
   const PoaLoggerProofOfCustodyUpdatedEvent = log.ProofOfCustodyUpdated()
 
@@ -158,9 +131,6 @@ const testActivateEvents = async (poa, reg, pmr, fmr, log) => {
   const { args: triggeredPoaLoggerStage } = await waitForEvent(
     PoaLoggerStageEvent
   )
-
-  // change back so that other testing functions will work with owner...
-  await poaManagerToOwner(reg)
 
   assert.equal(
     triggeredPoaLoggerStage.tokenAddress,
@@ -187,8 +157,6 @@ const testActivateEvents = async (poa, reg, pmr, fmr, log) => {
 const testPayoutEvents = async (poa, reg, pmr, fmr, log) => {
   const from = broker
   const value = new BigNumber(1e18)
-  // change to actual PoaManager contract so that logger validation works...
-  await poaManagerToPoaManager(reg, pmr.address)
 
   const PoaLoggerPayoutEvent = log.Payout()
 
@@ -199,9 +167,6 @@ const testPayoutEvents = async (poa, reg, pmr, fmr, log) => {
   })
 
   const { args: triggeredPoaLogger } = await waitForEvent(PoaLoggerPayoutEvent)
-
-  // change back so that other testing functions will work with owner...
-  await poaManagerToOwner(reg)
 
   assert.equal(
     triggeredPoaLogger.tokenAddress,
@@ -216,8 +181,6 @@ const testPayoutEvents = async (poa, reg, pmr, fmr, log) => {
 
 const testClaimEvents = async (poa, reg, pmr, log) => {
   const from = whitelistedPoaBuyers[0]
-  // change to actual PoaManager contract so that logger validation works...
-  await poaManagerToPoaManager(reg, pmr.address)
 
   const PoaLoggerClaimEvent = log.Claim()
 
@@ -227,9 +190,6 @@ const testClaimEvents = async (poa, reg, pmr, log) => {
   })
 
   const { args: triggeredPoaLogger } = await waitForEvent(PoaLoggerClaimEvent)
-
-  // change back so that other testing functions will work with owner...
-  await poaManagerToOwner(reg)
 
   assert.equal(
     triggeredPoaLogger.tokenAddress,
@@ -249,22 +209,22 @@ const testClaimEvents = async (poa, reg, pmr, log) => {
 
 const testTerminateEvents = async (poa, reg, pmr, log) => {
   const from = custodian
-  // change to actual PoaManager contract so that logger validation works...
-  await poaManagerToPoaManager(reg, pmr.address)
 
   const PoaLoggerTerminatedEvent = log.Terminated()
 
-  await testTerminate(poa, {
-    from,
-    gasPrice
-  })
+  await testTerminate(
+    poa,
+    pmr,
+    {
+      from,
+      gasPrice
+    },
+    { callPoaDirectly: true }
+  )
 
   const { args: triggeredPoaLogger } = await waitForEvent(
     PoaLoggerTerminatedEvent
   )
-
-  // change back so that other testing functions will work with owner...
-  await poaManagerToOwner(reg)
 
   assert.equal(
     triggeredPoaLogger.tokenAddress,
@@ -276,8 +236,6 @@ const testTerminateEvents = async (poa, reg, pmr, log) => {
 const testChangeCustodianEvents = async (poa, reg, pmr, log) => {
   const from = custodian
   const newCustodian = web3.eth.accounts[9]
-  // change to actual PoaManager contract so that logger validation works...
-  await poaManagerToPoaManager(reg, pmr.address)
 
   const PoaLoggerCustodianChangedEvent = log.CustodianChanged()
 
@@ -289,9 +247,6 @@ const testChangeCustodianEvents = async (poa, reg, pmr, log) => {
   const { args: triggeredPoaLoggerEvent } = await waitForEvent(
     PoaLoggerCustodianChangedEvent
   )
-
-  // change back so that other testing functions will work with owner...
-  await poaManagerToOwner(reg)
 
   assert.equal(
     triggeredPoaLoggerEvent.tokenAddress,
@@ -315,7 +270,7 @@ const testReclaimEvents = async () => {
   const from = whitelistedPoaBuyers[0]
 
   // need a whole new instance in order to test this...
-  const { poa, reg, log, pmr } = await setupPoaProxyAndEcosystem()
+  const { poa, log, pmr } = await setupPoaProxyAndEcosystem()
   await pmr.listToken(poa.address)
   // move into "EthFunding" stage
   const neededTime = await determineNeededTimeTravel(poa)
@@ -329,9 +284,6 @@ const testReclaimEvents = async () => {
   })
   await forcePoaTimeout(poa)
 
-  // change to actual PoaManager contract so that logger validation works...
-  await poaManagerToPoaManager(reg, pmr.address)
-
   const PoaLoggerStageEvent = log.Stage()
   const PoaLoggerReclaimEvent = log.ReClaim()
 
@@ -343,8 +295,6 @@ const testReclaimEvents = async () => {
   const { args: triggeredPoaLoggerReClaim } = await waitForEvent(
     PoaLoggerReclaimEvent
   )
-  // change back so that other testing functions will work with owner...
-  await poaManagerToOwner(reg)
 
   assert.equal(
     triggeredPoaLoggerStage.tokenAddress,
@@ -373,15 +323,13 @@ const testReclaimEvents = async () => {
 }
 
 module.exports = {
-  poaManagerToOwner,
-  poaManagerToPoaManager,
-  testPreFundingToFundingEvent,
-  testBuyTokensEvents,
-  testBuyRemainingTokensEvents,
   testActivateEvents,
-  testPayoutEvents,
-  testClaimEvents,
-  testTerminateEvents,
+  testBuyRemainingTokensEvents,
+  testBuyTokensEvents,
   testChangeCustodianEvents,
-  testReclaimEvents
+  testClaimEvents,
+  testPayoutEvents,
+  testPreFundingToFundingEvent,
+  testReclaimEvents,
+  testTerminateEvents
 }

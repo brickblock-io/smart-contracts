@@ -1,29 +1,29 @@
 const BigNumber = require('bignumber.js')
 const {
-  owner,
+  bbkContributors,
   broker,
   custodian,
-  bbkContributors,
-  whitelistedPoaBuyers,
   defaultIpfsHashArray32,
-  setupPoaProxyAndEcosystem,
-  testStartEthSale,
-  testBuyTokens,
   determineNeededTimeTravel,
-  testBuyRemainingTokens,
+  getRemainingAmountInWeiDuringEthFunding,
+  owner,
+  setupPoaProxyAndEcosystem,
   testActivate,
-  testPayout,
+  testApprove,
+  testBuyRemainingTokens,
+  testBuyTokens,
   testClaim,
+  testPaused,
+  testPayout,
   testReclaim,
   testSetStageToTimedOut,
-  testPaused,
+  testStartEthSale,
+  testTerminate,
+  testTransfer,
+  testTransferFrom,
   testUnpause,
   testUpdateProofOfCustody,
-  testTransfer,
-  testApprove,
-  testTransferFrom,
-  testTerminate,
-  getRemainingAmountInWeiDuringEthFunding
+  whitelistedPoaBuyers
 } = require('../../helpers/poa')
 const {
   testWillThrow,
@@ -37,11 +37,13 @@ describe("when in 'EthFunding' stage", () => {
   contract('PoaTokenProxy', () => {
     let poa
     let fmr
+    let pmr
 
     before('setup contracts', async () => {
       const contracts = await setupPoaProxyAndEcosystem()
       poa = contracts.poa
       fmr = contracts.fmr
+      pmr = contracts.pmr
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
       await testStartEthSale(poa)
@@ -52,7 +54,12 @@ describe("when in 'EthFunding' stage", () => {
     })
 
     it('should NOT unpause, even if owner', async () => {
-      await testWillThrow(testUnpause, [poa, { from: owner }])
+      await testWillThrow(testUnpause, [
+        poa,
+        pmr,
+        { from: owner },
+        { callPoaDIrectly: false }
+      ])
     })
 
     it('should NOT startEthSale, even if owner', async () => {
@@ -68,7 +75,12 @@ describe("when in 'EthFunding' stage", () => {
     })
 
     it('should NOT terminate, even if custodian', async () => {
-      await testWillThrow(testTerminate, [poa, { from: custodian }])
+      await testWillThrow(testTerminate, [
+        poa,
+        pmr,
+        { from: custodian },
+        { callPoaDirectly: true }
+      ])
     })
 
     it('should NOT reclaim, even if owning tokens', async () => {

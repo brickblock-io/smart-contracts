@@ -1,19 +1,19 @@
 const {
   broker,
   custodian,
-  whitelistedPoaBuyers,
   defaultIpfsHashArray32,
-  setupPoaProxyAndEcosystem,
-  testStartEthSale,
-  testBuyTokens,
   determineNeededTimeTravel,
-  testBuyRemainingTokens,
+  setupPoaProxyAndEcosystem,
   testActivate,
   testBrokerClaim,
-  testPayout,
+  testBuyRemainingTokens,
+  testBuyTokens,
   testClaimAllPayouts,
+  testPayActivationFee,
+  testPayout,
+  testStartEthSale,
   testUpdateProofOfCustody,
-  testPayActivationFee
+  whitelistedPoaBuyers
 } = require('../../helpers/poa')
 const { gasPrice } = require('../../helpers/general.js')
 const { timeTravel } = require('helpers')

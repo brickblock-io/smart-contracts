@@ -1,33 +1,33 @@
 const {
-  owner,
+  bbkContributors,
   broker,
   custodian,
-  bbkContributors,
-  whitelistedPoaBuyers,
   defaultIpfsHashArray32,
+  determineNeededTimeTravel,
+  getRemainingAmountInCentsDuringFiatFunding,
+  owner,
   setupPoaProxyAndEcosystem,
-  testStartEthSale,
-  testStartFiatSale,
+  stages,
+  testActivate,
+  testApprove,
   testBuyTokens,
   testBuyTokensWithFiat,
-  testRemoveTokensWithFiat,
-  testIncrementOfBalanceWhenBuyTokensWithFiat,
-  determineNeededTimeTravel,
-  testActivate,
-  testPayout,
   testClaim,
-  testReclaim,
-  testSetStageToTimedOut,
+  testIncrementOfBalanceWhenBuyTokensWithFiat,
   testPaused,
+  testPayout,
+  testPercent,
+  testReclaim,
+  testRemoveTokensWithFiat,
+  testSetStageToTimedOut,
+  testStartEthSale,
+  testStartFiatSale,
+  testTerminate,
+  testTransfer,
+  testTransferFrom,
   testUnpause,
   testUpdateProofOfCustody,
-  testTransfer,
-  testApprove,
-  testTransferFrom,
-  testTerminate,
-  testPercent,
-  getRemainingAmountInCentsDuringFiatFunding,
-  stages
+  whitelistedPoaBuyers
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
 const { timeTravel } = require('helpers')
@@ -36,12 +36,14 @@ describe("when in 'FiatFunding' stage", () => {
   contract('PoaToken', accounts => {
     let poa
     let fmr
+    let pmr
     const fiatInvestor = accounts[3]
 
     before('setup contracts', async () => {
       const contracts = await setupPoaProxyAndEcosystem()
       poa = contracts.poa
       fmr = contracts.fmr
+      pmr = contracts.pmr
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
       await testStartFiatSale(poa, { from: broker, gasPrice })
@@ -52,7 +54,12 @@ describe("when in 'FiatFunding' stage", () => {
     })
 
     it('should NOT unpause, even if owner', async () => {
-      await testWillThrow(testUnpause, [poa, { from: owner }])
+      await testWillThrow(testUnpause, [
+        poa,
+        pmr,
+        { from: owner },
+        { callPoaDirectly: false }
+      ])
     })
 
     it('should NOT setStageToTimedOut', async () => {
@@ -64,7 +71,12 @@ describe("when in 'FiatFunding' stage", () => {
     })
 
     it('should NOT terminate, even if custodian', async () => {
-      await testWillThrow(testTerminate, [poa, { from: custodian }])
+      await testWillThrow(testTerminate, [
+        poa,
+        pmr,
+        { from: custodian },
+        { callPoaDirectly: true }
+      ])
     })
 
     it('should NOT reclaim, even if owning tokens', async () => {

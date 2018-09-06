@@ -1,21 +1,21 @@
 const {
-  owner,
   broker,
   custodian,
+  defaultActivationTimeout,
+  defaultFiatCurrency,
+  defaultFiatCurrency32,
+  defaultFiatRate,
+  defaultFundingGoal,
+  defaultFundingTimeout,
   defaultName32,
   defaultSymbol32,
-  defaultFiatCurrency32,
-  defaultFiatCurrency,
-  defaultFundingTimeout,
-  defaultActivationTimeout,
-  defaultFundingGoal,
-  defaultFiatRate,
-  getDefaultStartTime,
-  setupEcosystem,
-  testSetCurrencyRate,
-  testProxyInitialization,
   defaultTotalSupply,
-  emptyBytes32
+  emptyBytes32,
+  getDefaultStartTime,
+  owner,
+  setupEcosystem,
+  testProxyInitialization,
+  testSetCurrencyRate
 } = require('../../helpers/poa')
 const { testWillThrow, addressZero } = require('../../helpers/general.js')
 const BigNumber = require('bignumber.js')

@@ -1,29 +1,29 @@
 const {
-  owner,
+  bbkContributors,
   broker,
   custodian,
-  bbkContributors,
-  whitelistedPoaBuyers,
   defaultIpfsHashArray32,
-  setupPoaProxyAndEcosystem,
-  testStartEthSale,
-  testBuyTokens,
   determineNeededTimeTravel,
-  testBuyRemainingTokens,
+  owner,
+  setupPoaProxyAndEcosystem,
   testActivate,
+  testApprove,
   testBrokerClaim,
-  testPayout,
+  testBuyRemainingTokens,
+  testBuyTokens,
   testClaim,
+  testPaused,
+  testPayActivationFee,
+  testPayout,
   testReclaim,
   testSetStageToTimedOut,
-  testPaused,
+  testStartEthSale,
+  testTerminate,
+  testTransfer,
+  testTransferFrom,
   testUnpause,
   testUpdateProofOfCustody,
-  testTransfer,
-  testApprove,
-  testTransferFrom,
-  testTerminate,
-  testPayActivationFee
+  whitelistedPoaBuyers
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
 const { timeTravel } = require('helpers')
@@ -37,11 +37,13 @@ describe("when in 'Terminated' stage", () => {
     ]
     let poa
     let fmr
+    let pmr
 
     before('setup contracts', async () => {
       const contracts = await setupPoaProxyAndEcosystem()
       poa = contracts.poa
       fmr = contracts.fmr
+      pmr = contracts.pmr
 
       // move into "EthFunding" stage
       const neededTime = await determineNeededTimeTravel(poa)
@@ -78,7 +80,7 @@ describe("when in 'Terminated' stage", () => {
 
       // move into "Terminated" stage
       //⚠️  also acts as a test terminating as owner rather than custodian
-      await testTerminate(poa, { from: owner })
+      await testTerminate(poa, pmr, { from: owner }, { callPoaDirectly: false })
     })
 
     it('should start paused', async () => {
@@ -86,7 +88,12 @@ describe("when in 'Terminated' stage", () => {
     })
 
     it('should NOT unpause, even if owner', async () => {
-      await testWillThrow(testUnpause, [poa, { from: owner }])
+      await testWillThrow(testUnpause, [
+        poa,
+        pmr,
+        { from: owner },
+        { callPoaDirectly: false }
+      ])
     })
 
     it('should NOT startEthSale, even if owner', async () => {
@@ -109,7 +116,12 @@ describe("when in 'Terminated' stage", () => {
     })
 
     it('should NOT terminate, even if custodian', async () => {
-      await testWillThrow(testTerminate, [poa, { from: custodian }])
+      await testWillThrow(testTerminate, [
+        poa,
+        pmr,
+        { from: custodian },
+        { callPoaDirectly: true }
+      ])
     })
 
     it('should NOT reclaim, even if owning tokens', async () => {

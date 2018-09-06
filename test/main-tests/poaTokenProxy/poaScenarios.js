@@ -1,35 +1,35 @@
 const {
+  activationTimeoutContract,
   broker,
   custodian,
-  whitelistedPoaBuyers,
-  fiatBuyer,
   defaultIpfsHashArray32,
-  setupPoaProxyAndEcosystem,
-  testStartFiatSale,
-  testStartEthSale,
-  testBuyTokensWithFiat,
-  testBuyTokens,
   determineNeededTimeTravel,
-  testBuyRemainingTokens,
+  fiatBuyer,
+  forcePoaTimeout,
+  getAccountInformation,
+  setupPoaProxyAndEcosystem,
+  stages,
   testActivate,
+  testActiveBalances,
+  testApprove,
   testBrokerClaim,
-  testPayout,
+  testBuyRemainingTokens,
+  testBuyTokens,
+  testBuyTokensMulti,
+  testBuyTokensWithFiat,
   testClaimAllPayouts,
   testFirstReclaim,
-  forcePoaTimeout,
-  activationTimeoutContract,
-  testSetStageToTimedOut,
-  testTransfer,
-  testApprove,
-  testTransferFrom,
-  testBuyTokensMulti,
-  getAccountInformation,
+  testPayActivationFee,
+  testPayout,
   testResetCurrencyRate,
-  testActiveBalances,
+  testSetStageToTimedOut,
+  testStartEthSale,
+  testStartFiatSale,
   testToggleWhitelistTransfers,
-  stages,
+  testTransfer,
+  testTransferFrom,
   testUpdateProofOfCustody,
-  testPayActivationFee
+  whitelistedPoaBuyers
 } = require('../../helpers/poa')
 const {
   gasPrice,
@@ -43,6 +43,7 @@ const BigNumber = require('bignumber.js')
 describe('De-whitelisted POA holders', () => {
   const defaultBuyAmount = new BigNumber(1.802384753e16)
   let poa
+  let pmr
   let fmr
   let wht
   let sender
@@ -56,6 +57,7 @@ describe('De-whitelisted POA holders', () => {
       sender = whitelistedPoaBuyers[0]
       receiver = whitelistedPoaBuyers[1]
       poa = contracts.poa
+      pmr = contracts.pmr
       fmr = contracts.fmr
       wht = contracts.wht
 
@@ -74,9 +76,14 @@ describe('De-whitelisted POA holders', () => {
         gasPrice
       })
 
-      await testToggleWhitelistTransfers(poa, {
-        from: owner
-      })
+      await testToggleWhitelistTransfers(
+        poa,
+        pmr,
+        {
+          from: owner
+        },
+        { callPoaDirectly: false }
+      )
 
       await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
         from: custodian

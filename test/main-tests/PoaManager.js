@@ -7,7 +7,7 @@ const {
   testPauseToken,
   testUnpauseToken,
   testTerminateToken,
-  testToggleWhitelistTransfers
+  testToggleWhitelistTokenTransfers
 } = require('../helpers/pmr')
 
 describe('when creating a new instance of the contract', () => {
@@ -498,9 +498,21 @@ describe('when calling token convenience functions', () => {
       })
 
       it('should pause the addedToken', async () => {
+        assert.equal(
+          await addedToken.paused(),
+          false,
+          'token should begin unpaused'
+        )
+
         await testPauseToken(pmr, addedToken, {
           from: owner
         })
+
+        assert.equal(
+          await addedToken.paused(),
+          true,
+          'token should then become paused'
+        )
       })
     })
 
@@ -516,9 +528,19 @@ describe('when calling token convenience functions', () => {
       })
 
       it('should unpause the addedToken', async () => {
+        assert.equal(
+          await addedToken.paused(),
+          true,
+          'token should begin paused'
+        )
         await testUnpauseToken(pmr, addedToken, {
           from: owner
         })
+        assert.equal(
+          await addedToken.paused(),
+          false,
+          'token should then become unpaused'
+        )
       })
     })
 
@@ -540,7 +562,7 @@ describe('when calling token convenience functions', () => {
 
     describe('when toggle whitelistTransfers', () => {
       it('should NOT toggle toggleWhitelistTransfers when NOT owner', async () => {
-        await testWillThrow(testToggleWhitelistTransfers, [
+        await testWillThrow(testToggleWhitelistTokenTransfers, [
           pmr,
           addedToken,
           {
@@ -550,7 +572,9 @@ describe('when calling token convenience functions', () => {
       })
 
       it('should toggle toggleWhitelistTransfers when owner', async () => {
-        await testToggleWhitelistTransfers(pmr, addedToken, { from: owner })
+        await testToggleWhitelistTokenTransfers(pmr, addedToken, {
+          from: owner
+        })
       })
     })
   })

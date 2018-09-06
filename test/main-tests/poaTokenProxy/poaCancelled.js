@@ -1,27 +1,27 @@
 const {
-  owner,
+  bbkContributors,
   broker,
   custodian,
-  bbkContributors,
-  whitelistedPoaBuyers,
   defaultIpfsHashArray32,
-  setupPoaProxyAndEcosystem,
-  testStartEthSale,
-  testBuyTokens,
   determineNeededTimeTravel,
+  owner,
+  setupPoaProxyAndEcosystem,
   testActivate,
-  testPayout,
+  testApprove,
+  testBuyTokens,
+  testBuyTokensWithFiat,
+  testCancelFunding,
   testClaim,
   testPaused,
+  testPayout,
+  testStartEthSale,
+  testStartFiatSale,
+  testTerminate,
+  testTransfer,
+  testTransferFrom,
   testUnpause,
   testUpdateProofOfCustody,
-  testTransfer,
-  testApprove,
-  testTransferFrom,
-  testTerminate,
-  testStartFiatSale,
-  testBuyTokensWithFiat,
-  testCancelFunding
+  whitelistedPoaBuyers
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
 const { timeTravel } = require('helpers')
@@ -30,12 +30,14 @@ describe("when in 'FundingCancelled' stage", () => {
   contract('PoaToken', accounts => {
     let poa
     let fmr
+    let pmr
     const fiatInvestor = accounts[3]
 
     before('setup contracts', async () => {
       const contracts = await setupPoaProxyAndEcosystem()
       poa = contracts.poa
       fmr = contracts.fmr
+      pmr = contracts.pmr
 
       // move into "FiatFunding" stagew
       const neededTime = await determineNeededTimeTravel(poa)
@@ -54,7 +56,12 @@ describe("when in 'FundingCancelled' stage", () => {
     })
 
     it('should NOT unpause, even if owner', async () => {
-      await testWillThrow(testUnpause, [poa, { from: owner }])
+      await testWillThrow(testUnpause, [
+        poa,
+        pmr,
+        { from: owner },
+        { callPoaDirectly: false }
+      ])
     })
 
     it('should NOT startEthSale, even if owner', async () => {
@@ -73,7 +80,12 @@ describe("when in 'FundingCancelled' stage", () => {
     })
 
     it('should NOT terminate, even if custodian', async () => {
-      await testWillThrow(testTerminate, [poa, { from: custodian }])
+      await testWillThrow(testTerminate, [
+        poa,
+        pmr,
+        { from: custodian },
+        { callPoaDirectly: true }
+      ])
     })
 
     it('should NOT payout, even if broker', async () => {

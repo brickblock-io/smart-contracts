@@ -1,32 +1,32 @@
 const assert = require('assert')
 const BigNumber = require('bignumber.js')
+
 const { timeTravel } = require('helpers')
 const { gasPrice } = require('../helpers/general')
 const {
-  owner,
   broker,
   custodian,
-  defaultName32,
-  defaultName,
-  defaultSymbol32,
-  defaultSymbol,
-  defaultFiatCurrency32,
-  defaultFiatCurrency,
-  defaultTotalSupply,
-  getDefaultStartTime,
-  defaultFundingTimeout,
   defaultActivationTimeout,
+  defaultFiatCurrency,
+  defaultFiatCurrency32,
   defaultFundingGoal,
-  testStartEthSale,
+  defaultFundingTimeout,
+  defaultIpfsHashArray32,
+  defaultName,
+  defaultName32,
+  defaultSymbol,
+  defaultSymbol32,
+  defaultTotalSupply,
   determineNeededTimeTravel,
-  testBuyRemainingTokens,
+  getDefaultStartTime,
+  stages,
   testActivate,
   testBrokerClaim,
-  whitelistedPoaBuyers,
-  defaultIpfsHashArray32,
-  stages,
+  testBuyRemainingTokens,
+  testPayActivationFee,
+  testStartEthSale,
   testUpdateProofOfCustody,
-  testPayActivationFee
+  whitelistedPoaBuyers
 } = require('./poa')
 const {
   getAllSequentialStorage,
@@ -124,33 +124,33 @@ const initializeContract = async (poa, reg) => {
   )
 }
 
-const checkPostInitializedStorage = async (poa, reg) => {
+const checkPostInitializedStorage = async (poa, reg, pmr) => {
   // get all storage
   const storage = await getAllSequentialStorage(poa.address)
   // proxy storage
   const {
-    poaTokenMaster,
     poaCrowdsaleMaster,
+    poaTokenMaster,
     registry
   } = parseProxyCommonStorage(storage, false)
   // common storage
   const {
-    stage,
     actualBroker,
     actualCustodian,
-    proofOfCustody32,
-    commonTotalSupply,
-    fundedFiatAmountInTokens,
-    fundedEthAmountInWei,
-    paused,
-    tokenInitialized,
-    crowdsaleInitialized,
-    startTimeForEthFundingPeriod,
-    durationForEthFundingPeriod,
-    durationForActivationPeriod,
     actualFiatCurrency32,
+    commonTotalSupply,
+    crowdsaleInitialized,
+    durationForActivationPeriod,
+    durationForEthFundingPeriod,
+    fundedEthAmountInWei,
+    fundedFiatAmountInCents,
+    fundedFiatAmountInTokens,
     fundingGoalInCents,
-    fundedFiatAmountInCents
+    paused,
+    proofOfCustody32,
+    stage,
+    startTimeForEthFundingPeriod,
+    tokenInitialized
   } = parseCommonStorage(storage, false)
 
   // token storage
@@ -237,7 +237,11 @@ const checkPostInitializedStorage = async (poa, reg) => {
   assert.equal(actualBroker, broker, 'actualBroker should match broker')
 
   assert.equal(allowed, '0x00', 'allowed slot should be empty')
-  assert.equal(actualOwner, owner, 'owner should be in expected storage slot')
+  assert.equal(
+    actualOwner,
+    pmr.address,
+    'owner should be in expected storage slot'
+  )
   assert.equal(name, defaultName, 'name32 should be in correct storage slot')
   assert.equal(
     symbol,
@@ -278,7 +282,7 @@ const enterActiveStage = async (poa, fmr) => {
   - enterActiveStage() has been run to give buy all tokens as whitelistedPoaBuyers[0]
   - testApprove() has been run to give whitelistedPoaBuyers[1] approval to spend whitelistedPoaBuyers[0]'s tokens
 */
-const checkPostActiveStorage = async (poa, reg) => {
+const checkPostActiveStorage = async (poa, reg, pmr) => {
   // get all storage
   const storage = await getAllSequentialStorage(poa.address)
   // proxy storage
@@ -288,22 +292,22 @@ const checkPostActiveStorage = async (poa, reg) => {
   )
   // common storage
   const {
-    stage,
     actualBroker,
     actualCustodian,
-    proofOfCustody32,
-    commonTotalSupply,
-    fundedFiatAmountInTokens,
-    fundedEthAmountInWei,
-    paused,
-    crowdsaleInitialized,
-    tokenInitialized,
-    durationForEthFundingPeriod,
     actualFiatCurrency32,
-    startTimeForEthFundingPeriod,
+    commonTotalSupply,
+    crowdsaleInitialized,
     durationForActivationPeriod,
+    durationForEthFundingPeriod,
+    fundedEthAmountInWei,
+    fundedFiatAmountInCents,
+    fundedFiatAmountInTokens,
     fundingGoalInCents,
-    fundedFiatAmountInCents
+    paused,
+    proofOfCustody32,
+    stage,
+    startTimeForEthFundingPeriod,
+    tokenInitialized
   } = await parseCommonStorage(storage, true)
   // token storage
   const { allowed, actualOwner, name, symbol } = parseTokenStorage(storage)
@@ -314,7 +318,11 @@ const checkPostActiveStorage = async (poa, reg) => {
   )
 
   assert.equal(allowed, '0x00', 'expected allowed slot should be empty')
-  assert.equal(actualOwner, owner, 'owner should be in correct storage slot')
+  assert.equal(
+    actualOwner,
+    pmr.address,
+    'owner should be in correct storage slot'
+  )
   assert.equal(name, defaultName, 'name32 should be in correct storage slot')
   assert.equal(
     symbol,
@@ -419,7 +427,7 @@ const checkPostActiveStorage = async (poa, reg) => {
   )
 }
 
-const checkPostIsUpgradedStorage = async (poa, reg) => {
+const checkPostIsUpgradedStorage = async (poa, reg, pmr) => {
   // get all storage
   const storage = await getAllSequentialStorage(poa.address)
   // proxy storage
@@ -430,22 +438,22 @@ const checkPostIsUpgradedStorage = async (poa, reg) => {
   } = parseProxyCommonStorage(storage, true)
   // common storage
   const {
-    stage,
     actualBroker,
     actualCustodian,
-    proofOfCustody32,
-    commonTotalSupply,
-    fundedFiatAmountInTokens,
-    fundedEthAmountInWei,
-    paused,
-    tokenInitialized,
-    crowdsaleInitialized,
-    startTimeForEthFundingPeriod,
-    durationForEthFundingPeriod,
-    durationForActivationPeriod,
     actualFiatCurrency32,
+    commonTotalSupply,
+    crowdsaleInitialized,
+    durationForActivationPeriod,
+    durationForEthFundingPeriod,
+    fundedEthAmountInWei,
+    fundedFiatAmountInCents,
+    fundedFiatAmountInTokens,
     fundingGoalInCents,
-    fundedFiatAmountInCents
+    paused,
+    proofOfCustody32,
+    stage,
+    startTimeForEthFundingPeriod,
+    tokenInitialized
   } = await parseCommonStorage(storage, true)
   // token storage
   const { allowed, actualOwner, name, symbol } = parseTokenStorage(storage)
@@ -457,7 +465,11 @@ const checkPostIsUpgradedStorage = async (poa, reg) => {
   )
 
   assert.equal(allowed, '0x00', 'expected allowed slot should be empty')
-  assert.equal(actualOwner, owner, 'owner should be in correct storage slot')
+  assert.equal(
+    actualOwner,
+    pmr.address,
+    'owner should be in correct storage slot'
+  )
   assert.equal(name, defaultName, 'name32 should be in correct storage slot')
   assert.equal(
     symbol,

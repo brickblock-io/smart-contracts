@@ -4,29 +4,28 @@ const PoaCrowdsale = artifacts.require('PoaCrowdsale')
 
 const { timeTravel } = require('helpers')
 const {
-  setupEcosystem,
-  testSetCurrencyRate,
-  defaultName32,
-  defaultSymbol32,
+  defaultActivationTimeout,
   defaultFiatCurrency,
   defaultFiatCurrency32,
-  defaultTotalSupply,
-  defaultFundingTimeout,
-  defaultActivationTimeout,
-  defaultFundingGoal,
   defaultFiatRate,
-  getDefaultStartTime,
-  determineNeededTimeTravel,
-  testStartEthSale,
-  testBuyRemainingTokens,
-  testActivate,
+  defaultFundingGoal,
+  defaultFundingTimeout,
   defaultIpfsHashArray32,
+  defaultName32,
+  defaultSymbol32,
+  defaultTotalSupply,
+  determineNeededTimeTravel,
+  getDefaultStartTime,
+  setupEcosystem,
   stages,
-  whitelistedPoaBuyers,
+  testActivate,
+  testBuyRemainingTokens,
+  testPayActivationFee,
+  testSetCurrencyRate,
+  testStartEthSale,
   testUpdateProofOfCustody,
-  testPayActivationFee
+  whitelistedPoaBuyers
 } = require('./poa')
-
 const { gasPrice } = require('./general')
 
 const accounts = web3.eth.accounts
@@ -103,33 +102,24 @@ const moveTokenToActive = async (poa, fmr) => {
 }
 
 const testPauseToken = async (pmr, poa, config) => {
-  assert.equal(await poa.paused(), false, 'token should begin unpaused')
-
   await pmr.pauseToken(poa.address, config)
-
-  assert.equal(await poa.paused(), true, 'token should then become paused')
 }
 
 const testUnpauseToken = async (pmr, poa, config) => {
-  assert.equal(await poa.paused(), true, 'token should begin paused')
-
   await pmr.unpauseToken(poa.address, config)
-
-  assert.equal(await poa.paused(), false, 'token should then become unpaused')
 }
 
 const testTerminateToken = async (pmr, poa, config) => {
   const preStage = await poa.stage()
-
-  await pmr.terminateToken(poa.address, config)
-
-  const postStage = await poa.stage()
-
   assert.equal(
     preStage.toString(),
     stages.Active,
     'poa should start in stage Active'
   )
+
+  await pmr.terminateToken(poa.address, config)
+
+  const postStage = await poa.stage()
   assert.equal(
     postStage.toString(),
     stages.Terminated,
@@ -137,7 +127,7 @@ const testTerminateToken = async (pmr, poa, config) => {
   )
 }
 
-const testToggleWhitelistTransfers = async (pmr, addedToken, config) => {
+const testToggleWhitelistTokenTransfers = async (pmr, addedToken, config) => {
   const preWhitelistTransfers = await addedToken.whitelistTransfers()
 
   await pmr.toggleTokenWhitelistTransfers(addedToken.address, config)
@@ -157,5 +147,5 @@ module.exports = {
   testPauseToken,
   testUnpauseToken,
   testTerminateToken,
-  testToggleWhitelistTransfers
+  testToggleWhitelistTokenTransfers
 }

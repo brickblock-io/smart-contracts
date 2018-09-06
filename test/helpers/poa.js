@@ -1,4 +1,3 @@
-const logger = require('../../scripts/lib/logger')
 const AccessToken = artifacts.require('AccessToken')
 const ContractRegistry = artifacts.require('ContractRegistry')
 const ExchangeRateProvider = artifacts.require('ExchangeRateProviderStub')
@@ -12,17 +11,9 @@ const Whitelist = artifacts.require('Whitelist')
 const IPoaTokenCrowdsale = artifacts.require('IPoaTokenCrowdsale')
 
 const assert = require('assert')
+const BigNumber = require('bignumber.js')
 
-const stages = {
-  PreFunding: '0',
-  FiatFunding: '1',
-  EthFunding: '2',
-  FundingSuccessful: '3',
-  FundingCancelled: '4',
-  TimedOut: '5',
-  Active: '6',
-  Terminated: '7'
-}
+const logger = require('../../scripts/lib/logger')
 const { timeTravel } = require('helpers')
 const {
   areInRange,
@@ -42,7 +33,17 @@ const {
   testSetRate,
   testSetQueryId
 } = require('./exr')
-const BigNumber = require('bignumber.js')
+
+const stages = {
+  PreFunding: '0',
+  FiatFunding: '1',
+  EthFunding: '2',
+  FundingSuccessful: '3',
+  FundingCancelled: '4',
+  TimedOut: '5',
+  Active: '6',
+  Terminated: '7'
+}
 
 const accounts = web3.eth.accounts
 const owner = accounts[0]
@@ -216,11 +217,6 @@ const setupPoaProxyAndEcosystem = async ({
   // wrap the proxied PoA in PoaToken ABI to call as if regular PoA
   const poa = await IPoaTokenCrowdsale.at(poaTx.logs[0].args.token)
 
-  // trick the proxyPoa into thinking that PoaManager is owner
-  // this makes it easier to test with a regular account
-  // PoaManager only functions are tested in PoaManager tests as
-  // actual PoaManager as well
-  await reg.updateContractAddress('PoaManager', owner)
   return {
     reg,
     act,
@@ -657,8 +653,8 @@ const testBuyTokensWithFiat = async (poa, buyer, amountInCents, config) => {
       expectedTokenDifferenceTolerance
     ),
     `Token amount should match the expected value.
-      expected: ${expectedUserTokenAmount.toString()}, 
-      actual  : ${actualFundedAmountInTokens.toString()}, 
+      expected: ${expectedUserTokenAmount.toString()},
+      actual  : ${actualFundedAmountInTokens.toString()},
       tolerance: ${expectedTokenDifferenceTolerance.toString()}`
   )
 
@@ -1363,15 +1359,76 @@ const testPaused = async (poa, shouldBePaused) => {
   assert(shouldBePaused ? paused : !paused, 'contract should be paused')
 }
 
-const testPause = async (poa, config) => {
-  await poa.pause(config)
+// start - onlyOwner functions
+
+// NOTE: onlyOwner does a live check for 'PoaManager' from ContractRegistry, which is why we use
+// PoaManager here to test "successful" calls
+
+const testPause = async (poa, pmr, config, { callPoaDirectly }) => {
+  // NOTE: this should always fail
+  if (callPoaDirectly) return await poa.pause(config)
+
+  await require('./pmr').testPauseToken(pmr, poa, config)
   await testPaused(poa, true)
 }
 
-const testUnpause = async (poa, config) => {
-  await poa.unpause(config)
+const testUnpause = async (poa, pmr, config, { callPoaDirectly }) => {
+  // NOTE: this should always fail
+  if (callPoaDirectly) return await poa.unpause(config)
+
+  await require('./pmr').testUnpauseToken(pmr, poa, config)
   await testPaused(poa, false)
 }
+
+const testToggleWhitelistTransfers = async (
+  poa,
+  pmr,
+  config,
+  { callPoaDirectly }
+) => {
+  if (!callPoaDirectly)
+    return await require('./pmr').testToggleWhitelistTokenTransfers(
+      pmr,
+      poa,
+      config
+    )
+
+  const preWhitelistTransfers = await poa.whitelistTransfers()
+
+  await poa.toggleWhitelistTransfers(config)
+
+  const postWhitelistTransfers = await poa.whitelistTransfers()
+
+  assert(
+    preWhitelistTransfers != postWhitelistTransfers,
+    'whitelistTransfers should be toggled'
+  )
+}
+
+// end - onlyOwner functions
+
+// start - eitherCustodianOrOwner functions
+
+const testTerminate = async (poa, pmr, config, { callPoaDirectly }) => {
+  if (!callPoaDirectly) {
+    return await require('./pmr').testTerminateToken(pmr, poa, config)
+  }
+
+  const preStage = await poa.stage()
+
+  await poa.terminate(config)
+
+  const postStage = await poa.stage()
+
+  assert.equal(preStage.toString(), stages.Active, 'preStage should be Active')
+  assert.equal(
+    postStage.toString(),
+    stages.Terminated,
+    'postStage should be Terminated'
+  )
+}
+
+// end - eitherCustodianOrOwner functions
 
 const testFallback = async config => {
   await testWillThrow(sendTransaction, [web3, config])
@@ -1482,21 +1539,6 @@ const testTransferFrom = async (
   )
 }
 
-const testTerminate = async (poa, config) => {
-  const preStage = await poa.stage()
-
-  await poa.terminate(config)
-
-  const postStage = await poa.stage()
-
-  assert.equal(preStage.toString(), stages.Active, 'preStage should be Active')
-  assert.equal(
-    postStage.toString(),
-    stages.Terminated,
-    'postStage should be Terminated'
-  )
-}
-
 const testChangeCustodianAddress = async (poa, newAddress, config) => {
   await poa.changeCustodianAddress(newAddress, config)
 
@@ -1564,21 +1606,6 @@ const testActiveBalances = async (poa, commitments) => {
     ),
     'totalSupply should be within 1 wei of tokenBalanceTotal'
   )
-}
-
-const testToggleWhitelistTransfers = async (poa, config) => {
-  const preWhitelistTransfers = await poa.whitelistTransfers()
-
-  await poa.toggleWhitelistTransfers(config)
-
-  const postWhitelistTransfers = await poa.whitelistTransfers()
-
-  assert(
-    preWhitelistTransfers != postWhitelistTransfers,
-    'whitelistTransfers should be toggled'
-  )
-
-  return postWhitelistTransfers
 }
 
 const testProxyUnchanged = async (poa, first, state) => {
@@ -1691,7 +1718,6 @@ module.exports = {
   bbkTokenDistAmount,
   broker,
   custodian,
-  fiatBuyer,
   defaultActivationTimeout,
   defaultBuyAmount,
   defaultFiatCurrency,
@@ -1700,22 +1726,27 @@ module.exports = {
   defaultFundingGoal,
   defaultFundingTimeout,
   defaultIpfsHash,
-  newIpfsHash,
   defaultIpfsHashArray32,
-  newIpfsHashArray32,
   defaultName,
   defaultName32,
   defaultSymbol,
   defaultSymbol32,
   defaultTotalSupply,
   determineNeededTimeTravel,
+  emptyBytes32,
+  fiatBuyer,
   forcePoaTimeout,
   getAccountInformation,
   getDefaultStartTime,
+  getExpectedTokenAmount,
+  getRemainingAmountInCentsDuringFiatFunding,
+  getRemainingAmountInWeiDuringEthFunding,
+  newIpfsHash,
+  newIpfsHashArray32,
   owner,
   setupEcosystem,
   setupPoaProxyAndEcosystem,
-  testPayActivationFee,
+  stages,
   testActivate,
   testActiveBalances,
   testApprove,
@@ -1724,9 +1755,8 @@ module.exports = {
   testBuyTokens,
   testBuyTokensMulti,
   testBuyTokensWithFiat,
-  testRemoveTokensWithFiat,
-  testIncrementOfBalanceWhenBuyTokensWithFiat,
   testCalculateFee,
+  testCancelFunding,
   testChangeCustodianAddress,
   testClaim,
   testClaimAllPayouts,
@@ -1734,20 +1764,23 @@ module.exports = {
   testFallback,
   testFiatCentsToWei,
   testFirstReclaim,
+  testIncrementOfBalanceWhenBuyTokensWithFiat,
   testInitialization,
   testPause,
   testPaused,
+  testPayActivationFee,
   testPayout,
+  testPercent,
   testProxyInitialization,
   testProxyUnchanged,
   testReclaim,
   testReclaimAll,
+  testRemoveTokensWithFiat,
   testResetCurrencyRate,
   testSetCurrencyRate,
   testSetStageToTimedOut,
-  testCancelFunding,
-  testStartFiatSale,
   testStartEthSale,
+  testStartFiatSale,
   testTerminate,
   testToggleWhitelistTransfers,
   testTransfer,
@@ -1755,11 +1788,5 @@ module.exports = {
   testUnpause,
   testUpdateProofOfCustody,
   testWeiToFiatCents,
-  whitelistedPoaBuyers,
-  emptyBytes32,
-  stages,
-  getExpectedTokenAmount,
-  testPercent,
-  getRemainingAmountInCentsDuringFiatFunding,
-  getRemainingAmountInWeiDuringEthFunding
+  whitelistedPoaBuyers
 }

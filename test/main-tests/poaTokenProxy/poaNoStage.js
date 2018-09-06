@@ -1,12 +1,12 @@
 const {
   custodian,
-  whitelistedPoaBuyers,
   setupPoaProxyAndEcosystem,
-  testWeiToFiatCents,
-  testFiatCentsToWei,
   testCalculateFee,
+  testChangeCustodianAddress,
   testFallback,
-  testChangeCustodianAddress
+  testFiatCentsToWei,
+  testWeiToFiatCents,
+  whitelistedPoaBuyers
 } = require('../../helpers/poa')
 const { testWillThrow } = require('../../helpers/general.js')
 const BigNumber = require('bignumber.js')

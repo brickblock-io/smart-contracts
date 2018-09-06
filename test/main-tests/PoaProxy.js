@@ -33,12 +33,14 @@ describe('when using PoaProxy contract to proxy a PoaToken', () => {
     let poa
     let reg
     let fmr
+    let pmr
 
     before('setup contracts', async () => {
       // this sets PoaManager contract as owner in registry... storage will reflect that
       const contracts = await setupEcosystem()
       reg = contracts.reg
       fmr = contracts.fmr
+      pmr = contracts.pmr
       const { exr, exp } = contracts
       poatm = await PoaToken.new()
       poacm = await PoaCrowdsale.new()
@@ -61,8 +63,6 @@ describe('when using PoaProxy contract to proxy a PoaToken', () => {
           value: 1e18
         }
       )
-      // set PoaManager to owner in registry in order to perform ownerOnly functions
-      await reg.updateContractAddress('PoaManager', owner)
 
       assert.equal(
         poa.address,
@@ -80,7 +80,7 @@ describe('when using PoaProxy contract to proxy a PoaToken', () => {
     })
 
     it('should have new storage after initializing token and crowdsale', async () => {
-      await checkPostInitializedStorage(poa, reg)
+      await checkPostInitializedStorage(poa, reg, pmr)
     })
 
     it('should move to active poa stage', async () => {
@@ -94,7 +94,7 @@ describe('when using PoaProxy contract to proxy a PoaToken', () => {
     })
 
     it('should have correct storage after entering active', async () => {
-      await checkPostActiveStorage(poa, reg)
+      await checkPostActiveStorage(poa, reg, pmr)
     })
 
     it('should NOT upgrade to new master if NOT PoaManager (accounts[0] for test)', async () => {
@@ -107,8 +107,10 @@ describe('when using PoaProxy contract to proxy a PoaToken', () => {
     it('should upgrade to new master with additional functionality and storage', async () => {
       const preTokenMaster = await pxy.poaTokenMaster()
 
-      await pxy.proxyChangeTokenMaster(upoam.address)
+      // first must update the contract registry
       await reg.updateContractAddress('PoaTokenMaster', upoam.address)
+      // then can upgrade the proxy
+      await pmr.upgradeToken(pxy.address)
 
       const postTokenMaster = await pxy.poaTokenMaster()
 
@@ -125,7 +127,7 @@ describe('when using PoaProxy contract to proxy a PoaToken', () => {
     })
 
     it('should have the same storage as before', async () => {
-      await checkPostActiveStorage(poa, reg)
+      await checkPostActiveStorage(poa, reg, pmr)
       poa = UpgradedPoa.at(pxy.address)
     })
 
@@ -141,7 +143,7 @@ describe('when using PoaProxy contract to proxy a PoaToken', () => {
     })
 
     it('should have new storage for new bool isUpgraded after being set', async () => {
-      await checkPostIsUpgradedStorage(poa, reg)
+      await checkPostIsUpgradedStorage(poa, reg, pmr)
     })
   })
 })

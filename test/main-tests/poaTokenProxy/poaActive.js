@@ -1,34 +1,34 @@
 const {
-  owner,
+  bbkContributors,
   broker,
   custodian,
-  bbkContributors,
-  whitelistedPoaBuyers,
+  defaultBuyAmount,
   defaultIpfsHashArray32,
-  setupPoaProxyAndEcosystem,
-  testStartEthSale,
-  testBuyTokens,
   determineNeededTimeTravel,
-  testBuyRemainingTokens,
+  newIpfsHashArray32,
+  owner,
+  setupPoaProxyAndEcosystem,
   testActivate,
+  testActiveBalances,
+  testApprove,
   testBrokerClaim,
-  testPayout,
+  testBuyRemainingTokens,
+  testBuyTokens,
   testClaim,
+  testPause,
+  testPaused,
+  testPayActivationFee,
+  testPayout,
   testReclaim,
   testSetStageToTimedOut,
-  testPaused,
-  testPause,
+  testStartEthSale,
+  testTerminate,
+  testToggleWhitelistTransfers,
+  testTransfer,
+  testTransferFrom,
   testUnpause,
   testUpdateProofOfCustody,
-  testTransfer,
-  testApprove,
-  testTransferFrom,
-  testTerminate,
-  testActiveBalances,
-  defaultBuyAmount,
-  testToggleWhitelistTransfers,
-  newIpfsHashArray32,
-  testPayActivationFee
+  whitelistedPoaBuyers
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
 const { timeTravel } = require('helpers')
@@ -37,12 +37,14 @@ describe("when in 'Active' stage", () => {
   contract('PoaTokenProxy', () => {
     let poa
     let fmr
+    let pmr
     const commitments = []
 
     before('setup contracts', async () => {
       const contracts = await setupPoaProxyAndEcosystem()
       poa = contracts.poa
       fmr = contracts.fmr
+      pmr = contracts.pmr
 
       // move into "EthFunding" stage
       const neededTime = await determineNeededTimeTravel(poa)
@@ -99,27 +101,47 @@ describe("when in 'Active' stage", () => {
     })
 
     it('should NOT unpause when already unpaused', async () => {
-      await testWillThrow(testUnpause, [poa, { from: owner }])
+      await testWillThrow(testUnpause, [
+        poa,
+        pmr,
+        { from: owner },
+        { callPoaDirectly: false }
+      ])
     })
 
     it('should NOT pause if NOT owner', async () => {
-      await testWillThrow(testPause, [poa, { from: whitelistedPoaBuyers[0] }])
+      await testWillThrow(testPause, [
+        poa,
+        pmr,
+        { from: whitelistedPoaBuyers[0] },
+        { callPoaDirectly: true }
+      ])
     })
 
     it('should pause if owner', async () => {
-      await testPause(poa, { from: owner })
+      await testPause(poa, pmr, { from: owner }, { callPoaDirectly: false })
     })
 
     it('should NOT pause if already paused', async () => {
-      await testWillThrow(testPause, [poa, { from: owner }])
+      await testWillThrow(testPause, [
+        poa,
+        pmr,
+        { from: owner },
+        { callPoaDirectly: false }
+      ])
     })
 
     it('should NOT unpause if NOT owner', async () => {
-      await testWillThrow(testUnpause, [poa, { from: whitelistedPoaBuyers[0] }])
+      await testWillThrow(testUnpause, [
+        poa,
+        pmr,
+        { from: whitelistedPoaBuyers[0] },
+        { callPoaDirectly: true }
+      ])
     })
 
     it('should unpause if owner', async () => {
-      await testUnpause(poa, { from: owner })
+      await testUnpause(poa, pmr, { from: owner }, { callPoaDirectly: false })
     })
 
     it('should NOT startEthSale, even if owner', async () => {
@@ -243,16 +265,21 @@ describe("when in 'Active' stage", () => {
     it('should NOT toggleWhitelistTransfers if NOT owner', async () => {
       await testWillThrow(testToggleWhitelistTransfers, [
         poa,
-        { from: custodian }
+        pmr,
+        { from: custodian },
+        { callPoaDirectly: true }
       ])
     })
 
     it('should toggleWhitelistTransfers to true if owner', async () => {
-      const whitelistTransfers = await testToggleWhitelistTransfers(poa, {
-        from: owner
-      })
+      await testToggleWhitelistTransfers(
+        poa,
+        pmr,
+        { from: owner },
+        { callPoaDirectly: false }
+      )
       assert(
-        whitelistTransfers,
+        await poa.whitelistTransfers(),
         'transfers/transferFroms should require whitelisting now'
       )
     })
@@ -302,7 +329,12 @@ describe("when in 'Active' stage", () => {
 
     // test for owner done through contract setup test for Terminated stage
     it('should allow terminating if owner or custodian', async () => {
-      await testTerminate(poa, { from: custodian })
+      await testTerminate(
+        poa,
+        pmr,
+        { from: custodian },
+        { callPoaDirectly: true }
+      )
     })
   })
 })
