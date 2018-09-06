@@ -7,20 +7,11 @@ const migrationHelpers = require('../helpers')
 const index = async (deployer, accounts, contracts, web3, network) => {
   const {
     brickblockToken,
-    constants: {
-      oneWeekInSec,
-      twoWeeksInSec,
-      oneHundredThousandEuroInCents,
-      oneHundredThousandTokensInWei
-    },
+    constants: { oneWeekInSec, twoWeeksInSec, oneHundredThousandEuroInCents },
     exchangeRates,
-    general: {
-      addContractsToRegistry,
-      getEtherBalance,
-      unixTimeWithOffsetInSec,
-      sendTransaction
-    },
+    general: { getEtherBalance, unixTimeWithOffsetInSec, sendTransaction },
     deployment: { deployContracts },
+    registry: { addContractsToRegistry },
     poaManager,
     whitelist,
     statistics,
@@ -59,7 +50,7 @@ const index = async (deployer, accounts, contracts, web3, network) => {
     hasParams = hasParams || actions[key]
   })
 
-  if (argv.all) {
+  if (argv.default) {
     Object.keys(actions).forEach(key => {
       actions[key] = true
     })
@@ -92,15 +83,15 @@ const index = async (deployer, accounts, contracts, web3, network) => {
     * Set ETH <> Fiat exchange rate in our oracle
     */
     ownerPreEtherBalance = await getEtherBalance(owner)
+    const symbol = argv.setRateSymbol
     await exchangeRates.setFiatRate(
       instances.ExchangeRates,
       instances.ExchangeRateProvider,
       {
-        currencyName: 'EUR',
-        queryString:
-          'json(https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=EUR).EUR',
-        callIntervalInSec: 60,
-        callbackGasLimit: 1500000,
+        currencyName: symbol,
+        queryString: `json(https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=${symbol}).${symbol}`,
+        callIntervalInSec: argv.setRateInterval,
+        callbackGasLimit: argv.setRateGasLimit,
         useStub
       },
       { from: owner }
@@ -160,11 +151,11 @@ const index = async (deployer, accounts, contracts, web3, network) => {
     await poaManager.deployPoa(
       instances.PoaManager,
       {
-        name: 'Local Testnet Token',
-        symbol: 'BBK-RE-DE123',
-        fiatCurrency: 'EUR',
+        name: argv.deployPoaName,
+        symbol: argv.deployPoaSymbol,
+        fiatCurrency: argv.deployPoaCurrency,
         custodian,
-        totalSupply: oneHundredThousandTokensInWei,
+        totalSupply: argv.deployPoaTotalSupply,
         // startTimeForEthFundingPeriod needs a little offset so that it isn't too close to `block.timestamp` which would fail
         startTimeForEthFundingPeriod: unixTimeWithOffsetInSec(600),
         durationForEthFundingPeriod: oneWeekInSec,
@@ -185,7 +176,7 @@ const index = async (deployer, accounts, contracts, web3, network) => {
     await whitelist.addAddress(
       instances.Whitelist,
       {
-        investor: whitelistedInvestor
+        investor: argv.addToWhiteList || whitelistedInvestor
       },
       { from: owner }
     )

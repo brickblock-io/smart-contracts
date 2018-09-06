@@ -192,10 +192,7 @@ const conditionalDeploy = async (
 
   if (useExistingContracts) {
     let contractAddress
-    if (
-      contractName === 'ContractRegistry' ||
-      contractName === 'BrickblockToken'
-    ) {
+    if (contractName === 'ContractRegistry') {
       contractAddress = await getDeployedContractAddressFromFile(
         contractName,
         network
@@ -209,7 +206,19 @@ const conditionalDeploy = async (
       const contractRegistry = ContractRegistryABI.at(contractRegistryAddress)
 
       // Get the address from Contract Registry
-      contractAddress = await contractRegistry.getContractAddress(contractName)
+      try {
+        contractAddress = await contractRegistry.getContractAddress(
+          contractName
+        )
+      } catch (ex) {
+        logger.info(
+          `${contractName} not found in the registry. Will try to fetch from file`
+        )
+        contractAddress = await getDeployedContractAddressFromFile(
+          contractName,
+          network
+        )
+      }
     }
 
     if (contractAddress) {
@@ -223,13 +232,22 @@ const conditionalDeploy = async (
     }
 
     // If it doesn't exist, deploy a new one
-    return await deployContract(
+    logger.warn(
+      `${contractName} failed to fetch address from many sources. Deploying a new one.`
+    )
+    const contractInstance = await deployContract(
       contractName,
       contractAbi,
       contractParams,
       deployer,
       config
     )
+
+    if (contractName === 'ContractRegistry') {
+      process.env.CONTRACT_REGISTRY = contractInstance.address
+    }
+
+    return contractInstance
   }
 }
 
@@ -244,6 +262,10 @@ const getDeployedContractAddressFromFile = (contractName, networkName) => {
   const networkConfig = truffleConfig.networks[networkName]
 
   if (typeof networkConfig === 'undefined') {
+    return false
+  }
+
+  if (typeof deployedContracts[networkConfig.network_id] === 'undefined') {
     return false
   }
 

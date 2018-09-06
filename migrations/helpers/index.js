@@ -7,6 +7,7 @@ const whitelist = require('./whitelist')
 const statistics = require('./statistics')
 const ownerManagement = require('./ownerManagement')
 const deployment = require('./deployment')
+const registry = require('./registry')
 
 /*
  * IMPORTANT CONVENTION
@@ -39,5 +40,6 @@ module.exports = {
   whitelist,
   statistics,
   ownerManagement,
-  deployment
+  deployment,
+  registry
 }

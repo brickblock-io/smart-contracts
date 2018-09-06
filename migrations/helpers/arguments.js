@@ -1,3 +1,9 @@
+const {
+  oneHundredThousandTokensInWei,
+  oneWeekInSec,
+  twoWeeksInSec
+} = require('../helpers/constants')
+const { unixTimeWithOffsetInSec } = require('../helpers/general')
 const yargs = require('yargs')
   .version(require('../../package.json').version)
   .option('default', {
@@ -16,6 +22,21 @@ const yargs = require('yargs')
     describe: 'Sets currency rate',
     default: false
   })
+  .option('setRate-interval', {
+    alias: 'sr-i',
+    describe: 'Sets currency rate fetch interval',
+    default: 0
+  })
+  .option('setRate-symbol', {
+    alias: 'sr-s',
+    describe: 'Sets currency symbol',
+    default: 'EUR'
+  })
+  .option('setRate-gasLimit', {
+    alias: 'sr-s',
+    describe: 'Sets exchange rate callback gas limit',
+    default: 1500000
+  })
   .option('finalizeBbk', {
     alias: 'fb',
     describe: 'finalizes crowdsale, distributes bbk if not mainnet',
@@ -28,12 +49,50 @@ const yargs = require('yargs')
   })
   .option('deployPoa', {
     alias: 'dp',
-    describe: 'deploys an example POA token',
+    describe: 'Deploys an example POA token',
     default: false
+  })
+  .option('deployPoa-totalSupply', {
+    alias: 'dp-ts',
+    describe: 'Total supply of POA Token in wei',
+    default: oneHundredThousandTokensInWei
+  })
+  .option('deployPoa-currency', {
+    alias: 'dp-c',
+    describe: 'Currency of POA Token',
+    default: 'EUR'
+  })
+  .option('deployPoa-name', {
+    alias: 'dp-n',
+    describe: 'Name of POA Token',
+    default: 'Local Testnet Token'
+  })
+  .option('deployPoa-symbol', {
+    alias: 'dp-s',
+    describe: 'Symbol of POA Token',
+    default: 'BBK-RE-DE123'
+  })
+  .option('deployPoa-startTimeForEthFunding', {
+    alias: 'dp-start',
+    describe:
+      'Start Time for eth funding period in unix time in seconds format. Default is 60 seconds after from now.',
+    default: unixTimeWithOffsetInSec(60)
+  })
+  .option('deployPoa-durationForEthFunding', {
+    alias: 'dp-de',
+    describe:
+      'Duration for eth funding period in seconds. Default is 1 week from start time.',
+    default: oneWeekInSec
+  })
+  .option('deployPoa-durationForActivation', {
+    alias: 'dp-da',
+    describe:
+      'Duration for activation period in seconds. Default is 2 weeks from start time.',
+    default: twoWeeksInSec
   })
   .option('addToWhiteList', {
     alias: 'aw',
-    describe: 'adds accounts to whitelist',
+    describe: 'adds given address to whitelist. Default is accounts[4]',
     default: false
   })
   .option('useExistingContracts', {

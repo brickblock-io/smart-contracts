@@ -167,14 +167,14 @@ yarn migrate:dev --default --useExistingContracts
 yarn migrate:dev -def --uec
 
 # Deploy with some actions
-yarn migrate:dev --fd all --register --setRate --finalizeBbk
+yarn migrate:dev --dorceDeploy all --register --setRate --finalizeBbk
 
 # Ask for help
 yarn migrate:dev --help
 
 # To deploy POA Token
 # make sure everything is deployed first
-yarn migrate:dev --uec -dp
+yarn migrate:dev --useExistingContracts -deployPoa
 ```
 
 1. Start the [Ganache app](http://truffleframework.com/ganache/) (make sure it's running on `8545`in the settings!) or run `yarn ganache-cli -p 8545`
