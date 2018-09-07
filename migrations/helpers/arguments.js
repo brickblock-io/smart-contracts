@@ -100,7 +100,7 @@ const yargs = require('yargs')
   .option('addToWhiteList', {
     alias: 'aw',
     describe:
-      'adds given address to whitelist. If no address is given, fallbacks to accounts[4]'
+      'adds given address to whitelist. If no address is given, fallbacks to accounts[3]'
   })
   .option('useExistingContracts', {
     alias: 'uec',

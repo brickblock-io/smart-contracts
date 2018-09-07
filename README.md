@@ -153,78 +153,55 @@ There are pre-defined actions you can call with migrations
 - --help: Displays posible options
 
 NOTES: 
-- If no action specified, migration only deploys contracts without taking any further action.
-- Only essential actions are grouped by `all` action to keep it more flexible
-
-examples:   
-```
-# Deploy with default actions
-yarn migrate:dev --default --fd all
-
-# Use pre-deployed contracts
-yarn migrate:dev --default --useExistingContracts
-# short version
-yarn migrate:dev -def --uec
-
-# Deploy with some actions
-yarn migrate:dev --dorceDeploy all --register --setRate --finalizeBbk
-
-# Ask for help
-yarn migrate:dev --help
-
-# To deploy POA Token
-# make sure everything is deployed first
-yarn migrate:dev --useExistingContracts -deployPoa
-```
+- You have to provide one of `--forceDeploy [arguments]` or `--useExistingContracts` to have the essential functionality.
+- Only essential actions are grouped by `default` action to keep it more flexible
 
 1. Start the [Ganache app](http://truffleframework.com/ganache/) (make sure it's running on `8545`in the settings!) or run `yarn ganache-cli -p 8545`
 2. Run `yarn migrate:dev --[action name]`
 
+
+examples:   
+```
+# Deploy with default actions
+yarn migrate:dev --forceDeploy all --default
+
+# Use pre-deployed contracts
+yarn migrate:dev --useExistingContracts --default
+
+# Short version
+yarn migrate:dev --uec -def
+
+# Deploy with some actions
+yarn migrate:dev --forceDeploy all --register --setRate --finalizeBbk
+
+# Deploy selected contracts only and use the rest from the registry
+# Note: If contract addresses are not found in `.env` file for dev network or `config/deployed-contracts.js` for testnets, deployment script deploys a new one
+yarn migrate:dev --forceDeploy AccessToken BrickblockAccount --useExistingContracts --register
+
+# Forcing to use a contract outside of registry
+# First you need to put it inside `.env` file for dev network or `config/deployed-contracts.js`
+# then run:
+yarn migrate:dev --useExistingContracts  --other params
+
+
+# To deploy POA Token
+# Make sure everything is deployed, registered, BBK finalized, currency set, brokers added and investors whitelisted
+# To customize your token, use --deployPoa-[sub argument name]. See help for the full list.
+yarn migrate:dev --useExistingContracts -deployPoa
+
+# To see the full list of commands, ask for help
+yarn migrate:dev --help
+```
+
 #### To deploy on Rinkeby, Kovan or Ropsten
 1. Make sure you set `TESTNET_MNEMONIC` and `INFURA_API_KEY` in `.env` file for your HD wallet
-2. Run
+2. Make sure you set `ContractRegistry` address field under the right network Id if you don't do a full deployment.
+3. Everything else is the same as local deployment
+4. Run
 ```
 yarn migrate:[network name] --def --fd all
 ```
 The network name can be `rinkeby`, `kovan`, or `ropsten`
-
-#### To deploy on Mainnet
-The mainnet migration steps are:
-* Deploys everything except Brickblock Contract
-* then transfers ownership to our coldstore account
-
-1. Make sure you set `MAINNET_MNEMONIC`, `INFURA_API_KEY` and `NEW_OWNER` in `.env` file for your HD wallet
-2. Run:
-```
-yarn migrate:mainnet --register --finalizeBbk --changeOwner --useExistingContracts
-```
-
-#### Mainnet Checklist
-- [ ] Perform migration on rinkeby or kovan using exact same script. The script should:
-    * do everything the testnet deployments do
-    * take into account the already deployed BrickblockToken (DO NOT DEPLOY A NEW ONE!)
-    * change the owner to cold store owner address when everything else has been completed
-    * double check manually all important aspects of the ecosystem such as
-        * exchange rate fetching
-        * locking in BBK
-        * fee payments
-        * poa creation
-        * all stages & aspects of poas
-- [ ] Make sure that the first account in the mnemonic wallet has enough ether (check previous testnet in order to get a cost estimate, make sure to take into acccount gas prices)
-- [ ] double check current gas prices and make sure that the correct gas price is set in truffle.js
-- [ ] double check mnemonic is correct (DO NOT USE TESTNET MNEMONIC)
- 
-#### Deploy to mainnet
-In order to deploy the ecosystem to mainnet run the following: 
-```
-yarn truffle migrate --reset --network mainnet
-```
-
-#### Post Deployment Checklist
-- [ ] Owner is cold store address
-- [ ] check that each contract is deployed
-- [ ] check that exchange rates works (fund it if needed)
-- [ ] remove any remaining ether from deployment accounts and send somewhere secure
 
 ### Interacting with deployed contracts
 When you'd like to interact with deployed contracts on a local testnet, check that `truffle.js` setting for `dev` matches your local testrpc / ganache-cli settings and run:
