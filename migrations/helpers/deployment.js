@@ -95,16 +95,16 @@ const deployContracts = async (
   )
 
   if (useExpStub) {
-    logger.info(chalk.magenta('using stub'))
+    logger.warn(chalk.magenta('using stub for Exchange Rate Provider'))
     instances.ExchangeRateProvider = await conditionalDeploy(
-      'PoaLogger',
+      'ExchangeRateProvider',
       ExchangeRateProviderStubABI,
       [instances.ContractRegistry.address],
       ...defaultParams
     )
   } else {
     instances.ExchangeRateProvider = await conditionalDeploy(
-      'PoaLogger',
+      'ExchangeRateProvider',
       ExchangeRateProviderABI,
       [instances.ContractRegistry.address],
       ...defaultParams
@@ -252,11 +252,14 @@ const conditionalDeploy = async (
 }
 
 const getDeployedContractAddressFromFile = (contractName, networkName) => {
-  const envFileContractName = toUnderscoreCapitalCase(contractName)
-  const envContractAddress = process.env[envFileContractName]
+  // Use .env only for local testnet
+  if (networkName.search('dev' > -1)) {
+    const envFileContractName = toUnderscoreCapitalCase(contractName)
+    const envContractAddress = process.env[envFileContractName]
 
-  if (envContractAddress) {
-    return envContractAddress
+    if (envContractAddress) {
+      return envContractAddress
+    }
   }
 
   const networkConfig = truffleConfig.networks[networkName]

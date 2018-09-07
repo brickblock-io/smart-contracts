@@ -1,15 +1,15 @@
 /* eslint-disable no-console */
 const BigNumber = require('bignumber.js')
 const argv = require('../helpers/arguments')
+const logger = require('../../scripts/lib/logger')
 
 const migrationHelpers = require('../helpers')
 
 const index = async (deployer, accounts, contracts, web3, network) => {
   const {
     brickblockToken,
-    constants: { oneWeekInSec, twoWeeksInSec, oneHundredThousandEuroInCents },
     exchangeRates,
-    general: { getEtherBalance, unixTimeWithOffsetInSec, sendTransaction },
+    general: { getEtherBalance, sendTransaction, isValidAddress },
     deployment: { deployContracts },
     registry: { addContractsToRegistry },
     poaManager,
@@ -35,8 +35,11 @@ const index = async (deployer, accounts, contracts, web3, network) => {
     deployPoaTokenGasCost,
     whitelistAddressGasCost,
     changeOwnerGasCost
+
+  // Use stub for exchange rate provider only in local testnet
   const useStub = network.search('dev') > -1
 
+  // default actions group
   const actions = {
     register: argv.register,
     setRate: argv.setRate,
@@ -157,10 +160,10 @@ const index = async (deployer, accounts, contracts, web3, network) => {
         custodian,
         totalSupply: argv.deployPoaTotalSupply,
         // startTimeForEthFundingPeriod needs a little offset so that it isn't too close to `block.timestamp` which would fail
-        startTimeForEthFundingPeriod: unixTimeWithOffsetInSec(600),
-        durationForEthFundingPeriod: oneWeekInSec,
-        durationForActivationPeriod: twoWeeksInSec,
-        fundingGoalInCents: oneHundredThousandEuroInCents
+        startTimeForEthFundingPeriod: argv.deployPoaStartTimeForEthFunding,
+        durationForEthFundingPeriod: argv.deployPoaDurationForEthFunding,
+        durationForActivationPeriod: argv.deployPoaDurationForActivation,
+        fundingGoalInCents: argv.deployPoaFundingGoalInCents
       },
       { from: broker }
     )
@@ -172,11 +175,25 @@ const index = async (deployer, accounts, contracts, web3, network) => {
     /*
     * Whitelist accounts[4] to be able to buy POA tokens in platform
     */
+
+    let addressToWhiteList
+    if (isValidAddress(argv.addToWhiteList)) {
+      addressToWhiteList = argv.addToWhiteList
+    } else {
+      if (typeof argv.addToWhiteList !== 'undefined') {
+        logger.error(
+          'The address given to whitelist is not a valid Ethereum address. Falling back to default...'
+        )
+      }
+
+      addressToWhiteList = whitelistedInvestor
+    }
+
     ownerPreEtherBalance = await getEtherBalance(owner)
     await whitelist.addAddress(
       instances.Whitelist,
       {
-        investor: argv.addToWhiteList || whitelistedInvestor
+        investor: addressToWhiteList
       },
       { from: owner }
     )

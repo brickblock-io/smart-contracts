@@ -11,6 +11,7 @@ const transferOwnershipOfAllContracts = async (contracts, owner, newOwner) => {
 
     if (isOwnable) {
       const isOwner = (await contract.owner.call()) === owner
+
       if (isOwner) {
         logger.info(chalk.yellow(`Transferring ownership of ${contractName}`))
         const tx = await contract.transferOwnership(newOwner, { from: owner })

@@ -5,7 +5,7 @@ const poaManager = require('./poa-manager')
 const exchangeRates = require('./exchange-rates')
 const whitelist = require('./whitelist')
 const statistics = require('./statistics')
-const ownerManagement = require('./ownerManagement')
+const ownerManagement = require('./owner-management')
 const deployment = require('./deployment')
 const registry = require('./registry')
 

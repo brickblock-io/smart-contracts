@@ -13,6 +13,17 @@ const addAddress = async (
       '\n---------------------------------------------------------------------------------'
     )
   )
+
+  console.log(
+    chalk.cyan(`🚀  Checking if investor "${investor}" is whitelisted…\n`)
+  )
+  const isWhiteListed = await whitelist.whitelisted.call(investor, txConfig)
+
+  if (isWhiteListed) {
+    console.log(chalk.cyan(`🚀  "${investor}" is already whitelisted…\n`))
+    return
+  }
+
   console.log(chalk.cyan(`🚀  Whitelisting investor "${investor}"…\n`))
   await whitelist.addAddress(investor, txConfig)
   console.log(

@@ -36,12 +36,6 @@ contract PoaManager is Ownable {
   event TokenRemoved(address indexed token);
   event TokenStatusChanged(address indexed token, bool active);
 
-  modifier doesEntityExist(address _entityAddress, EntityState entity) {
-    require(_entityAddress != address(0));
-    require(entity.index != 0);
-    _;
-  }
-
   modifier isNewBroker(address _brokerAddress) {
     require(_brokerAddress != address(0));
     require(brokerMap[_brokerAddress].index == 0);
@@ -66,6 +60,14 @@ contract PoaManager is Ownable {
   //
   // Entity functions
   //
+
+  function doesEntityExist(address _entityAddress, EntityState entity)
+    private
+    pure
+    returns (bool)
+  {
+    return (_entityAddress != address(0) && entity.index != 0);
+  }
 
   function addEntity(
     address _entityAddress,
@@ -149,8 +151,9 @@ contract PoaManager is Ownable {
   function removeBroker(address _brokerAddress)
     public
     onlyOwner
-    doesEntityExist(_brokerAddress, brokerMap[_brokerAddress])
   {
+    require(doesEntityExist(_brokerAddress, brokerMap[_brokerAddress]));
+
     address addressToUpdate;
     uint256 indexUpdate;
     (addressToUpdate, indexUpdate) = removeEntity(brokerMap[_brokerAddress], brokerAddressList);
@@ -164,8 +167,9 @@ contract PoaManager is Ownable {
   function listBroker(address _brokerAddress)
     public
     onlyOwner
-    doesEntityExist(_brokerAddress, brokerMap[_brokerAddress])
   {
+    require(doesEntityExist(_brokerAddress, brokerMap[_brokerAddress]));
+
     setEntityActiveValue(brokerMap[_brokerAddress], true);
     emit BrokerStatusChanged(_brokerAddress, true);
   }
@@ -174,8 +178,9 @@ contract PoaManager is Ownable {
   function delistBroker(address _brokerAddress)
     public
     onlyOwner
-    doesEntityExist(_brokerAddress, brokerMap[_brokerAddress])
   {
+    require(doesEntityExist(_brokerAddress, brokerMap[_brokerAddress]));
+
     setEntityActiveValue(brokerMap[_brokerAddress], false);
     emit BrokerStatusChanged(_brokerAddress, false);
   }
@@ -183,10 +188,19 @@ contract PoaManager is Ownable {
   function getBrokerStatus(address _brokerAddress)
     public
     view
-    doesEntityExist(_brokerAddress, brokerMap[_brokerAddress])
     returns (bool)
   {
+    require(doesEntityExist(_brokerAddress, brokerMap[_brokerAddress]));
+
     return brokerMap[_brokerAddress].active;
+  }
+
+  function isBrokerExist(address _brokerAddress)
+    public
+    view
+    returns (bool)
+  {
+    return doesEntityExist(_brokerAddress, brokerMap[_brokerAddress]);
   }
 
   //
@@ -269,8 +283,9 @@ contract PoaManager is Ownable {
   function removeToken(address _tokenAddress)
     public
     onlyOwner
-    doesEntityExist(_tokenAddress, tokenMap[_tokenAddress])
   {
+    require(doesEntityExist(_tokenAddress, tokenMap[_tokenAddress]));
+
     address addressToUpdate;
     uint256 indexUpdate;
     (addressToUpdate, indexUpdate) = removeEntity(tokenMap[_tokenAddress], tokenAddressList);
@@ -284,8 +299,9 @@ contract PoaManager is Ownable {
   function listToken(address _tokenAddress)
     public
     onlyOwner
-    doesEntityExist(_tokenAddress, tokenMap[_tokenAddress])
   {
+    require(doesEntityExist(_tokenAddress, tokenMap[_tokenAddress]));
+
     setEntityActiveValue(tokenMap[_tokenAddress], true);
     emit TokenStatusChanged(_tokenAddress, true);
   }
@@ -294,8 +310,9 @@ contract PoaManager is Ownable {
   function delistToken(address _tokenAddress)
     public
     onlyOwner
-    doesEntityExist(_tokenAddress, tokenMap[_tokenAddress])
   {
+    require(doesEntityExist(_tokenAddress, tokenMap[_tokenAddress]));
+
     setEntityActiveValue(tokenMap[_tokenAddress], false);
     emit TokenStatusChanged(_tokenAddress, false);
   }
@@ -303,9 +320,10 @@ contract PoaManager is Ownable {
   function getTokenStatus(address _tokenAddress)
     public
     view
-    doesEntityExist(_tokenAddress, tokenMap[_tokenAddress])
     returns (bool)
   {
+    require(doesEntityExist(_tokenAddress, tokenMap[_tokenAddress]));
+
     return tokenMap[_tokenAddress].active;
   }
 

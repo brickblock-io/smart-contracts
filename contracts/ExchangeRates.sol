@@ -94,11 +94,10 @@ contract ExchangeRates is Ownable {
       _callbackGasLimit,
       _queryString
     ) = getCurrencySettings(_queryType);
+
     // check that queryString isn't empty before making the query
-    require(
-      bytes(_queryString).length > 0,
-      "_queryString is empty"
-    );
+    require(bytes(_queryString).length > 0);
+
     // make query on ExchangeRateProvider
     // forward any ether value sent on to ExchangeRateProvider
     // setQuery is called from ExchangeRateProvider to trigger an event

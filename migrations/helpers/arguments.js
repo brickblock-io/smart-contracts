@@ -1,7 +1,8 @@
 const {
   oneHundredThousandTokensInWei,
   oneWeekInSec,
-  twoWeeksInSec
+  twoWeeksInSec,
+  oneHundredThousandEuroInCents
 } = require('../helpers/constants')
 const { unixTimeWithOffsetInSec } = require('../helpers/general')
 const yargs = require('yargs')
@@ -23,17 +24,17 @@ const yargs = require('yargs')
     default: false
   })
   .option('setRate-interval', {
-    alias: 'sr-i',
+    alias: 'sr-iv',
     describe: 'Sets currency rate fetch interval',
     default: 0
   })
   .option('setRate-symbol', {
-    alias: 'sr-s',
+    alias: 'sr-sym',
     describe: 'Sets currency symbol',
     default: 'EUR'
   })
   .option('setRate-gasLimit', {
-    alias: 'sr-s',
+    alias: 'sr-gas',
     describe: 'Sets exchange rate callback gas limit',
     default: 1500000
   })
@@ -90,10 +91,15 @@ const yargs = require('yargs')
       'Duration for activation period in seconds. Default is 2 weeks from start time.',
     default: twoWeeksInSec
   })
+  .option('deployPoa-fundingGoalInCents', {
+    alias: 'dp-fg',
+    describe: 'Funding goal in cents.',
+    default: oneHundredThousandEuroInCents
+  })
   .option('addToWhiteList', {
     alias: 'aw',
-    describe: 'adds given address to whitelist. Default is accounts[4]',
-    default: false
+    describe:
+      'adds given address to whitelist. If no address is given, fallbacks to accounts[4]'
   })
   .option('useExistingContracts', {
     alias: 'uec',

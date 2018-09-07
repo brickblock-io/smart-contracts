@@ -23,6 +23,13 @@ const addBroker = async (
       '\n--------------------------------------------------------------'
     )
   )
+  console.log(chalk.gray(`Checking if broker "${broker}" exist…\n`))
+  const isBrokerExist = await poaManager.isBrokerExist(broker, txConfig)
+  if (isBrokerExist) {
+    console.log(chalk.gray(`Broker "${broker}" already exist, skipping…\n`))
+    return
+  }
+
   console.log(chalk.cyan(`🚀  Adding broker "${broker}"…\n`))
   await poaManager.addBroker(broker, txConfig)
   console.log(chalk.green(`\n✅  Successfully added broker "${broker}"`))

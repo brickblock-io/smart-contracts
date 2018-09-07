@@ -72,7 +72,7 @@ contract ExchangeRateProviderStub {
   {
     // _callInterval and _callbackGasLimit are not used in this stub
     // so we do this dummy check to get rid of compiler warnings
-    require(_callInterval != 0);
+    require(_callInterval >= 0);
     require(_callbackGasLimit != 0);
     // simulate price of 2 000 000 000
     uint256 _simulatedPrice = 2e9;

@@ -43,11 +43,20 @@ const calculateUsedGasFromCost = (networkName, totalcost) => {
   return totalcost.div(gasPrice)
 }
 
+const isValidAddress = address => {
+  if (/^(0x)?[0-9a-f]{40}$/i.test(address)) {
+    return true
+  } else {
+    return false
+  }
+}
+
 module.exports = {
   setWeb3,
   getEtherBalance,
   unixTimeWithOffsetInSec,
   getDefaultGasPrice,
   calculateUsedGasFromCost,
-  sendTransaction
+  sendTransaction,
+  isValidAddress
 }
