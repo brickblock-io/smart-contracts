@@ -253,7 +253,9 @@ const conditionalDeploy = async (
 
 const getDeployedContractAddressFromFile = (contractName, networkName) => {
   // Use .env only for local testnet
-  if (networkName.search('dev' > -1)) {
+
+  if (networkName.search('dev') > -1) {
+    console.log(networkName, 'dsdafs')
     const envFileContractName = toUnderscoreCapitalCase(contractName)
     const envContractAddress = process.env[envFileContractName]
 
