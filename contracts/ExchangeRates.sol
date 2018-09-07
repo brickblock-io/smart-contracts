@@ -47,7 +47,7 @@ contract ExchangeRates is Ownable {
   mapping (string => Settings) private currencySettings;
 
   event RateUpdated(string currency, uint256 rate);
-  event QueryNoMinBalance();
+  event NotEnoughBalance();
   event QuerySent(string currency);
   event SettingsUpdated(string currency);
 
@@ -130,7 +130,7 @@ contract ExchangeRates is Ownable {
       emit QuerySent(_queryType);
       queryTypes[_queryId] = _queryType;
     } else {
-      emit QueryNoMinBalance();
+      emit NotEnoughBalance();
     }
     return true;
   }

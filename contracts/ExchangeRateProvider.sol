@@ -7,7 +7,6 @@ import "./interfaces/IExchangeRates.sol";
 
 contract ExchangeRateProvider is usingOraclize {
   uint8 public constant version = 1;
-  event LowBalance(string queryString, uint queryPrice);
 
   IRegistry private registry;
 
@@ -67,11 +66,8 @@ contract ExchangeRateProvider is usingOraclize {
     returns (bool)
   {
     // check that there is enough money to make the query
-    uint256 price = oraclize_getPrice("URL");
-
-    if (price > address(this).balance) {
+    if (oraclize_getPrice("URL") > address(this).balance) {
       setQueryId(0x0, "");
-      emit LowBalance(_queryString, price);
 
       return false;
     } else {
