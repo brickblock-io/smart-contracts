@@ -331,16 +331,16 @@ Oraclize provides different options for making calls. Most of them are updateabl
 ### Events
 Events are a cheap way to record historical changes in events and other important things such as `Settings` changes.
 
-#### RateUpdatedEvent
+#### RateUpdated
 This is emitted when a rate has been returned from a query and set in the `rates` mapping. `currency` and `rate` are the parameters.
 
-#### QueryNoMinBalanceEvent
+#### NotEnoughBalance
 Emitted when there is no minimum balance needed for query. Remedy this by sending ETH to the `ExchangeRatesProvider` contract. No parameters are given.
 
-#### QuerySentEvent
+#### QuerySent
 Emitted upon query execution. Does not mean query was successful. Includes `currency` parameter.
 
-#### SettingsUpdatedEvent
+#### SettingsUpdated
 Emitted every time settings have been changed for any currency. Includes `currency` parameter.
 
 ### Setters

@@ -188,7 +188,7 @@ describe('when testing events', async () => {
       )
     })
 
-    it('should trigger QueryNoMinBalanceEvent if a query is sent with no min balance', async () => {
+    it('should trigger NotEnoughBalance if a query is sent with no min balance', async () => {
       await testSetCurrencySettings(
         exr,
         queryType,
@@ -202,8 +202,8 @@ describe('when testing events', async () => {
       const log = tx.logs[0].event
       assert.equal(
         log,
-        'QueryNoMinBalance',
-        'event log even should match QueryNoMinBalanceEvent'
+        'NotEnoughBalance',
+        'event log even should match NotEnoughBalance'
       )
     })
   })
