@@ -137,11 +137,19 @@ const yargs = require('yargs')
   })
   .help()
 
-if (!yargs.argv.uec || yargs.argv.fd.length === 0) {
-  logger.error(
-    '\nMissing parameters! You have to enter at least one of "--useExistingContracts" or "--fd [params]"'
-  )
-  process.exit(1)
+const init = network => {
+  if (
+    network !== 'test' &&
+    yargs.argv.uec === false &&
+    yargs.argv.fd.length === 0
+  ) {
+    logger.error(
+      '\nMissing parameters! You have to enter at least one of "--useExistingContracts" or "--fd [params]"'
+    )
+    process.exit(1)
+  }
+
+  return yargs.argv
 }
 
-module.exports = yargs.argv
+module.exports = { init, argv: yargs.argv }

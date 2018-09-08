@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 const BigNumber = require('bignumber.js')
-const argv = require('../helpers/arguments')
+const { argv } = require('../helpers/arguments')
 const logger = require('../../scripts/lib/logger')
 
 const migrationHelpers = require('../helpers')

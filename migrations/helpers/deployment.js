@@ -4,7 +4,7 @@ const chalk = require('chalk')
 const deployedContracts = require('../../config/deployed-contracts')
 const { unixTimeWithOffsetInSec } = require('./general')
 const truffleConfig = require('../../truffle')
-const argv = require('../helpers/arguments')
+const { argv } = require('../helpers/arguments')
 const gasAmountForPoa = 6612388
 
 const isForceDeploy = contractName => {
@@ -181,6 +181,7 @@ const conditionalDeploy = async (
 ) => {
   // --forceDeploy is high priority and overrides --useExistingContract param
   if (isForceDeploy(contractName)) {
+    console.log(contractName, 'forcedeploy')
     return await deployContract(
       contractName,
       contractAbi,
@@ -253,9 +254,7 @@ const conditionalDeploy = async (
 
 const getDeployedContractAddressFromFile = (contractName, networkName) => {
   // Use .env only for local testnet
-
   if (networkName.search('dev') > -1) {
-    console.log(networkName, 'dsdafs')
     const envFileContractName = toUnderscoreCapitalCase(contractName)
     const envContractAddress = process.env[envFileContractName]
 
