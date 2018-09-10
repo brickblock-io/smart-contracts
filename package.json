@@ -4,7 +4,7 @@
   "description": "Smart contracts for the Brickblock platform",
   "license": "UNLICENSED",
   "engines": {
-    "node": ">=8 <10",
+    "node": ">=8",
     "yarn": ">=1.5.1"
   },
   "repository": {
