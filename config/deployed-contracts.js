@@ -30,7 +30,7 @@ module.exports = {
 
   // kovan
   '42': {
-    BrickblockToken: '0xf32A2e166d35A62a99955e7856A13C0C8FDEA730'
+    ContractRegistry: '0x553681e929fdb1549ba6cac3d16067bf6e0a2ee3'
   },
 
   // local testnet (dedicated ganache when running `yarn ganache-cli --network 4448` in platform to run end-to-end tests against)

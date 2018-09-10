@@ -21,7 +21,7 @@
     "start:geth": "./scripts/geth/start-geth.sh",
     "---SECTION:BUILD---": "-------------------- HOW TO BUILD THE SMART CONTRACTS --------------------",
     "build:comment": "Compile smart contracts and output into the build/ dir",
-    "build": "rimraf build/*.json && truffle compile --reset && yarn build:inject-deployed-contracts",
+    "build": "rimraf build && truffle compile --reset && yarn build:inject-deployed-contracts",
     "build:inject-deployed-contracts:comment": "making the deployed chainid:address pair as configured in .env available to build/contract/Brickblock.json",
     "build:inject-deployed-contracts": "rm -rf deployed-contracts/ && node scripts/inject-deployed-contracts.js",
     "---SECTION:CLEAN---": "-------------------- HOW TO CLEAN OLD BUILD OUTPUT --------------------",
