@@ -219,17 +219,6 @@ contract PoaToken is PoaCommon {
   * start owner functions *
   ************************/
 
-  function transferOwnership(
-    address _newOwner
-  )
-    public
-    onlyOwner
-  {
-    require(_newOwner != address(0));
-    emit OwnershipTransferred(owner, _newOwner);
-    owner = _newOwner;
-  }
-
   function pause()
     public
     onlyOwner
