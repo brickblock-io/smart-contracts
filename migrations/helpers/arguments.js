@@ -97,6 +97,11 @@ const yargs = require('yargs')
     describe: 'Funding goal in cents.',
     default: oneHundredThousandEuroInCents
   })
+  .option('deployPoa-listToken', {
+    alias: 'dp-lt',
+    describe: 'If POA token address should be listed in PoaManager.',
+    default: true
+  })
   .option('addToWhiteList', {
     alias: 'aw',
     describe:
