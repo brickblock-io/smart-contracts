@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.5.25"></a>
+## [3.5.25](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.5.24...v3.5.25) (2018-09-13)
+
+
+
 <a name="3.5.24"></a>
 ## [3.5.24](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.5.23...v3.5.24) (2018-09-04)
 
