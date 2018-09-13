@@ -100,7 +100,8 @@ const yargs = require('yargs')
   .option('deployPoa-listToken', {
     alias: 'dp-lt',
     describe: 'If POA token address should be listed in PoaManager.',
-    default: true
+    default: true,
+    type: 'boolean'
   })
   .option('addToWhiteList', {
     alias: 'aw',
@@ -146,10 +147,10 @@ const init = network => {
   if (
     network !== 'test' &&
     yargs.argv.uec === false &&
-    yargs.argv.fd.length === 0
+    (typeof yargs.argv.fd === 'undefined' || yargs.argv.fd.length === 0)
   ) {
     logger.error(
-      '\nMissing parameters! You have to enter at least one of "--useExistingContracts" or "--fd [params]"'
+      '\nMissing parameters! You have to enter at least one of "--useExistingContracts" or "--fd [params]" parameters.'
     )
     process.exit(1)
   }

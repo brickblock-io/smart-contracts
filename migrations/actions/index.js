@@ -163,7 +163,8 @@ const index = async (deployer, accounts, contracts, web3, network) => {
         startTimeForEthFundingPeriod: argv.deployPoaStartTimeForEthFunding,
         durationForEthFundingPeriod: argv.deployPoaDurationForEthFunding,
         durationForActivationPeriod: argv.deployPoaDurationForActivation,
-        fundingGoalInCents: argv.deployPoaFundingGoalInCents
+        fundingGoalInCents: argv.deployPoaFundingGoalInCents,
+        listToken: argv.deployPoaListToken
       },
       { from: broker }
     )

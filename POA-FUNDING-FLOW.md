@@ -1,5 +1,5 @@
 # POA Token sale steps
-## 1- [Brickblock] Add broker address to `PoaManager`
+## 1. [Brickblock] Add broker address to `PoaManager`
   - Check if broker exist by calling:
     ```
     poaManager.isBrokerExist(address broker)
@@ -9,31 +9,33 @@
     poaManager.addBroker(address broker)
     ```
 
-## 2- [Broker] Deploy Poa Token:
-  - Deploy POA token by calling:
+## 2. [Broker] Deploy Poa Token:
+  ### 2.1 Broker:
+    - Deploy POA token by calling:
+      ```
+      poaManager.addToken(
+        bytes32 _name32, // Token name
+        bytes32 _symbol32, // Token symbol
+        bytes32 _fiatCurrency32, // Fiat currency
+        address _custodian, // custodian address
+        uint256 _totalSupply,
+        uint256 _startTimeForEthFundingPeriod,
+        uint256 _durationForEthFundingPeriod,
+        uint256 _durationForActivationPeriod,
+        uint256 _fundingGoalInCents
+      )
+      ```
+  ### 2.2 Brickblock:
+    - List PoaToken on Poa Manager
     ```
-    poaManager.addToken(
-      bytes32 _name32, // Token name
-      bytes32 _symbol32, // Token symbol
-      bytes32 _fiatCurrency32, // Fiat currency
-      address _custodian, // custodian address
-      uint256 _totalSupply,
-      uint256 _startTimeForEthFundingPeriod,
-      uint256 _durationForEthFundingPeriod,
-      uint256 _durationForActivationPeriod,
-      uint256 _fundingGoalInCents
-    )
+    poaManager.listToken(address _tokenAddress)
     ```
-  - List PoaToken on Poa Manager
-  ```
-  poaManager.listToken(address _tokenAddress)
-  ```
 
 
 Depending on the sale, broker should start `Fiat funding` or `Eth Funding` period
 
-## 3- [Broker] Fiat Funding Period
-  - To start `Fiat Funding`, -only- broker should call:
+## 3. [Broker] Fiat Funding Period
+  - To start `Fiat Funding`, -only- broker must call:
   ```
   poatoken.startFiatSale()
   ```
@@ -59,7 +61,7 @@ Depending on the sale, broker should start `Fiat funding` or `Eth Funding` perio
   poatoken.cancelFunding()
   ```
 
-## 4- [Broker] Eth Funding Period
+## 4. [Broker] Eth Funding Period
   - To start `Eth Funding`, anyone -including broker- can call:
   ```
   poatoken.startEthSale()
@@ -67,24 +69,26 @@ Depending on the sale, broker should start `Fiat funding` or `Eth Funding` perio
   Please remember, it only starts if the block time is greater than `_startTimeForEthFundingPeriod` mentioned above. Otherwise transaction fails.
   - If funding goal is met at this stage, contract automatically switches to `FundingSuccessful` stage.
 
-## 5- Funding Succesful Stage
+## 5. Funding Succesful Stage
   - Broker should check the fee amount required to activate the contract:
   ```
   poatoken.calculateTotalFee()
   ```
-  1. Execute required functions before activation:
-  -  `poatoken.payActivationFee()` should be called by any of `Broker`, `Custodian` or `Brickblock`. If you are wondering why we made this function public to everyone, please see the explanation for this function in `PoaCrowdsale.sol` file.
+  ### 5.1 Execute required functions before activation:
+  -  `poatoken.payActivationFee()` should be called by any of `Broker`, `Custodian` or `Brickblock`. If you are wondering why we made this function public to everyone, please see the explanation for this function in `PoaCrowdsale.sol` contract.
   - Custodian should update proof of custody (Hash of legal papers uploaded to IPFS) by calling:
 
   ```
   poatoken.updateProofOfCustody(bytes32[2] _ipfsHash)
   ```
   - Note: The order for `payActivationFee` and `updateProofOfCustody` does not matter.
-  2. Custodian must activate contract after activation fee paid and proof of custody updated before activation period ends, by calling:
+  ### 5.2 Activation
+  - Custodian must activate contract after activation fee paid and proof of custody updated before activation period ends, by calling:
+
   ```
   poatoken.activate()
   ```
-## 6- Active Stage
+## 6. Active Stage
   - Broker can claim Eth, which was funded during `Eth Funding` period, by calling:
   ```
   poatoken.claim()

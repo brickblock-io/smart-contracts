@@ -50,7 +50,8 @@ const deployPoa = async (
     startTimeForEthFundingPeriod: unixTimeWithOffsetInSec(600),
     durationForEthFundingPeriod: oneWeekInSec,
     durationForActivationPeriod: twoWeeksInSec,
-    fundingGoalInCents: oneHundredThousandEuroInCents
+    fundingGoalInCents: oneHundredThousandEuroInCents,
+    listToken: true
   },
   txConfig = {}
 ) => {
@@ -63,7 +64,8 @@ const deployPoa = async (
     startTimeForEthFundingPeriod,
     durationForEthFundingPeriod,
     durationForActivationPeriod,
-    fundingGoalInCents
+    fundingGoalInCents,
+    listToken
   } = params
   console.log(
     chalk.cyan(
@@ -86,11 +88,21 @@ const deployPoa = async (
     txConfig
   )
   const poaAddress = tx.logs[0].args.token
+
   console.log(
     chalk.green(
       `\n✅  Successfully deployed POA "${symbol}" to "${poaAddress}"`
     )
   )
+
+  if (listToken) {
+    console.log(chalk.gray(`\n  Listing POA "${symbol}" on PoaManager`))
+    await poaManager.listToken(poaAddress)
+    console.log(
+      chalk.green(`\n✅  Successfully listed POA "${symbol}" on PoaManager`)
+    )
+  }
+
   console.log(
     chalk.green(
       '-------------------------------------------------------------------------------------------\n\n'
