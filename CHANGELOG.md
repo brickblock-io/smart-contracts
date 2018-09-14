@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.6.0"></a>
+# [3.6.0](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.5.25...v3.6.0) (2018-09-14)
+
+
+### Bug Fixes
+
+* poa test setup now that ContractRegistry checks if address is a contract ([c3d6d85](https://git.brickblock-dev.io/platform/smart-contracts/commits/c3d6d85))
+* remove transferOwnership from PoaToken, since there is a live check with COntractRegistry to get latest PoaManager address ([6aa4b9b](https://git.brickblock-dev.io/platform/smart-contracts/commits/6aa4b9b))
+
+
+### Features
+
+* ContractRegistry checks that an address is a contract when updating ([bfe13dc](https://git.brickblock-dev.io/platform/smart-contracts/commits/bfe13dc))
+
+
+
 <a name="3.5.25"></a>
 ## [3.5.25](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.5.24...v3.5.25) (2018-09-13)
 
