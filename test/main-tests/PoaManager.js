@@ -51,6 +51,16 @@ describe('when calling broker functions', () => {
     })
 
     describe('when adding a broker', () => {
+      it('isRegisteredBroker should return false before adding a broker', async () => {
+        const isRegisteredBroker = await pmr.isRegisteredBroker(addedBroker)
+
+        assert.equal(
+          isRegisteredBroker,
+          false,
+          'isRegisteredBroker should return false'
+        )
+      })
+
       it('should emit BrokerAdded', async () => {
         checkForEvent(
           'BrokerAdded',
@@ -58,6 +68,16 @@ describe('when calling broker functions', () => {
             broker: addedBroker
           },
           await pmr.addBroker(addedBroker)
+        )
+      })
+
+      it('isRegisteredBroker should return true after adding a broker', async () => {
+        const isRegisteredBroker = await pmr.isRegisteredBroker(addedBroker)
+
+        assert.equal(
+          isRegisteredBroker,
+          true,
+          'isRegisteredBroker should return true'
         )
       })
 

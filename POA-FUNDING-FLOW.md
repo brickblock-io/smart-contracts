@@ -2,7 +2,7 @@
 ## 1. [Brickblock] Add broker address to `PoaManager`
   - Check if broker exist by calling:
     ```
-    poaManager.isBrokerExist(address broker)
+    poaManager.isRegisteredBroker(address broker)
     ```
   - If the result is false, add broker to the `PoaManager`
     ```

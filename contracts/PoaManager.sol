@@ -195,8 +195,8 @@ contract PoaManager is Ownable {
     return brokerMap[_brokerAddress].active;
   }
 
-  function isBrokerExist(address _brokerAddress)
-    public
+  function isRegisteredBroker(address _brokerAddress)
+    external
     view
     returns (bool)
   {
