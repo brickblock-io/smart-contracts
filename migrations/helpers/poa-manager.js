@@ -103,6 +103,16 @@ const deployPoa = async (
     )
   }
 
+  const tokenList = await poaManager.getTokenAddressList()
+
+  console.log(chalk.yellow(`\n  POA token list in PoaManager`), tokenList)
+
+  console.log(
+    chalk.yellow(
+      `\n  POA "${symbol}" index in PoaManager is: ${tokenList.length - 1}`
+    )
+  )
+
   console.log(
     chalk.green(
       '-------------------------------------------------------------------------------------------\n\n'

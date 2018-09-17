@@ -51,6 +51,21 @@ const isValidAddress = address => {
   }
 }
 
+const isBigNumber = value => {
+  const keys = Object.keys(value)
+  return keys.includes('s') && keys.includes('e') && keys.includes('c')
+}
+
+const getAccounts = accounts => {
+  return {
+    owner: accounts[0],
+    broker: accounts[1],
+    custodian: accounts[2],
+    whitelistedInvestor: accounts[3],
+    contributors: accounts.slice(4, 6)
+  }
+}
+
 module.exports = {
   setWeb3,
   getEtherBalance,
@@ -58,5 +73,7 @@ module.exports = {
   getDefaultGasPrice,
   calculateUsedGasFromCost,
   sendTransaction,
-  isValidAddress
+  isValidAddress,
+  getAccounts,
+  isBigNumber
 }

@@ -126,13 +126,6 @@ Deploying with truffle will execute the [migrations/2_deploy_contracts.js](https
         })
     ```
 
-#### CLI Helpers for POA :robot:
-To move a POA token through different stages manually, we've built a little CLI helper:
-
-1. Open a `truffle` console and deploy the contract ecosystem (see above)
-1. Call the helper with `exec ./migrations/helpers/poa-token.js`
-1. Follow the interactive prompt :shell:
-
 #### To deploy eco-system using migrations
 ##### Actions
 There are pre-defined actions you can call with migrations
@@ -205,6 +198,35 @@ The network name can be `rinkeby`, `kovan`, or `ropsten`
 
 ### Interacting with deployed contracts
 When you'd like to interact with deployed contracts on a local testnet, check that `truffle.js` setting for `dev` matches your local testrpc / ganache-cli settings and run:
+
+
+#### Using deployment script
+- Make sure you you are running a local testnet and deployed the contracts using deployment script.
+- Make sure you put `ContractRegistry` address to `.env` file. (see `.env.example` for an example)
+
+There are some arguments to know before moving on:
+
+- --execute, --exec: you have to give a contract name as parameter to this argument. Currently it only supports `PoaToken`
+- --execute-functionName, --exec-fn: function name to be executed
+- --execute-arguments, --exec-args: function arguments. Any argument with the exact same order the function receives, seperated by comma or space
+- --execute-address, --exec-addr: `PoaToken` contract address. It can be a real address or index number in PoaManager token list.
+- --execute-txConfig, --exec-tc: tx params for the function to executed. Ex: '{"from":"0x1c34e1325d5193cdf95fc6e863edc789a798a23e", "value": 10000000}'
+
+Example for starting `Eth Sale`
+```
+
+yarn migrate:dev --uec --exec PoaToken --exec-addr 0x3e5d48f04b942fce33f12eb582aa4364106962f5 --exec-fn startEthSale'
+```
+
+Example for buying poa token
+```
+# --exec-addr can be either a real POA token address or an index number on POA Manager token list
+
+yarn migrate:dev --uec --exec PoaToken --exec-addr 0 --exec-fn buy --exec-tc '{"value":100000, "from":"0xb95cb8ffbdf31b9dc19caad6208a49c8248b6249"}'
+```
+
+
+#### Using Truffle Console
 
 `yarn truffle console --network dev`.
 

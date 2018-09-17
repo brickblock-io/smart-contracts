@@ -141,6 +141,31 @@ const yargs = require('yargs')
       'ExchangeRateProviderStub'
     ]
   })
+  .option('execute', {
+    alias: 'exec',
+    describe:
+      'Contract name for the function to be executed. Should be used together with --execute-functionName'
+  })
+  .option('execute-functionName', {
+    alias: 'exec-fn',
+    describe: 'function name to be executed'
+  })
+  .option('execute-arguments', {
+    alias: 'exec-args',
+    describe: 'function arguments',
+    type: 'array',
+    default: []
+  })
+  .option('execute-address', {
+    alias: 'exec-addr',
+    describe:
+      'Contract address. Can be the real address or index number in Poa Manager'
+  })
+  .option('execute-txConfig', {
+    alias: 'exec-tc',
+    describe:
+      'tx params for the function to executed. Ex: \'{"from":"0x1c34e1325d5193cdf95fc6e863edc789a798a23e", "value": 10000000}\''
+  })
   .help()
 
 const init = network => {

@@ -14,11 +14,14 @@ const PoaLogger = artifacts.require('PoaLogger')
 const PoaManager = artifacts.require('PoaManager')
 const PoaTokenMaster = artifacts.require('PoaToken')
 const Whitelist = artifacts.require('Whitelist')
+const IPoaTokenCrowdsale = artifacts.require('IPoaTokenCrowdsale')
+
+const { argv } = require('./helpers/arguments')
 
 const { setWeb3 } = require('./helpers/general.js')
 setWeb3(web3)
 
-const actions = require('./actions')
+const { deploymentActions, poaActions } = require('./actions')
 
 // artifacts is not available in other files...
 const contracts = {
@@ -34,7 +37,8 @@ const contracts = {
   PoaLogger,
   PoaManager,
   PoaTokenMaster,
-  Whitelist
+  Whitelist,
+  IPoaTokenCrowdsale
 }
 
 module.exports = (deployer, network, accounts) => {
@@ -45,7 +49,21 @@ module.exports = (deployer, network, accounts) => {
         case 'test':
           return true
         default:
-          await actions(deployer, accounts, contracts, web3, network)
+          switch (argv.execute) {
+            case 'PoaToken':
+              await poaActions(deployer, accounts, contracts, web3, network)
+              break
+
+            default:
+              await deploymentActions(
+                deployer,
+                accounts,
+                contracts,
+                web3,
+                network
+              )
+          }
+
           return true
       }
     })
