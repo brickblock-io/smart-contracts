@@ -7,6 +7,7 @@
 
 # migration helpers used to deploy contracts in e2e testing in platform
 !config/*
+!helpers/*
 !migrations/helpers/*
 !scripts/lib/*
 !truffle.js
