@@ -3,11 +3,7 @@
 All contracts under review have been audited by [ConsenSys Diligence](https://consensys.net/diligence/). The audit reports are published under [/audits](./audits).
 
 ## Platform: Solidified
-All issues must be submitted through https://solidified.io
-
-## Timeline
-* Start: **Friday, September 14th of 2019. 00:00 CET (Berlin Time)**
-* End: **Sunday, September 30th of 2019. 23:59 CET (Berlin Time)**
+All issues must be submitted through https://solidified.io. The official URL for this bug bounty is https://web.solidified.io/contract/5b9e754ffd407500116a9d0f
 
 ## Rewards
 
@@ -39,7 +35,7 @@ Bugs that break specified or reasonably assumed contract behavior but do not ena
 * Issues outlined in the AUDIT REPORT
 
 ### Contracts in Scope
-The official commit hash at which to review is [46c9d13c14401eb0020d33588881208b38e2854f](https://git.brickblock.sh/platform/smart-contracts/tree/46c9d13c14401eb0020d33588881208b38e2854f)
+The official commit hash at which to review is [46c9d13c14401eb0020d33588881208b38e2854f](./tree/46c9d13c14401eb0020d33588881208b38e2854f)
 
 * [AccessToken.sol](./contracts/AccessToken.sol)
 * [BrickblockAccount.sol](./contracts/BrickblockAccount.sol)
