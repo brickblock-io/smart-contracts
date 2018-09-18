@@ -1,6 +1,6 @@
 # Bug Bounty Program
 
-All contracts under review have been audited by [ConsenSys Diligence](https://consensys.net/diligence/). The audit reports are published under [/audits](./audits).
+All contracts under review have been audited by [ConsenSys Diligence](https://consensys.net/diligence/). The audit reports are published under [/audits](/audits).
 
 ## Platform: Solidified
 All issues must be submitted through https://solidified.io. The official URL for this bug bounty is https://web.solidified.io/contract/5b9e754ffd407500116a9d0f
@@ -35,29 +35,29 @@ Bugs that break specified or reasonably assumed contract behavior but do not ena
 * Issues outlined in the AUDIT REPORT
 
 ### Contracts in Scope
-The official commit hash at which to review is [46c9d13c14401eb0020d33588881208b38e2854f](./tree/46c9d13c14401eb0020d33588881208b38e2854f)
+The official commit hash at which to review is [46c9d13c14401eb0020d33588881208b38e2854f](/tree/46c9d13c14401eb0020d33588881208b38e2854f)
 
-* [AccessToken.sol](./contracts/AccessToken.sol)
-* [BrickblockAccount.sol](./contracts/BrickblockAccount.sol)
-* [BrickblockToken.sol](./contracts/BrickblockToken.sol)
-* [ContractRegistry.sol](./contracts/ContractRegistry.sol)
-* [ExchangeRateProvider.sol](./contracts/ExchangeRateProvider.sol)
-* [ExchangeRates.sol](./contracts/ExchangeRates.sol)
-* [FeeManager.sol](./contracts/FeeManager.sol)
-* [PoaCommon.sol](./contracts/PoaCommon.sol)
-* [PoaCrowdsale.sol](./contracts/PoaCrowdsale.sol)
-* [PoaLogger.sol](./contracts/PoaLogger.sol)
-* [PoaManager.sol](./contracts/PoaManager.sol)
-* [PoaProxy.sol](./contracts/PoaProxy.sol)
-* [PoaProxyCommon.sol](./contracts/PoaProxyCommon.sol)
-* [PoaToken.sol](./contracts/PoaToken.sol)
-* [SafeMathPower.sol](./contracts/tools/SafeMathPower.sol)
-* [Whitelist.sol](./contracts/Whitelist.sol)
+* [AccessToken.sol](/contracts/AccessToken.sol)
+* [BrickblockAccount.sol](/contracts/BrickblockAccount.sol)
+* [BrickblockToken.sol](/contracts/BrickblockToken.sol)
+* [ContractRegistry.sol](/contracts/ContractRegistry.sol)
+* [ExchangeRateProvider.sol](/contracts/ExchangeRateProvider.sol)
+* [ExchangeRates.sol](/contracts/ExchangeRates.sol)
+* [FeeManager.sol](/contracts/FeeManager.sol)
+* [PoaCommon.sol](/contracts/PoaCommon.sol)
+* [PoaCrowdsale.sol](/contracts/PoaCrowdsale.sol)
+* [PoaLogger.sol](/contracts/PoaLogger.sol)
+* [PoaManager.sol](/contracts/PoaManager.sol)
+* [PoaProxy.sol](/contracts/PoaProxy.sol)
+* [PoaProxyCommon.sol](/contracts/PoaProxyCommon.sol)
+* [PoaToken.sol](/contracts/PoaToken.sol)
+* [SafeMathPower.sol](/contracts/tools/SafeMathPower.sol)
+* [Whitelist.sol](/contracts/Whitelist.sol)
 
 ### Help
-* Read [README.md](./README.md) for technical instructions on how to run our ecosystem locally
-* Read [ECOSYSTEM.md](./ECOSYSTEM.md) for an overview of our smart contract structure
-* Read [WORST-CASE-SCENARIOS.md](./WORST-CASE-SCENARIOS.md) to learn about accepted risks/tradeoffs and known issues that are not eligible for bounty rewards
+* Read [README.md](/README.md) for technical instructions on how to run our ecosystem locally
+* Read [ECOSYSTEM.md](/ECOSYSTEM.md) for an overview of our smart contract structure
+* Read [WORST-CASE-SCENARIOS.md](/WORST-CASE-SCENARIOS.md) to learn about accepted risks/tradeoffs and known issues that are not eligible for bounty rewards
 
 ### Legal
 We can end the bug bounty program at any time. Awards are at the sole discretion of the Brickblock bug bounty panel. In addition, we are not able to issue awards to individuals who are on sanctions lists or who are in countries on sanctions lists (e.g. North Korea, Iran, etc). You are responsible for all taxes. All awards are subject to applicable law. Finally, your testing must not violate any law or compromise any data that is not yours.
