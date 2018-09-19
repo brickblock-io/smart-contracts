@@ -211,6 +211,9 @@ const conditionalDeploy = async (
         contractAddress = await contractRegistry.getContractAddress(
           contractName
         )
+        if (contractAddress === '0x') {
+          throw new Error('Contract not registered to Contract registry.')
+        }
       } catch (ex) {
         logger.info(
           `${contractName} not found in the registry. Will try to fetch from file`
@@ -254,13 +257,11 @@ const conditionalDeploy = async (
 
 const getDeployedContractAddressFromFile = (contractName, networkName) => {
   // Use .env only for local testnet
-  if (networkName.search('dev') > -1) {
-    const envFileContractName = toUnderscoreCapitalCase(contractName)
-    const envContractAddress = process.env[envFileContractName]
+  const envFileContractName = toUnderscoreCapitalCase(contractName)
+  const envContractAddress = process.env[envFileContractName]
 
-    if (envContractAddress) {
-      return envContractAddress
-    }
+  if (envContractAddress) {
+    return envContractAddress
   }
 
   const networkConfig = truffleConfig.networks[networkName]
