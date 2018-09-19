@@ -463,6 +463,7 @@ There is a modifier for each `log` function which checks if the sender is a [Poa
 `PoaManager`'s job is to:
 
 * deploy new [PoaTokens](#poatoken)
+    - Note: Only use `PoaManager` to deploy `PoaToken`s. This is needed to deploy and initialize `PoaToken` in the same transaction. If done manually in two steps/transactions, it is vulnerable to front-running.
 * remove [PoaTokens](#poatoken)
 * list [PoaToken](#poatoken)
 * delist [PoaToken](#poatoken)
@@ -556,7 +557,9 @@ This is the contract which produces the concept of `Proxy`, a `PoaProxy` contrac
 
 `PoaProxy` is a closer implementation to the ZeppelinOS version. It keeps no sequential storage itself. This is done through using `bytes32` hashes as slots which will never collide with any master code it calls to, unless intentionally done.
 
-#### Important Note
+`PoaProxy` must only be deployed by `PoaManager` to guarantee that deployment and initialization atomically happen in the same transaction. Otherwise, when done manually in two transactions, the process is vulnerable to front-running, meaning that an adversary can initialize the contract that you deployed.
+
+### Important Note
 All functions and variables (technically constants are not stored in storage but in code) are prepended with `proxy`. As a general rule, when upgrading NEVER use/set/create any variable, storage, or function with this prefix. This will result in very unpredictable and dangerous behavior.
 
 When upgrading it is also very important to note that you cannot change the order of ANY variables in the `PoaMaster` upgrade or you will have storage set in incorrect slots when making use of the upgraded `PoaProxy`. Chaos will ensue.
