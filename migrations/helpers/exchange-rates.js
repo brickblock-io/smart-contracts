@@ -62,7 +62,8 @@ const setFiatRate = async (
     )
     await ExchangeRateProvider.simulate__callback(
       pendingQueryId,
-      '50000',
+      // expected that this API returns a euro dollar value
+      '500.12',
       txConfig
     )
   }

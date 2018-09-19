@@ -5,6 +5,9 @@ import "./interfaces/IRegistry.sol";
 import "./interfaces/IExchangeRates.sol";
 
 
+/**
+  @title This contract is the integration point for using the Oraclize service.
+*/
 contract ExchangeRateProvider is usingOraclize {
   uint8 public constant version = 1;
 
@@ -120,8 +123,10 @@ contract ExchangeRateProvider is usingOraclize {
       _queryString
     ) = _exchangeRates.getCurrencySettings(_queryType);
 
-    // set rate on ExchangeRates contract giving queryId for validation
-    // rate is set in cents api returns float string which is parsed as int
+    // Set the rate on ExchangeRates contract giving queryId for validation.
+    // The api returns a string which is parsed as int with 2 decimal places
+    // ie. _result = 500.12
+    //    parseInt(_result, 2) => 50012
     require(_exchangeRates.setRate(_queryId, parseInt(_result, 2)));
 
     // check if call interval has been set and that _ratesActive is still true
