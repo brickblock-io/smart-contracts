@@ -124,7 +124,7 @@ contract ExchangeRateProviderStub {
     ) = _exchangeRates.getCurrencySettings(_queryType);
 
     // set rate on ExchangeRates contract
-    _exchangeRates.setRate(_queryId, parseInt(_result));
+    _exchangeRates.setRate(_queryId, parseInt(_result, 2));
 
     if (_callInterval > 0 && _ratesActive) {
       pendingTestQueryId = keccak256(abi.encodePacked(_result));

@@ -78,7 +78,7 @@ describe('when performing owner only functions', () => {
     })
 
     it('should have rates set by the exRatesProvider', async () => {
-      await testSetRate(exr, exp, 100)
+      await testSetRate(exr, exp, '100.50')
     })
 
     it('should stop rates when active', async () => {
@@ -224,7 +224,7 @@ describe('when setting rate settings and fetching', async () => {
       const contracts = await setupContracts()
       exr = contracts.exr
       exp = contracts.exp
-      defaultRate = 100
+      defaultRate = '100.50'
     })
 
     it('should start by setting and fetching rate from owner', async () => {
@@ -245,7 +245,6 @@ describe('when setting rate settings and fetching', async () => {
 
     it('should get the correct rate', async () => {
       await testGetRate(exr, defaultRate, queryType)
-      defaultRate++
     })
   })
 })
@@ -265,7 +264,7 @@ describe('when setting rate settings, fetching rates, and setting ratesActive to
       const contracts = await setupContracts()
       exr = contracts.exr
       exp = contracts.exp
-      defaultRate = 50
+      defaultRate = '50.55'
     })
 
     it('should start by setting and fetching rate from owner', async () => {
@@ -286,14 +285,13 @@ describe('when setting rate settings, fetching rates, and setting ratesActive to
 
     it('should get the correct rate', async () => {
       await testGetRate(exr, defaultRate, queryType)
-      defaultRate++
     })
 
     it('should toggle ratesActive', async () => {
       await testToggleRatesActive(exr, true, { from: owner })
     })
 
-    it('should simulate a recurisve call where ratesActive is false', async () => {
+    it('should simulate a recursive call where ratesActive is false', async () => {
       await testSetQueryId(exr, exp, queryType)
       await testSetRateRatesActiveFalse(exr, exp, defaultRate)
     })
@@ -318,7 +316,7 @@ describe('when setting rate settings then changing them later', async () => {
       const contracts = await setupContracts()
       exr = contracts.exr
       exp = contracts.exp
-      defaultRate = 33
+      defaultRate = '33.33'
     })
 
     it('should start by setting and fetching rate from owner', async () => {
@@ -339,7 +337,6 @@ describe('when setting rate settings then changing them later', async () => {
 
     it('should get the correct rate', async () => {
       await testGetRate(exr, defaultRate, queryType)
-      defaultRate++
     })
 
     it('should update the settings while rate queries are already in progress', async () => {
@@ -373,7 +370,6 @@ describe('when setting rate settings then changing them later', async () => {
 
     it('should get the correct rate', async () => {
       await testGetRate(exr, defaultRate, queryType)
-      defaultRate++
     })
 
     it('should set rate with simulated callback', async () => {

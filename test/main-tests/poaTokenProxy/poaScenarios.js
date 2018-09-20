@@ -918,7 +918,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       exr = contracts.exr
       exp = contracts.exp
       fmr = contracts.fmr
-      rate = new BigNumber(5e4)
+      rate = new BigNumber('500.00')
 
       // buy with fiat
       await testStartFiatSale(poa, { from: broker, gasPrice })

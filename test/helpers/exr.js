@@ -203,7 +203,7 @@ const testSetRate = async (exr, exp, rate, isAfterClearRateIntervals) => {
   }
 
   assert.equal(
-    bigRate.toString(),
+    bigRate.times(100).toString(),
     actualRate.toString(),
     'the rate on exr should match the rate set'
   )
@@ -218,7 +218,7 @@ const testGetRate = async (exr, rate, queryType) => {
   const bigRate = new BigNumber(rate)
   const actualRate = await exr.getRate(queryType)
   assert.equal(
-    bigRate.toString(),
+    bigRate.times(100).toString(),
     actualRate.toString(),
     'the rate should match the expected rate'
   )
@@ -464,7 +464,7 @@ const testSetRateRatesActiveFalse = async (exr, exp, rate) => {
     'the pending query id should be empty after callback completed'
   )
   assert.equal(
-    bigRate.toString(),
+    bigRate.times(100).toString(),
     actualRate.toString(),
     'the rate on exr should match the rate set'
   )

@@ -66,7 +66,7 @@ const defaultFundingTimeout = new BigNumber(60 * 60 * 24)
 const defaultActivationTimeout = new BigNumber(60 * 60 * 24 * 7)
 const defaultFundingGoal = new BigNumber(5e5)
 const defaultTotalSupply = new BigNumber(1e23)
-const defaultFiatRate = new BigNumber(33333)
+const defaultFiatRate = new BigNumber('333.33')
 const defaultIpfsHash = 'QmSUfCtXgb59G9tczrz2WuHNAbecV55KRBGXBbZkou5RtE'
 const newIpfsHash = 'Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u'
 const defaultIpfsHashArray32 = [
@@ -495,7 +495,7 @@ const testInitialization = async (exr, exp, reg, pmr) => {
 
 const testWeiToFiatCents = async (poa, weiInput) => {
   const expectedFiat = weiInput
-    .mul(defaultFiatRate)
+    .mul(defaultFiatRate.times(100))
     .div(1e18)
     .floor()
 
@@ -511,7 +511,7 @@ const testWeiToFiatCents = async (poa, weiInput) => {
 const testFiatCentsToWei = async (poa, fiatCentInput) => {
   const expectedWei = fiatCentInput
     .mul(1e18)
-    .div(defaultFiatRate)
+    .div(defaultFiatRate.times(100))
     .floor()
 
   const actualWei = await poa.fiatCentsToWei(fiatCentInput)
