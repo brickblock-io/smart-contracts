@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.6.6"></a>
+## [3.6.6](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.6.5...v3.6.6) (2018-09-21)
+
+
+### Bug Fixes
+
+* ExchangeRateProviderStub callback is the same as actual implementation ([185735c](https://git.brickblock-dev.io/platform/smart-contracts/commits/185735c))
+
+
+
 <a name="3.6.5"></a>
 ## [3.6.5](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.6.4...v3.6.5) (2018-09-20)
 
