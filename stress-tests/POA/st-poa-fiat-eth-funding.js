@@ -18,7 +18,6 @@ const {
   testPayout,
   defaultFiatCurrency,
   defaultFiatRate,
-  testBuyTokens,
   getRemainingAmountInWeiDuringEthFunding
 } = require('test/helpers/poa')
 
@@ -32,6 +31,7 @@ const {
 
 describe('PoaToken Stress Tests - test fiat & eth funding only', () => {
   contract('PoaToken', accounts => {
+    const owner = accounts[0]
     const investors = accounts.slice(4, accounts.length)
     const fiatInvestorEnds = Math.floor(accounts.length / 4)
     const fiatInvestors = investors.slice(0, fiatInvestorEnds)
@@ -42,6 +42,8 @@ describe('PoaToken Stress Tests - test fiat & eth funding only', () => {
     let fundingGoal
     let fmr
     let poa
+    let exr
+    let exp
     let totalPayout = new BigNumber(0)
 
     before('setup contracts', async () => {
@@ -58,6 +60,8 @@ describe('PoaToken Stress Tests - test fiat & eth funding only', () => {
 
       fmr = contracts.fmr
       poa = contracts.poa
+      exr = contracts.exr
+      exp = contracts.exp
 
       const neededTime = await determineNeededTimeTravel(poa)
 
@@ -99,29 +103,38 @@ describe('PoaToken Stress Tests - test fiat & eth funding only', () => {
       await testStartEthSale(poa, { gasPrice })
       await fundEthUntilRemainingTarget(
         poa,
+        exr,
+        exp,
         target,
         gasPrice,
         ethInvestors,
-        investmentRegistry
+        investmentRegistry,
+        owner
       )
 
-      let remainingBuyableAmount = await getRemainingAmountInWeiDuringEthFunding(
+      const remainingBuyableAmount = await getRemainingAmountInWeiDuringEthFunding(
         poa
       )
-      logger.info(
-        'buying remaining tokens with eth',
-        remainingBuyableAmount.toString()
-      )
 
-      await testBuyTokens(poa, {
-        from: ethInvestors[0],
-        value: remainingBuyableAmount,
-        gasPrice
-      })
+      if (remainingBuyableAmount.isNegative()) {
+        logger.info('buying remaining tokens with eth', 0)
+        await poa.buy({
+          from: ethInvestors[0],
+          value: 0,
+          gasPrice
+        })
+      } else {
+        logger.info(
+          'buying remaining tokens with eth',
+          remainingBuyableAmount.div(1e18).toString()
+        )
+        await poa.buy({
+          from: ethInvestors[0],
+          value: remainingBuyableAmount,
+          gasPrice
+        })
+      }
 
-      remainingBuyableAmount = await getRemainingAmountInWeiDuringEthFunding(
-        poa
-      )
       logger.info('Eth funding finished')
     }).timeout(1000 * 60 * 20) // set timeout to 20 minutes
 
@@ -167,7 +180,7 @@ describe('PoaToken Stress Tests - test fiat & eth funding only', () => {
       await displaySummary({
         poa,
         fundingGoal,
-        defaultFiatCurrency,
+        currency: defaultFiatCurrency,
         defaultFiatRate,
         investmentRegistry,
         totalPayout,

@@ -200,7 +200,7 @@ contract PoaCommon is PoaProxyCommon {
     stage = _stage;
     getContractAddress("PoaLogger").call(
       bytes4(keccak256("logStage(uint256)")),
-      _stage
+      uint256(_stage)
     );
   }
 

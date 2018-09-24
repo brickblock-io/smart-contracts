@@ -138,7 +138,7 @@ describe('PoaToken Stress Tests - test fiat funding only', () => {
       await displaySummary({
         poa,
         fundingGoal,
-        defaultFiatCurrency,
+        currency: defaultFiatCurrency,
         defaultFiatRate,
         investmentRegistry,
         totalPayout,

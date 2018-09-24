@@ -7,9 +7,12 @@ const {
   getRemainingAmountInWeiDuringEthFunding,
   getRemainingAmountInCentsDuringFiatFunding,
   testBuyTokens,
-  testBuyTokensWithFiat
+  testBuyTokensWithFiat,
+  defaultFiatCurrency,
+  testResetCurrencyRate
 } = require('../../test/helpers/poa')
 const {
+  getRandomInt,
   getRandomBigInt,
   getEtherBalance
 } = require('../../test/helpers/general')
@@ -149,13 +152,39 @@ const fundFiatUntilRemainingTarget = async (
   logger.info('Fiat funding target reached stepping out')
 }
 
+const setRandomRate = async (
+  poa,
+  exr,
+  exp,
+  { fluctuationLimitPerCent = 10 } = {}
+) => {
+  const currentRate = await poa.getFiatRate()
+  const isMinus = getRandomInt(-1, 1) < 0
+  const randomRateChange = getRandomBigInt(
+    new BigNumber(1),
+    new BigNumber(fluctuationLimitPerCent)
+  )
+  const diff = currentRate.div(100).times(randomRateChange)
+  const newRate = isMinus
+    ? currentRate.minus(diff).floor()
+    : currentRate.plus(diff).floor()
+
+  logger.debug('old rate', currentRate.toString())
+  logger.info('Setting new rate', newRate.toString())
+  await testResetCurrencyRate(exr, exp, 'EUR', newRate)
+  return newRate
+}
+
 const fundEthUntilRemainingTarget = async (
   poa,
-  targetAsWei,
+  exr,
+  exp,
+  targetInFiatCents,
   gasPrice,
   investors,
   investmentRegistry
 ) => {
+  let targetInWei
   let remainingFundableAmount = await getRemainingAmountInWeiDuringEthFunding(
     poa
   )
@@ -164,21 +193,25 @@ const fundEthUntilRemainingTarget = async (
     let maxAmount = new BigNumber(1e19) // 10 Eth
     const minAmount = new BigNumber(1e18) // 1 Eth
 
+    const newRate = await setRandomRate(poa, exr, exp)
+    targetInWei = targetInFiatCents.mul(newRate)
+    remainingFundableAmount = await getRemainingAmountInWeiDuringEthFunding(poa)
+
     if (maxAmount.gt(remainingFundableAmount)) {
       maxAmount = remainingFundableAmount
     }
 
     const randomAmount = getRandomBigInt(minAmount, maxAmount)
-    if (remainingFundableAmount.lte(targetAsWei)) {
+    if (remainingFundableAmount.lte(targetInWei)) {
       logger.debug(
         'Target achived stepping out!',
-        remainingFundableAmount,
-        targetAsWei
+        remainingFundableAmount.div(1e18).toString(),
+        targetInWei.div(1e18).toString()
       )
       return
     }
 
-    logger.debug('investing with ETH', randomAmount)
+    logger.debug('investing with ETH', randomAmount.div(1e18).toString())
     await testBuyTokens(poa, {
       from: investor,
       value: randomAmount,
@@ -189,11 +222,13 @@ const fundEthUntilRemainingTarget = async (
     investmentRegistry.addEthInvestor(investor, randomAmount)
   }
 
-  if (remainingFundableAmount.gt(targetAsWei)) {
+  if (remainingFundableAmount.gt(targetInWei)) {
     logger.debug('target not reached looping again')
     await fundEthUntilRemainingTarget(
       poa,
-      targetAsWei,
+      exr,
+      exp,
+      targetInFiatCents,
       gasPrice,
       investors,
       investmentRegistry
@@ -215,7 +250,7 @@ const calculateSumBalanceOfAccounts = async accounts => {
 const displaySummary = async ({
   poa,
   fundingGoal,
-  defaultFiatCurrency,
+  currency,
   investmentRegistry,
   totalPayout,
   paidActivationFee
@@ -225,7 +260,7 @@ const displaySummary = async ({
     .toNumber()
     .toLocaleString('en-US', {
       style: 'currency',
-      currency: defaultFiatCurrency
+      currency
     })
   const data = [[chalk.yellow('Funding Goal'), fundingGoalFormatted]]
 
@@ -239,7 +274,7 @@ const displaySummary = async ({
       .toNumber()
       .toLocaleString('en-US', {
         style: 'currency',
-        currency: defaultFiatCurrency
+        currency
       })
   ])
 

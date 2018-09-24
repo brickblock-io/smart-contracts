@@ -166,10 +166,16 @@ const yargs = require('yargs')
     describe:
       'tx params for the function to executed. Ex: \'{"from":"0x1c34e1325d5193cdf95fc6e863edc789a798a23e", "value": 10000000}\''
   })
+  .option('skip-migrations', {
+    alias: 'sm',
+    describe: 'Forces to skip migrations. Useful for stress tests.',
+    default: false
+  })
   .help()
 
 const init = network => {
   if (
+    yargs.argv.skipMigrations == false &&
     network !== 'test' &&
     yargs.argv.uec === false &&
     (typeof yargs.argv.fd === 'undefined' || yargs.argv.fd.length === 0)

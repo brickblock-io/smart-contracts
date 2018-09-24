@@ -1701,10 +1701,18 @@ const getRemainingAmountInWeiDuringEthFunding = async poa => {
   const fundingGoalInWei = await poa.fiatCentsToWei(fundingGoalInCents)
   const fundedFiatAmount = await poa.fundedFiatAmountInCents()
   const fundedFiatAmountInWei = await poa.fiatCentsToWei(fundedFiatAmount)
-
+  logger.debug(
+    'fundingGoalInEth',
+    fundingGoalInWei.div(1e18).toString(),
+    'fundedEthAmount',
+    fundedEthAmountInWei.div(1e18).toString(),
+    'fundedFiatAmountInWei',
+    fundedFiatAmountInWei.div(1e18).toString()
+  )
   const remainingBuyableEth = fundingGoalInWei
     .sub(fundedEthAmountInWei)
     .sub(fundedFiatAmountInWei)
+  logger.debug('remainingBuyableEth', remainingBuyableEth.div(1e18).toString())
 
   return remainingBuyableEth
 }

@@ -49,6 +49,10 @@ module.exports = (deployer, network, accounts) => {
         case 'test':
           return true
         default:
+          if (argv.skipMigrations) {
+            return true
+          }
+
           switch (argv.execute) {
             case 'PoaToken':
               await poaActions(deployer, accounts, contracts, web3, network)
