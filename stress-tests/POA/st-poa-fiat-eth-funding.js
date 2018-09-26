@@ -31,7 +31,6 @@ const {
 
 describe('PoaToken Stress Tests - test fiat & eth funding only', () => {
   contract('PoaToken', accounts => {
-    const owner = accounts[0]
     const investors = accounts.slice(4, accounts.length)
     const fiatInvestorEnds = Math.floor(accounts.length / 4)
     const fiatInvestors = investors.slice(0, fiatInvestorEnds)
@@ -94,12 +93,11 @@ describe('PoaToken Stress Tests - test fiat & eth funding only', () => {
     })
 
     it('should fund eth with random amounts with many investors', async () => {
-      const target = new BigNumber(2e18)
-      logger.info(
-        `Funding with ETH investors until ${target
-          .div(1e18)
-          .toString()} ETH remains`
-      )
+      const target = fundingGoal
+        .div(100)
+        .mul(45)
+        .floor()
+
       await testStartEthSale(poa, { gasPrice })
       await fundEthUntilRemainingTarget(
         poa,
@@ -108,8 +106,7 @@ describe('PoaToken Stress Tests - test fiat & eth funding only', () => {
         target,
         gasPrice,
         ethInvestors,
-        investmentRegistry,
-        owner
+        investmentRegistry
       )
 
       const remainingBuyableAmount = await getRemainingAmountInWeiDuringEthFunding(

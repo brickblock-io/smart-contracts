@@ -8,7 +8,6 @@ const {
   getRemainingAmountInCentsDuringFiatFunding,
   testBuyTokens,
   testBuyTokensWithFiat,
-  defaultFiatCurrency,
   testResetCurrencyRate
 } = require('../../test/helpers/poa')
 const {
@@ -159,18 +158,28 @@ const setRandomRate = async (
   { fluctuationLimitPerCent = 10 } = {}
 ) => {
   const currentRate = await poa.getFiatRate()
-  const isMinus = getRandomInt(-1, 1) < 0
+  const isMinus = getRandomInt(0, 10) < 5
   const randomRateChange = getRandomBigInt(
     new BigNumber(1),
     new BigNumber(fluctuationLimitPerCent)
   )
   const diff = currentRate.div(100).times(randomRateChange)
   const newRate = isMinus
-    ? currentRate.minus(diff).floor()
-    : currentRate.plus(diff).floor()
+    ? currentRate
+        .minus(diff)
+        .div(100)
+        .toNumber()
+        .toFixed(2)
+    : currentRate
+        .plus(diff)
+        .div(100)
+        .toNumber()
+        .toFixed(2)
 
   logger.debug('old rate', currentRate.toString())
   logger.info('Setting new rate', newRate.toString())
+  const expBalance = await getEtherBalance(exp.address)
+  logger.debug('ExchangRateProvider Balance', expBalance.div(1e18).toString())
   await testResetCurrencyRate(exr, exp, 'EUR', newRate)
   return newRate
 }
@@ -339,14 +348,18 @@ const getFundingGoal = async ({
   defaultfundingGoal,
   investors
 }) => {
-  const totalAvailableCap = await calculateSumBalanceOfAccounts(investors)
+  const totalAvailableCapInWei = await calculateSumBalanceOfAccounts(investors)
 
   let fundingGoal
 
-  const totalAvailableCapInCents = totalAvailableCap
-    .div(1e18)
+  logger.info('defaultFiatRate', defaultFiatRate.toString())
+  logger.debug('totalAvailableCap', totalAvailableCapInWei.toString())
+  const totalAvailableCapInCents = totalAvailableCapInWei
+    .div(1e16) //shortcut for div(1e18).mul(100)
     .mul(defaultFiatRate)
     .floor()
+  logger.debug('totalAvailableCapInCents', totalAvailableCapInCents.toString())
+
   if (defaultfundingGoal.gt(totalAvailableCapInCents)) {
     logger.info(
       `Default funding goal (${defaultfundingGoal

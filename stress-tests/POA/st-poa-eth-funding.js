@@ -85,8 +85,7 @@ describe('PoaToken Stress Tests - test eth funding only', () => {
         target,
         gasPrice,
         ethInvestors,
-        investmentRegistry,
-        owner
+        investmentRegistry
       )
       const remainingBuyableAmount = await getRemainingAmountInWeiDuringEthFunding(
         poa

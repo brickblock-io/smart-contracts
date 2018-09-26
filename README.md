@@ -53,10 +53,10 @@ They are split out of the normal tests because they take a very long time to run
 
 Run them with:   
 
-- (Optional but recommended step) Run an external ganache with the following config, users: 100, default ether balance: 1000
+- (Optional but recommended step) Run an external ganache with the following config, users: 50, default ether balance: 1000
 - Each stress test should be run individually. To run a stress test:
 ```
-yarn test:stress-test stress-tests/[testFilename.js]
+yarn test stress-tests/[testFilename.js] --skip-migrations
 ```
 
 #### Frozen Contract Tests
