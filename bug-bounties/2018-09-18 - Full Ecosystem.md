@@ -7,16 +7,16 @@ All issues must be submitted through https://solidified.io. The official URL for
 
 ## Rewards
 
-### Critical Bugs: 50 ETH
+### Critical Bugs: 100 ETH
 Bugs that enable an attacker to steal ETH or BBK tokens or ACT tokens or POA tokens from any of the contracts under review or participants in our ecosystem holding BBK, ACT or POA.
 
-### Major Bugs: 25 ETH
+### Major Bugs: 50 ETH
 Bugs that would lock or render our POA tokens, BBK tokens or ACT tokens otherwise unusable and/or make said tokens vulnerable to attacks.
 
-### Minor Bugs: 1 ETH
+### Minor Bugs: 3 ETH
 Bugs that break specified or reasonably assumed contract behavior but do not enable an attacker to steal, freeze or destroy funds.
 
-### Available pool: 100 ETH
+### Available pool: 200 ETH
 
 ## Rules
 * Public disclosure of vulnerabilities outside of Solidified render the publisher and their associates ineligible for any bounty rewards.
