@@ -22,6 +22,8 @@ geth --datadir "$GETH_DATA_DIR" \
   --preload "scripts/geth/manage-accounts.js,scripts/geth/auto-mine.js" \
   --rpc \
   --rpcapi eth,net,web3,personal,miner,debug,txpool \
+  --ws \
+  --wsorigins="*" \
   --rpccorsdomain "*" \
   --targetgaslimit 94000000 \
   --mine \
