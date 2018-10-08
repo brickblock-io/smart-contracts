@@ -64,6 +64,11 @@ const yargs = require('yargs')
     describe: 'Currency of POA Token',
     default: 'EUR'
   })
+  .option('deployPoa-custodian', {
+    alias: 'dp-custodian',
+    describe: 'Custodian address of POA Token',
+    default: false
+  })
   .option('deployPoa-name', {
     alias: 'dp-n',
     describe: 'Name of POA Token',

@@ -166,7 +166,7 @@ const deploymentActions = async (
         name: argv.deployPoaName,
         symbol: argv.deployPoaSymbol,
         fiatCurrency: argv.deployPoaCurrency,
-        custodian,
+        custodian: argv.deployPoaCustodian || custodian,
         totalSupply: argv.deployPoaTotalSupply,
         // startTimeForEthFundingPeriod needs a little offset so that it isn't too close to `block.timestamp` which would fail
         startTimeForEthFundingPeriod: argv.deployPoaStartTimeForEthFunding,
@@ -213,7 +213,7 @@ const deploymentActions = async (
 
   if (argv.changeOwner) {
     /*
-    * Used for changing ownership of all contracts to the real owner 
+    * Used for changing ownership of all contracts to the real owner
     * Usually used on mainnet deployment
     */
     ownerPreEtherBalance = await getEtherBalance(owner)
