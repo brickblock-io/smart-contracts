@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.7.0"></a>
+# [3.7.0](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.6.9...v3.7.0) (2018-10-08)
+
+
+### Features
+
+* Fiat rate penalty ([fe6736d](https://git.brickblock-dev.io/platform/smart-contracts/commits/fe6736d))
+
+
+
 <a name="3.6.9"></a>
 ## [3.6.9](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.6.8...v3.6.9) (2018-10-08)
 
