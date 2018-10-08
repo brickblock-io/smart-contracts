@@ -1,9 +1,9 @@
 pragma solidity 0.4.24;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./interfaces/IRegistry.sol";
 import "./interfaces/IExchangeRateProvider.sol";
-
 
 
 /*
@@ -23,6 +23,8 @@ erroring which we parse as a uint256 which turns to 0.
 
 // main contract
 contract ExchangeRates is Ownable {
+  using SafeMath for uint256;
+
   uint8 public constant version = 1;
   // instance of Registry to be used for getting other contract addresses
   IRegistry private registry;
@@ -33,6 +35,9 @@ contract ExchangeRates is Ownable {
     string queryString;
     uint256 callInterval;
     uint256 callbackGasLimit;
+    // Rate penalty that is applied on fetched fiat rates. The penalty
+    // is specified at permille-accuracy. Example: 18 => 18/1000 = 1.8% penalty.
+    uint256 ratePenalty;
   }
 
   // the actual exchange rate for each currency
@@ -89,10 +94,12 @@ contract ExchangeRates is Ownable {
     uint256 _callInterval;
     uint256 _callbackGasLimit;
     string memory _queryString;
+    uint256 _ratePenalty;
     (
       _callInterval,
       _callbackGasLimit,
-      _queryString
+      _queryString,
+      _ratePenalty // not used in this function
     ) = getCurrencySettings(_queryType);
 
     // check that queryString isn't empty before making the query
@@ -140,25 +147,30 @@ contract ExchangeRates is Ownable {
   // checks that the queryId returned is correct.
   function setRate(
     bytes32 _queryId,
-    uint256 _result
+    uint256 _rateInCents
   )
     external
     onlyContract("ExchangeRateProvider")
     returns (bool)
   {
     // get the query type (usd, eur, etc)
-    string memory _queryType = queryTypes[_queryId];
+    string memory _currencyName = queryTypes[_queryId];
     // check that first byte of _queryType is not 0 (something wrong or empty)
     // if the queryType is 0 then the queryId is incorrect
-    require(bytes(_queryType).length > 0);
+    require(bytes(_currencyName).length > 0);
+    // get and apply penality on fiat rate to compensate for fees
+    uint256 _penaltyInPermille = currencySettings[toUpperCase(_currencyName)].ratePenalty;
+    uint256 _penalizedRate = _rateInCents
+      .mul(1000 - _penaltyInPermille)
+      .div(1000);
     // set _queryId to empty (uninitialized, to prevent from being called again)
     delete queryTypes[_queryId];
     // set currency rate depending on _queryType (USD, EUR, etc.)
-    rates[keccak256(abi.encodePacked(_queryType))] = _result;
+    rates[keccak256(abi.encodePacked(_currencyName))] = _penalizedRate;
     // event for particular rate that was updated
     emit RateUpdated(
-      _queryType,
-      _result
+      _currencyName,
+      _penalizedRate
     );
 
     return true;
@@ -180,17 +192,21 @@ contract ExchangeRates is Ownable {
     string _currencyName,
     string _queryString,
     uint256 _callInterval,
-    uint256 _callbackGasLimit
+    uint256 _callbackGasLimit,
+    uint256 _ratePenalty
   )
     external
     onlyOwner
     returns (bool)
   {
+    // check that the permille value doesn't exceed 999.
+    require(_ratePenalty < 1000);
     // store settings by bytes8 of string, convert queryString to bytes array
     currencySettings[toUpperCase(_currencyName)] = Settings(
       _queryString,
       _callInterval,
-      _callbackGasLimit
+      _callbackGasLimit,
+      _ratePenalty
     );
     emit SettingsUpdated(_currencyName);
     return true;
@@ -241,6 +257,24 @@ contract ExchangeRates is Ownable {
     return true;
   }
 
+  // set only ratePenalty in settings for a given currency
+  function setCurrencySettingRatePenalty(
+    string _currencyName,
+    uint256 _ratePenalty
+  )
+    external
+    onlyOwner
+    returns (bool)
+  {
+    // check that the permille value doesn't exceed 999.
+    require(_ratePenalty < 1000);
+
+    Settings storage _settings = currencySettings[toUpperCase(_currencyName)];
+    _settings.ratePenalty = _ratePenalty;
+    emit SettingsUpdated(_currencyName);
+    return true;
+  }
+
   // set callback gasPrice for all currencies
   function setCallbackGasPrice(uint256 _gasPrice)
     external
@@ -280,13 +314,14 @@ contract ExchangeRates is Ownable {
   function getCurrencySettings(string _queryTypeString)
     public
     view
-    returns (uint256, uint256, string)
+    returns (uint256, uint256, string, uint256)
   {
     Settings memory _settings = currencySettings[_queryTypeString];
     return (
       _settings.callInterval,
       _settings.callbackGasLimit,
-      _settings.queryString
+      _settings.queryString,
+      _settings.ratePenalty
     );
   }
 

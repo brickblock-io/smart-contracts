@@ -5,6 +5,7 @@ const {
   defaultFiatCurrency,
   defaultFiatCurrency32,
   defaultFiatRate,
+  defaultFiatRatePenalty,
   defaultFundingGoal,
   defaultFundingTimeout,
   defaultName32,
@@ -42,6 +43,7 @@ describe('when initializing PoaToken', () => {
         exp,
         defaultFiatCurrency,
         defaultFiatRate,
+        defaultFiatRatePenalty,
         {
           from: owner,
           value: 1e18
@@ -85,6 +87,7 @@ describe('when initializing PoaToken', () => {
         exp,
         defaultFiatCurrency,
         defaultFiatRate,
+        defaultFiatRatePenalty,
         {
           from: owner,
           value: 1e18
@@ -111,6 +114,7 @@ describe('when initializing PoaToken', () => {
         exp,
         defaultFiatCurrency,
         defaultFiatRate,
+        defaultFiatRatePenalty,
         {
           from: owner,
           value: 1e18
@@ -177,6 +181,7 @@ describe('when initializing PoaToken', () => {
         exp,
         defaultFiatCurrency,
         defaultFiatRate,
+        defaultFiatRatePenalty,
         {
           from: owner,
           value: 1e18
@@ -207,6 +212,7 @@ describe('when initializing PoaToken', () => {
         exp,
         defaultFiatCurrency,
         defaultFiatRate,
+        defaultFiatRatePenalty,
         {
           from: owner,
           value: 1e18
@@ -237,6 +243,7 @@ describe('when initializing PoaToken', () => {
         exp,
         defaultFiatCurrency,
         defaultFiatRate,
+        defaultFiatRatePenalty,
         {
           from: owner,
           value: 1e18
@@ -267,6 +274,7 @@ describe('when initializing PoaToken', () => {
         exp,
         defaultFiatCurrency,
         defaultFiatRate,
+        defaultFiatRatePenalty,
         {
           from: owner,
           value: 1e18
@@ -297,6 +305,7 @@ describe('when initializing PoaToken', () => {
         exp,
         defaultFiatCurrency,
         defaultFiatRate,
+        defaultFiatRatePenalty,
         {
           from: owner,
           value: 1e18
@@ -344,6 +353,7 @@ describe('when initializing PoaToken', () => {
         exp,
         defaultFiatCurrency,
         defaultFiatRate,
+        defaultFiatRatePenalty,
         {
           from: owner,
           value: 1e18
@@ -391,6 +401,7 @@ describe('when initializing PoaToken', () => {
         exp,
         defaultFiatCurrency,
         defaultFiatRate,
+        defaultFiatRatePenalty,
         {
           from: owner,
           value: 1e18
@@ -422,6 +433,7 @@ describe('when initializing PoaToken', () => {
         exp,
         defaultFiatCurrency,
         defaultFiatRate,
+        defaultFiatRatePenalty,
         {
           from: owner,
           value: 1e18
@@ -456,6 +468,7 @@ describe('when initializing PoaToken', () => {
         exp,
         defaultFiatCurrency,
         defaultFiatRate,
+        defaultFiatRatePenalty,
         {
           from: owner,
           value: 1e18
@@ -495,6 +508,7 @@ describe('when initializing PoaToken', () => {
         exp,
         defaultFiatCurrency,
         defaultFiatRate,
+        defaultFiatRatePenalty,
         {
           from: owner,
           value: 1e18

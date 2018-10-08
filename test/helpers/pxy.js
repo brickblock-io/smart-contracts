@@ -9,6 +9,8 @@ const {
   defaultActivationTimeout,
   defaultFiatCurrency,
   defaultFiatCurrency32,
+  defaultFiatRate,
+  defaultPenalizedFiatRate,
   defaultFundingGoal,
   defaultFundingTimeout,
   defaultIpfsHashArray32,
@@ -285,11 +287,13 @@ const enterActiveStage = async (poa, fmr) => {
 const checkPostActiveStorage = async (poa, reg, pmr) => {
   // get all storage
   const storage = await getAllSequentialStorage(poa.address)
+
   // proxy storage
   const { poaCrowdsaleMaster, registry } = parseProxyCommonStorage(
     storage,
     true
   )
+
   // common storage
   const {
     actualBroker,
@@ -309,6 +313,7 @@ const checkPostActiveStorage = async (poa, reg, pmr) => {
     startTimeForEthFundingPeriod,
     tokenInitialized
   } = await parseCommonStorage(storage, true)
+
   // token storage
   const { allowed, actualOwner, name, symbol } = parseTokenStorage(storage)
 
@@ -329,7 +334,6 @@ const checkPostActiveStorage = async (poa, reg, pmr) => {
     defaultSymbol,
     'symbol32 should be in correct storage slot'
   )
-
   assert.equal(
     stage.toString(),
     stages.Active,
@@ -398,7 +402,6 @@ const checkPostActiveStorage = async (poa, reg, pmr) => {
     'fundedFiatAmountInCents should be 0'
   )
   assert.equal(actualBroker, broker, 'actualBroker should match broker')
-
   // get needed mapping values to check on values
   const investmentPerUserInWei = await getMappingStorage(
     poa.address,
@@ -413,16 +416,23 @@ const checkPostActiveStorage = async (poa, reg, pmr) => {
     whitelistedPoaBuyers[0],
     whitelistedPoaBuyers[1]
   )
-
   assert.equal(
     new BigNumber(allowedValue).toString(),
     new BigNumber(3e18).toString(),
     'allowed for buyers should be in correct slot'
   )
+
+  // Since we have a rate penalty (test default: 2%), user has to invest
+  // more wei in order to reach fiatGoalInCents. How much more can be calculated
+  // by the rate difference (important: integer divison in Solidity makes it
+  // approximately 2%, not exactly)
   assert.equal(
     new BigNumber(investmentPerUserInWei).toString(),
     // calculated based on default values for poa tests
-    new BigNumber('15000150001500015000').toString(),
+    new BigNumber('15000150001500015000')
+      .times(defaultFiatRate) // initial fiat rate
+      .dividedBy(defaultPenalizedFiatRate) // penalized fiat rate with default penalty (~2%). It is not exactly 2% because of integer division in Solidity
+      .toFixed(0, 1),
     'investmentPerUserInWei should match expected value'
   )
 }
@@ -574,7 +584,10 @@ const checkPostIsUpgradedStorage = async (poa, reg, pmr) => {
   assert.equal(
     new BigNumber(investmentPerUserInWei).toString(),
     // calculated based on default values for poa tests
-    new BigNumber('15000150001500015000').toString(),
+    new BigNumber('15000150001500015000')
+      .times(defaultFiatRate) // initial fiat rate
+      .dividedBy(defaultPenalizedFiatRate) // penalized fiat rate with default penalty (~2%). It is not exactly 2% because of integer division in Solidity
+      .toFixed(0, 1), // cut off decimals to simulate integer division in Solidity
     'investmentPerUserInWei should match expected value'
   )
 

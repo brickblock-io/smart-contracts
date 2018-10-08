@@ -127,7 +127,12 @@ contract ExchangeRateProvider is usingOraclize {
     // The api returns a string which is parsed as int with 2 decimal places
     // ie. _result = 500.12
     //    parseInt(_result, 2) => 50012
-    require(_exchangeRates.setRate(_queryId, parseInt(_result, 2)));
+    require(
+      _exchangeRates.setRate(
+        _queryId,
+        parseInt(_result, 2)
+      )
+    );
 
     // check if call interval has been set and that _ratesActive is still true
     // if so, call again with the interval

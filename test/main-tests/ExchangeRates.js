@@ -25,6 +25,7 @@ describe('when performing owner only functions', () => {
     const callbackGasLimit = new BigNumber(20e9)
     const queryString = 'https://domain.com/api/?base=ETH&to=USD'
     const queryType = 'USD'
+    const ratePenalty = new BigNumber(20) // in permille => 20/1000 = 2%
     let exr
     let exp
 
@@ -45,17 +46,19 @@ describe('when performing owner only functions', () => {
         callInterval,
         callbackGasLimit,
         queryString,
+        ratePenalty,
         { from: notOwner }
       ])
     })
 
-    it('should set rate settings', async () => {
+    it('should set rate settings as owner', async () => {
       await testSetCurrencySettings(
         exr,
         queryType,
         callInterval,
         callbackGasLimit,
         queryString,
+        ratePenalty,
         { from: owner }
       )
     })
@@ -78,7 +81,7 @@ describe('when performing owner only functions', () => {
     })
 
     it('should have rates set by the exRatesProvider', async () => {
-      await testSetRate(exr, exp, '100.50')
+      await testSetRate(exr, exp, '100.50', ratePenalty)
     })
 
     it('should stop rates when active', async () => {
@@ -124,9 +127,8 @@ describe('when using utility functions', () => {
         30,
         100000,
         'https://domain.com/api/rates?currency=ETH',
-        {
-          from: owner
-        }
+        20,
+        { from: owner }
       )
     })
   })
@@ -145,7 +147,7 @@ describe('when self destructing', async () => {
       exp = contracts.exp
     })
 
-    it('should selfDestruct ExchangeRateProvider', async () => {
+    it('should selfDestruct ExchangeRateProvider if owner', async () => {
       await testSelfDestruct(exr, exp, owner)
     })
 
@@ -162,6 +164,7 @@ describe('when testing events', async () => {
     const callbackGasLimit = new BigNumber(20e9)
     const queryString = 'https://domain.com/api/?base=ETH&to=USD'
     const queryType = 'USD'
+    const ratePenalty = new BigNumber(20) // in permille => 20/1000 = 2%
     let exr
 
     beforeEach('setup contracts', async () => {
@@ -176,6 +179,7 @@ describe('when testing events', async () => {
         callInterval,
         callbackGasLimit,
         queryString,
+        ratePenalty,
         { from: owner }
       )
       await testSettingsExists(exr, queryType)
@@ -195,6 +199,7 @@ describe('when testing events', async () => {
         callInterval,
         callbackGasLimit,
         queryString,
+        ratePenalty,
         { from: owner }
       )
       await testSettingsExists(exr, queryType)
@@ -216,6 +221,7 @@ describe('when setting rate settings and fetching', async () => {
     const callbackGasLimit = new BigNumber(20e9)
     const queryString = 'https://domain.com/api/?base=ETH&to=USD'
     const queryType = 'USD'
+    const ratePenalty = new BigNumber(20) // in permille => 20/1000 = 2%
     let exr
     let exp
     let defaultRate
@@ -234,17 +240,18 @@ describe('when setting rate settings and fetching', async () => {
         callInterval,
         callbackGasLimit,
         queryString,
+        ratePenalty,
         { from: owner }
       )
       await testFetchRate(exr, exp, queryType, { from: owner, value: 1e18 })
     })
 
     it('should set rate with simulated callback', async () => {
-      await testSetRate(exr, exp, defaultRate)
+      await testSetRate(exr, exp, defaultRate, ratePenalty)
     })
 
     it('should get the correct rate', async () => {
-      await testGetRate(exr, defaultRate, queryType)
+      await testGetRate(exr, defaultRate, queryType, ratePenalty)
     })
   })
 })
@@ -256,6 +263,7 @@ describe('when setting rate settings, fetching rates, and setting ratesActive to
     const callbackGasLimit = new BigNumber(20e9)
     const queryString = 'https://domain.com/api/?base=ETH&to=USD'
     const queryType = 'USD'
+    const ratePenalty = new BigNumber(20) // in permille => 20/1000 = 2%
     let exr
     let exp
     let defaultRate
@@ -274,17 +282,18 @@ describe('when setting rate settings, fetching rates, and setting ratesActive to
         callInterval,
         callbackGasLimit,
         queryString,
+        ratePenalty,
         { from: owner }
       )
       await testFetchRate(exr, exp, queryType, { from: owner, value: 1e18 })
     })
 
     it('should set rate with simulated callback', async () => {
-      await testSetRate(exr, exp, defaultRate)
+      await testSetRate(exr, exp, defaultRate, ratePenalty)
     })
 
     it('should get the correct rate', async () => {
-      await testGetRate(exr, defaultRate, queryType)
+      await testGetRate(exr, defaultRate, queryType, ratePenalty)
     })
 
     it('should toggle ratesActive', async () => {
@@ -293,7 +302,7 @@ describe('when setting rate settings, fetching rates, and setting ratesActive to
 
     it('should simulate a recursive call where ratesActive is false', async () => {
       await testSetQueryId(exr, exp, queryType)
-      await testSetRateRatesActiveFalse(exr, exp, defaultRate)
+      await testSetRateRatesActiveFalse(exr, exp, defaultRate, ratePenalty)
     })
   })
 })
@@ -305,12 +314,14 @@ describe('when setting rate settings then changing them later', async () => {
     const callbackGasLimit = new BigNumber(20e9)
     const queryString = 'https://domain.com/api/?base=ETH&to=USD'
     const queryType = 'USD'
+    const ratePenalty = new BigNumber(20) // in permille => 20/1000 = 2%
     let exr
     let exp
     let defaultRate
     let updatedCallInterval
     let updatedCallbackGasLimit
     let updatedQueryString
+    let updatedRatePenalty
 
     before('setup contracts', async () => {
       const contracts = await setupContracts()
@@ -326,39 +337,44 @@ describe('when setting rate settings then changing them later', async () => {
         callInterval,
         callbackGasLimit,
         queryString,
+        ratePenalty,
         { from: owner }
       )
       await testFetchRate(exr, exp, queryType, { from: owner, value: 1e18 })
     })
 
     it('should set rate with simulated callback', async () => {
-      await testSetRate(exr, exp, defaultRate)
+      await testSetRate(exr, exp, defaultRate, ratePenalty)
     })
 
     it('should get the correct rate', async () => {
-      await testGetRate(exr, defaultRate, queryType)
+      await testGetRate(exr, defaultRate, queryType, ratePenalty)
     })
 
     it('should update the settings while rate queries are already in progress', async () => {
       updatedCallInterval = callInterval.add(20)
       updatedCallbackGasLimit = callbackGasLimit.add(500)
       updatedQueryString = 'https://otherdomain.com/api/?base=ETH&to=USD'
+      updatedRatePenalty = ratePenalty.minus(15)
       await testSetCurrencySettings(
         exr,
         queryType,
         updatedCallInterval,
         updatedCallbackGasLimit,
         updatedQueryString,
+        updatedRatePenalty,
         { from: owner }
       )
     })
 
     it('should set rate with simulated callback', async () => {
       await testSetQueryId(exr, exp, queryType)
-      await testSetRate(exr, exp, defaultRate)
+      await testSetRate(exr, exp, defaultRate, updatedRatePenalty)
     })
 
     it('should have the correct pending values in test stub', async () => {
+      // we not pass updatedRatePenalty here as it doesn't influence
+      // ExchangeRateProvider or ExchangeRateProviderStub
       await testUpdatedCurrencySettings(
         exr,
         exp,
@@ -369,16 +385,16 @@ describe('when setting rate settings then changing them later', async () => {
     })
 
     it('should get the correct rate', async () => {
-      await testGetRate(exr, defaultRate, queryType)
+      await testGetRate(exr, defaultRate, queryType, updatedRatePenalty)
     })
 
     it('should set rate with simulated callback', async () => {
       await testSetQueryId(exr, exp, queryType)
-      await testSetRate(exr, exp, defaultRate)
+      await testSetRate(exr, exp, defaultRate, updatedRatePenalty)
     })
 
     it('should get the correct rate', async () => {
-      await testGetRate(exr, defaultRate, queryType)
+      await testGetRate(exr, defaultRate, queryType, updatedRatePenalty)
     })
   })
 })

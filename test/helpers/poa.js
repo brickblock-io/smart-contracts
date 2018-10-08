@@ -13,7 +13,6 @@ const IPoaTokenCrowdsale = artifacts.require('IPoaTokenCrowdsale')
 const assert = require('assert')
 const BigNumber = require('bignumber.js')
 
-const logger = require('../../scripts/lib/logger')
 const { timeTravel } = require('helpers')
 const {
   areInRange,
@@ -67,6 +66,8 @@ const defaultActivationTimeout = new BigNumber(60 * 60 * 24 * 7)
 const defaultFundingGoal = new BigNumber(5e5)
 const defaultTotalSupply = new BigNumber(1e23)
 const defaultFiatRate = new BigNumber('333.33')
+const defaultPenalizedFiatRate = new BigNumber('326.66')
+const defaultFiatRatePenalty = new BigNumber(20) // in permille => 20/1000 = 2%
 const defaultIpfsHash = 'QmSUfCtXgb59G9tczrz2WuHNAbecV55KRBGXBbZkou5RtE'
 const newIpfsHash = 'Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u'
 const defaultIpfsHashArray32 = [
@@ -77,7 +78,15 @@ const newIpfsHashArray32 = [
   web3.toHex(newIpfsHash.slice(0, 32)),
   web3.toHex(newIpfsHash.slice(32))
 ]
-const defaultBuyAmount = new BigNumber(1e18)
+// default buy amount of 1e18 wei including effect
+// of penalized fiat rate, which increases this amount
+// by factor defaultFiatRate/defaultPenalizedFiatRate.
+const defaultBuyAmount = new BigNumber(
+  new BigNumber(1e18)
+    .times(defaultFiatRate)
+    .dividedBy(defaultPenalizedFiatRate)
+    .toFixed(0, 1) // cut off decimals to simulate integer
+)
 const emptyBytes32 = '0x' + '0'.repeat(64)
 const getDefaultStartTime = async () => {
   const currentBlock = await web3.eth.getBlock(web3.eth.blockNumber)
@@ -153,7 +162,14 @@ const setupEcosystem = async ({
   }
 }
 
-const testSetCurrencyRate = async (exr, exp, currencyType, rate, config) => {
+const testSetCurrencyRate = async (
+  exr,
+  exp,
+  currencyType,
+  rate,
+  ratePenalty,
+  config
+) => {
   const callInterval = new BigNumber(30)
   const queryString = 'https://domain.com?currency=ETH'
   const callbackGasLimit = new BigNumber(1.5e5)
@@ -163,6 +179,7 @@ const testSetCurrencyRate = async (exr, exp, currencyType, rate, config) => {
     callInterval,
     callbackGasLimit,
     queryString,
+    ratePenalty,
     {
       from: config.from
     }
@@ -170,7 +187,7 @@ const testSetCurrencyRate = async (exr, exp, currencyType, rate, config) => {
 
   await testFetchRate(exr, exp, currencyType, config)
 
-  await testSetRate(exr, exp, rate, false)
+  await testSetRate(exr, exp, rate, ratePenalty, false)
 }
 
 const setupPoaProxyAndEcosystem = async ({
@@ -183,10 +200,17 @@ const setupPoaProxyAndEcosystem = async ({
     _whitelistedPoaBuyers
   })
 
-  await testSetCurrencyRate(exr, exp, defaultFiatCurrency, defaultFiatRate, {
-    from: owner,
-    value: 1e18
-  })
+  await testSetCurrencyRate(
+    exr,
+    exp,
+    defaultFiatCurrency,
+    defaultFiatRate,
+    defaultFiatRatePenalty,
+    {
+      from: owner,
+      value: 1e18
+    }
+  )
 
   // deploy poa master in order to allow proxies to use it's code
   const poatm = await PoaToken.new()
@@ -360,10 +384,17 @@ const testProxyInitialization = async (reg, pmr, args) => {
 }
 
 const testInitialization = async (exr, exp, reg, pmr) => {
-  await testSetCurrencyRate(exr, exp, defaultFiatCurrency, defaultFiatRate, {
-    from: owner,
-    value: 1e18
-  })
+  await testSetCurrencyRate(
+    exr,
+    exp,
+    defaultFiatCurrency,
+    defaultFiatRate,
+    defaultFiatRatePenalty,
+    {
+      from: owner,
+      value: 1e18
+    }
+  )
 
   const defaultStartTime = await getDefaultStartTime()
 
@@ -497,10 +528,11 @@ const testWeiToFiatCents = async (poa, weiInput) => {
   const expectedFiat = weiInput
     .mul(defaultFiatRate.times(100))
     .div(1e18)
+    .mul(1000 - defaultFiatRatePenalty.toNumber()) // take into account the fiat rete penalty. This computes 98% of the original fiat value
+    .div(1000)
     .floor()
 
   const actualFiat = await poa.weiToFiatCents(weiInput)
-
   assert.equal(
     expectedFiat.toString(),
     actualFiat.toString(),
@@ -512,7 +544,9 @@ const testFiatCentsToWei = async (poa, fiatCentInput) => {
   const expectedWei = fiatCentInput
     .mul(1e18)
     .div(defaultFiatRate.times(100))
-    .floor()
+    .mul(defaultFiatRate) // default rate
+    .div(defaultPenalizedFiatRate) // penalized default rate (by default penalty of 2%)
+    .floor() // round down to lower integer to simulate integer division in Solidity
 
   const actualWei = await poa.fiatCentsToWei(fiatCentInput)
 
@@ -877,9 +911,6 @@ const testPayActivationFee = async (
   { value, from = broker } = {}
 ) => {
   const paidFeeAmount = value || (await poa.calculateTotalFee())
-  logger.debug('calculatedFee', paidFeeAmount, {
-    scope: 'testPayActivationFee'
-  })
   const preIsActivationFeePaid = await poa.isActivationFeePaid.call()
   const preFeeManagerBalance = await getEtherBalance(fmr.address)
 
@@ -1572,9 +1603,15 @@ const getAccountInformation = async (poa, address) => {
   }
 }
 
-const testResetCurrencyRate = async (exr, exp, currencyType, rate) => {
+const testResetCurrencyRate = async (
+  exr,
+  exp,
+  currencyType,
+  rate,
+  ratePenalty
+) => {
   await testSetQueryId(exr, exp, currencyType)
-  await testSetRate(exr, exp, rate, false)
+  await testSetRate(exr, exp, rate, ratePenalty, false)
 }
 
 const testActiveBalances = async (poa, commitments) => {
@@ -1701,18 +1738,9 @@ const getRemainingAmountInWeiDuringEthFunding = async poa => {
   const fundingGoalInWei = await poa.fiatCentsToWei(fundingGoalInCents)
   const fundedFiatAmount = await poa.fundedFiatAmountInCents()
   const fundedFiatAmountInWei = await poa.fiatCentsToWei(fundedFiatAmount)
-  logger.debug(
-    'fundingGoalInEth',
-    fundingGoalInWei.div(1e18).toString(),
-    'fundedEthAmount',
-    fundedEthAmountInWei.div(1e18).toString(),
-    'fundedFiatAmountInWei',
-    fundedFiatAmountInWei.div(1e18).toString()
-  )
   const remainingBuyableEth = fundingGoalInWei
     .sub(fundedEthAmountInWei)
     .sub(fundedFiatAmountInWei)
-  logger.debug('remainingBuyableEth', remainingBuyableEth.div(1e18).toString())
 
   return remainingBuyableEth
 }
@@ -1731,6 +1759,8 @@ module.exports = {
   defaultFiatCurrency,
   defaultFiatCurrency32,
   defaultFiatRate,
+  defaultPenalizedFiatRate,
+  defaultFiatRatePenalty,
   defaultFundingGoal,
   defaultFundingTimeout,
   defaultIpfsHash,

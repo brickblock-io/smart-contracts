@@ -32,7 +32,8 @@ const testUninitializedSettings = async exr => {
   const [
     preCallInterval,
     preCallbackGasLimit,
-    preQueryString
+    preQueryString,
+    preRatePenalty
   ] = await exr.getCurrencySettings('USD')
 
   assert.equal(
@@ -43,9 +44,14 @@ const testUninitializedSettings = async exr => {
   assert.equal(
     preCallbackGasLimit.toString(),
     new BigNumber(0).toString(),
-    'callbackGAsLimit should start uninitialized'
+    'callbackGasLimit should start uninitialized'
   )
   assert.equal(preQueryString, '', 'queryString should start uninitialized')
+  assert.equal(
+    preRatePenalty.toString(),
+    new BigNumber(0).toString(),
+    'ratePenalty should start uninitialized'
+  )
 }
 
 const testSetCurrencySettings = async (
@@ -54,12 +60,14 @@ const testSetCurrencySettings = async (
   callInterval,
   callbackGasLimit,
   queryString,
+  ratePenalty,
   config
 ) => {
   const [
     preCallInterval,
     preCallbackGasLimit,
-    preQueryString
+    preQueryString,
+    preRatePenalty
   ] = await exr.getCurrencySettings(queryType)
 
   await exr.setCurrencySettings(
@@ -67,13 +75,15 @@ const testSetCurrencySettings = async (
     queryString,
     callInterval,
     callbackGasLimit,
+    ratePenalty,
     config
   )
 
   const [
     postCallInterval,
     postCallbackGasLimit,
-    postQueryString
+    postQueryString,
+    postRatePenalty
   ] = await exr.getCurrencySettings(queryType)
 
   assert(
@@ -87,6 +97,10 @@ const testSetCurrencySettings = async (
   assert(
     preQueryString != postQueryString,
     'postQueryString should not match uninitialized value'
+  )
+  assert(
+    preRatePenalty != postRatePenalty,
+    'postRatePenalty should not match uninitialized value'
   )
 
   assert.equal(
@@ -104,19 +118,30 @@ const testSetCurrencySettings = async (
     queryString,
     'the postQueryString should match the set value'
   )
+  assert.equal(
+    postRatePenalty.toString(),
+    ratePenalty.toString(),
+    'the postRatePenalty should match the set value'
+  )
 }
 
 const testSettingsExists = async (exr, queryType) => {
   const [
     callInterval,
     callbackGasLimit,
-    queryString
+    queryString,
+    ratePenalty
   ] = await exr.getCurrencySettings(queryType)
   assert(callbackGasLimit.greaterThan(0), 'callbackGasLimit uninitialized')
   assert(queryString !== '', 'queryString uninitialized')
   if (callInterval.equals(0)) {
     // eslint-disable-next-line
     console.log('callInterval set to 0, are you sure this should be like this?')
+  }
+
+  if (ratePenalty.equals(0)) {
+    // eslint-disable-next-line
+    console.log('ratePenalty set to 0, are you sure this should be like this?')
   }
 }
 
@@ -133,8 +158,15 @@ const testFetchRate = async (exr, exp, queryType, config) => {
   )
 }
 
-const testSetRate = async (exr, exp, rate, isAfterClearRateIntervals) => {
+const testSetRate = async (
+  exr,
+  exp,
+  rate,
+  ratePenalty,
+  isAfterClearRateIntervals
+) => {
   const bigRate = new BigNumber(rate)
+  const penalizedRate = bigRate.times(1000 - ratePenalty).dividedBy(1000)
   const prePendingQueryId = await exp.pendingTestQueryId()
   const queryType = await exr.queryTypes(prePendingQueryId)
   await exp.simulate__callback(prePendingQueryId, bigRate.toString())
@@ -147,7 +179,8 @@ const testSetRate = async (exr, exp, rate, isAfterClearRateIntervals) => {
   const [
     callInterval,
     callbackGasLimit,
-    queryString
+    queryString,
+    actualRatePenalty
   ] = await exr.getCurrencySettings(queryType)
 
   const shouldCallAgainWithQuery = await exp.shouldCallAgainWithQuery()
@@ -203,9 +236,15 @@ const testSetRate = async (exr, exp, rate, isAfterClearRateIntervals) => {
   }
 
   assert.equal(
-    bigRate.times(100).toString(),
+    // toFixed(0, 1) simulates rounding down of integer divisions in Solidity
+    penalizedRate.times(100).toFixed(0, 1),
     actualRate.toString(),
-    'the rate on exr should match the rate set'
+    'the rate on exr should match the penalized rate'
+  )
+  assert.equal(
+    ratePenalty.toString(),
+    actualRatePenalty.toString(),
+    'the rate penalty on exr should match the set rate penalty'
   )
   assert.equal(
     actualRate.toString(),
@@ -214,13 +253,14 @@ const testSetRate = async (exr, exp, rate, isAfterClearRateIntervals) => {
   )
 }
 
-const testGetRate = async (exr, rate, queryType) => {
+const testGetRate = async (exr, rate, queryType, ratePenalty) => {
   const bigRate = new BigNumber(rate)
+  const penalizedRate = bigRate.times(1000 - ratePenalty).dividedBy(1000)
   const actualRate = await exr.getRate(queryType)
   assert.equal(
-    bigRate.times(100).toString(),
+    penalizedRate.times(100).toFixed(0, 1),
     actualRate.toString(),
-    'the rate should match the expected rate'
+    'the rate should match the expected penalized rate'
   )
 }
 
@@ -306,76 +346,6 @@ const testSelfDestruct = async (exr, exp, caller) => {
   )
 }
 
-const testSetRateClearIntervals = async (exr, exp, rate) => {
-  const bigRate = new BigNumber(rate)
-  const prePendingQueryId = await exp.pendingTestQueryId()
-  const queryType = await exr.queryTypes(prePendingQueryId)
-
-  const [
-    // eslint-disable-next-line no-unused-vars
-    preCallInterval,
-    preCallbackGasLimit,
-    preQueryString
-  ] = await exr.getCurrencySettings(queryType)
-
-  await exp.simulate__callback(prePendingQueryId, bigRate.toString())
-  const postPendingQueryId = await exp.pendingTestQueryId()
-  const actualRate = await exr.getRate(queryType)
-
-  // check on recursive callback settings
-  const [
-    postCallInterval,
-    postCallbackGasLimit,
-    postQueryString
-  ] = await exr.getCurrencySettings(queryType)
-
-  const shouldCallAgainWithQuery = await exp.shouldCallAgainWithQuery()
-  const shouldCallAgainIn = await exp.shouldCallAgainIn()
-  const shouldCallAgainWithGas = await exp.shouldCallAgainWithGas()
-
-  assert.equal(
-    postCallInterval.toString(),
-    new BigNumber(0).toString(),
-    'callInterval in exchange rates settings should be 0'
-  )
-  assert.equal(
-    postCallbackGasLimit.toString(),
-    preCallbackGasLimit.toString(),
-    'the callback gas limit should remain unchanged'
-  )
-  assert.equal(
-    postQueryString,
-    preQueryString,
-    'the query string should remain unchanged'
-  )
-  assert.equal(
-    shouldCallAgainIn.toString(),
-    new BigNumber(0).toString(),
-    'shouldCallAgainIn in provider should be 0'
-  )
-  assert.equal(
-    shouldCallAgainWithQuery,
-    '',
-    'shouldCallAgainWithQuery should be empty'
-  )
-  assert.equal(
-    shouldCallAgainWithGas.toString(),
-    new BigNumber(0).toString(),
-    'shouldCallAgainWithGas be 0'
-  )
-  assert(queryType !== '', 'queryTypeBytes should not be empty')
-  assert.equal(
-    postPendingQueryId,
-    '0x' + '00'.repeat(32),
-    'the pending query id should be empty after callback completed'
-  )
-  assert.equal(
-    bigRate.toString(),
-    actualRate.toString(),
-    'the rate on exr should match the rate set'
-  )
-}
-
 // FIXME: This test is flaky in CI, temporarily added some debug console.logs
 /* eslint-disable no-console */
 const testSetQueryId = async (exr, exp, queryType) => {
@@ -399,8 +369,9 @@ const testSetQueryId = async (exr, exp, queryType) => {
 }
 /* eslint-enable no-console */
 
-const testSetRateRatesActiveFalse = async (exr, exp, rate) => {
+const testSetRateRatesActiveFalse = async (exr, exp, rate, ratePenalty) => {
   const bigRate = new BigNumber(rate)
+  const penalizedRate = bigRate.times(1000 - ratePenalty).dividedBy(1000)
   const prePendingQueryId = await exp.pendingTestQueryId()
   const queryType = await exr.queryTypes(prePendingQueryId)
 
@@ -408,7 +379,8 @@ const testSetRateRatesActiveFalse = async (exr, exp, rate) => {
     // eslint-disable-next-line no-unused-vars
     preCallInterval,
     preCallbackGasLimit,
-    preQueryString
+    preQueryString,
+    preRatePenalty
   ] = await exr.getCurrencySettings(queryType)
 
   await exp.simulate__callback(prePendingQueryId, bigRate.toString())
@@ -419,7 +391,8 @@ const testSetRateRatesActiveFalse = async (exr, exp, rate) => {
   const [
     postCallInterval,
     postCallbackGasLimit,
-    postQueryString
+    postQueryString,
+    postRatePenalty
   ] = await exr.getCurrencySettings(queryType)
 
   const shouldCallAgainWithQuery = await exp.shouldCallAgainWithQuery()
@@ -440,6 +413,11 @@ const testSetRateRatesActiveFalse = async (exr, exp, rate) => {
     postQueryString,
     preQueryString,
     'the query string should remain unchanged'
+  )
+  assert.equal(
+    postRatePenalty.toString(),
+    preRatePenalty.toString(),
+    'the rate penalty should remain unchanged'
   )
   assert.equal(
     shouldCallAgainIn.toString(),
@@ -464,9 +442,9 @@ const testSetRateRatesActiveFalse = async (exr, exp, rate) => {
     'the pending query id should be empty after callback completed'
   )
   assert.equal(
-    bigRate.times(100).toString(),
+    penalizedRate.times(100).toFixed(0, 1),
     actualRate.toString(),
-    'the rate on exr should match the rate set'
+    'the rate on exr should match the set penalized rate'
   )
 }
 
@@ -504,6 +482,7 @@ const testGetCurrencySettings = async (
   callInterval,
   callbackGasLimit,
   queryString,
+  ratePenalty,
   config
 ) => {
   await testSetCurrencySettings(
@@ -512,13 +491,15 @@ const testGetCurrencySettings = async (
     callInterval,
     callbackGasLimit,
     queryString,
+    ratePenalty,
     config
   )
 
   const [
     actualCallInterval,
     actualCallbackGasLimit,
-    actualQueryString
+    actualQueryString,
+    actualRatePenalty
   ] = await exr.getCurrencySettings(queryTypeString)
 
   assert.equal(
@@ -536,6 +517,11 @@ const testGetCurrencySettings = async (
     actualQueryString,
     'queryString should match returned actualQueryString'
   )
+  assert.equal(
+    ratePenalty.toString(),
+    actualRatePenalty.toString(),
+    'ratePenalty should match returned actualRatePenalty'
+  )
 }
 
 module.exports = {
@@ -550,7 +536,6 @@ module.exports = {
   testToBytes32Array,
   testSelfDestruct,
   testGetRate,
-  testSetRateClearIntervals,
   testSetQueryId,
   testSetRateRatesActiveFalse,
   testUpdatedCurrencySettings,

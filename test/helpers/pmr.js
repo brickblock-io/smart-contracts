@@ -8,6 +8,7 @@ const {
   defaultFiatCurrency,
   defaultFiatCurrency32,
   defaultFiatRate,
+  defaultFiatRatePenalty,
   defaultFundingGoal,
   defaultFundingTimeout,
   defaultIpfsHashArray32,
@@ -43,10 +44,17 @@ const setupPoaManager = async () => {
   await reg.updateContractAddress('PoaTokenMaster', poatm.address)
   await reg.updateContractAddress('PoaCrowdsaleMaster', poacm.address)
 
-  await testSetCurrencyRate(exr, exp, defaultFiatCurrency, defaultFiatRate, {
-    from: owner,
-    value: 1e18
-  })
+  await testSetCurrencyRate(
+    exr,
+    exp,
+    defaultFiatCurrency,
+    defaultFiatRate,
+    defaultFiatRatePenalty,
+    {
+      from: owner,
+      value: 1e18
+    }
+  )
 
   return {
     poatm,

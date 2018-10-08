@@ -9,6 +9,7 @@ describe('when analyzing gas costs', () => {
     const callbackGasLimit = new BigNumber(20e9)
     const queryString = 'https://domain.com/api/?base=ETH&to=USD'
     const queryType = 'USD'
+    const ratePenalty = 20 // in permille => 20/1000 = 2%
     let exr
 
     before('setup contracts', async () => {
@@ -25,6 +26,7 @@ describe('when analyzing gas costs', () => {
         queryString,
         callInterval,
         callbackGasLimit,
+        ratePenalty,
         { from: owner }
       )
       data.push(['setCurrencySettings', txSetCurrencySettings.receipt.gasUsed])

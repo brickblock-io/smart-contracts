@@ -21,6 +21,7 @@ const {
   testSetCurrencyRate,
   defaultFiatCurrency,
   defaultFiatRate,
+  defaultFiatRatePenalty,
   owner
 } = require('../helpers/poa')
 
@@ -58,6 +59,7 @@ describe('when using PoaProxy contract to proxy a PoaToken', () => {
         exp,
         defaultFiatCurrency,
         defaultFiatRate,
+        defaultFiatRatePenalty,
         {
           from: owner,
           value: 1e18
@@ -71,7 +73,7 @@ describe('when using PoaProxy contract to proxy a PoaToken', () => {
       )
     })
 
-    it('should have proxy addresses in storage before intiialization', async () => {
+    it('should have proxy addresses in storage before initialization', async () => {
       await checkPreInitializedStorage(poa, reg)
     })
 

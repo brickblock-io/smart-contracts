@@ -911,6 +911,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
     let exp
     let fmr
     let rate
+    let ratePenalty
 
     beforeEach('setup contracts', async () => {
       const contracts = await setupPoaProxyAndEcosystem()
@@ -919,6 +920,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       exp = contracts.exp
       fmr = contracts.fmr
       rate = new BigNumber('500.00')
+      ratePenalty = new BigNumber(20)
 
       // buy with fiat
       await testStartFiatSale(poa, { from: broker, gasPrice })
@@ -933,7 +935,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       await testStartEthSale(poa)
 
       // set starting rate to be sure of rate
-      await testResetCurrencyRate(exr, exp, 'EUR', rate)
+      await testResetCurrencyRate(exr, exp, 'EUR', rate, ratePenalty)
     })
 
     it('should give token balance proportional to commitment and fundingGoal, even when rates go down', async () => {
@@ -943,7 +945,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       for (const from of whitelistedPoaBuyers) {
         const preFundingGoalInWei = await poa.fundingGoalInWei()
         rate = rate.sub(rate.mul(decreaseRate)).floor()
-        await testResetCurrencyRate(exr, exp, 'EUR', rate)
+        await testResetCurrencyRate(exr, exp, 'EUR', rate, ratePenalty)
         const postFundingGoalInWei = await poa.fundingGoalInWei()
         assert(
           postFundingGoalInWei.greaterThan(preFundingGoalInWei),
@@ -991,7 +993,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       for (const from of whitelistedPoaBuyers) {
         const preFundingGoalInWei = await poa.fundingGoalInWei()
         rate = rate.add(rate.mul(increaseRate)).floor()
-        await testResetCurrencyRate(exr, exp, 'EUR', rate)
+        await testResetCurrencyRate(exr, exp, 'EUR', rate, ratePenalty)
         const postFundingGoalInWei = await poa.fundingGoalInWei()
         assert(
           postFundingGoalInWei.lessThan(preFundingGoalInWei),
@@ -1037,7 +1039,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       const preNeededWei = await poa.fiatCentsToWei(fundingGoalFiatCents)
       // suddenly eth drops to half of value vs EUR
       rate = rate.div(2).floor()
-      await testResetCurrencyRate(exr, exp, 'EUR', rate)
+      await testResetCurrencyRate(exr, exp, 'EUR', rate, ratePenalty)
 
       await testBuyTokens(poa, {
         from: whitelistedPoaBuyers[0],
@@ -1072,7 +1074,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
 
       // rate doubles
       rate = rate.mul(2).floor()
-      await testResetCurrencyRate(exr, exp, 'EUR', rate)
+      await testResetCurrencyRate(exr, exp, 'EUR', rate, ratePenalty)
 
       const interimStage = await poa.stage()
       const preSecondEthBalance = await getEtherBalance(whitelistedPoaBuyers[1])
@@ -1126,10 +1128,15 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
         value: preNeededWei.div(2),
         gasPrice
       })
-
-      // rate doubles
-      rate = rate.mul(2).floor()
-      await testResetCurrencyRate(exr, exp, 'EUR', rate)
+      // The intention is to double the rate. However, we compensate the fiat
+      // rate penalty of 2% by increasing the rate slighly more. This way,
+      // the following `poa.checkFundingSuccessful()` will succeed.
+      rate = rate
+        .mul(2)
+        .mul(333.33) // default fiat rate
+        .div(326.66) // penalized default rate (by default penalty of 2%)
+        .floor()
+      await testResetCurrencyRate(exr, exp, 'EUR', rate, ratePenalty)
 
       const interimStage = await poa.stage()
 
