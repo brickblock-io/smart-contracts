@@ -26,6 +26,7 @@ contract ExchangeRates is Ownable {
   using SafeMath for uint256;
 
   uint8 public constant version = 1;
+  uint256 public constant permilleDenominator = 1000;
   // instance of Registry to be used for getting other contract addresses
   IRegistry private registry;
   // flag used to tell recursive rate fetching to stop
@@ -161,8 +162,8 @@ contract ExchangeRates is Ownable {
     // get and apply penalty on fiat rate to compensate for fees
     uint256 _penaltyInPermille = currencySettings[toUpperCase(_currencyName)].ratePenalty;
     uint256 _penalizedRate = _rateInCents
-      .mul(1000.sub(_penaltyInPermille))
-      .div(1000);
+      .mul(permilleDenominator.sub(_penaltyInPermille))
+      .div(permilleDenominator);
     // set _queryId to empty (uninitialized, to prevent from being called again)
     delete queryTypes[_queryId];
     // set currency rate depending on _queryType (USD, EUR, etc.)
