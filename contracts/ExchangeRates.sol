@@ -158,10 +158,10 @@ contract ExchangeRates is Ownable {
     // check that first byte of _queryType is not 0 (something wrong or empty)
     // if the queryType is 0 then the queryId is incorrect
     require(bytes(_currencyName).length > 0);
-    // get and apply penality on fiat rate to compensate for fees
+    // get and apply penalty on fiat rate to compensate for fees
     uint256 _penaltyInPermille = currencySettings[toUpperCase(_currencyName)].ratePenalty;
     uint256 _penalizedRate = _rateInCents
-      .mul(1000 - _penaltyInPermille)
+      .mul(1000.sub(_penaltyInPermille))
       .div(1000);
     // set _queryId to empty (uninitialized, to prevent from being called again)
     delete queryTypes[_queryId];
