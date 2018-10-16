@@ -62,7 +62,9 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(
           mainnetMnemonic,
-          providerUrl || 'https://mainnet.infura.io/v3/' + infuraApiKey
+          providerUrl || 'https://mainnet.infura.io/v3/' + infuraApiKey,
+          0,
+          10
         )
     },
     // to be used when we want to interact in a local truffle console session

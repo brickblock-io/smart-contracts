@@ -34,6 +34,7 @@
     "migrate:kovan": "env-cmd .env truffle migrate --network kovan --reset",
     "migrate:ropsten": "env-cmd .env truffle migrate --network ropsten --reset",
     "migrate:rinkeby": "env-cmd .env truffle migrate --network rinkeby --reset",
+    "migrate:mainnet": "env-cmd .env truffle migrate --network mainnet --reset",
     "seed": "NODE_PATH=build NODE_ENV=development node scripts/seed.js",
     "seed:ropsten": "NODE_PATH=build NODE_ENV=development node scripts/seed.ropsten.js",
     "---SECTION:TEST---": "-------------------- HOW TO TEST THE SMART CONTRACTS --------------------",
