@@ -8,12 +8,7 @@
 module.exports = {
   // mainnet
   '1': {
-    ContractRegistry: '0x5973376b603268fe4251d13040226078257014f8',
-
-    AccessToken: '0xE043dd0C6712b862D68Be955f4a031940FBB5513',
-    BrickblockAccount: '0x5E59DE3c393bf442288E5a7aA2A9b216aF79EA63',
-    BrickblockToken: '0x4a6058666cf1057eac3cd3a5a614620547559fc9',
-    FeeManager: '0xe87227adf0fd3f6e580e2825069a0f8e8da66ad0'
+    ContractRegistry: '0x5973376b603268fe4251d13040226078257014f8'
   },
 
   // rinkeby
