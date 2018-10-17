@@ -292,7 +292,6 @@ const testProxyInitialization = async (reg, pmr, args) => {
   const contractBalance = await poa.balanceOf(poa.address)
   const stage = await poa.stage()
   const paused = await poa.paused()
-  const whitelistTransfers = await poa.whitelistTransfers()
   const registry = await poa.registry()
   const contractOwner = await poa.owner()
 
@@ -370,10 +369,6 @@ const testProxyInitialization = async (reg, pmr, args) => {
   )
   assert.equal(contractOwner, pmr.address, 'the owner should be pmr')
   assert(paused, 'contract should start paused')
-  assert(
-    !whitelistTransfers,
-    'contract should start not requiring whitelisted for transfers'
-  )
 
   assert.equal(
     givenstartTimeForFiatFunding.toString(),
@@ -433,7 +428,6 @@ const testInitialization = async (exr, exp, reg, pmr) => {
   const contractBalance = await poa.balanceOf(poa.address)
   const stage = await poa.stage()
   const paused = await poa.paused()
-  const whitelistTransfers = await poa.whitelistTransfers()
   const registry = await poa.registry()
   const contractOwner = await poa.owner()
 
@@ -516,10 +510,6 @@ const testInitialization = async (exr, exp, reg, pmr) => {
   )
   assert.equal(contractOwner, pmr.address, 'the owner should be PoaManager')
   assert(paused, 'contract should start paused')
-  assert(
-    !whitelistTransfers,
-    'contract should start not requiring whitelisted for transfers'
-  )
 
   return poa
 }
@@ -1411,31 +1401,6 @@ const testUnpause = async (poa, pmr, config, { callPoaDirectly }) => {
   await testPaused(poa, false)
 }
 
-const testToggleWhitelistTransfers = async (
-  poa,
-  pmr,
-  config,
-  { callPoaDirectly }
-) => {
-  if (!callPoaDirectly)
-    return await require('./pmr').testToggleWhitelistTokenTransfers(
-      pmr,
-      poa,
-      config
-    )
-
-  const preWhitelistTransfers = await poa.whitelistTransfers()
-
-  await poa.toggleWhitelistTransfers(config)
-
-  const postWhitelistTransfers = await poa.whitelistTransfers()
-
-  assert(
-    preWhitelistTransfers != postWhitelistTransfers,
-    'whitelistTransfers should be toggled'
-  )
-}
-
 // end - onlyOwner functions
 
 // start - eitherCustodianOrOwner functions
@@ -1665,7 +1630,6 @@ const testProxyUnchanged = async (poa, first, state) => {
       contractBalance: await poa.balanceOf(await poa.address),
       stage: await poa.stage(),
       paused: await poa.paused(),
-      whitelistTransfers: await poa.whitelistTransfers(),
       registry: await poa.registry(),
       contractOwner: await poa.owner()
     }
@@ -1689,7 +1653,6 @@ const testProxyUnchanged = async (poa, first, state) => {
         contractBalance: await poa.balanceOf(await poa.address),
         stage: await poa.stage(),
         paused: await poa.paused(),
-        whitelistTransfers: await poa.whitelistTransfers(),
         registry: await poa.registry(),
         contractOwner: await poa.owner()
       },
@@ -1820,7 +1783,6 @@ module.exports = {
   testStartEthSale,
   testStartFiatSale,
   testTerminate,
-  testToggleWhitelistTransfers,
   testTransfer,
   testTransferFrom,
   testUnpause,

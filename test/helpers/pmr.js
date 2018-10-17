@@ -135,25 +135,11 @@ const testTerminateToken = async (pmr, poa, config) => {
   )
 }
 
-const testToggleWhitelistTokenTransfers = async (pmr, addedToken, config) => {
-  const preWhitelistTransfers = await addedToken.whitelistTransfers()
-
-  await pmr.toggleTokenWhitelistTransfers(addedToken.address, config)
-
-  const postWhitelistTransfers = await addedToken.whitelistTransfers()
-
-  assert(
-    preWhitelistTransfers != postWhitelistTransfers,
-    'pre whitelistTransfers should be inverse of post'
-  )
-}
-
 module.exports = {
   setupPoaManager,
   addToken,
   moveTokenToActive,
   testPauseToken,
   testUnpauseToken,
-  testTerminateToken,
-  testToggleWhitelistTokenTransfers
+  testTerminateToken
 }

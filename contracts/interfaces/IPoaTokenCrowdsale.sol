@@ -23,11 +23,6 @@ interface IPoaTokenCrowdsale {
     view
     returns (uint256);
 
-  function whitelistTransfers()
-    external
-    view
-    returns (bool);
-
   function initializeToken(
     bytes32 _name32, // bytes32 of name string
     bytes32 _symbol32, // bytes32 of symbol string
@@ -54,10 +49,6 @@ interface IPoaTokenCrowdsale {
 
   function unpause()
     external;
-
-  function toggleWhitelistTransfers()
-    external
-    returns (bool);
 
   function name()
     external

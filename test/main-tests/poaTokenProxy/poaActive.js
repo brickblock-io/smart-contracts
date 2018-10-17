@@ -23,7 +23,6 @@ const {
   testSetStageToTimedOut,
   testStartEthSale,
   testTerminate,
-  testToggleWhitelistTransfers,
   testTransfer,
   testTransferFrom,
   testUnpause,
@@ -244,44 +243,10 @@ describe("when in 'Active' stage", () => {
       ])
     })
 
-    it('should transfer to NOT whitelisted addresses when whitelistTransfers=false', async () => {
-      await testTransfer(poa, custodian, 1e17, {
-        from: whitelistedPoaBuyers[0]
-      })
-    })
-
     it('should approve', async () => {
       await testApprove(poa, whitelistedPoaBuyers[1], 1e17, {
         from: whitelistedPoaBuyers[0]
       })
-    })
-
-    it('should transferFrom to NOT whitelisted address when whitelistTransfers=false', async () => {
-      await testTransferFrom(poa, whitelistedPoaBuyers[0], custodian, 1e17, {
-        from: whitelistedPoaBuyers[1]
-      })
-    })
-
-    it('should NOT toggleWhitelistTransfers if NOT owner', async () => {
-      await testWillThrow(testToggleWhitelistTransfers, [
-        poa,
-        pmr,
-        { from: custodian },
-        { callPoaDirectly: true }
-      ])
-    })
-
-    it('should toggleWhitelistTransfers to true if owner', async () => {
-      await testToggleWhitelistTransfers(
-        poa,
-        pmr,
-        { from: owner },
-        { callPoaDirectly: false }
-      )
-      assert(
-        await poa.whitelistTransfers(),
-        'transfers/transferFroms should require whitelisting now'
-      )
     })
 
     it('should NOT transfer to NOT whitelisted address', async () => {
@@ -293,13 +258,7 @@ describe("when in 'Active' stage", () => {
       ])
     })
 
-    it('should still approve when whitelistTransfers is enabled when whitelistTransfers=true', async () => {
-      await testApprove(poa, whitelistedPoaBuyers[1], 1e17, {
-        from: whitelistedPoaBuyers[0]
-      })
-    })
-
-    it('should NOT transferFrom to NOT whitelisted address when whitelistTransfers=true', async () => {
+    it('should NOT transferFrom to NOT whitelisted address', async () => {
       await testWillThrow(testTransferFrom, [
         poa,
         whitelistedPoaBuyers[0],
@@ -309,13 +268,13 @@ describe("when in 'Active' stage", () => {
       ])
     })
 
-    it('should transfer to whitelisted addresses when whitelistTransfers=true', async () => {
+    it('should transfer to whitelisted addresses', async () => {
       await testTransfer(poa, whitelistedPoaBuyers[1], 1e17, {
         from: whitelistedPoaBuyers[0]
       })
     })
 
-    it('should transferFrom to whitelisted address when whitelistTransfers=true', async () => {
+    it('should transferFrom to whitelisted address', async () => {
       await testTransferFrom(
         poa,
         whitelistedPoaBuyers[0],

@@ -25,7 +25,6 @@ const {
   testSetStageToTimedOut,
   testStartEthSale,
   testStartFiatSale,
-  testToggleWhitelistTransfers,
   testTransfer,
   testTransferFrom,
   testUpdateProofOfCustody,
@@ -75,15 +74,6 @@ describe('De-whitelisted POA holders', () => {
           ],
         gasPrice
       })
-
-      await testToggleWhitelistTransfers(
-        poa,
-        pmr,
-        {
-          from: owner
-        },
-        { callPoaDirectly: false }
-      )
 
       await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
         from: custodian

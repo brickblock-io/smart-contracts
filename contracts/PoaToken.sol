@@ -40,8 +40,6 @@ contract PoaToken is PoaCommon {
   mapping(address => uint256) public receivedBalances;
   // allowance of spender to spend owners tokens
   mapping (address => mapping (address => uint256)) internal allowed;
-  // used in order to enable/disable whitelist required transfers/transferFroms
-  bool public whitelistTransfers;
 
   /********************************
   * end poaToken specific storage *
@@ -109,14 +107,11 @@ contract PoaToken is PoaCommon {
     _;
   }
 
-  modifier isTransferWhitelisted
-  (
+  modifier isTransferWhitelisted(
     address _address
-  ) {
-    if (whitelistTransfers) {
-      require(isWhitelisted(_address));
-    }
-
+  )
+  {
+    require(isWhitelisted(_address));
     _;
   }
 
@@ -153,7 +148,6 @@ contract PoaToken is PoaCommon {
     // initialize sequential storage
     name32 = _name32;
     symbol32 = _symbol32;
-    whitelistTransfers = false;
     owner = getContractAddress("PoaManager");
 
     // initialize non-sequential storage
@@ -237,16 +231,6 @@ contract PoaToken is PoaCommon {
   {
     paused = false;
     emit Unpause();
-  }
-
-  /// @notice enables whitelisted transfers/transferFroms
-  function toggleWhitelistTransfers()
-    external
-    onlyOwner
-    returns (bool)
-  {
-    whitelistTransfers = !whitelistTransfers;
-    return whitelistTransfers;
   }
 
   /**********************

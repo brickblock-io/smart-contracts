@@ -6,8 +6,7 @@ const {
   moveTokenToActive,
   testPauseToken,
   testUnpauseToken,
-  testTerminateToken,
-  testToggleWhitelistTokenTransfers
+  testTerminateToken
 } = require('../helpers/pmr')
 
 describe('when creating a new instance of the contract', () => {
@@ -577,24 +576,6 @@ describe('when calling token convenience functions', () => {
 
       it('should terminate the addedToken when owner', async () => {
         await testTerminateToken(pmr, addedToken)
-      })
-    })
-
-    describe('when toggle whitelistTransfers', () => {
-      it('should NOT toggle toggleWhitelistTransfers when NOT owner', async () => {
-        await testWillThrow(testToggleWhitelistTokenTransfers, [
-          pmr,
-          addedToken,
-          {
-            from: notOwner
-          }
-        ])
-      })
-
-      it('should toggle toggleWhitelistTransfers when owner', async () => {
-        await testToggleWhitelistTokenTransfers(pmr, addedToken, {
-          from: owner
-        })
       })
     })
   })

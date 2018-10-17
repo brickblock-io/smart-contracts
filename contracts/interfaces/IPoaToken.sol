@@ -27,8 +27,4 @@ interface IPoaToken {
     external
     view
     returns (string);
-
-  function toggleWhitelistTransfers()
-    external
-    returns (bool);
 }

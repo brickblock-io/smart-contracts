@@ -380,15 +380,4 @@ contract PoaManager is Ownable {
       registry.getContractAddress("PoaCrowdsaleMaster")
     );
   }
-
-  // toggle whitelisting required on transfer & transferFrom for a token
-  function toggleTokenWhitelistTransfers(
-    address _tokenAddress
-  )
-    external
-    onlyOwner
-    returns (bool)
-  {
-    return IPoaToken(_tokenAddress).toggleWhitelistTransfers();
-  }
 }

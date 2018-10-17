@@ -103,8 +103,7 @@ const parseTokenStorage = storage => ({
   claimedPerTokenPayouts: storage[24].data,
   spentBalances: storage[25].data,
   receivedBalances: storage[26].data,
-  allowed: storage[27].data,
-  whitelistTransfers: storage[28].data
+  allowed: storage[27].data
 })
 
 const initializeContract = async (poa, reg) => {
@@ -594,9 +593,7 @@ const checkPostIsUpgradedStorage = async (poa, reg, pmr) => {
   //
   // start upgraded storage
   //
-
-  // isUpgraded is packed in with bool whitelistTransfers at slot 28
-  const isUpgraded = parseInt(storage[28].data.slice(0, 4))
+  const isUpgraded = parseInt(storage[28].data)
 
   assert(isUpgraded, 'isUpgraded should be true in correct slot')
 }
