@@ -84,6 +84,11 @@ module.exports = {
       network_id: '*'
     }
   },
+  compilers: {
+    solc: {
+      version: '0.4.24'
+    }
+  },
   mocha: {
     /*
      * Default reporter: 'spec'

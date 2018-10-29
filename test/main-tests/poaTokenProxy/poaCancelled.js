@@ -14,6 +14,7 @@ const {
   testClaim,
   testPaused,
   testPayout,
+  testStartPreFunding,
   testStartEthSale,
   testStartFiatSale,
   testTerminate,
@@ -39,7 +40,10 @@ describe("when in 'FundingCancelled' stage", () => {
       fmr = contracts.fmr
       pmr = contracts.pmr
 
-      // move into "FiatFunding" stagew
+      // move from `Pending` to `PreFunding` stage
+      await testStartPreFunding(poa, { from: broker, gasPrice })
+
+      // move into `FiatFunding` stage
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
       await testStartFiatSale(poa, { from: broker, gasPrice })

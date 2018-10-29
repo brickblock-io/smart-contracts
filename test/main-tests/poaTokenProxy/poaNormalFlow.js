@@ -11,6 +11,7 @@ const {
   testClaimAllPayouts,
   testPayActivationFee,
   testPayout,
+  testStartPreFunding,
   testStartEthSale,
   testUpdateProofOfCustody,
   whitelistedPoaBuyers
@@ -27,6 +28,10 @@ describe("when going through Poa's normal flow", async () => {
       const contracts = await setupPoaProxyAndEcosystem()
       poa = contracts.poa
       fmr = contracts.fmr
+    })
+
+    it("should move from 'Preview' to 'PreFunding' stage", async () => {
+      await testStartPreFunding(poa, { from: broker, gasPrice })
     })
 
     it('should move from PreFunding to EthFunding after startTimeForEthFundingPeriod', async () => {

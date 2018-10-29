@@ -14,6 +14,7 @@ const {
   testPayout,
   testReclaim,
   testSetStageToTimedOut,
+  testStartPreFunding,
   testStartEthSale,
   testStartFiatSale,
   testTerminate,
@@ -37,6 +38,9 @@ describe("when in 'PreFunding' stage", async () => {
       poa = contracts.poa
       fmr = contracts.fmr
       pmr = contracts.pmr
+
+      // move from `Pending` to `PreFunding` stage
+      await testStartPreFunding(poa, { from: broker, gasPrice })
     })
 
     it('should start paused', async () => {

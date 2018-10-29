@@ -31,14 +31,15 @@ contract PoaCommon is PoaProxyCommon {
   // An enum representing all stages a contract can be in.
   // Different stages enable or restrict certain functionality.
   enum Stages {
-    PreFunding,        // 0
-    FiatFunding,       // 1
-    EthFunding,        // 2
-    FundingSuccessful, // 3
-    FundingCancelled,  // 4
-    TimedOut,          // 5
-    Active,            // 6
-    Terminated         // 7
+    Preview,           // 0
+    PreFunding,        // 1
+    FiatFunding,       // 2
+    EthFunding,        // 3
+    FundingSuccessful, // 4
+    FundingCancelled,  // 5
+    TimedOut,          // 6
+    Active,            // 7
+    Terminated         // 8
   }
 
   /***********************
@@ -312,7 +313,7 @@ contract PoaCommon is PoaProxyCommon {
     }
 
     // directly set the length of bytes array through assembly
-    assembly { 
+    assembly {
       mstore(_bytesString, _bytesCounter)
     }
 

@@ -23,6 +23,7 @@ const {
   testPayout,
   testResetCurrencyRate,
   testSetStageToTimedOut,
+  testStartPreFunding,
   testStartEthSale,
   testStartFiatSale,
   testTransfer,
@@ -42,25 +43,25 @@ const BigNumber = require('bignumber.js')
 describe('De-whitelisted POA holders', () => {
   const defaultBuyAmount = new BigNumber(1.802384753e16)
   let poa
-  let pmr
   let fmr
   let wht
   let sender
   let receiver
   let senderBalance
 
-  contract('PoaTokenProxy', accounts => {
+  contract('PoaTokenProxy', () => {
     beforeEach('setup contracts', async () => {
-      const owner = accounts[0]
       const contracts = await setupPoaProxyAndEcosystem()
       sender = whitelistedPoaBuyers[0]
       receiver = whitelistedPoaBuyers[1]
       poa = contracts.poa
-      pmr = contracts.pmr
       fmr = contracts.fmr
       wht = contracts.wht
 
-      // move into "EthFunding" stage
+      // move from `Preview` to `PreFunding` stage
+      await testStartPreFunding(poa, { from: broker, gasPrice })
+
+      // move from `PreFunding` to `EthFunding` stage
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
       await testStartEthSale(poa)
@@ -139,11 +140,16 @@ describe('when handling unhappy paths', async () => {
 
     it('should hit checkTimeout when reclaiming after durationForEthFundingPeriod', async () => {
       const tokenBuyAmount = new BigNumber(1e18)
+
+      // move from `Preview` to `PreFunding` stage
+      await testStartPreFunding(poa, { from: broker, gasPrice })
+
+      // move from `PreFunding` to `EthFunding` stage
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
       await testStartEthSale(poa)
 
-      // purchase tokens to reclaim when failed
+      // buy tokens to reclaim when failed
       await testBuyTokens(poa, {
         from: whitelistedPoaBuyers[0],
         value: tokenBuyAmount,
@@ -155,11 +161,15 @@ describe('when handling unhappy paths', async () => {
     })
 
     it('should hit checkTimeout when reclaiming after durationForActivationPeriod', async () => {
+      // move from `Preview` to `PreFunding` stage
+      await testStartPreFunding(poa, { from: broker, gasPrice })
+
+      // move from `PreFunding` to `EthFunding` stage
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
       await testStartEthSale(poa)
 
-      // move to "FundingSuccessful" stage
+      // buy all remaining tokens and move to `FundingSuccessful` stage
       await testBuyRemainingTokens(poa, {
         from: whitelistedPoaBuyers[0],
         gasPrice
@@ -171,11 +181,15 @@ describe('when handling unhappy paths', async () => {
     })
 
     it('should setStageToTimedOut by anyone when durationForActivationPeriod has occured', async () => {
+      // move from `Preview` to `PreFunding` stage
+      await testStartPreFunding(poa, { from: broker, gasPrice })
+
+      // move from `PreFunding` to `EthFunding` stage
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
       await testStartEthSale(poa)
 
-      // move to "FundingSuccessful" stage
+      // buy all remaining tokens and move to `FundingSuccessful` stage
       await testBuyRemainingTokens(poa, {
         from: whitelistedPoaBuyers[0],
         gasPrice
@@ -201,17 +215,21 @@ describe('when trying various scenarios involving payout, transfer, approve, and
       poa = contracts.poa
       fmr = contracts.fmr
 
-      // buy with fiat
+      // move from `Pending` to `PreFunding` stage
+      await testStartPreFunding(poa, { from: broker, gasPrice })
+
+      // move from `PreFunding` to `FiatFunding` stage
       await testStartFiatSale(poa, { from: broker, gasPrice })
+
+      // buy with fiat
       await testBuyTokensWithFiat(poa, fiatBuyer, 1000, {
         from: custodian,
         gasPrice
       })
 
-      // move into "EthFunding" stage
+      // move from `FiatFunding` to `EthFunding` stage
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
-
       await testStartEthSale(poa)
 
       await testBuyTokensMulti(poa, defaultBuyAmount)
@@ -912,14 +930,19 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       rate = new BigNumber('500.00')
       ratePenalty = new BigNumber(20)
 
-      // buy with fiat
+      // move from `Pending` to `PreFunding` stage
+      await testStartPreFunding(poa, { from: broker, gasPrice })
+
+      // move from `PreFunding` to `FiatFunding` stage
       await testStartFiatSale(poa, { from: broker, gasPrice })
+
+      // buy with fiat
       await testBuyTokensWithFiat(poa, fiatBuyer, 1000, {
         from: custodian,
         gasPrice
       })
 
-      // move into "EthFunding" stage
+      // move from `FiatFunding` to `EthFunding` stage
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
       await testStartEthSale(poa)

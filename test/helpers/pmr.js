@@ -4,6 +4,7 @@ const PoaCrowdsale = artifacts.require('PoaCrowdsale')
 
 const { timeTravel } = require('helpers')
 const {
+  broker,
   defaultActivationTimeout,
   defaultFiatCurrency,
   defaultFiatCurrency32,
@@ -23,6 +24,7 @@ const {
   testBuyRemainingTokens,
   testPayActivationFee,
   testSetCurrencyRate,
+  testStartPreFunding,
   testStartEthSale,
   testUpdateProofOfCustody,
   whitelistedPoaBuyers
@@ -89,10 +91,14 @@ const addToken = async (pmr, config) => {
 }
 
 const moveTokenToActive = async (poa, fmr) => {
+  // move from `Preview` to `PreFunding` stage
+  await testStartPreFunding(poa, { from: broker, gasPrice })
+
+  // move from `PreFunding` to `EthFunding` stage
   const neededTime = await determineNeededTimeTravel(poa)
   await timeTravel(neededTime)
-
   await testStartEthSale(poa)
+
   await testBuyRemainingTokens(poa, {
     from: whitelistedPoaBuyers[whitelistedPoaBuyers.length - 1],
     gasPrice

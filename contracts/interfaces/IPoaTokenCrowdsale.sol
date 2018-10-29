@@ -34,6 +34,52 @@ interface IPoaTokenCrowdsale {
     external
     returns (bool);
 
+  // setters in `Preview` stage
+  function updateName(
+    bytes32 _newName
+  )
+    external;
+
+  function updateSymbol(
+    bytes32 _newSymbol
+  )
+    external;
+
+  function updateBrokerAddress(
+    address _newBroker
+  )
+    external;
+
+  function updateTotalSupply(
+    uint256 _newTotalSupply
+  )
+    external;
+
+  function updateFiatCurrency(
+    bytes32 _newFiatCurrency
+  )
+    external;
+
+  function updateFundingGoalInCents(
+    uint256 _newFundingGoalInCents
+  )
+    external;
+
+  function updateStartTimeForEthFundingPeriod(
+    uint256 _newStartTimeForEthFundingPeriod
+  )
+    external;
+
+  function updateDurationForEthFundingPeriod(
+    uint256 _newDurationForEthFundingPeriod
+  )
+    external;
+
+  function updateDurationForActivationPeriod(
+    uint256 _newDurationForActivationPeriod
+  )
+    external;
+
   function changeCustodianAddress(
     address _newCustodian
   )
@@ -166,6 +212,9 @@ interface IPoaTokenCrowdsale {
   )
     external
     returns (bool);
+
+  function startPreFunding()
+    external;
 
   function startFiatSale()
     external

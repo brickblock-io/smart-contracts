@@ -35,7 +35,7 @@ contract PoaCrowdsale is PoaCommon {
       .add(durationForActivationPeriod);
 
     if (
-      (uint256(stage) < 3 && block.timestamp >= fundingDeadline) ||
+      (stage <= Stages.EthFunding && block.timestamp >= fundingDeadline) ||
       (stage == Stages.FundingSuccessful && block.timestamp >= activationDeadline)
     ) {
       enterStage(Stages.TimedOut);
@@ -79,29 +79,214 @@ contract PoaCrowdsale is PoaCommon {
     // ensure that crowdsale has not already been initialized
     require(!crowdsaleInitialized);
 
-    // validate initialize parameters
-    require(_fiatCurrency32 != bytes32(0));
-    require(_startTimeForEthFundingPeriod > block.timestamp);
-    require(_durationForEthFundingPeriod >= 60 * 60 * 24);
-    require(_durationForActivationPeriod >= 60 * 60 * 24 * 7);
-    require(_fundingGoalInCents > 0);
-    require(totalSupply_ > _fundingGoalInCents);
-
-    // initialize non-sequential storage
-    fiatCurrency32 = _fiatCurrency32;
-    startTimeForEthFundingPeriod = _startTimeForEthFundingPeriod;
-    durationForEthFundingPeriod = _durationForEthFundingPeriod;
-    durationForActivationPeriod = _durationForActivationPeriod;
-    fundingGoalInCents = _fundingGoalInCents;
-
-    // run getRate once in order to see if rate is initialized, throws if not
-    require(getFiatRate() > 0);
+    // validate and initialize parameters in sequential storage
+    setFiatCurrency(_fiatCurrency32);
+    setStartTimeForEthFundingPeriod(_startTimeForEthFundingPeriod);
+    setDurationForEthFundingPeriod(_durationForEthFundingPeriod);
+    setDurationForActivationPeriod(_durationForActivationPeriod);
+    setFundingGoalInCents(_fundingGoalInCents);
 
     // set crowdsaleInitialized to true so cannot be initialized again
     crowdsaleInitialized = true;
 
     return true;
   }
+
+  /*****************************************
+   * external setters for `Stages.Preview` *
+   *****************************************/
+
+  /**
+   * @notice Update fiat currency for POA Token
+   * @dev Only allowed in `Stages.Preview` by Broker
+   * @param _newFiatCurrency32 The new fiat currency
+   *        in symbol notation (e.g. EUR, GBP, USD, etc.)
+   */
+  function updateFiatCurrency
+  (
+    bytes32 _newFiatCurrency32
+  )
+    external
+    onlyBroker
+    atStage(Stages.Preview)
+  {
+    setFiatCurrency(_newFiatCurrency32);
+  }
+
+  /**
+   * @notice Update funding goal in cents for POA Token
+   * @dev Only allowed in `Stages.Preview` stage by Broker
+   * @param _newFundingGoalInCents The new funding goal in
+   *        cents
+   */
+  function updateFundingGoalInCents
+  (
+    uint256 _newFundingGoalInCents
+  )
+    external
+    onlyBroker
+    atStage(Stages.Preview)
+  {
+    setFundingGoalInCents(_newFundingGoalInCents);
+  }
+
+  /**
+   * @notice Update start time for ETH funding period for POA Token
+   * @dev Only allowed in `Stages.Preview` stage by Broker
+   * @param _newStartTimeForEthFundingPeriod The new start
+   *        time for ETH funding period as UNIX timestamp
+   *        in seconds
+   */
+  function updateStartTimeForEthFundingPeriod
+  (
+    uint256 _newStartTimeForEthFundingPeriod
+  )
+    external
+    onlyBroker
+    atStage(Stages.Preview)
+  {
+    setStartTimeForEthFundingPeriod(_newStartTimeForEthFundingPeriod);
+  }
+
+  /**
+   * @notice Update duration for ETH funding period for POA Token
+   * @dev Only allowed in `Stages.Preview` stage by Broker
+   * @param _newDurationForEthFundingPeriod The new duration
+   *        for ETH funding period as seconds
+   */
+  function updateDurationForEthFundingPeriod
+  (
+    uint256 _newDurationForEthFundingPeriod
+  )
+    external
+    onlyBroker
+    atStage(Stages.Preview)
+  {
+    setDurationForEthFundingPeriod(_newDurationForEthFundingPeriod);
+  }
+
+  /**
+   * @notice Update duration for activation period for POA Token
+   * @dev Only allowed in `Stages.Preview` stage by Broker
+   * @param _newDurationForActivationPeriod The new duration
+   *        for ETH funding period in seconds
+   */
+  function updateDurationForActivationPeriod
+  (
+    uint256 _newDurationForActivationPeriod
+  )
+    external
+    onlyBroker
+    atStage(Stages.Preview)
+  {
+    setDurationForActivationPeriod(_newDurationForActivationPeriod);
+  }
+
+  /*********************************************
+   * end external setters for `Stages.Preview` *
+   *********************************************/
+
+  /*******************************
+   * internal validating setters *
+   *******************************/
+
+  /**
+   * @notice Set fiat currency for POA Token
+   * @param _newFiatCurrency32 The new fiat currency
+   *        in symbol notation (e.g. EUR, GBP, USD, etc.)
+   */
+  function setFiatCurrency
+  (
+    bytes32 _newFiatCurrency32
+  )
+    internal
+  {
+    require(_newFiatCurrency32 != bytes32(0));
+    require(_newFiatCurrency32 != fiatCurrency32);
+
+    fiatCurrency32 = _newFiatCurrency32;
+
+    // For any fiat currency, we require its fiat rate to be already initialized
+    require(getFiatRate() > 0);
+  }
+
+  /**
+   * @notice Set funding goal in cents for POA Token
+   * @dev Funding goal represents a fiat amount in cent
+   *      notation. E.g., `140123` represents 1401.23
+   * @param _newFundingGoalInCents The new funding goal in
+   *        cents
+   */
+  function setFundingGoalInCents
+  (
+    uint256 _newFundingGoalInCents
+  )
+    internal
+  {
+    require(_newFundingGoalInCents < totalSupply_);
+    require(_newFundingGoalInCents != fundingGoalInCents);
+
+    fundingGoalInCents = _newFundingGoalInCents;
+  }
+
+  /**
+   * @notice Set start time for ETH funding period for POA Token
+   * @dev start time must be future time
+   * @param _newStartTimeForEthFundingPeriod The new start
+   *        time for ETH funding period as UNIX timestamp
+   *        in seconds
+   */
+  function setStartTimeForEthFundingPeriod
+  (
+    uint256 _newStartTimeForEthFundingPeriod
+  )
+    internal
+  {
+    require(_newStartTimeForEthFundingPeriod > block.timestamp);
+    require(_newStartTimeForEthFundingPeriod != startTimeForEthFundingPeriod);
+
+    startTimeForEthFundingPeriod = _newStartTimeForEthFundingPeriod;
+  }
+
+  /**
+   * @notice Set duration for ETH funding period for POA Token
+   * @dev Duration must be longer than 1 day
+   * @param _newDurationForEthFundingPeriod The new duration
+   *        for ETH funding period as seconds
+   */
+  function setDurationForEthFundingPeriod
+  (
+    uint256 _newDurationForEthFundingPeriod
+  )
+    internal
+  {
+    require(_newDurationForEthFundingPeriod >= 60 * 60 * 24);
+    require(_newDurationForEthFundingPeriod != durationForEthFundingPeriod);
+
+    durationForEthFundingPeriod = _newDurationForEthFundingPeriod;
+  }
+
+  /**
+   * @notice Set duration for activation period for POA Token
+   * @dev Duration must be longer than 1 week
+   * @param _newDurationForActivationPeriod The new duration
+   *        for ETH funding period in seconds
+   */
+  function setDurationForActivationPeriod
+  (
+    uint256 _newDurationForActivationPeriod
+  )
+    internal
+  {
+    require(_newDurationForActivationPeriod >= 60 * 60 * 24 * 7);
+    require(_newDurationForActivationPeriod != durationForActivationPeriod);
+
+    durationForActivationPeriod = _newDurationForActivationPeriod;
+  }
+
+  /***********************************
+   * end internal validating setters *
+   ***********************************/
 
   /****************************
   * start lifecycle functions *
@@ -298,7 +483,7 @@ contract PoaCrowdsale is PoaCommon {
         .add(fundedEthAmountInWei)
         .add(msg.value)
         .sub(fiatCentsToWei(fundingGoalInCents))
-      : 0; 
+      : 0;
 
 
     // Transfer refund amount back to user
@@ -433,7 +618,7 @@ contract PoaCrowdsale is PoaCommon {
   /**
    @notice Used for manually setting Stage to TimedOut when no users have bought any tokens;
    if no `buy()`s occurred before the funding deadline, the token would be stuck in Funding.
-   It can also optionally be used when activate is not called by custodian within 
+   It can also optionally be used when activate is not called by custodian within
    durationForActivationPeriod or when no one else has called reclaim after a timeout.
 
   */

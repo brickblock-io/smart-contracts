@@ -34,14 +34,15 @@ const {
 } = require('./exr')
 
 const stages = {
-  PreFunding: '0',
-  FiatFunding: '1',
-  EthFunding: '2',
-  FundingSuccessful: '3',
-  FundingCancelled: '4',
-  TimedOut: '5',
-  Active: '6',
-  Terminated: '7'
+  Preview: '0',
+  PreFunding: '1',
+  FiatFunding: '2',
+  EthFunding: '3',
+  FundingSuccessful: '4',
+  FundingCancelled: '5',
+  TimedOut: '6',
+  Active: '7',
+  Terminated: '8'
 }
 
 const accounts = web3.eth.accounts
@@ -205,6 +206,17 @@ const setupPoaProxyAndEcosystem = async ({
     exp,
     defaultFiatCurrency,
     defaultFiatRate,
+    defaultFiatRatePenalty,
+    {
+      from: owner,
+      value: 1e18
+    }
+  )
+  await testSetCurrencyRate(
+    exr,
+    exp,
+    'USD',
+    new BigNumber('350.11'),
     defaultFiatRatePenalty,
     {
       from: owner,
@@ -530,6 +542,140 @@ const testWeiToFiatCents = async (poa, weiInput) => {
   )
 }
 
+const testUpdateName = async (poa, newName, config = {}) => {
+  assert(!!config.from, "'from' must be defined in the config object")
+
+  await poa.updateName(newName, config)
+  const postName = await poa.name()
+
+  assert.equal(newName, postName.toString(), 'name32 should be updated')
+}
+
+const testUpdateSymbol = async (poa, newSymbol, config = {}) => {
+  assert(!!config.from, "'from' must be defined in the config object")
+
+  await poa.updateSymbol(newSymbol, config)
+  const postSymbol = await poa.symbol()
+
+  assert.equal(newSymbol, postSymbol.toString(), 'symbol32 should be updated')
+}
+
+const testUpdateBrokerAddress = async (poa, newBrokerAddress, config = {}) => {
+  assert(!!config.from, "'from' must be defined in the config object")
+
+  await poa.updateBrokerAddress(newBrokerAddress, config)
+  const postBrokerAddress = await poa.broker()
+
+  assert.equal(
+    newBrokerAddress,
+    postBrokerAddress.toString(),
+    'broker address should be updated'
+  )
+}
+
+const testUpdateTotalSupply = async (poa, newTotalSupply, config = {}) => {
+  assert(!!config.from, "'from' must be defined in the config object")
+
+  await poa.updateTotalSupply(newTotalSupply, config)
+  const postTotalSupply = await poa.totalSupply()
+
+  assert.equal(
+    newTotalSupply,
+    postTotalSupply.toString(),
+    'totalSupply should be updated'
+  )
+}
+
+const testUpdateFiatCurrency = async (poa, newFiatCurrency, config = {}) => {
+  assert(!!config.from, "'from' must be defined in the config object")
+
+  await poa.updateFiatCurrency(newFiatCurrency, config)
+  const postFiatCurrency = await poa.fiatCurrency()
+
+  assert.equal(
+    newFiatCurrency,
+    postFiatCurrency,
+    'fiatCurrency32 should be updated'
+  )
+}
+
+const testUpdateFundingGoalInCents = async (
+  poa,
+  newFundingGoalInCents,
+  config = {}
+) => {
+  assert(!!config.from, "'from' must be defined in the config object")
+
+  await poa.updateFundingGoalInCents(newFundingGoalInCents, config)
+  const postFundingGoalInCents = await poa.fundingGoalInCents()
+
+  assert.equal(
+    newFundingGoalInCents,
+    postFundingGoalInCents.toString(),
+    'fundingGoalInCents should be updated'
+  )
+}
+
+const testUpdateStartTimeForEthFundingPeriod = async (
+  poa,
+  newStartTimeForEthFundingPeriod,
+  config = {}
+) => {
+  assert(!!config.from, "'from' must be defined in the config object")
+
+  await poa.updateStartTimeForEthFundingPeriod(
+    newStartTimeForEthFundingPeriod,
+    config
+  )
+  const postStartTimeForEthFundingPeriod = await poa.startTimeForEthFundingPeriod()
+
+  assert.equal(
+    newStartTimeForEthFundingPeriod,
+    postStartTimeForEthFundingPeriod.toString(),
+    'startTimeForEthFundingPeriod should be updated'
+  )
+}
+
+const testUpdateDurationForEthFundingPeriod = async (
+  poa,
+  newDurationForEthFundingPeriod,
+  config = {}
+) => {
+  assert(!!config.from, "'from' must be defined in the config object")
+
+  await poa.updateDurationForEthFundingPeriod(
+    newDurationForEthFundingPeriod,
+    config
+  )
+  const postDurationForEthFundingPeriod = await poa.durationForEthFundingPeriod()
+
+  assert.equal(
+    newDurationForEthFundingPeriod,
+    postDurationForEthFundingPeriod.toString(),
+    'durationForEthFundingPeriod should be updated'
+  )
+}
+
+const testUpdateDurationForActivationPeriod = async (
+  poa,
+  newDurationForActivationPeriod,
+  config = {}
+) => {
+  assert(!!config.from, "'from' must be defined in the config object")
+
+  await poa.updateDurationForActivationPeriod(
+    newDurationForActivationPeriod,
+    config
+  )
+  const postDurationForActivationPeriod = await poa.durationForActivationPeriod()
+
+  assert.equal(
+    newDurationForActivationPeriod,
+    postDurationForActivationPeriod.toString(),
+    'durationForActivationPeriod should be updated'
+  )
+}
+
 const testFiatCentsToWei = async (poa, fiatCentInput) => {
   const expectedWei = fiatCentInput
     .mul(1e18)
@@ -568,6 +714,28 @@ const testCalculateFee = async (poa, taxableValue) => {
   )
 }
 
+const testStartPreFunding = async (poa, config = {}) => {
+  assert(!!config.gasPrice, "'gasPrice' must be defined in the config object")
+  assert(!!config.from, "'from' must be defined in the config object")
+  const preStage = await poa.stage()
+
+  await poa.startPreFunding(config)
+
+  const postStage = await poa.stage()
+
+  assert.equal(
+    preStage.toString(),
+    stages.Preview,
+    'stage should start as Preview'
+  )
+
+  assert.equal(
+    postStage.toString(),
+    stages.PreFunding,
+    'stage should end in PreFunding'
+  )
+}
+
 const testStartFiatSale = async (poa, config = {}) => {
   assert(!!config.gasPrice, "'gasPrice' must be defined in the config object")
   assert(!!config.from, "'from' must be defined in the config object")
@@ -580,13 +748,13 @@ const testStartFiatSale = async (poa, config = {}) => {
   assert.equal(
     preStage.toString(),
     stages.PreFunding,
-    'stage should start as PreFunding or FiatFunding'
+    'stage should start as PreFunding'
   )
 
   assert.equal(
     postStage.toString(),
     stages.FiatFunding,
-    'stage should start as FiatFunding'
+    'stage should end in FiatFunding'
   )
 }
 
@@ -606,7 +774,7 @@ const testStartEthSale = async (poa, config) => {
   assert.equal(
     postStage.toString(),
     stages.EthFunding,
-    'stage should start as EthFunding'
+    'stage should end in EthFunding'
   )
 }
 
@@ -1120,8 +1288,8 @@ const testClaim = async (poa, config, isTerminated) => {
   )
   assert.equal(
     stage.toString(),
-    isTerminated ? new BigNumber(7).toString() : new BigNumber(6).toString(),
-    `stage should be in ${isTerminated ? 7 : 6}, Active`
+    isTerminated ? new BigNumber(8).toString() : new BigNumber(7).toString(),
+    `stage should be in ${isTerminated ? 8 : 7}, Active`
   )
 }
 
@@ -1780,13 +1948,23 @@ module.exports = {
   testResetCurrencyRate,
   testSetCurrencyRate,
   testSetStageToTimedOut,
+  testStartPreFunding,
   testStartEthSale,
   testStartFiatSale,
   testTerminate,
   testTransfer,
   testTransferFrom,
   testUnpause,
+  testUpdateBrokerAddress,
+  testUpdateDurationForActivationPeriod,
+  testUpdateDurationForEthFundingPeriod,
+  testUpdateFiatCurrency,
+  testUpdateFundingGoalInCents,
+  testUpdateName,
   testUpdateProofOfCustody,
+  testUpdateSymbol,
+  testUpdateStartTimeForEthFundingPeriod,
+  testUpdateTotalSupply,
   testWeiToFiatCents,
   whitelistedPoaBuyers
 }

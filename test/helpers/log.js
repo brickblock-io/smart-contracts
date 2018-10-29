@@ -18,6 +18,7 @@ const {
   testPayActivationFee,
   testPayout,
   testReclaim,
+  testStartPreFunding,
   testStartEthSale,
   testTerminate,
   testUpdateProofOfCustody,
@@ -27,6 +28,9 @@ const {
 // only meant to be used for transition from stage 0 to stage 1
 const testPreFundingToFundingEvent = async (poa, reg, pmr, log) => {
   const PoaLoggerStageEvent = log.Stage()
+
+  // move from `Pending` to `PreFunding` stage
+  await testStartPreFunding(poa, { from: broker, gasPrice })
 
   const neededTime = await determineNeededTimeTravel(
     poa,
@@ -272,10 +276,15 @@ const testReclaimEvents = async () => {
   // need a whole new instance in order to test this...
   const { poa, log, pmr } = await setupPoaProxyAndEcosystem()
   await pmr.listToken(poa.address)
-  // move into "EthFunding" stage
+
+  // move from `Preview` to `PreFunding` stage
+  await testStartPreFunding(poa, { from: broker, gasPrice })
+
+  // move from `PreFunding` to `EthFunding` stage
   const neededTime = await determineNeededTimeTravel(poa)
   await timeTravel(neededTime)
   await testStartEthSale(poa)
+
   // purchase tokens to reclaim when failed
   await testBuyTokens(poa, {
     from,

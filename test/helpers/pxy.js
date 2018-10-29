@@ -26,6 +26,7 @@ const {
   testBrokerClaim,
   testBuyRemainingTokens,
   testPayActivationFee,
+  testStartPreFunding,
   testStartEthSale,
   testUpdateProofOfCustody,
   whitelistedPoaBuyers
@@ -165,8 +166,8 @@ const checkPostInitializedStorage = async (poa, reg, pmr) => {
 
   assert.equal(
     stage.toString(),
-    stages.PreFunding,
-    'stage should be in PreFunding stage'
+    stages.Preview,
+    'stage should be in Preview stage'
   )
   assert.equal(
     actualCustodian,
@@ -252,12 +253,15 @@ const checkPostInitializedStorage = async (poa, reg, pmr) => {
 }
 
 const enterActiveStage = async (poa, fmr) => {
-  // move into "EthFunding" stage
+  // move from `Preview` to `PreFunding` stage
+  await testStartPreFunding(poa, { from: broker, gasPrice })
+
+  // move from `PreFunding` to `EthFunding` stage
   const neededTime = await determineNeededTimeTravel(poa)
   await timeTravel(neededTime)
   await testStartEthSale(poa)
 
-  // move into "FundingSuccessful" stage
+  // buy all remaining tokens and move to `FundingSuccessful` stage
   await testBuyRemainingTokens(poa, {
     from: whitelistedPoaBuyers[0],
     gasPrice
@@ -336,7 +340,7 @@ const checkPostActiveStorage = async (poa, reg, pmr) => {
   assert.equal(
     stage.toString(),
     stages.Active,
-    'stage should be in PreFunding stage'
+    'stage should be in Active stage'
   )
   assert.equal(
     actualCustodian,
@@ -489,7 +493,7 @@ const checkPostIsUpgradedStorage = async (poa, reg, pmr) => {
   assert.equal(
     stage.toString(),
     stages.Active,
-    'stage should be in PreFunding stage'
+    'stage should be in Active stage'
   )
   assert.equal(
     actualCustodian,

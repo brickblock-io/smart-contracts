@@ -16,6 +16,7 @@ const {
   testPayout,
   testReclaim,
   testSetStageToTimedOut,
+  testStartPreFunding,
   testStartEthSale,
   testTerminate,
   testTransfer,
@@ -39,7 +40,10 @@ describe("when in 'FundingSuccessful' stage", () => {
       fmr = contracts.fmr
       pmr = contracts.pmr
 
-      // move into "EthFunding" stage
+      // move from `Preview` to `PreFunding` stage
+      await testStartPreFunding(poa, { from: broker, gasPrice })
+
+      // move from `PreFunding` to `EthFunding` stage
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
       await testStartEthSale(poa)

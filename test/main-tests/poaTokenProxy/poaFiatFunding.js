@@ -20,6 +20,7 @@ const {
   testReclaim,
   testRemoveTokensWithFiat,
   testSetStageToTimedOut,
+  testStartPreFunding,
   testStartEthSale,
   testStartFiatSale,
   testTerminate,
@@ -44,8 +45,14 @@ describe("when in 'FiatFunding' stage", () => {
       poa = contracts.poa
       fmr = contracts.fmr
       pmr = contracts.pmr
+
+      // move from `Pending` to `PreFunding` stage
+      await testStartPreFunding(poa, { from: broker, gasPrice })
+
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
+
+      // move from `PreFunding` to `FiatFunding` stage
       await testStartFiatSale(poa, { from: broker, gasPrice })
     })
 
@@ -238,8 +245,14 @@ describe('when in FIAT Funding (stage 1) and funding goal is met during the fiat
     beforeEach('setup contracts', async () => {
       const contracts = await setupPoaProxyAndEcosystem()
       poa = contracts.poa
+
+      // move from `Pending` to `PreFunding` stage
+      await testStartPreFunding(poa, { from: broker, gasPrice })
+
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
+
+      // move from `PreFunding` to `FiatFunding` stage
       await testStartFiatSale(poa, { from: broker, gasPrice })
     })
 

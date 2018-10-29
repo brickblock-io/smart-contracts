@@ -17,6 +17,7 @@ const {
   testPayout,
   testReclaim,
   testSetStageToTimedOut,
+  testStartPreFunding,
   testStartEthSale,
   testTerminate,
   testTransfer,
@@ -44,6 +45,11 @@ describe("when in 'EthFunding' stage", () => {
       poa = contracts.poa
       fmr = contracts.fmr
       pmr = contracts.pmr
+
+      // move from `Preview` to `PreFunding` stage
+      await testStartPreFunding(poa, { from: broker, gasPrice })
+
+      // move from `PreFunding` to `EthFunding` stage
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
       await testStartEthSale(poa)
@@ -177,6 +183,11 @@ describe("when in 'EthFunding' stage", () => {
     beforeEach('setup contracts', async () => {
       const contracts = await setupPoaProxyAndEcosystem()
       poa = contracts.poa
+
+      // move from `Preview` to `PreFunding` stage
+      await testStartPreFunding(poa, { from: broker, gasPrice })
+
+      // move from `PreFunding` to `EthFunding` stage
       const neededTime = await determineNeededTimeTravel(poa)
       await timeTravel(neededTime)
       await testStartEthSale(poa)

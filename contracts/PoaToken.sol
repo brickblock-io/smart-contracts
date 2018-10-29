@@ -4,6 +4,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./PoaCommon.sol";
 
+/* solium-disable security/no-block-members */
 /* solium-disable security/no-low-level-calls */
 
 
@@ -137,35 +138,198 @@ contract PoaToken is PoaCommon {
     // ensure initialize has not been called already
     require(!tokenInitialized);
 
-    // validate initialize parameters
-    require(_name32 != bytes32(0));
-    require(_symbol32 != bytes32(0));
-    require(_broker != address(0));
-    require(_custodian != address(0));
-    require(_registry != address(0));
-    require(_totalSupply >= 1e18);
+    // validate and initialize parameters in sequential storage
+    setName(_name32);
+    setSymbol(_symbol32);
+    setBrokerAddress(_broker);
+    setCustodianAddress(_custodian);
+    setTotalSupply(_totalSupply);
 
-    // initialize sequential storage
-    name32 = _name32;
-    symbol32 = _symbol32;
     owner = getContractAddress("PoaManager");
-
-    // initialize non-sequential storage
-    broker = _broker;
-    custodian = _custodian;
     registry = _registry;
-    totalSupply_ = _totalSupply;
+
     paused = true;
     tokenInitialized = true;
 
     return true;
   }
 
+  /****************************************
+  * external setters for `Stages.Preview` *
+  *****************************************/
+
+  /**
+   * @notice Update name for POA Token
+   * @dev Only allowed in `Stages.Preview` by Broker
+   * @param _newName32 The new name
+   */
+  function updateName
+  (
+    bytes32 _newName32
+  )
+    external
+    onlyBroker
+    atStage(Stages.Preview)
+  {
+    setName(_newName32);
+  }
+
+  /**
+   * @notice Update symbol for POA Token
+   * @dev Only allowed in `Stages.Preview` by Broker
+   * @param _newSymbol32 The new symbol
+   */
+  function updateSymbol
+  (
+    bytes32 _newSymbol32
+  )
+    external
+    onlyBroker
+    atStage(Stages.Preview)
+  {
+    setSymbol(_newSymbol32);
+  }
+
+  /**
+   * @notice Update Broker address for POA Token
+   * @dev Only allowed in `Stages.Preview` by Broker
+   * @param _newBroker The new Broker address
+   */
+  function updateBrokerAddress
+  (
+    address _newBroker
+  )
+    external
+    onlyBroker
+    atStage(Stages.Preview)
+  {
+    setBrokerAddress(_newBroker);
+  }
+
+  /**
+   * @notice Update total supply for POA Token
+   * @dev Only allowed in `Stages.Preview` by Broker
+   * @param _newTotalSupply The new total supply
+   */
+  function updateTotalSupply
+  (
+    uint256 _newTotalSupply
+  )
+    external
+    onlyBroker
+    atStage(Stages.Preview)
+  {
+    setTotalSupply(_newTotalSupply);
+  }
+
+  /********************************************
+  * end external setters for `Stages.Preview` *
+  *********************************************/
+
+  /*******************************
+   * internal validating setters *
+   *******************************/
+
+  /**
+   * @notice Set name for POA Token
+   * @param _newName32 The new name
+   */
+  function setName
+  (
+    bytes32 _newName32
+  )
+    internal
+  {
+    require(_newName32 != bytes32(0));
+    require(_newName32 != name32);
+
+    name32 = _newName32;
+  }
+
+  /**
+   * @notice Set symbol for POA Token
+   * @param _newSymbol32 The new symbol
+   */
+  function setSymbol
+  (
+    bytes32 _newSymbol32
+  )
+    internal
+  {
+    require(_newSymbol32 != bytes32(0));
+    require(_newSymbol32 != symbol32);
+
+    symbol32 = _newSymbol32;
+  }
+
+  /**
+   * @notice Set Broker address for POA Token
+   * @param _newBroker The new Broker address
+   */
+  function setBrokerAddress
+  (
+    address _newBroker
+  )
+    internal
+  {
+    require(_newBroker != address(0));
+    require(_newBroker != broker);
+
+    broker = _newBroker;
+  }
+
+  /**
+   * @notice Set Custodian address for POA Token
+   * @param _newCustodian The new Custodian address
+   */
+  function setCustodianAddress
+  (
+    address _newCustodian
+  )
+    internal
+  {
+    require(_newCustodian != address(0));
+    require(_newCustodian != custodian);
+
+    custodian = _newCustodian;
+  }
+
+  /**
+   * @notice Set total supply for POA token
+   * @dev Assuming 18 decimals, the total supply must
+   *      be greather than 1e18
+   * @param _newTotalSupply The new total supply
+   */
+  function setTotalSupply
+  (
+    uint256 _newTotalSupply
+  )
+    internal
+  {
+    require(_newTotalSupply >= 1e18);
+    require(fundingGoalInCents < _newTotalSupply);
+    require(_newTotalSupply != totalSupply_);
+
+    totalSupply_ = _newTotalSupply;
+  }
+
+  /***********************************
+   * end internal validating setters *
+   ***********************************/
+
   /****************************
   * start lifecycle functions *
   ****************************/
 
-  /// @notice function to change custodianship of poa
+  /**
+   * @notice Change Custodian address for POA Token
+   * @dev Only old Custodian is able to change his own
+   *      address (`onlyCustodian` modifier)
+   * @dev This change is allowed at any stage and is
+   *      logged via PoaManager
+   * @param _newCustodian The new Custodian address
+   * @return true when successful
+   */
   function changeCustodianAddress
   (
     address _newCustodian
@@ -174,15 +338,33 @@ contract PoaToken is PoaCommon {
     onlyCustodian
     returns (bool)
   {
-    require(_newCustodian != address(0));
-    require(_newCustodian != custodian);
-    address _oldCustodian = custodian;
-    custodian = _newCustodian;
     getContractAddress("PoaLogger").call(
       bytes4(keccak256("logCustodianChanged(address,address)")),
-      _oldCustodian,
+      custodian,
       _newCustodian
     );
+
+    setCustodianAddress(_newCustodian);
+    return true;
+  }
+
+  /**
+   * @notice Move from `Stages.Preview` to `Stages.PreFunding`
+   * @dev After calling this function, the token parameters
+   *      become immutable
+   * @dev Only allowed in `Stages.Preview` by Broker
+   * @dev We need to revalidate the time-related token parameters here
+  */
+  function startPreFunding()
+    external
+    onlyBroker
+    atStage(Stages.Preview)
+    returns (bool)
+  {
+    // check that `startTimeForEthFundingPeriod` lies in the future
+    require(startTimeForEthFundingPeriod > block.timestamp);
+    // set Stage to PreFunding
+    enterStage(Stages.PreFunding);
     return true;
   }
 
@@ -308,7 +490,6 @@ contract PoaToken is PoaCommon {
     return _includeUnclaimed
       ? _totalPerTokenUnclaimedConverted.add(unclaimedPayoutTotals[_address])
       : _totalPerTokenUnclaimedConverted;
-
   }
 
   /// @notice settle up perToken balances and move into unclaimedPayoutTotals in order
@@ -408,7 +589,6 @@ contract PoaToken is PoaCommon {
      that have received the actual securities that this contract
      tokenizes.
    */
-
   function updateProofOfCustody
   (
     bytes32[2] _ipfsHash
@@ -450,11 +630,11 @@ contract PoaToken is PoaCommon {
       // Token balances will only show in "Active" stage
       // and "Terminated" stage. Why also in "Terminated"?
       // Because there can still be pending payouts
-      return uint256(stage) > 5
+      return stage >= Stages.Active
         ? fundedFiatAmountPerUserInTokens[_address]
         : 0;
     } else {
-      return uint256(stage) > 5
+      return stage >= Stages.Active
         ? fundedEthAmountPerUserInWei[_address]
           .mul(
             totalSupply_.sub(fundedFiatAmountInTokens)
@@ -596,7 +776,7 @@ contract PoaToken is PoaCommon {
   function allowance(
     address _owner,
     address _spender
-   )
+  )
     public
     view
     returns (uint256)
