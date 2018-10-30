@@ -1,11 +1,9 @@
 const {
-  activationTimeoutContract,
   broker,
   custodian,
   defaultIpfsHashArray32,
   determineNeededTimeTravel,
   fiatBuyer,
-  forcePoaTimeout,
   getAccountInformation,
   setupPoaProxyAndEcosystem,
   stages,
@@ -29,6 +27,8 @@ const {
   testTransfer,
   testTransferFrom,
   testUpdateProofOfCustody,
+  timeTravelToFundingPeriodTimeout,
+  timeTravelToActivationPeriodTimeout,
   whitelistedPoaBuyers
 } = require('../../helpers/poa')
 const {
@@ -156,7 +156,7 @@ describe('when handling unhappy paths', async () => {
         gasPrice
       })
 
-      await forcePoaTimeout(poa)
+      await timeTravelToFundingPeriodTimeout(poa)
       await testFirstReclaim(poa, { from: whitelistedPoaBuyers[0] })
     })
 
@@ -175,7 +175,7 @@ describe('when handling unhappy paths', async () => {
         gasPrice
       })
 
-      await activationTimeoutContract(poa)
+      await timeTravelToActivationPeriodTimeout(poa)
 
       await testFirstReclaim(poa, { from: whitelistedPoaBuyers[0] }, true)
     })
@@ -195,7 +195,8 @@ describe('when handling unhappy paths', async () => {
         gasPrice
       })
 
-      await activationTimeoutContract(poa)
+      await timeTravelToActivationPeriodTimeout(poa)
+
       await testSetStageToTimedOut(poa, true)
     })
   })

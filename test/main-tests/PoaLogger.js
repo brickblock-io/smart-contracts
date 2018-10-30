@@ -1,5 +1,7 @@
 const {
-  testPreFundingToFundingEvent,
+  testPreviewToPreFundingEvent,
+  testPreFundingToFiatFundingEvent,
+  testFiatFundingToEthFundingEvent,
   testBuyTokensEvents,
   testBuyRemainingTokensEvents,
   testActivateEvents,
@@ -30,8 +32,16 @@ describe('when using PoaLogger to log PoaToken events', () => {
       await pmr.listToken(poa.address)
     })
 
-    it('should log stage events', async () => {
-      await testPreFundingToFundingEvent(poa, reg, pmr, log)
+    it('should log transitition from Preview to PreFunding stage', async () => {
+      await testPreviewToPreFundingEvent(poa, reg, pmr, log)
+    })
+
+    it('should log transitition from PreFunding to FiatFunding stage', async () => {
+      await testPreFundingToFiatFundingEvent(poa, reg, pmr, log)
+    })
+
+    it('should log transitition from FiatFunding to EthFunding stage', async () => {
+      await testFiatFundingToEthFundingEvent(poa, reg, pmr, log)
     })
 
     it('should log buy events', async () => {

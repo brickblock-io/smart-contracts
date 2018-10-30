@@ -4,7 +4,6 @@ const {
   custodian,
   defaultIpfsHashArray32,
   determineNeededTimeTravel,
-  forcePoaTimeout,
   owner,
   setupPoaProxyAndEcosystem,
   testActivate,
@@ -23,6 +22,7 @@ const {
   testTransferFrom,
   testUnpause,
   testUpdateProofOfCustody,
+  timeTravelToFundingPeriodTimeout,
   whitelistedPoaBuyers
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
@@ -68,7 +68,7 @@ describe("when in 'TimedOut' stage", () => {
         gasPrice
       })
 
-      await forcePoaTimeout(poa)
+      await timeTravelToFundingPeriodTimeout(poa)
     })
 
     it('should start paused', async () => {

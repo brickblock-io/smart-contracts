@@ -34,6 +34,27 @@ const timeTravel = async seconds => {
   }
 }
 
+const timeTravelToTarget = async targetTime => {
+  const currentTime = await getCurrentBlockTime()
+  const timeToTravelInSeconds = targetTime
+    .minus(currentTime)
+    .add(10)
+    .toNumber()
+
+  return timeTravel(timeToTravelInSeconds)
+}
+
+const getCurrentBlockTime = async () => {
+  return (await web3.eth.getBlock(web3.eth.blockNumber)).timestamp
+}
+
+const getTimeInFutureBySeconds = async secondsInFuture => {
+  return (await getCurrentBlockTime()) + secondsInFuture
+}
+
 module.exports = {
-  timeTravel
+  getCurrentBlockTime,
+  getTimeInFutureBySeconds,
+  timeTravel,
+  timeTravelToTarget
 }

@@ -17,7 +17,7 @@ const {
   defaultSymbol32,
   defaultTotalSupply,
   determineNeededTimeTravel,
-  getDefaultStartTime,
+  getDefaultStartTimeForFundingPeriod,
   setupEcosystem,
   stages,
   testActivate,
@@ -67,7 +67,7 @@ const setupPoaManager = async () => {
 }
 
 const addToken = async (pmr, config) => {
-  const defaultStartTime = await getDefaultStartTime()
+  const defaultStartTime = await getDefaultStartTimeForFundingPeriod()
 
   const txReceipt = await pmr.addToken(
     defaultName32,

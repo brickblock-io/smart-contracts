@@ -1,13 +1,10 @@
 const BigNumber = require('bignumber.js')
-const { timeTravel } = require('helpers')
 const { waitForEvent, gasPrice } = require('./general')
 const {
   broker,
   custodian,
   defaultIpfsHash,
   defaultIpfsHashArray32,
-  determineNeededTimeTravel,
-  forcePoaTimeout,
   setupPoaProxyAndEcosystem,
   stages,
   testActivate,
@@ -19,25 +16,67 @@ const {
   testPayout,
   testReclaim,
   testStartPreFunding,
+  testStartFiatSale,
   testStartEthSale,
   testTerminate,
   testUpdateProofOfCustody,
+  timeTravelToEthFundingPeriod,
+  timeTravelToFundingPeriod,
+  timeTravelToFundingPeriodTimeout,
   whitelistedPoaBuyers
 } = require('./poa')
 
-// only meant to be used for transition from stage 0 to stage 1
-const testPreFundingToFundingEvent = async (poa, reg, pmr, log) => {
+const testPreviewToPreFundingEvent = async (poa, reg, pmr, log) => {
   const PoaLoggerStageEvent = log.Stage()
 
   // move from `Pending` to `PreFunding` stage
   await testStartPreFunding(poa, { from: broker, gasPrice })
 
-  const neededTime = await determineNeededTimeTravel(
-    poa,
-    whitelistedPoaBuyers[0]
+  const { args: triggeredPoaLogger } = await waitForEvent(PoaLoggerStageEvent)
+
+  assert.equal(
+    triggeredPoaLogger.tokenAddress,
+    poa.address,
+    'stage event tokenAddress should match poa.address'
   )
-  await timeTravel(neededTime)
-  await testStartEthSale(poa)
+  assert.equal(
+    triggeredPoaLogger.stage.toString(),
+    stages.PreFunding,
+    'stage event stage should be in PreFunding stage'
+  )
+}
+
+// only meant to be used for transition from `Stages.PreFunding` to `Stages.FiatFunding`
+const testPreFundingToFiatFundingEvent = async (poa, reg, pmr, log) => {
+  const PoaLoggerStageEvent = log.Stage()
+
+  await timeTravelToFundingPeriod(poa)
+
+  // move from `PreFunding` to `FiatFunding` stage
+  await testStartFiatSale(poa, { from: whitelistedPoaBuyers[0], gasPrice })
+
+  const { args: triggeredPoaLogger } = await waitForEvent(PoaLoggerStageEvent)
+
+  assert.equal(
+    triggeredPoaLogger.tokenAddress,
+    poa.address,
+    'stage event tokenAddress should match poa.address'
+  )
+  assert.equal(
+    triggeredPoaLogger.stage.toString(),
+    stages.FiatFunding,
+    'stage event stage should be in FiatFunding stage'
+  )
+}
+
+// only meant to be used for transition from `Stages.FiatFunding` to `Stages.EthFunding`
+const testFiatFundingToEthFundingEvent = async (poa, reg, pmr, log) => {
+  const PoaLoggerStageEvent = log.Stage()
+
+  await timeTravelToEthFundingPeriod(poa)
+
+  // move from `FiatFunding` to `EthFunding` stage
+  await testStartEthSale(poa, { from: whitelistedPoaBuyers[0], gasPrice })
 
   const { args: triggeredPoaLogger } = await waitForEvent(PoaLoggerStageEvent)
 
@@ -49,7 +88,7 @@ const testPreFundingToFundingEvent = async (poa, reg, pmr, log) => {
   assert.equal(
     triggeredPoaLogger.stage.toString(),
     stages.EthFunding,
-    'stage event stage should be in Funding Stage'
+    'stage event stage should be in EthFunding stage'
   )
 }
 
@@ -281,8 +320,7 @@ const testReclaimEvents = async () => {
   await testStartPreFunding(poa, { from: broker, gasPrice })
 
   // move from `PreFunding` to `EthFunding` stage
-  const neededTime = await determineNeededTimeTravel(poa)
-  await timeTravel(neededTime)
+  await timeTravelToEthFundingPeriod(poa)
   await testStartEthSale(poa)
 
   // purchase tokens to reclaim when failed
@@ -291,7 +329,7 @@ const testReclaimEvents = async () => {
     value,
     gasPrice
   })
-  await forcePoaTimeout(poa)
+  await timeTravelToFundingPeriodTimeout(poa)
 
   const PoaLoggerStageEvent = log.Stage()
   const PoaLoggerReclaimEvent = log.ReClaim()
@@ -338,7 +376,9 @@ module.exports = {
   testChangeCustodianEvents,
   testClaimEvents,
   testPayoutEvents,
-  testPreFundingToFundingEvent,
+  testPreviewToPreFundingEvent,
+  testPreFundingToFiatFundingEvent,
+  testFiatFundingToEthFundingEvent,
   testReclaimEvents,
   testTerminateEvents
 }

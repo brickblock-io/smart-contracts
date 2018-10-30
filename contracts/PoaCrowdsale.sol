@@ -29,10 +29,10 @@ contract PoaCrowdsale is PoaCommon {
 
   /// @notice Ensure that the contract has not timed out
   modifier checkTimeout() {
-    uint256 fundingDeadline = startTimeForEthFundingPeriod.add(durationForEthFundingPeriod);
-    uint256 activationDeadline = startTimeForEthFundingPeriod
-      .add(durationForEthFundingPeriod)
-      .add(durationForActivationPeriod);
+    uint256 fundingDeadline = startTimeForFundingPeriod
+      .add(durationForFiatFundingPeriod)
+      .add(durationForEthFundingPeriod);
+    uint256 activationDeadline = fundingDeadline.add(durationForActivationPeriod);
 
     if (
       (stage <= Stages.EthFunding && block.timestamp >= fundingDeadline) ||
@@ -59,14 +59,16 @@ contract PoaCrowdsale is PoaCommon {
     of the constructor in order to initialize the contract storage.
 
     @param _fiatCurrency32 bytes32 of fiat currency string
-    @param _startTimeForEthFundingPeriod beginning of the sale as unix timestamp
-    @param _durationForEthFundingPeriod duration of the sale (starting from _startTimeForEthFundingPeriod)
-    @param _durationForActivationPeriod timeframe for the custodian to activate the token (starting from _startTimeForEthFundingPeriod + _durationForEthFundingPeriod)
-    @param _fundingGoalInCents funding goal in fiat cents (e.g. a €10,000 fundingGoal would be '10000000')
+    @param _startTimeForFundingPeriod beginning of the sale as UNIX timestamp
+    @param _durationForFiatFundingPeriod duration of the fiat sale
+    @param _durationForEthFundingPeriod duration of the ETH sale
+    @param _durationForActivationPeriod timeframe for the custodian to activate the token
+    @param _fundingGoalInCents funding goal in fiat cents (e.g. a €10,000 funding goal would be '1000000')
   */
   function initializeCrowdsale(
     bytes32 _fiatCurrency32,
-    uint256 _startTimeForEthFundingPeriod,
+    uint256 _startTimeForFundingPeriod,
+    uint256 _durationForFiatFundingPeriod,
     uint256 _durationForEthFundingPeriod,
     uint256 _durationForActivationPeriod,
     uint256 _fundingGoalInCents
@@ -81,10 +83,22 @@ contract PoaCrowdsale is PoaCommon {
 
     // validate and initialize parameters in sequential storage
     setFiatCurrency(_fiatCurrency32);
-    setStartTimeForEthFundingPeriod(_startTimeForEthFundingPeriod);
-    setDurationForEthFundingPeriod(_durationForEthFundingPeriod);
+    setStartTimeForFundingPeriod(_startTimeForFundingPeriod);
     setDurationForActivationPeriod(_durationForActivationPeriod);
     setFundingGoalInCents(_fundingGoalInCents);
+
+    // With checking that not both durations are 0, we can skip the setters
+    // if the respective duration is 0. Since the setter functions are
+    // validating, this avoids a special case where setting
+    // `_durationForFiatFundingPeriod` fails in case its value is 0, because
+    // `durationForEthFundingPeriod` is already 0.
+    require(_durationForFiatFundingPeriod + _durationForEthFundingPeriod > 0);
+    if (_durationForFiatFundingPeriod > 0) {
+      setDurationForFiatFundingPeriod(_durationForFiatFundingPeriod);
+    }
+    if (_durationForEthFundingPeriod > 0) {
+      setDurationForEthFundingPeriod(_durationForEthFundingPeriod);
+    }
 
     // set crowdsaleInitialized to true so cannot be initialized again
     crowdsaleInitialized = true;
@@ -131,21 +145,37 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /**
-   * @notice Update start time for ETH funding period for POA Token
+   * @notice Update start time for funding period for POA Token
    * @dev Only allowed in `Stages.Preview` stage by Broker
-   * @param _newStartTimeForEthFundingPeriod The new start
-   *        time for ETH funding period as UNIX timestamp
-   *        in seconds
+   * @param _newStartTimeForFundingPeriod The new start
+   *        time for funding period as UNIX timestamp in seconds
    */
-  function updateStartTimeForEthFundingPeriod
+  function updateStartTimeForFundingPeriod
   (
-    uint256 _newStartTimeForEthFundingPeriod
+    uint256 _newStartTimeForFundingPeriod
   )
     external
     onlyBroker
     atStage(Stages.Preview)
   {
-    setStartTimeForEthFundingPeriod(_newStartTimeForEthFundingPeriod);
+    setStartTimeForFundingPeriod(_newStartTimeForFundingPeriod);
+  }
+
+  /**
+   * @notice Update duration for fiat funding period for POA Token
+   * @dev Only allowed in `Stages.Preview` stage by Broker
+   * @param _newDurationForFiatFundingPeriod The new duration
+   *        for fiat funding period as seconds
+   */
+  function updateDurationForFiatFundingPeriod
+  (
+    uint256 _newDurationForFiatFundingPeriod
+  )
+    external
+    onlyBroker
+    atStage(Stages.Preview)
+  {
+    setDurationForFiatFundingPeriod(_newDurationForFiatFundingPeriod);
   }
 
   /**
@@ -230,27 +260,53 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /**
-   * @notice Set start time for ETH funding period for POA Token
+   * @notice Set start time for funding period for POA Token
    * @dev start time must be future time
-   * @param _newStartTimeForEthFundingPeriod The new start
-   *        time for ETH funding period as UNIX timestamp
-   *        in seconds
+   * @param _newStartTimeForFundingPeriod The new start
+   *        time for funding period as UNIX timestamp in seconds
    */
-  function setStartTimeForEthFundingPeriod
+  function setStartTimeForFundingPeriod
   (
-    uint256 _newStartTimeForEthFundingPeriod
+    uint256 _newStartTimeForFundingPeriod
   )
     internal
   {
-    require(_newStartTimeForEthFundingPeriod > block.timestamp);
-    require(_newStartTimeForEthFundingPeriod != startTimeForEthFundingPeriod);
+    require(_newStartTimeForFundingPeriod > block.timestamp);
+    require(_newStartTimeForFundingPeriod != startTimeForFundingPeriod);
 
-    startTimeForEthFundingPeriod = _newStartTimeForEthFundingPeriod;
+    startTimeForFundingPeriod = _newStartTimeForFundingPeriod;
+  }
+
+  /**
+   * @notice Set duration for fiat funding period for POA Token
+   * @dev Duration must be 0 (skips fiat funding) or at least 3 days,
+   *      which corresponds to the approx. processing time of a wire transfer
+   * @param _newDurationForFiatFundingPeriod The new duration
+   *        for fiat funding period as seconds
+   */
+  function setDurationForFiatFundingPeriod
+  (
+    uint256 _newDurationForFiatFundingPeriod
+  )
+    internal
+  {
+    // Check if `_newDurationForFiatFundingPeriod` is at least 3 days. If set
+    // to 0 (skip fiat funding), the duration for ETH funding must be non-zero.
+    require(
+      _newDurationForFiatFundingPeriod >= (3 days) ||
+      (
+        _newDurationForFiatFundingPeriod == 0 &&
+        durationForEthFundingPeriod != 0
+      )
+    );
+    require(_newDurationForFiatFundingPeriod != durationForFiatFundingPeriod);
+
+    durationForFiatFundingPeriod = _newDurationForFiatFundingPeriod;
   }
 
   /**
    * @notice Set duration for ETH funding period for POA Token
-   * @dev Duration must be longer than 1 day
+   * @dev Duration must be 0 (skips ETH funding) or at least 1 day
    * @param _newDurationForEthFundingPeriod The new duration
    *        for ETH funding period as seconds
    */
@@ -260,7 +316,15 @@ contract PoaCrowdsale is PoaCommon {
   )
     internal
   {
-    require(_newDurationForEthFundingPeriod >= 60 * 60 * 24);
+    // Check if `_newDurationForEthFundingPeriod` is at least 1 day. If set
+    // to 0 (skip ETH funding), the duration for fiat funding must be non-zero.
+    require(
+      _newDurationForEthFundingPeriod >= (1 days) ||
+      (
+        _newDurationForEthFundingPeriod == 0 &&
+        durationForFiatFundingPeriod != 0
+      )
+    );
     require(_newDurationForEthFundingPeriod != durationForEthFundingPeriod);
 
     durationForEthFundingPeriod = _newDurationForEthFundingPeriod;
@@ -278,7 +342,8 @@ contract PoaCrowdsale is PoaCommon {
   )
     internal
   {
-    require(_newDurationForActivationPeriod >= 60 * 60 * 24 * 7);
+    // Check if `_newDurationForActivationPeriod` is at least 1 week.
+    require(_newDurationForActivationPeriod >= (1 weeks));
     require(_newDurationForActivationPeriod != durationForActivationPeriod);
 
     durationForActivationPeriod = _newDurationForActivationPeriod;
@@ -292,24 +357,53 @@ contract PoaCrowdsale is PoaCommon {
   * start lifecycle functions *
   ****************************/
 
-  /// @notice Used for moving contract into FiatFunding stage where fiat purchases can be made
+  /// @notice Used for moving contract into `Stages.FiatFunding` where fiat purchases can be made
   function startFiatSale()
     external
-    onlyBroker
     atStage(Stages.PreFunding)
     returns (bool)
   {
+    // To save gas, create copies in memory to not have to read these
+    // variables from storage twice
+    uint256 _startTimeForFundingPeriod = startTimeForFundingPeriod;
+    uint256 _durationForFiatFundingPeriod = durationForFiatFundingPeriod;
+
+    // Check if fiat funding is intended
+    require(_durationForFiatFundingPeriod > 0);
+
+    // Check if funding period has started
+    require(_startTimeForFundingPeriod <= block.timestamp);
+
+    // Check if fiat funding period has not ended yet
+    require(block.timestamp < _startTimeForFundingPeriod + _durationForFiatFundingPeriod);
+
     enterStage(Stages.FiatFunding);
     return true;
   }
 
-  /// @notice Used for starting ETH sale as long as startTimeForEthFundingPeriod has passed
+  /// @notice Used for starting ETH sale as long as `startTimeForFundingPeriod` +
+  // `durationForFiatFundingPeriod` has passed.
   function startEthSale()
     external
     atEitherStage(Stages.PreFunding, Stages.FiatFunding)
     returns (bool)
   {
-    require(block.timestamp >= startTimeForEthFundingPeriod);
+    // To save gas, create copies in memory to not have to read these
+    // variables from storage twice
+    uint256 _startTimeForEthFundingPeriod = startTimeForFundingPeriod + durationForFiatFundingPeriod;
+    uint256 _durationForEthFundingPeriod = durationForEthFundingPeriod;
+
+    // Check if ETH funding is intended
+    require(_durationForEthFundingPeriod > 0);
+
+    // Check if ETH funding period is reached. If `durationForFiatFundingPeriod`
+    // is 0, the ETH funding period can start as soon as `startTimeForFundingPeriod`
+    // is reached.
+    require(_startTimeForEthFundingPeriod <= block.timestamp);
+
+    // Check if ETH funding period has not ended yet
+    require(block.timestamp < _startTimeForEthFundingPeriod + _durationForEthFundingPeriod);
+
     enterStage(Stages.EthFunding);
     return true;
   }
@@ -668,7 +762,7 @@ contract PoaCrowdsale is PoaCommon {
     - Legal issue arises with the asset
     - Broker gets blacklisted during the funding phase
       due to fraudulent behavior
-    */
+   */
   function cancelFunding()
     external
     onlyCustodian

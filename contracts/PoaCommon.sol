@@ -104,13 +104,22 @@ contract PoaCommon is PoaProxyCommon {
   // Bool indicating whether or not crowdsale proxy has been initialized
   bool public crowdsaleInitialized;
 
-  // Used for checking when contract should move from PreFunding or FiatFunding to EthFunding stage
-  uint256 public startTimeForEthFundingPeriod;
+  // Used for checking when contract should move from PreFunding to FiatFunding or EthFunding stage
+  uint256 public startTimeForFundingPeriod;
 
-  // Amount of seconds (starting at startTimeForEthFundingPeriod) until moving from EthFunding to TimedOut stage
+  // Maximum duration of fiat funding period in seconds. If set to 0, fiat funding will be skipped.
+  // If funding goal is not reached after `startTimeForFundingPeriod` +
+  // `durationForFiatFundingPeriod` + `durationForEthFundingPeriod`, move to `Stages.TimeOut`.
+  uint256 public durationForFiatFundingPeriod;
+
+  // Maximum duration of ETH funding period in seconds. If set to 0, ETH funding will be skipped.
+  // If funding goal is not reached after `startTimeForFundingPeriod` +
+  // `durationForFiatFundingPeriod` + `durationForEthFundingPeriod`, move to `Stages.TimeOut`.
   uint256 public durationForEthFundingPeriod;
 
-  // Amount of seconds (starting at startTimeForEthFundingPeriod + durationForEthFundingPeriod) until moving from FundingSuccessful stage to TimedOut
+  // Maximum duration of activation period in seconds. After successful funding, if not activated
+  // until `startTimeForFundingPeriod` + `durationForFiatFundingPeriod` + `durationForEthFundingPeriod`
+  // + `durationForActivationPeriod`, move from `Stages.FundingSuccessful` to `Stages.TimedOut`.
   uint256 public durationForActivationPeriod;
 
   // bytes32 representation fiat currency symbol used to get rate

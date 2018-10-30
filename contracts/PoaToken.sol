@@ -361,8 +361,9 @@ contract PoaToken is PoaCommon {
     atStage(Stages.Preview)
     returns (bool)
   {
-    // check that `startTimeForEthFundingPeriod` lies in the future
-    require(startTimeForEthFundingPeriod > block.timestamp);
+    // check that `startTimeForFundingPeriod` lies in the future
+    require(startTimeForFundingPeriod > block.timestamp);
+
     // set Stage to PreFunding
     enterStage(Stages.PreFunding);
     return true;

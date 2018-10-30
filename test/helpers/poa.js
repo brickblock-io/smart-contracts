@@ -13,7 +13,7 @@ const IPoaTokenCrowdsale = artifacts.require('IPoaTokenCrowdsale')
 const assert = require('assert')
 const BigNumber = require('bignumber.js')
 
-const { timeTravel } = require('helpers')
+const { getTimeInFutureBySeconds, timeTravelToTarget } = require('helpers')
 const {
   areInRange,
   bigZero,
@@ -62,8 +62,9 @@ const defaultSymbol = 'TPA'
 const defaultSymbol32 = web3.toHex('TPA')
 const defaultFiatCurrency = 'EUR'
 const defaultFiatCurrency32 = web3.toHex('EUR')
-const defaultFundingTimeout = new BigNumber(60 * 60 * 24)
-const defaultActivationTimeout = new BigNumber(60 * 60 * 24 * 7)
+const defaultFiatFundingDuration = new BigNumber(60 * 60 * 24 * 3)
+const defaultEthFundingDuration = new BigNumber(60 * 60 * 24)
+const defaultActivationDuration = new BigNumber(60 * 60 * 24 * 7)
 const defaultFundingGoal = new BigNumber(5e5)
 const defaultTotalSupply = new BigNumber(1e23)
 const defaultFiatRate = new BigNumber('333.33')
@@ -88,25 +89,66 @@ const defaultBuyAmount = new BigNumber(
     .dividedBy(defaultPenalizedFiatRate)
     .toFixed(0, 1) // cut off decimals to simulate integer
 )
-const emptyBytes32 = '0x' + '0'.repeat(64)
-const getDefaultStartTime = async () => {
-  const currentBlock = await web3.eth.getBlock(web3.eth.blockNumber)
-  const blockTime = new BigNumber(currentBlock.timestamp)
-  const realTime = new BigNumber(Date.now()).div(1000).floor()
 
-  return blockTime.greaterThan(realTime) ? blockTime.add(60) : realTime.add(60)
+const emptyBytes32 = '0x' + '0'.repeat(64)
+
+const getDefaultStartTimeForFundingPeriod = async () => {
+  return getTimeInFutureBySeconds(60)
 }
 
-const determineNeededTimeTravel = async poa => {
-  const startTimeForEthFundingPeriod = await poa.startTimeForEthFundingPeriod()
-  const currentBlock = await web3.eth.getBlock(web3.eth.blockNumber)
-  const blockNow = new BigNumber(currentBlock.timestamp)
-  return blockNow.greaterThan(startTimeForEthFundingPeriod)
-    ? 0
-    : startTimeForEthFundingPeriod
-        .sub(blockNow)
-        .add(1)
-        .toNumber()
+// Travels forward in time until `startTimeForFundingPeriod` is reached.
+// Also travels forward when any funding duration is 0.
+const timeTravelToFundingPeriod = async poa => {
+  const startTimeForFiatFunding = await poa.startTimeForFundingPeriod()
+  return timeTravelToTarget(startTimeForFiatFunding)
+}
+
+// Travels forward in time until `startTimeForFundingPeriod` +
+// `durationForFiatFundingPeriod` is reached.
+// If `durationForEthFundingPeriod` is 0, do NOT travel.
+// If `durationForFiatFundingPeriod` is 0, travel to `startTimeForFundingPeriod`
+const timeTravelToEthFundingPeriod = async poa => {
+  const startTimeForFundingPeriod = await poa.startTimeForFundingPeriod()
+  const durationForFiatFundingPeriod = await poa.durationForFiatFundingPeriod()
+  const durationForEthFundingPeriod = await poa.durationForEthFundingPeriod()
+
+  // Only travel when ETH funding period exists
+  if (durationForEthFundingPeriod.greaterThan(0)) {
+    return timeTravelToTarget(
+      startTimeForFundingPeriod.add(durationForFiatFundingPeriod)
+    )
+  } else {
+    // eslint-disable-next-line
+    console.log('💫 Did not warp... ETH funding period does not exist')
+  }
+}
+
+// Travels forward in time until `startTimeForFundingPeriod` +
+// `durationForFiatFundingPeriod` + `durationForEthFundingPeriod` is reached.
+const timeTravelToFundingPeriodTimeout = async poa => {
+  const startTimeForFundingPeriod = await poa.startTimeForFundingPeriod()
+  const durationForFiatFundingPeriod = await poa.durationForEthFundingPeriod()
+  const durationForEthFundingPeriod = await poa.durationForFiatFundingPeriod()
+
+  return timeTravelToTarget(
+    startTimeForFundingPeriod
+      .add(durationForFiatFundingPeriod)
+      .add(durationForEthFundingPeriod)
+  )
+}
+
+const timeTravelToActivationPeriodTimeout = async poa => {
+  const startTimeForFundingPeriod = await poa.startTimeForFundingPeriod()
+  const durationForFiatFundingPeriod = await poa.durationForEthFundingPeriod()
+  const durationForEthFundingPeriod = await poa.durationForFiatFundingPeriod()
+  const durationForActivationPeriod = await poa.durationForActivationPeriod()
+
+  return timeTravelToTarget(
+    startTimeForFundingPeriod
+      .add(durationForFiatFundingPeriod)
+      .add(durationForEthFundingPeriod)
+      .add(durationForActivationPeriod)
+  )
 }
 
 // sets up all contracts needed in the ecosystem for poa to function
@@ -241,9 +283,10 @@ const setupPoaProxyAndEcosystem = async ({
     defaultFiatCurrency32,
     custodian,
     defaultTotalSupply,
-    await getDefaultStartTime(),
-    defaultFundingTimeout,
-    defaultActivationTimeout,
+    await getDefaultStartTimeForFundingPeriod(),
+    defaultFiatFundingDuration,
+    defaultEthFundingDuration,
+    defaultActivationDuration,
     _fundingGoal,
     {
       from: broker
@@ -275,7 +318,7 @@ const testProxyInitialization = async (reg, pmr, args) => {
   // create new master poa contracts
   const poatm = await PoaToken.new()
   const poacm = await PoaCrowdsale.new()
-  const givenstartTimeForFiatFunding = args[5]
+  const givenStartTimeForFundingPeriod = args[5]
 
   // add poa master to registry
   await reg.updateContractAddress('PoaTokenMaster', poatm.address)
@@ -295,7 +338,8 @@ const testProxyInitialization = async (reg, pmr, args) => {
   const actualCustodian = await poa.custodian()
   const decimals = await poa.decimals()
   const feeRateInPermille = await poa.feeRateInPermille()
-  const startTimeForFiatFunding = await poa.startTimeForEthFundingPeriod()
+  const startTimeForFundingPeriod = await poa.startTimeForFundingPeriod()
+  const durationForFiatFundingPeriod = await poa.durationForFiatFundingPeriod()
   const durationForEthFundingPeriod = await poa.durationForEthFundingPeriod()
   const fundingGoalInCents = await poa.fundingGoalInCents()
   const totalPerTokenPayout = await poa.totalPerTokenPayout()
@@ -340,8 +384,13 @@ const testProxyInitialization = async (reg, pmr, args) => {
     'fee rate should be a constant of 5'
   )
   assert.equal(
+    durationForFiatFundingPeriod.toString(),
+    defaultFiatFundingDuration.toString(),
+    'durationForFiatFundingPeriod should match that given in constructor'
+  )
+  assert.equal(
     durationForEthFundingPeriod.toString(),
-    defaultFundingTimeout.toString(),
+    defaultEthFundingDuration.toString(),
     'durationForEthFundingPeriod should match that given in constructor'
   )
   assert.equal(
@@ -383,9 +432,9 @@ const testProxyInitialization = async (reg, pmr, args) => {
   assert(paused, 'contract should start paused')
 
   assert.equal(
-    givenstartTimeForFiatFunding.toString(),
-    startTimeForFiatFunding.toString(),
-    'startTimeForFiatFunding should match startTimeForFiatFunding given in constructor'
+    givenStartTimeForFundingPeriod.toString(),
+    startTimeForFundingPeriod.toString(),
+    'startTimeForFundingPeriod should match givenStartTimeForFundingPeriod given in constructor'
   )
   return poa
 }
@@ -403,7 +452,7 @@ const testInitialization = async (exr, exp, reg, pmr) => {
     }
   )
 
-  const defaultStartTime = await getDefaultStartTime()
+  const defaultStartTime = await getDefaultStartTimeForFundingPeriod()
 
   const poa = await PoaToken.new()
 
@@ -418,8 +467,9 @@ const testInitialization = async (exr, exp, reg, pmr) => {
     reg.address,
     defaultTotalSupply,
     defaultStartTime,
-    defaultFundingTimeout,
-    defaultActivationTimeout,
+    defaultFiatFundingDuration,
+    defaultEthFundingDuration,
+    defaultActivationDuration,
     defaultFundingGoal
   )
 
@@ -431,7 +481,8 @@ const testInitialization = async (exr, exp, reg, pmr) => {
   const actualCustodian = await poa.custodian()
   const decimals = await poa.decimals()
   const feeRateInPermille = await poa.feeRateInPermille()
-  const startTimeForEthFundingPeriod = await poa.startTimeForEthFundingPeriod()
+  const startTimeForFundingPeriod = await poa.startTimeForFundingPeriod()
+  const durationForFiatFundingPeriod = await poa.durationForFiatFundingPeriod()
   const durationForEthFundingPeriod = await poa.durationForEthFundingPeriod()
   const fundingGoalInCents = await poa.fundingGoalInCents()
   const totalPerTokenPayout = await poa.totalPerTokenPayout()
@@ -476,13 +527,18 @@ const testInitialization = async (exr, exp, reg, pmr) => {
     'fee rate should be a constant of 5'
   )
   assert.equal(
-    startTimeForEthFundingPeriod.toString(),
+    startTimeForFundingPeriod.toString(),
     defaultStartTime.toString(),
-    'startTimeForEthFundingPeriod should match startTimeForEthFundingPeriod given in constructor'
+    'startTimeForFundingPeriod should match that given in constructor'
+  )
+  assert.equal(
+    durationForFiatFundingPeriod.toString(),
+    defaultFiatFundingDuration.toString(),
+    'durationForFiatFundingPeriod should match that given in constructor'
   )
   assert.equal(
     durationForEthFundingPeriod.toString(),
-    defaultFundingTimeout.toString(),
+    defaultEthFundingDuration.toString(),
     'durationForEthFundingPeriod should match that given in constructor'
   )
   assert.equal(
@@ -616,23 +672,43 @@ const testUpdateFundingGoalInCents = async (
   )
 }
 
-const testUpdateStartTimeForEthFundingPeriod = async (
+const testUpdateStartTimeForFundingPeriod = async (
   poa,
-  newStartTimeForEthFundingPeriod,
+  newStartTimeForFundingPeriod,
   config = {}
 ) => {
   assert(!!config.from, "'from' must be defined in the config object")
 
-  await poa.updateStartTimeForEthFundingPeriod(
-    newStartTimeForEthFundingPeriod,
+  await poa.updateStartTimeForFundingPeriod(
+    newStartTimeForFundingPeriod,
     config
   )
-  const postStartTimeForEthFundingPeriod = await poa.startTimeForEthFundingPeriod()
+  const postStartTimeForFundingPeriod = await poa.startTimeForFundingPeriod()
 
   assert.equal(
-    newStartTimeForEthFundingPeriod,
-    postStartTimeForEthFundingPeriod.toString(),
-    'startTimeForEthFundingPeriod should be updated'
+    newStartTimeForFundingPeriod,
+    postStartTimeForFundingPeriod.toString(),
+    'startTimeForFundingPeriod should be updated'
+  )
+}
+
+const testUpdateDurationForFiatFundingPeriod = async (
+  poa,
+  newDurationForFiatFundingPeriod,
+  config = {}
+) => {
+  assert(!!config.from, "'from' must be defined in the config object")
+
+  await poa.updateDurationForFiatFundingPeriod(
+    newDurationForFiatFundingPeriod,
+    config
+  )
+  const postDurationForFiatFundingPeriod = await poa.durationForFiatFundingPeriod()
+
+  assert.equal(
+    newDurationForFiatFundingPeriod,
+    postDurationForFiatFundingPeriod.toString(),
+    'durationForEthFundingPeriod should be updated'
   )
 }
 
@@ -1125,7 +1201,7 @@ const testActivate = async (poa, fmr, config) => {
   assert.equal(
     postStage.toString(),
     stages.Active,
-    'postStage should be Active'
+    "postStage should be 'Active'"
   )
 
   assert(prePaused, 'should be paused before activation')
@@ -1369,19 +1445,6 @@ const testFirstReclaim = async (poa, config, shouldBeFundingSuccessful) => {
     postStage.toNumber(),
     stages.TimedOut,
     'the contract should be in stage TimedOut after reclaiming'
-  )
-}
-
-const forcePoaTimeout = async poa => {
-  const durationForEthFundingPeriod = await poa.durationForEthFundingPeriod()
-  await timeTravel(durationForEthFundingPeriod.toNumber())
-}
-
-const activationTimeoutContract = async poa => {
-  const durationForActivationPeriod = await poa.durationForActivationPeriod()
-  const durationForEthFundingPeriod = await poa.durationForEthFundingPeriod()
-  await timeTravel(
-    durationForEthFundingPeriod.add(durationForActivationPeriod).toNumber()
   )
 }
 
@@ -1789,7 +1852,8 @@ const testProxyUnchanged = async (poa, first, state) => {
       actualCustodian: await poa.custodian(),
       decimals: await poa.decimals(),
       feeRateInPermille: await poa.feeRateInPermille(),
-      startTimeForEthFundingPeriod: await poa.startTimeForEthFundingPeriod(),
+      startTimeForFundingPeriod: await poa.startTimeForFundingPeriod(),
+      durationForFiatFundingPeriod: await poa.durationForFiatFundingPeriod(),
       durationForEthFundingPeriod: await poa.durationForEthFundingPeriod(),
       fundingGoalInCents: await poa.fundingGoalInCents(),
       totalPerTokenPayout: await poa.totalPerTokenPayout(),
@@ -1812,7 +1876,8 @@ const testProxyUnchanged = async (poa, first, state) => {
         actualCustodian: await poa.custodian(),
         decimals: await poa.decimals(),
         feeRateInPermille: await poa.feeRateInPermille(),
-        startTimeForEthFundingPeriod: await poa.startTimeForEthFundingPeriod(),
+        startTimeForFundingPeriod: await poa.startTimeForFundingPeriod(),
+        durationForFiatFundingPeriod: await poa.durationForFiatFundingPeriod(),
         durationForEthFundingPeriod: await poa.durationForEthFundingPeriod(),
         fundingGoalInCents: await poa.fundingGoalInCents(),
         totalPerTokenPayout: await poa.totalPerTokenPayout(),
@@ -1878,14 +1943,13 @@ const getRemainingAmountInWeiDuringEthFunding = async poa => {
 
 module.exports = {
   accounts,
-  activationTimeoutContract,
   actRate,
   bbkBonusAddress,
   bbkContributors,
   bbkTokenDistAmount,
   broker,
   custodian,
-  defaultActivationTimeout,
+  defaultActivationDuration,
   defaultBuyAmount,
   defaultFiatCurrency,
   defaultFiatCurrency32,
@@ -1893,7 +1957,8 @@ module.exports = {
   defaultPenalizedFiatRate,
   defaultFiatRatePenalty,
   defaultFundingGoal,
-  defaultFundingTimeout,
+  defaultFiatFundingDuration,
+  defaultEthFundingDuration,
   defaultIpfsHash,
   defaultIpfsHashArray32,
   defaultName,
@@ -1901,12 +1966,10 @@ module.exports = {
   defaultSymbol,
   defaultSymbol32,
   defaultTotalSupply,
-  determineNeededTimeTravel,
   emptyBytes32,
   fiatBuyer,
-  forcePoaTimeout,
   getAccountInformation,
-  getDefaultStartTime,
+  getDefaultStartTimeForFundingPeriod,
   getExpectedTokenAmount,
   getRemainingAmountInCentsDuringFiatFunding,
   getRemainingAmountInWeiDuringEthFunding,
@@ -1958,13 +2021,18 @@ module.exports = {
   testUpdateBrokerAddress,
   testUpdateDurationForActivationPeriod,
   testUpdateDurationForEthFundingPeriod,
+  testUpdateDurationForFiatFundingPeriod,
   testUpdateFiatCurrency,
   testUpdateFundingGoalInCents,
   testUpdateName,
   testUpdateProofOfCustody,
   testUpdateSymbol,
-  testUpdateStartTimeForEthFundingPeriod,
+  testUpdateStartTimeForFundingPeriod,
   testUpdateTotalSupply,
   testWeiToFiatCents,
+  timeTravelToFundingPeriod,
+  timeTravelToEthFundingPeriod,
+  timeTravelToFundingPeriodTimeout,
+  timeTravelToActivationPeriodTimeout,
   whitelistedPoaBuyers
 }

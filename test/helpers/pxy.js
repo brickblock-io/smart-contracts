@@ -20,7 +20,7 @@ const {
   defaultSymbol32,
   defaultTotalSupply,
   determineNeededTimeTravel,
-  getDefaultStartTime,
+  getDefaultStartTimeForFundingPeriod,
   stages,
   testActivate,
   testBrokerClaim,
@@ -119,7 +119,7 @@ const initializeContract = async (poa, reg) => {
 
   await poa.initializeCrowdsale(
     defaultFiatCurrency32,
-    await getDefaultStartTime(),
+    await getDefaultStartTimeForFundingPeriod(),
     defaultFundingTimeout,
     defaultActivationTimeout,
     defaultFundingGoal

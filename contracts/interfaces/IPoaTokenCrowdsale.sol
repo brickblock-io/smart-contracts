@@ -195,26 +195,20 @@ interface IPoaTokenCrowdsale {
     external
     returns(uint256);
 
-  /**
-    @notice Starts the crowdsale
-    @param _fiatCurrency32 bytes32 of fiat currency string
-    @param _startTimeForEthFundingPeriod unix timestamp in seconds
-    @param _durationForEthFundingPeriod seconds for eth funding period to last
-    @param _durationForActivationPeriod seconds for custodian to activate token
-    @param _fundingGoalInCents in fiat cents
-   */
   function initializeCrowdsale(
-    bytes32 _fiatCurrency32,
-    uint256 _startTimeForEthFundingPeriod,
-    uint256 _durationForEthFundingPeriod,
-    uint256 _durationForActivationPeriod,
-    uint256 _fundingGoalInCents
+    bytes32 _fiatCurrency32,                // fiat currency string, e.g. 'EUR'
+    uint256 _startTimeForFundingPeriod,     // future UNIX timestamp
+    uint256 _durationForFiatFundingPeriod,  // duration of fiat funding period in seconds
+    uint256 _durationForEthFundingPeriod,   // duration of ETH funding period in seconds
+    uint256 _durationForActivationPeriod,   // duration of activation period in seconds
+    uint256 _fundingGoalInCents             // funding goal in fiat cents
   )
     external
     returns (bool);
 
   function startPreFunding()
-    external;
+    external
+    returns (bool);
 
   function startFiatSale()
     external
@@ -319,10 +313,15 @@ interface IPoaTokenCrowdsale {
     view
     returns (bool _crowdsaleInitialized);
 
-  function startTimeForEthFundingPeriod()
+  function startTimeForFundingPeriod()
     external
     view
-    returns (uint256 _startTimeForEthFundingPeriod);
+    returns (uint256 _startTimeForFundingPeriod);
+
+  function durationForFiatFundingPeriod()
+    external
+    view
+    returns (uint256 _durationForFiatFundingPeriod);
 
   function durationForEthFundingPeriod()
     external
