@@ -4,7 +4,6 @@ const {
   broker,
   custodian,
   defaultIpfsHashArray32,
-  determineNeededTimeTravel,
   getRemainingAmountInWeiDuringEthFunding,
   owner,
   setupPoaProxyAndEcosystem,
@@ -24,6 +23,7 @@ const {
   testTransferFrom,
   testUnpause,
   testUpdateProofOfCustody,
+  timeTravelToEthFundingPeriod,
   whitelistedPoaBuyers
 } = require('../../helpers/poa')
 const {
@@ -32,7 +32,6 @@ const {
   getGasUsed,
   getEtherBalance
 } = require('../../helpers/general.js')
-const { timeTravel } = require('helpers')
 
 describe("when in 'EthFunding' stage", () => {
   contract('PoaTokenProxy', () => {
@@ -49,9 +48,10 @@ describe("when in 'EthFunding' stage", () => {
       // move from `Preview` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
+      // time travel to start of ETH funding period
+      await timeTravelToEthFundingPeriod(poa)
+
       // move from `PreFunding` to `EthFunding` stage
-      const neededTime = await determineNeededTimeTravel(poa)
-      await timeTravel(neededTime)
       await testStartEthSale(poa)
     })
 
@@ -187,10 +187,12 @@ describe("when in 'EthFunding' stage", () => {
       // move from `Preview` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
+      // time travel to start of ETH funding period
+      await timeTravelToEthFundingPeriod(poa)
+
       // move from `PreFunding` to `EthFunding` stage
-      const neededTime = await determineNeededTimeTravel(poa)
-      await timeTravel(neededTime)
       await testStartEthSale(poa)
+
       await testBuyTokens(poa, {
         from: whitelistedPoaBuyers[0],
         value: 5e17,

@@ -1,13 +1,14 @@
 const {
   broker,
   custodian,
-  defaultActivationTimeout,
   defaultFiatCurrency,
   defaultFiatCurrency32,
   defaultFiatRate,
   defaultFiatRatePenalty,
   defaultFundingGoal,
-  defaultFundingTimeout,
+  defaultFiatFundingDuration,
+  defaultEthFundingDuration,
+  defaultActivationDuration,
   defaultName32,
   defaultSymbol32,
   defaultTotalSupply,
@@ -57,8 +58,9 @@ describe('when initializing PoaToken', () => {
         custodian,
         defaultTotalSupply,
         await getDefaultStartTimeForFundingPeriod(),
-        defaultFundingTimeout,
-        defaultActivationTimeout,
+        defaultFiatFundingDuration,
+        defaultEthFundingDuration,
+        defaultActivationDuration,
         defaultFundingGoal,
         {
           from: broker
@@ -101,8 +103,9 @@ describe('when initializing PoaToken', () => {
         custodian,
         defaultTotalSupply,
         await getDefaultStartTimeForFundingPeriod(),
-        defaultFundingTimeout,
-        defaultActivationTimeout,
+        defaultFiatFundingDuration,
+        defaultEthFundingDuration,
+        defaultActivationDuration,
         defaultFundingGoal,
         { from: broker }
       ])
@@ -128,8 +131,9 @@ describe('when initializing PoaToken', () => {
         custodian,
         defaultTotalSupply,
         await getDefaultStartTimeForFundingPeriod(),
-        defaultFundingTimeout,
-        defaultActivationTimeout,
+        defaultFiatFundingDuration,
+        defaultEthFundingDuration,
+        defaultActivationDuration,
         defaultFundingGoal,
         {
           from: broker
@@ -146,8 +150,9 @@ describe('when initializing PoaToken', () => {
           custodian,
           defaultTotalSupply,
           await getDefaultStartTimeForFundingPeriod(),
-          defaultFundingTimeout,
-          defaultActivationTimeout,
+          defaultFiatFundingDuration,
+          defaultEthFundingDuration,
+          defaultActivationDuration,
           defaultFundingGoal,
           {
             from: broker
@@ -167,8 +172,9 @@ describe('when initializing PoaToken', () => {
           custodian,
           defaultTotalSupply,
           await getDefaultStartTimeForFundingPeriod(),
-          defaultFundingTimeout,
-          defaultActivationTimeout,
+          defaultFiatFundingDuration,
+          defaultEthFundingDuration,
+          defaultActivationDuration,
           defaultFundingGoal,
           { from: broker }
         ]
@@ -198,8 +204,9 @@ describe('when initializing PoaToken', () => {
           custodian,
           defaultTotalSupply,
           await getDefaultStartTimeForFundingPeriod(),
-          defaultFundingTimeout,
-          defaultActivationTimeout,
+          defaultFiatFundingDuration,
+          defaultEthFundingDuration,
+          defaultActivationDuration,
           defaultFundingGoal,
           { from: custodian }
         ]
@@ -229,8 +236,9 @@ describe('when initializing PoaToken', () => {
           custodian,
           defaultTotalSupply,
           await getDefaultStartTimeForFundingPeriod(),
-          defaultFundingTimeout,
-          defaultActivationTimeout,
+          defaultFiatFundingDuration,
+          defaultEthFundingDuration,
+          defaultActivationDuration,
           defaultFundingGoal,
           { from: broker }
         ]
@@ -260,8 +268,9 @@ describe('when initializing PoaToken', () => {
           custodian,
           defaultTotalSupply,
           await getDefaultStartTimeForFundingPeriod(),
-          defaultFundingTimeout,
-          defaultActivationTimeout,
+          defaultFiatFundingDuration,
+          defaultEthFundingDuration,
+          defaultActivationDuration,
           defaultFundingGoal,
           { from: broker }
         ]
@@ -291,8 +300,9 @@ describe('when initializing PoaToken', () => {
           custodian,
           defaultTotalSupply,
           await getDefaultStartTimeForFundingPeriod(),
-          defaultFundingTimeout,
-          defaultActivationTimeout,
+          defaultFiatFundingDuration,
+          defaultEthFundingDuration,
+          defaultActivationDuration,
           defaultFundingGoal,
           { from: broker }
         ]
@@ -322,8 +332,9 @@ describe('when initializing PoaToken', () => {
           addressZero,
           defaultTotalSupply,
           await getDefaultStartTimeForFundingPeriod(),
-          defaultFundingTimeout,
-          defaultActivationTimeout,
+          defaultFiatFundingDuration,
+          defaultEthFundingDuration,
+          defaultActivationDuration,
           defaultFundingGoal,
           { from: broker }
         ]
@@ -339,8 +350,9 @@ describe('when initializing PoaToken', () => {
           null,
           defaultTotalSupply,
           await getDefaultStartTimeForFundingPeriod(),
-          defaultFundingTimeout,
-          defaultActivationTimeout,
+          defaultFiatFundingDuration,
+          defaultEthFundingDuration,
+          defaultActivationDuration,
           defaultFundingGoal,
           { from: broker }
         ]
@@ -370,8 +382,9 @@ describe('when initializing PoaToken', () => {
           custodian,
           9e17,
           await getDefaultStartTimeForFundingPeriod(),
-          defaultFundingTimeout,
-          defaultActivationTimeout,
+          defaultFiatFundingDuration,
+          defaultEthFundingDuration,
+          defaultActivationDuration,
           defaultFundingGoal,
           { from: broker }
         ]
@@ -387,15 +400,16 @@ describe('when initializing PoaToken', () => {
           custodian,
           null,
           await getDefaultStartTimeForFundingPeriod(),
-          defaultFundingTimeout,
-          defaultActivationTimeout,
+          defaultFiatFundingDuration,
+          defaultEthFundingDuration,
+          defaultActivationDuration,
           defaultFundingGoal,
           { from: broker }
         ]
       ])
     })
 
-    it('should NOT initialize with startTimeForEthFundingPeriod before now', async () => {
+    it('should NOT initialize with startTimeForFundingPeriod before now', async () => {
       await testSetCurrencyRate(
         exr,
         exp,
@@ -419,8 +433,42 @@ describe('when initializing PoaToken', () => {
           defaultTotalSupply,
           // simulate day before
           new BigNumber(Date.now()).div(1000).sub(60 * 60 * 24),
-          defaultFundingTimeout,
-          defaultActivationTimeout,
+          defaultFiatFundingDuration,
+          defaultEthFundingDuration,
+          defaultActivationDuration,
+          defaultFundingGoal,
+          { from: broker }
+        ]
+      ])
+    })
+
+    it('should NOT initialize with durationForFiatFundingPeriod less than 3 days', async () => {
+      await testSetCurrencyRate(
+        exr,
+        exp,
+        defaultFiatCurrency,
+        defaultFiatRate,
+        defaultFiatRatePenalty,
+        {
+          from: owner,
+          value: 1e18
+        }
+      )
+
+      await testWillThrow(testProxyInitialization, [
+        reg,
+        pmr,
+        [
+          defaultName32,
+          defaultSymbol32,
+          defaultFiatCurrency32,
+          custodian,
+          defaultTotalSupply,
+          await getDefaultStartTimeForFundingPeriod(),
+          // simulate 1 second less than 3 days
+          new BigNumber(60 * 60 * 24 * 3 - 1),
+          defaultEthFundingDuration,
+          defaultActivationDuration,
           defaultFundingGoal,
           { from: broker }
         ]
@@ -450,12 +498,10 @@ describe('when initializing PoaToken', () => {
           custodian,
           defaultTotalSupply,
           await getDefaultStartTimeForFundingPeriod(),
+          defaultFiatFundingDuration,
           // simulate 1 second less than a day
-          new BigNumber(60)
-            .mul(60)
-            .mul(24)
-            .sub(1),
-          defaultActivationTimeout,
+          new BigNumber(60 * 60 * 24 - 1),
+          defaultActivationDuration,
           defaultFundingGoal,
           { from: broker }
         ]
@@ -485,17 +531,10 @@ describe('when initializing PoaToken', () => {
           custodian,
           defaultTotalSupply,
           await getDefaultStartTimeForFundingPeriod(),
+          defaultFiatFundingDuration,
+          defaultEthFundingDuration,
           // simulate 1 second less than a day
-          new BigNumber(60)
-            .mul(60)
-            .mul(24)
-            .mul(7)
-            .sub(1),
-          new BigNumber(60)
-            .mul(60)
-            .mul(24)
-            .mul(7)
-            .sub(1),
+          new BigNumber(60 * 60 * 24 * 7 - 1),
           defaultFundingGoal,
           { from: broker }
         ]
@@ -525,8 +564,9 @@ describe('when initializing PoaToken', () => {
           custodian,
           defaultTotalSupply,
           await getDefaultStartTimeForFundingPeriod(),
-          defaultFundingTimeout,
-          defaultActivationTimeout,
+          defaultFiatFundingDuration,
+          defaultEthFundingDuration,
+          defaultActivationDuration,
           0,
           { from: broker }
         ]

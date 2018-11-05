@@ -1,25 +1,24 @@
 const assert = require('assert')
 const BigNumber = require('bignumber.js')
 
-const { timeTravel } = require('helpers')
 const { gasPrice } = require('../helpers/general')
 const {
   broker,
   custodian,
-  defaultActivationTimeout,
+  defaultActivationDuration,
   defaultFiatCurrency,
   defaultFiatCurrency32,
   defaultFiatRate,
   defaultPenalizedFiatRate,
   defaultFundingGoal,
-  defaultFundingTimeout,
+  defaultFiatFundingDuration,
+  defaultEthFundingDuration,
   defaultIpfsHashArray32,
   defaultName,
   defaultName32,
   defaultSymbol,
   defaultSymbol32,
   defaultTotalSupply,
-  determineNeededTimeTravel,
   getDefaultStartTimeForFundingPeriod,
   stages,
   testActivate,
@@ -29,6 +28,7 @@ const {
   testStartPreFunding,
   testStartEthSale,
   testUpdateProofOfCustody,
+  timeTravelToEthFundingPeriod,
   whitelistedPoaBuyers
 } = require('./poa')
 const {
@@ -88,23 +88,24 @@ const parseCommonStorage = (storage, stageInitialized) => ({
     '0x' + storage[13].data.slice(6, 8)
   ).toNumber(),
   paused: new BigNumber('0x' + storage[13].data.slice(8, 10)).toNumber(),
-  startTimeForEthFundingPeriod: new BigNumber(storage[14].data),
-  durationForEthFundingPeriod: new BigNumber(storage[15].data),
-  durationForActivationPeriod: new BigNumber(storage[16].data),
-  actualFiatCurrency32: bytes32StorageToAscii(storage[17].data),
-  fundingGoalInCents: new BigNumber(storage[18].data),
-  fundedFiatAmountInCents: new BigNumber(storage[19].data)
+  startTimeForFundingPeriod: new BigNumber(storage[14].data),
+  durationForFiatFundingPeriod: new BigNumber(storage[15].data),
+  durationForEthFundingPeriod: new BigNumber(storage[16].data),
+  durationForActivationPeriod: new BigNumber(storage[17].data),
+  actualFiatCurrency32: bytes32StorageToAscii(storage[18].data),
+  fundingGoalInCents: new BigNumber(storage[19].data),
+  fundedFiatAmountInCents: new BigNumber(storage[20].data)
 })
 
 const parseTokenStorage = storage => ({
-  name: bytes32StorageToAscii(storage[20].data),
-  symbol: bytes32StorageToAscii(storage[21].data),
-  totalPerTokenPayout: storage[22].data,
-  actualOwner: storage[23].data,
-  claimedPerTokenPayouts: storage[24].data,
-  spentBalances: storage[25].data,
-  receivedBalances: storage[26].data,
-  allowed: storage[27].data
+  name: bytes32StorageToAscii(storage[21].data),
+  symbol: bytes32StorageToAscii(storage[22].data),
+  totalPerTokenPayout: storage[23].data,
+  actualOwner: storage[24].data,
+  claimedPerTokenPayouts: storage[25].data,
+  spentBalances: storage[26].data,
+  receivedBalances: storage[27].data,
+  allowed: storage[28].data
 })
 
 const initializeContract = async (poa, reg) => {
@@ -120,8 +121,9 @@ const initializeContract = async (poa, reg) => {
   await poa.initializeCrowdsale(
     defaultFiatCurrency32,
     await getDefaultStartTimeForFundingPeriod(),
-    defaultFundingTimeout,
-    defaultActivationTimeout,
+    defaultFiatFundingDuration,
+    defaultEthFundingDuration,
+    defaultActivationDuration,
     defaultFundingGoal
   )
 }
@@ -144,6 +146,7 @@ const checkPostInitializedStorage = async (poa, reg, pmr) => {
     crowdsaleInitialized,
     durationForActivationPeriod,
     durationForEthFundingPeriod,
+    durationForFiatFundingPeriod,
     fundedEthAmountInWei,
     fundedFiatAmountInCents,
     fundedFiatAmountInTokens,
@@ -151,9 +154,9 @@ const checkPostInitializedStorage = async (poa, reg, pmr) => {
     paused,
     proofOfCustody32,
     stage,
-    startTimeForEthFundingPeriod,
+    startTimeForFundingPeriod,
     tokenInitialized
-  } = parseCommonStorage(storage, false)
+  } = await parseCommonStorage(storage, false)
 
   // token storage
   const { allowed, actualOwner, name, symbol } = parseTokenStorage(storage)
@@ -209,13 +212,18 @@ const checkPostInitializedStorage = async (poa, reg, pmr) => {
   )
   assert(crowdsaleInitialized, 'crowdsaleInitialized should be true')
   assert(
-    startTimeForEthFundingPeriod.greaterThan(1530280851),
-    'startTimeForEthFundingPeriod should be greater than 06/29/2018'
+    startTimeForFundingPeriod.greaterThan(1530280851),
+    'startTimeForFundingPeriod should be greater than 06/29/2018'
+  )
+  assert.equal(
+    durationForFiatFundingPeriod.toString(),
+    defaultFiatFundingDuration.toString(),
+    'durationForFiatFundingPeriod should match defaultFiatFundingDuration'
   )
   assert.equal(
     durationForEthFundingPeriod.toString(),
-    defaultFundingTimeout.toString(),
-    'durationForEthFundingPeriod should match defaultFundingTimeout'
+    defaultEthFundingDuration.toString(),
+    'durationForEthFundingPeriod should match defaultEthFundingDuration'
   )
   assert(
     durationForActivationPeriod.greaterThan(durationForEthFundingPeriod),
@@ -256,9 +264,10 @@ const enterActiveStage = async (poa, fmr) => {
   // move from `Preview` to `PreFunding` stage
   await testStartPreFunding(poa, { from: broker, gasPrice })
 
+  // time travel to start of ETH funding period
+  await timeTravelToEthFundingPeriod(poa)
+
   // move from `PreFunding` to `EthFunding` stage
-  const neededTime = await determineNeededTimeTravel(poa)
-  await timeTravel(neededTime)
   await testStartEthSale(poa)
 
   // buy all remaining tokens and move to `FundingSuccessful` stage
@@ -306,6 +315,7 @@ const checkPostActiveStorage = async (poa, reg, pmr) => {
     crowdsaleInitialized,
     durationForActivationPeriod,
     durationForEthFundingPeriod,
+    durationForFiatFundingPeriod,
     fundedEthAmountInWei,
     fundedFiatAmountInCents,
     fundedFiatAmountInTokens,
@@ -313,7 +323,7 @@ const checkPostActiveStorage = async (poa, reg, pmr) => {
     paused,
     proofOfCustody32,
     stage,
-    startTimeForEthFundingPeriod,
+    startTimeForFundingPeriod,
     tokenInitialized
   } = await parseCommonStorage(storage, true)
 
@@ -377,13 +387,18 @@ const checkPostActiveStorage = async (poa, reg, pmr) => {
 
   assert(crowdsaleInitialized, 'crowdsaleInitialized should be true')
   assert(
-    startTimeForEthFundingPeriod.greaterThan(1530280851),
-    'startTimeForEthFundingPeriod should be greater than 06/29/2018'
+    startTimeForFundingPeriod.greaterThan(1530280851),
+    'startTimeForFundingPeriod should be greater than 06/29/2018'
+  )
+  assert.equal(
+    durationForFiatFundingPeriod.toString(),
+    defaultFiatFundingDuration.toString(),
+    'durationForFiatFundingPeriod should match defaultFiatFundingDuration'
   )
   assert.equal(
     durationForEthFundingPeriod.toString(),
-    defaultFundingTimeout.toString(),
-    'durationForEthFundingPeriod should match defaultFundingTimeout'
+    defaultEthFundingDuration.toString(),
+    'durationForEthFundingPeriod should match defaultEthFundingDuration'
   )
   assert(
     durationForActivationPeriod.greaterThan(durationForEthFundingPeriod),
@@ -415,7 +430,7 @@ const checkPostActiveStorage = async (poa, reg, pmr) => {
     nestedMappingValueStorage: allowedValue
   } = await getNestedMappingStorage(
     poa.address,
-    27,
+    28,
     whitelistedPoaBuyers[0],
     whitelistedPoaBuyers[1]
   )
@@ -458,6 +473,7 @@ const checkPostIsUpgradedStorage = async (poa, reg, pmr) => {
     crowdsaleInitialized,
     durationForActivationPeriod,
     durationForEthFundingPeriod,
+    durationForFiatFundingPeriod,
     fundedEthAmountInWei,
     fundedFiatAmountInCents,
     fundedFiatAmountInTokens,
@@ -465,7 +481,7 @@ const checkPostIsUpgradedStorage = async (poa, reg, pmr) => {
     paused,
     proofOfCustody32,
     stage,
-    startTimeForEthFundingPeriod,
+    startTimeForFundingPeriod,
     tokenInitialized
   } = await parseCommonStorage(storage, true)
   // token storage
@@ -535,13 +551,18 @@ const checkPostIsUpgradedStorage = async (poa, reg, pmr) => {
 
   assert(crowdsaleInitialized, 'crowdsaleInitialized should be true')
   assert(
-    startTimeForEthFundingPeriod.greaterThan(1530280851),
-    'startTimeForEthFundingPeriod should be greater than 06/29/2018'
+    startTimeForFundingPeriod.greaterThan(1530280851),
+    'startTimeForFundingPeriod should be greater than 06/29/2018'
+  )
+  assert.equal(
+    durationForFiatFundingPeriod.toString(),
+    defaultFiatFundingDuration.toString(),
+    'durationForFiatFundingPeriod should match defaultFiatFundingDuration'
   )
   assert.equal(
     durationForEthFundingPeriod.toString(),
-    defaultFundingTimeout.toString(),
-    'durationForEthFundingPeriod should match defaultFundingTimeout'
+    defaultEthFundingDuration.toString(),
+    'durationForEthFundingPeriod should match defaultEthFundingDuration'
   )
   assert(
     durationForActivationPeriod.greaterThan(durationForEthFundingPeriod),
@@ -574,7 +595,7 @@ const checkPostIsUpgradedStorage = async (poa, reg, pmr) => {
     nestedMappingValueStorage: allowedValue
   } = await getNestedMappingStorage(
     poa.address,
-    27,
+    28,
     whitelistedPoaBuyers[0],
     whitelistedPoaBuyers[1]
   )
@@ -597,7 +618,7 @@ const checkPostIsUpgradedStorage = async (poa, reg, pmr) => {
   //
   // start upgraded storage
   //
-  const isUpgraded = parseInt(storage[28].data)
+  const isUpgraded = parseInt(storage[29].data)
 
   assert(isUpgraded, 'isUpgraded should be true in correct slot')
 }

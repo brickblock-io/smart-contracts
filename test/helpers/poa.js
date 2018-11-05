@@ -1807,6 +1807,8 @@ const testResetCurrencyRate = async (
   ratePenalty
 ) => {
   await testSetQueryId(exr, exp, currencyType)
+  // eslint-disable-next-line
+  console.log('in between')
   await testSetRate(exr, exp, rate, ratePenalty, false)
 }
 

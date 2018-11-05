@@ -3,7 +3,6 @@ const {
   broker,
   custodian,
   defaultIpfsHashArray32,
-  determineNeededTimeTravel,
   owner,
   setupPoaProxyAndEcosystem,
   testActivate,
@@ -23,10 +22,10 @@ const {
   testUnpause,
   testUpdateProofOfCustody,
   timeTravelToFundingPeriodTimeout,
+  timeTravelToEthFundingPeriod,
   whitelistedPoaBuyers
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
-const { timeTravel } = require('helpers')
 const BigNumber = require('bignumber.js')
 
 describe("when in 'TimedOut' stage", () => {
@@ -45,9 +44,10 @@ describe("when in 'TimedOut' stage", () => {
       // move from `Preview` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
+      // time travel to start of ETH funding period
+      await timeTravelToEthFundingPeriod(poa)
+
       // move from `PreFunding` to `EthFunding` stage
-      const neededTime = await determineNeededTimeTravel(poa)
-      await timeTravel(neededTime)
       await testStartEthSale(poa)
 
       // purchase tokens to reclaim when failed

@@ -2,21 +2,20 @@ const PoaManager = artifacts.require('PoaManager.sol')
 const PoaToken = artifacts.require('PoaToken.sol')
 const PoaCrowdsale = artifacts.require('PoaCrowdsale')
 
-const { timeTravel } = require('helpers')
 const {
   broker,
-  defaultActivationTimeout,
+  defaultActivationDuration,
   defaultFiatCurrency,
   defaultFiatCurrency32,
   defaultFiatRate,
   defaultFiatRatePenalty,
   defaultFundingGoal,
-  defaultFundingTimeout,
+  defaultFiatFundingDuration,
+  defaultEthFundingDuration,
   defaultIpfsHashArray32,
   defaultName32,
   defaultSymbol32,
   defaultTotalSupply,
-  determineNeededTimeTravel,
   getDefaultStartTimeForFundingPeriod,
   setupEcosystem,
   stages,
@@ -27,6 +26,7 @@ const {
   testStartPreFunding,
   testStartEthSale,
   testUpdateProofOfCustody,
+  timeTravelToEthFundingPeriod,
   whitelistedPoaBuyers
 } = require('./poa')
 const { gasPrice } = require('./general')
@@ -67,17 +67,16 @@ const setupPoaManager = async () => {
 }
 
 const addToken = async (pmr, config) => {
-  const defaultStartTime = await getDefaultStartTimeForFundingPeriod()
-
   const txReceipt = await pmr.addToken(
     defaultName32,
     defaultSymbol32,
     defaultFiatCurrency32,
     custodian,
     defaultTotalSupply,
-    defaultStartTime,
-    defaultFundingTimeout,
-    defaultActivationTimeout,
+    await getDefaultStartTimeForFundingPeriod(),
+    defaultFiatFundingDuration,
+    defaultEthFundingDuration,
+    defaultActivationDuration,
     defaultFundingGoal,
     config
   )
@@ -94,9 +93,10 @@ const moveTokenToActive = async (poa, fmr) => {
   // move from `Preview` to `PreFunding` stage
   await testStartPreFunding(poa, { from: broker, gasPrice })
 
+  // time travel to start of ETH funding period
+  await timeTravelToEthFundingPeriod(poa)
+
   // move from `PreFunding` to `EthFunding` stage
-  const neededTime = await determineNeededTimeTravel(poa)
-  await timeTravel(neededTime)
   await testStartEthSale(poa)
 
   await testBuyRemainingTokens(poa, {

@@ -3,7 +3,6 @@ const {
   broker,
   custodian,
   defaultIpfsHashArray32,
-  determineNeededTimeTravel,
   owner,
   setupPoaProxyAndEcosystem,
   testActivate,
@@ -22,10 +21,10 @@ const {
   testTransferFrom,
   testUnpause,
   testUpdateProofOfCustody,
+  timeTravelToFundingPeriod,
   whitelistedPoaBuyers
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
-const { timeTravel } = require('helpers')
 
 describe("when in 'FundingCancelled' stage", () => {
   contract('PoaToken', accounts => {
@@ -43,10 +42,12 @@ describe("when in 'FundingCancelled' stage", () => {
       // move from `Pending` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
-      // move into `FiatFunding` stage
-      const neededTime = await determineNeededTimeTravel(poa)
-      await timeTravel(neededTime)
+      // time travel to start of fiat funding period
+      await timeTravelToFundingPeriod(poa)
+
+      // move from `PreFunding` to `FiatFunding` stage
       await testStartFiatSale(poa, { from: broker, gasPrice })
+
       await testBuyTokensWithFiat(poa, fiatInvestor, 100000, {
         from: custodian,
         gasPrice

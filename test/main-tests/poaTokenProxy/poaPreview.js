@@ -26,7 +26,7 @@ const {
   testUpdateFiatCurrency,
   testUpdateFundingGoalInCents,
   testUpdateName,
-  testUpdateStartTimeForEthFundingPeriod,
+  testUpdateStartTimeForFundingPeriod,
   testUpdateSymbol,
   testUpdateTotalSupply,
   testUpdateProofOfCustody,
@@ -295,15 +295,15 @@ describe("when in 'Preview' stage", async () => {
       })
     })
 
-    // test updating start time of ETH funding period
-    it('should NOT update start time of ETH funding period by non-broker', async () => {
+    // test updating start time of funding period
+    it('should NOT update start time of funding period by non-broker', async () => {
       const timestampHundredYearsInFuture = (
         Math.round(new Date().getTime() / 1000) +
         3600 * 24 * 365 * 100
       ).toString()
       ;[owner, custodian, whitelistedPoaBuyers[0]].forEach(
         async fromAddress => {
-          await testWillThrow(testUpdateStartTimeForEthFundingPeriod, [
+          await testWillThrow(testUpdateStartTimeForFundingPeriod, [
             poa,
             timestampHundredYearsInFuture,
             { from: fromAddress }
@@ -312,12 +312,13 @@ describe("when in 'Preview' stage", async () => {
       )
     })
 
-    it('should update start time of ETH funding period by broker', async () => {
+    it('should update start time of funding period by broker', async () => {
       const timestampHundredYearsInFuture = (
         Math.round(new Date().getTime() / 1000) +
         3600 * 24 * 365 * 100
       ).toString()
-      await testUpdateStartTimeForEthFundingPeriod(
+
+      await testUpdateStartTimeForFundingPeriod(
         poa,
         timestampHundredYearsInFuture,
         { from: broker }

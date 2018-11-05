@@ -3,7 +3,6 @@ const {
   broker,
   custodian,
   defaultIpfsHashArray32,
-  determineNeededTimeTravel,
   getRemainingAmountInCentsDuringFiatFunding,
   owner,
   setupPoaProxyAndEcosystem,
@@ -28,10 +27,11 @@ const {
   testTransferFrom,
   testUnpause,
   testUpdateProofOfCustody,
+  timeTravelToFundingPeriod,
+  timeTravelToEthFundingPeriod,
   whitelistedPoaBuyers
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
-const { timeTravel } = require('helpers')
 
 describe("when in 'FiatFunding' stage", () => {
   contract('PoaToken', accounts => {
@@ -49,8 +49,8 @@ describe("when in 'FiatFunding' stage", () => {
       // move from `Pending` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
-      const neededTime = await determineNeededTimeTravel(poa)
-      await timeTravel(neededTime)
+      // time travel to start of fiat funding period
+      await timeTravelToFundingPeriod(poa)
 
       // move from `PreFunding` to `FiatFunding` stage
       await testStartFiatSale(poa, { from: broker, gasPrice })
@@ -222,6 +222,10 @@ describe("when in 'FiatFunding' stage", () => {
     })
 
     it('should NOT allow FIAT investment during the ETH sale', async () => {
+      // time travel to start of ETH funding period
+      await timeTravelToEthFundingPeriod(poa)
+
+      // move from `FiatFunding` to `EthFunding` stage
       await testStartEthSale(poa)
 
       await testWillThrow(testBuyTokensWithFiat, [
@@ -237,7 +241,7 @@ describe("when in 'FiatFunding' stage", () => {
   })
 })
 
-describe('when in FIAT Funding (stage 1) and funding goal is met during the fiat funding', () => {
+describe('when in FIAT Funding (stage 2) and funding goal is met during the fiat funding', () => {
   contract('PoaToken', accounts => {
     let poa
     const fiatInvestor = accounts[3]
@@ -249,8 +253,8 @@ describe('when in FIAT Funding (stage 1) and funding goal is met during the fiat
       // move from `Pending` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
-      const neededTime = await determineNeededTimeTravel(poa)
-      await timeTravel(neededTime)
+      // time travel to start of fiat funding period
+      await timeTravelToFundingPeriod(poa)
 
       // move from `PreFunding` to `FiatFunding` stage
       await testStartFiatSale(poa, { from: broker, gasPrice })

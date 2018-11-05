@@ -2,7 +2,6 @@ const {
   broker,
   custodian,
   defaultIpfsHashArray32,
-  determineNeededTimeTravel,
   fiatBuyer,
   getAccountInformation,
   setupPoaProxyAndEcosystem,
@@ -27,6 +26,8 @@ const {
   testTransfer,
   testTransferFrom,
   testUpdateProofOfCustody,
+  timeTravelToEthFundingPeriod,
+  timeTravelToFundingPeriod,
   timeTravelToFundingPeriodTimeout,
   timeTravelToActivationPeriodTimeout,
   whitelistedPoaBuyers
@@ -37,7 +38,6 @@ const {
   getEtherBalance,
   testWillThrow
 } = require('../../helpers/general.js')
-const { timeTravel } = require('helpers')
 const BigNumber = require('bignumber.js')
 
 describe('De-whitelisted POA holders', () => {
@@ -61,9 +61,10 @@ describe('De-whitelisted POA holders', () => {
       // move from `Preview` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
+      // time travel to start of ETH funding period
+      await timeTravelToEthFundingPeriod(poa)
+
       // move from `PreFunding` to `EthFunding` stage
-      const neededTime = await determineNeededTimeTravel(poa)
-      await timeTravel(neededTime)
       await testStartEthSale(poa)
 
       await testBuyTokensMulti(poa, defaultBuyAmount)
@@ -144,9 +145,10 @@ describe('when handling unhappy paths', async () => {
       // move from `Preview` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
+      // time travel to start of ETH funding period
+      await timeTravelToEthFundingPeriod(poa)
+
       // move from `PreFunding` to `EthFunding` stage
-      const neededTime = await determineNeededTimeTravel(poa)
-      await timeTravel(neededTime)
       await testStartEthSale(poa)
 
       // buy tokens to reclaim when failed
@@ -164,9 +166,10 @@ describe('when handling unhappy paths', async () => {
       // move from `Preview` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
+      // time travel to start of ETH funding period
+      await timeTravelToEthFundingPeriod(poa)
+
       // move from `PreFunding` to `EthFunding` stage
-      const neededTime = await determineNeededTimeTravel(poa)
-      await timeTravel(neededTime)
       await testStartEthSale(poa)
 
       // buy all remaining tokens and move to `FundingSuccessful` stage
@@ -184,9 +187,10 @@ describe('when handling unhappy paths', async () => {
       // move from `Preview` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
+      // time travel to start of ETH funding period
+      await timeTravelToEthFundingPeriod(poa)
+
       // move from `PreFunding` to `EthFunding` stage
-      const neededTime = await determineNeededTimeTravel(poa)
-      await timeTravel(neededTime)
       await testStartEthSale(poa)
 
       // buy all remaining tokens and move to `FundingSuccessful` stage
@@ -219,6 +223,9 @@ describe('when trying various scenarios involving payout, transfer, approve, and
       // move from `Pending` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
+      // time travel to start of funding period
+      await timeTravelToFundingPeriod(poa)
+
       // move from `PreFunding` to `FiatFunding` stage
       await testStartFiatSale(poa, { from: broker, gasPrice })
 
@@ -228,9 +235,10 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         gasPrice
       })
 
+      // time travel to start of ETH funding period
+      await timeTravelToEthFundingPeriod(poa)
+
       // move from `FiatFunding` to `EthFunding` stage
-      const neededTime = await determineNeededTimeTravel(poa)
-      await timeTravel(neededTime)
       await testStartEthSale(poa)
 
       await testBuyTokensMulti(poa, defaultBuyAmount)
@@ -934,6 +942,9 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       // move from `Pending` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
+      // time travel to start of funding period
+      await timeTravelToFundingPeriod(poa)
+
       // move from `PreFunding` to `FiatFunding` stage
       await testStartFiatSale(poa, { from: broker, gasPrice })
 
@@ -943,9 +954,10 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
         gasPrice
       })
 
+      // time travel to start of ETH funding period
+      await timeTravelToEthFundingPeriod(poa)
+
       // move from `FiatFunding` to `EthFunding` stage
-      const neededTime = await determineNeededTimeTravel(poa)
-      await timeTravel(neededTime)
       await testStartEthSale(poa)
 
       // set starting rate to be sure of rate

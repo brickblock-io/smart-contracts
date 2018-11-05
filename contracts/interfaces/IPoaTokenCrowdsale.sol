@@ -65,8 +65,8 @@ interface IPoaTokenCrowdsale {
   )
     external;
 
-  function updateStartTimeForEthFundingPeriod(
-    uint256 _newStartTimeForEthFundingPeriod
+  function updateStartTimeForFundingPeriod(
+    uint256 _newStartTimeForFundingPeriod
   )
     external;
 
