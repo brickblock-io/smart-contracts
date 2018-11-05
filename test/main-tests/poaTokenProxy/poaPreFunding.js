@@ -21,6 +21,7 @@ const {
   testTransferFrom,
   testUnpause,
   testUpdateProofOfCustody,
+  timeTravelToFundingPeriod,
   timeTravelToEthFundingPeriod,
   whitelistedPoaBuyers
 } = require('../../helpers/poa')
@@ -151,21 +152,60 @@ describe("when in 'PreFunding' stage", async () => {
       await testWillThrow(poa.checkFundingSuccessful, [])
     })
 
-    // start core stage functionality
-    it('should NOT startFiatSale, even if owner', async () => {
-      await testWillThrow(testStartFiatSale, [poa, { from: owner, gasPrice }])
+    it("should NOT move to 'FiatFunding' stage by ANYONE", async () => {
+      await Promise.all(
+        [broker, custodian, owner, whitelistedPoaBuyers[0]].map(
+          async fromAddress => {
+            await testWillThrow(testStartFiatSale, [
+              poa,
+              { from: fromAddress, gasPrice }
+            ])
+          }
+        )
+      )
     })
 
-    it('should NOT move to funding before startTimeForEthFundingPeriod, EVEN if owner', async () => {
-      await testWillThrow(testStartEthSale, [poa, { from: owner }])
+    it("should NOT move to 'EthFunding' stage by ANYONE", async () => {
+      await Promise.all(
+        [broker, custodian, owner, whitelistedPoaBuyers[0]].map(
+          async fromAddress => {
+            await testWillThrow(testStartEthSale, [
+              poa,
+              { from: fromAddress, gasPrice }
+            ])
+          }
+        )
+      )
+    })
+  })
+})
+
+describe("when in 'PreFunding' stage and funding periods are reached", async () => {
+  contract('PoaTokenProxy', () => {
+    let poa
+
+    beforeEach('setup contracts', async () => {
+      const contracts = await setupPoaProxyAndEcosystem()
+      poa = contracts.poa
+
+      // move from `Pending` to `PreFunding` stage
+      await testStartPreFunding(poa, { from: broker, gasPrice })
     })
 
-    it('should allow ANYONE to move to Stages.EthFunding when after startTimeForEthFundingPeriod', async () => {
+    it("should move to 'FiatFunding' stage by ANYONE when startTimeForFundingPeriod is reached", async () => {
+      // time travel to start of fiat funding period
+      await timeTravelToFundingPeriod(poa)
+
+      // move from `PreFunding` to `FiatFunding` stage
+      await testStartFiatSale(poa, { from: whitelistedPoaBuyers[0], gasPrice })
+    })
+
+    it("should move to 'EthFunding' stage by ANYONE when startTimeForFundingPeriod+durationForFiatFundingPeriod is reached", async () => {
       // time travel to start of ETH funding period
       await timeTravelToEthFundingPeriod(poa)
 
       // move from `PreFunding` to `EthFunding` stage
-      await testStartEthSale(poa)
+      await testStartEthSale(poa, { from: whitelistedPoaBuyers[0], gasPrice })
     })
   })
 })

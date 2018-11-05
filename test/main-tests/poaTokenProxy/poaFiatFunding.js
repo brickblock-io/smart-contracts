@@ -221,10 +221,18 @@ describe("when in 'FiatFunding' stage", () => {
       ])
     })
 
-    it('should NOT allow FIAT investment during the ETH sale', async () => {
+    // If this behaviour is changed in the future, this test should fail
+    it("should allow FIAT investment during ETH funding period when 'startEthSale' is not called", async () => {
       // time travel to start of ETH funding period
       await timeTravelToEthFundingPeriod(poa)
 
+      await testBuyTokensWithFiat(poa, fiatInvestor, 100000, {
+        from: custodian,
+        gasPrice
+      })
+    })
+
+    it("should NOT allow FIAT investment during 'EthFunding' stage", async () => {
       // move from `FiatFunding` to `EthFunding` stage
       await testStartEthSale(poa)
 

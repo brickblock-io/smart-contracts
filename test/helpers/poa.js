@@ -151,7 +151,7 @@ const timeTravelToActivationPeriodTimeout = async poa => {
   )
 }
 
-// sets up all contracts needed in the ecosystem for poa to function
+// sets up all contracts needed in the ecosystem for POA to function
 const setupEcosystem = async ({
   _bbkContributors = bbkContributors,
   _whitelistedPoaBuyers = whitelistedPoaBuyers
@@ -1807,8 +1807,6 @@ const testResetCurrencyRate = async (
   ratePenalty
 ) => {
   await testSetQueryId(exr, exp, currencyType)
-  // eslint-disable-next-line
-  console.log('in between')
   await testSetRate(exr, exp, rate, ratePenalty, false)
 }
 

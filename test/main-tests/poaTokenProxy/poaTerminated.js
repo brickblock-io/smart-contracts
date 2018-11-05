@@ -74,7 +74,7 @@ describe("when in 'Terminated' stage", () => {
       // Pay the initial fee
       await testPayActivationFee(poa, fmr)
 
-      // move into "Active" stage
+      // move into 'Active' stage
       await testActivate(poa, fmr, {
         from: custodian
       })
@@ -82,7 +82,7 @@ describe("when in 'Terminated' stage", () => {
       // clean out broker balance for easier debugging
       await testBrokerClaim(poa)
 
-      // move into "Terminated" stage
+      // move into 'Terminated' stage
       //⚠️  also acts as a test terminating as owner rather than custodian
       await testTerminate(poa, pmr, { from: owner }, { callPoaDirectly: false })
     })

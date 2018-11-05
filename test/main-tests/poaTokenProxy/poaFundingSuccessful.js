@@ -163,7 +163,6 @@ describe("when in 'FundingSuccessful' stage", () => {
     })
 
     // start core stage functionality
-
     it('should pay activation fee', async () => {
       await testPayActivationFee(poa, fmr)
     })
@@ -180,7 +179,7 @@ describe("when in 'FundingSuccessful' stage", () => {
   })
 })
 
-describe('when in paying activation fee', () => {
+describe("when in paying activation fee in 'FundingSuccessful' stage", () => {
   contract('PoaTokenProxy', () => {
     let poa
     let fmr
