@@ -107,19 +107,13 @@ contract PoaCommon is PoaProxyCommon {
   // Used for checking when contract should move from PreFunding to FiatFunding or EthFunding stage
   uint256 public startTimeForFundingPeriod;
 
-  // Maximum duration of fiat funding period in seconds. If set to 0, fiat funding will be skipped.
-  // If funding goal is not reached after `startTimeForFundingPeriod` +
-  // `durationForFiatFundingPeriod` + `durationForEthFundingPeriod`, move to `Stages.TimeOut`.
+  // Maximum duration of fiat funding period in seconds
   uint256 public durationForFiatFundingPeriod;
 
-  // Maximum duration of ETH funding period in seconds. If set to 0, ETH funding will be skipped.
-  // If funding goal is not reached after `startTimeForFundingPeriod` +
-  // `durationForFiatFundingPeriod` + `durationForEthFundingPeriod`, move to `Stages.TimeOut`.
+  // Maximum duration of ETH funding period in seconds
   uint256 public durationForEthFundingPeriod;
 
-  // Maximum duration of activation period in seconds. After successful funding, if not activated
-  // until `startTimeForFundingPeriod` + `durationForFiatFundingPeriod` + `durationForEthFundingPeriod`
-  // + `durationForActivationPeriod`, move from `Stages.FundingSuccessful` to `Stages.TimedOut`.
+  // Maximum duration of activation period in seconds
   uint256 public durationForActivationPeriod;
 
   // bytes32 representation fiat currency symbol used to get rate

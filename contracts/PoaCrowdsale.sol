@@ -87,7 +87,7 @@ contract PoaCrowdsale is PoaCommon {
     setDurationForActivationPeriod(_durationForActivationPeriod);
     setFundingGoalInCents(_fundingGoalInCents);
 
-    // With checking that not both durations are 0, we can skip the setters
+    // By checking that both durations are not 0, we can skip the setters
     // if the respective duration is 0. Since the setter functions are
     // validating, this avoids a special case where setting
     // `_durationForFiatFundingPeriod` fails in case its value is 0, because
@@ -111,7 +111,7 @@ contract PoaCrowdsale is PoaCommon {
    *****************************************/
 
   /**
-   * @notice Update fiat currency for POA Token
+   * @notice Update fiat currency
    * @dev Only allowed in `Stages.Preview` by Broker
    * @param _newFiatCurrency32 The new fiat currency
    *        in symbol notation (e.g. EUR, GBP, USD, etc.)
@@ -128,7 +128,7 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /**
-   * @notice Update funding goal in cents for POA Token
+   * @notice Update funding goal in cents
    * @dev Only allowed in `Stages.Preview` stage by Broker
    * @param _newFundingGoalInCents The new funding goal in
    *        cents
@@ -145,7 +145,7 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /**
-   * @notice Update start time for funding period for POA Token
+   * @notice Update start time for funding period
    * @dev Only allowed in `Stages.Preview` stage by Broker
    * @param _newStartTimeForFundingPeriod The new start
    *        time for funding period as UNIX timestamp in seconds
@@ -162,7 +162,7 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /**
-   * @notice Update duration for fiat funding period for POA Token
+   * @notice Update duration for fiat funding period
    * @dev Only allowed in `Stages.Preview` stage by Broker
    * @param _newDurationForFiatFundingPeriod The new duration
    *        for fiat funding period as seconds
@@ -179,7 +179,7 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /**
-   * @notice Update duration for ETH funding period for POA Token
+   * @notice Update duration for ETH funding period
    * @dev Only allowed in `Stages.Preview` stage by Broker
    * @param _newDurationForEthFundingPeriod The new duration
    *        for ETH funding period as seconds
@@ -196,7 +196,7 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /**
-   * @notice Update duration for activation period for POA Token
+   * @notice Update duration for activation period
    * @dev Only allowed in `Stages.Preview` stage by Broker
    * @param _newDurationForActivationPeriod The new duration
    *        for ETH funding period in seconds
@@ -221,7 +221,7 @@ contract PoaCrowdsale is PoaCommon {
    *******************************/
 
   /**
-   * @notice Set fiat currency for POA Token
+   * @notice Set fiat currency
    * @param _newFiatCurrency32 The new fiat currency
    *        in symbol notation (e.g. EUR, GBP, USD, etc.)
    */
@@ -241,7 +241,7 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /**
-   * @notice Set funding goal in cents for POA Token
+   * @notice Set funding goal in cents
    * @dev Funding goal represents a fiat amount in cent
    *      notation. E.g., `140123` represents 1401.23
    * @param _newFundingGoalInCents The new funding goal in
@@ -255,12 +255,13 @@ contract PoaCrowdsale is PoaCommon {
   {
     require(_newFundingGoalInCents < totalSupply_);
     require(_newFundingGoalInCents != fundingGoalInCents);
+    require(_newFundingGoalInCents > 0);
 
     fundingGoalInCents = _newFundingGoalInCents;
   }
 
   /**
-   * @notice Set start time for funding period for POA Token
+   * @notice Set start time for funding period
    * @dev start time must be future time
    * @param _newStartTimeForFundingPeriod The new start
    *        time for funding period as UNIX timestamp in seconds
@@ -278,8 +279,8 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /**
-   * @notice Set duration for fiat funding period for POA Token
-   * @dev Duration must be 0 (skips fiat funding) or at least 3 days,
+   * @notice Set duration for fiat funding period
+   * @dev Duration must be either 0 (skips fiat funding) or at least 3 days,
    *      which corresponds to the approx. processing time of a wire transfer
    * @param _newDurationForFiatFundingPeriod The new duration
    *        for fiat funding period as seconds
@@ -305,7 +306,7 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /**
-   * @notice Set duration for ETH funding period for POA Token
+   * @notice Set duration for ETH funding period
    * @dev Duration must be 0 (skips ETH funding) or at least 1 day
    * @param _newDurationForEthFundingPeriod The new duration
    *        for ETH funding period as seconds
@@ -331,7 +332,7 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /**
-   * @notice Set duration for activation period for POA Token
+   * @notice Set duration for activation period
    * @dev Duration must be longer than 1 week
    * @param _newDurationForActivationPeriod The new duration
    *        for ETH funding period in seconds

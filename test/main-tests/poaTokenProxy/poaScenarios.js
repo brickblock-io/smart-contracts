@@ -61,7 +61,6 @@ describe('De-whitelisted POA holders', () => {
       // move from `Preview` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
-      // time travel to start of ETH funding period
       await timeTravelToEthFundingPeriod(poa)
 
       // move from `PreFunding` to `EthFunding` stage
@@ -145,7 +144,6 @@ describe('when handling unhappy paths', async () => {
       // move from `Preview` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
-      // time travel to start of ETH funding period
       await timeTravelToEthFundingPeriod(poa)
 
       // move from `PreFunding` to `EthFunding` stage
@@ -166,7 +164,6 @@ describe('when handling unhappy paths', async () => {
       // move from `Preview` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
-      // time travel to start of ETH funding period
       await timeTravelToEthFundingPeriod(poa)
 
       // move from `PreFunding` to `EthFunding` stage
@@ -187,7 +184,6 @@ describe('when handling unhappy paths', async () => {
       // move from `Preview` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
-      // time travel to start of ETH funding period
       await timeTravelToEthFundingPeriod(poa)
 
       // move from `PreFunding` to `EthFunding` stage
@@ -223,7 +219,6 @@ describe('when trying various scenarios involving payout, transfer, approve, and
       // move from `Pending` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
-      // time travel to start of funding period
       await timeTravelToFundingPeriod(poa)
 
       // move from `PreFunding` to `FiatFunding` stage
@@ -235,7 +230,6 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         gasPrice
       })
 
-      // time travel to start of ETH funding period
       await timeTravelToEthFundingPeriod(poa)
 
       // move from `FiatFunding` to `EthFunding` stage
@@ -942,7 +936,6 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       // move from `Pending` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
-      // time travel to start of funding period
       await timeTravelToFundingPeriod(poa)
 
       // move from `PreFunding` to `FiatFunding` stage
@@ -954,7 +947,6 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
         gasPrice
       })
 
-      // time travel to start of ETH funding period
       await timeTravelToEthFundingPeriod(poa)
 
       // move from `FiatFunding` to `EthFunding` stage

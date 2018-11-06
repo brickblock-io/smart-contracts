@@ -193,7 +193,6 @@ describe("when in 'PreFunding' stage and funding periods are reached", async () 
     })
 
     it("should move to 'FiatFunding' stage by ANYONE when startTimeForFundingPeriod is reached", async () => {
-      // time travel to start of fiat funding period
       await timeTravelToFundingPeriod(poa)
 
       // move from `PreFunding` to `FiatFunding` stage
@@ -201,7 +200,6 @@ describe("when in 'PreFunding' stage and funding periods are reached", async () 
     })
 
     it("should move to 'EthFunding' stage by ANYONE when startTimeForFundingPeriod+durationForFiatFundingPeriod is reached", async () => {
-      // time travel to start of ETH funding period
       await timeTravelToEthFundingPeriod(poa)
 
       // move from `PreFunding` to `EthFunding` stage

@@ -34,7 +34,6 @@ describe("when going through Poa's normal flow", async () => {
     })
 
     it('should move from PreFunding to EthFunding after startTimeForEthFundingPeriod', async () => {
-      // time travel to start of ETH funding period
       await timeTravelToEthFundingPeriod(poa)
 
       // move from `PreFunding` to `EthFunding` stage

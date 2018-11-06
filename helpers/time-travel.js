@@ -2,6 +2,7 @@ const { send } = require('./general')
 
 // increases time through ganache evm command
 const timeTravel = async seconds => {
+  /* eslint-disable no-console */
   if (seconds > 0) {
     const startBlock = await web3.eth.getBlock(web3.eth.blockNumber)
 
@@ -23,13 +24,10 @@ const timeTravel = async seconds => {
       time = `${seconds / 60 / 60 / 24} days`
     }
 
-    /* eslint-disable no-console */
     console.log(`💫  Warped ${time} on new block`)
     console.log(`⏪  previous block timestamp: ${startBlock.timestamp}`)
     console.log(`✅  current block timestamp: ${currentBlock.timestamp}`)
-    /* eslint-enable no-console */
   } else {
-    // eslint-disable-next-line
     console.log('💫 Did not warp... 0 seconds was given as an argument')
   }
 }
@@ -38,19 +36,17 @@ const timeTravelToTarget = async targetTime => {
   const currentTime = await getCurrentBlockTime()
   const timeToTravelInSeconds = targetTime
     .minus(currentTime)
-    .add(10)
+    .add(1)
     .toNumber()
 
   return timeTravel(timeToTravelInSeconds)
 }
 
-const getCurrentBlockTime = async () => {
-  return (await web3.eth.getBlock(web3.eth.blockNumber)).timestamp
-}
+const getCurrentBlockTime = async () =>
+  (await web3.eth.getBlock(web3.eth.blockNumber)).timestamp
 
-const getTimeInFutureBySeconds = async secondsInFuture => {
-  return (await getCurrentBlockTime()) + secondsInFuture
-}
+const getTimeInFutureBySeconds = async secondsInFuture =>
+  (await getCurrentBlockTime()) + secondsInFuture
 
 module.exports = {
   getCurrentBlockTime,

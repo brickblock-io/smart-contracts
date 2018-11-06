@@ -46,7 +46,6 @@ const testPreviewToPreFundingEvent = async (poa, reg, pmr, log) => {
   )
 }
 
-// only meant to be used for transition from `Stages.PreFunding` to `Stages.FiatFunding`
 const testPreFundingToFiatFundingEvent = async (poa, reg, pmr, log) => {
   const PoaLoggerStageEvent = log.Stage()
 
@@ -69,7 +68,6 @@ const testPreFundingToFiatFundingEvent = async (poa, reg, pmr, log) => {
   )
 }
 
-// only meant to be used for transition from `Stages.FiatFunding` to `Stages.EthFunding`
 const testFiatFundingToEthFundingEvent = async (poa, reg, pmr, log) => {
   const PoaLoggerStageEvent = log.Stage()
 

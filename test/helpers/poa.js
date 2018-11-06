@@ -97,7 +97,6 @@ const getDefaultStartTimeForFundingPeriod = async () => {
 }
 
 // Travels forward in time until `startTimeForFundingPeriod` is reached.
-// Also travels forward when any funding duration is 0.
 const timeTravelToFundingPeriod = async poa => {
   const startTimeForFiatFunding = await poa.startTimeForFundingPeriod()
   return timeTravelToTarget(startTimeForFiatFunding)
@@ -231,6 +230,20 @@ const testSetCurrencyRate = async (
   await testFetchRate(exr, exp, currencyType, config)
 
   await testSetRate(exr, exp, rate, ratePenalty, false)
+}
+
+const testSetCurrencyRateWithDefaultValues = async (exr, exp) => {
+  return testSetCurrencyRate(
+    exr,
+    exp,
+    defaultFiatCurrency,
+    defaultFiatRate,
+    defaultFiatRatePenalty,
+    {
+      from: owner,
+      value: 1e18
+    }
+  )
 }
 
 const setupPoaProxyAndEcosystem = async ({
@@ -2010,6 +2023,7 @@ module.exports = {
   testRemoveTokensWithFiat,
   testResetCurrencyRate,
   testSetCurrencyRate,
+  testSetCurrencyRateWithDefaultValues,
   testSetStageToTimedOut,
   testStartPreFunding,
   testStartEthSale,

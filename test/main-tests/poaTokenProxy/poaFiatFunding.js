@@ -49,7 +49,6 @@ describe("when in 'FiatFunding' stage", () => {
       // move from `Pending` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
-      // time travel to start of fiat funding period
       await timeTravelToFundingPeriod(poa)
 
       // move from `PreFunding` to `FiatFunding` stage
@@ -223,7 +222,6 @@ describe("when in 'FiatFunding' stage", () => {
 
     // If this behaviour is changed in the future, this test should fail
     it("should allow FIAT investment during ETH funding period when 'startEthSale' is not called", async () => {
-      // time travel to start of ETH funding period
       await timeTravelToEthFundingPeriod(poa)
 
       await testBuyTokensWithFiat(poa, fiatInvestor, 100000, {
@@ -261,7 +259,6 @@ describe('when in FIAT Funding (stage 2) and funding goal is met during the fiat
       // move from `Pending` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
-      // time travel to start of fiat funding period
       await timeTravelToFundingPeriod(poa)
 
       // move from `PreFunding` to `FiatFunding` stage

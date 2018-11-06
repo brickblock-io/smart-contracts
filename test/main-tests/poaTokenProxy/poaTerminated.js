@@ -48,7 +48,6 @@ describe("when in 'Terminated' stage", () => {
       // move from `Preview` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
-      // time travel to start of ETH funding period
       await timeTravelToEthFundingPeriod(poa)
 
       // move from `PreFunding` to `EthFunding` stage

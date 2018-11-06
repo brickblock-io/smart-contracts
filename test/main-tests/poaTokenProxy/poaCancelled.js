@@ -42,7 +42,6 @@ describe("when in 'FundingCancelled' stage", () => {
       // move from `Pending` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
-      // time travel to start of fiat funding period
       await timeTravelToFundingPeriod(poa)
 
       // move from `PreFunding` to `FiatFunding` stage
