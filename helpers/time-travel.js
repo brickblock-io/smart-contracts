@@ -34,6 +34,8 @@ const timeTravel = async seconds => {
 
 const timeTravelToTarget = async targetTime => {
   const currentTime = await getCurrentBlockTime()
+
+  // Add 1 second to compensate for `> targetTime` checks
   const timeToTravelInSeconds = targetTime
     .minus(currentTime)
     .add(1)
