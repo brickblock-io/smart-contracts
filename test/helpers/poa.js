@@ -315,13 +315,26 @@ const setupPoaProxyAndEcosystem = async () => {
 }
 
 const testProxyInitialization = async (reg, pmr, args) => {
+  const [
+    name32,
+    symbol32,
+    fiatCurrency32,
+    passedCustodian,
+    totalSupply,
+    startTimeForFundingPeriod,
+    durationForFiatFundingPeriod,
+    durationForEthFundingPeriod,
+    durationForActivationPeriod,
+    fundingGoal,
+    config,
+  ] = args
+
   // list broker
   await pmr.addBroker(broker)
 
   // create new master poa contracts
   const poatm = await PoaToken.new()
   const poacm = await PoaCrowdsale.new()
-  const givenStartTimeForFundingPeriod = args[5]
 
   // add poa master to registry
   await reg.updateContractAddress('PoaTokenMaster', poatm.address)
@@ -333,112 +346,104 @@ const testProxyInitialization = async (reg, pmr, args) => {
   // wrap the proxied PoA in PoaToken ABI to call as if regular PoA
   const poa = await IPoaTokenCrowdsale.at(poaTx.logs[0].args.token)
 
-  const name = await poa.name()
-  const symbol = await poa.symbol()
-  const proofOfCustody = await poa.proofOfCustody()
-  const fiatCurrency = await poa.fiatCurrency()
-  const actualBroker = await poa.broker()
-  const actualCustodian = await poa.custodian()
-  const decimals = await poa.decimals()
-  const feeRateInPermille = await poa.feeRateInPermille()
-  const startTimeForFundingPeriod = await poa.startTimeForFundingPeriod()
-  const durationForFiatFundingPeriod = await poa.durationForFiatFundingPeriod()
-  const durationForEthFundingPeriod = await poa.durationForEthFundingPeriod()
-  const fundingGoalInCents = await poa.fundingGoalInCents()
-  const totalPerTokenPayout = await poa.totalPerTokenPayout()
-  const fundedEthAmountInWei = await poa.fundedEthAmountInWei()
-  const totalSupply = await poa.totalSupply()
-  const contractBalance = await poa.balanceOf(poa.address)
-  const stage = await poa.stage()
-  const paused = await poa.paused()
-  const registry = await poa.registry()
-  const contractOwner = await poa.owner()
-
-  assert.equal(name, defaultName, 'name should match that given in constructor')
   assert.equal(
-    symbol,
-    defaultSymbol,
+    await poa.name(),
+    name32,
+    'name should match that given in constructor'
+  )
+  assert.equal(
+    await poa.symbol(),
+    symbol32,
     'symbol should match that given in constructor'
   )
-  assert.equal(proofOfCustody, '', 'proofOfCustody should start uninitialized')
   assert.equal(
-    fiatCurrency,
-    defaultFiatCurrency,
+    await poa.proofOfCustody(),
+    '',
+    'proofOfCustody should start uninitialized'
+  )
+  assert.equal(
+    await poa.fiatCurrency(),
+    fiatCurrency32,
     'fiatCurrency should match that given in constructor'
   )
   assert.equal(
-    actualBroker,
-    broker,
-    'actualBroker should match broker in constructor'
+    await poa.broker(),
+    config.from,
+    'broker should match sender of transaction'
   )
   assert.equal(
-    actualCustodian,
-    custodian,
-    'actualCustodian should match custodian in constructor'
+    await poa.custodian(),
+    passedCustodian,
+    'custodian should match custodian in constructor'
   )
   assert.equal(
-    decimals.toString(),
+    await poa.decimals(),
     new BigNumber(18).toString(),
     'decimals should be constant of 18'
   )
   assert.equal(
-    feeRateInPermille.toString(),
+    await poa.feeRateInPermille(),
     new BigNumber(5).toString(),
     'fee rate should be a constant of 5'
   )
   assert.equal(
+    await poa.startTimeForFundingPeriod(),
+    startTimeForFundingPeriod,
+    'startTimeForFundingPeriod should match that given in constructor'
+  )
+  assert.equal(
+    await poa.durationForFiatFundingPeriod(),
     durationForFiatFundingPeriod.toString(),
-    defaultFiatFundingDuration.toString(),
     'durationForFiatFundingPeriod should match that given in constructor'
   )
   assert.equal(
+    await poa.durationForEthFundingPeriod(),
     durationForEthFundingPeriod.toString(),
-    defaultEthFundingDuration.toString(),
     'durationForEthFundingPeriod should match that given in constructor'
   )
   assert.equal(
-    fundingGoalInCents.toString(),
-    defaultFundingGoal.toString(),
+    await poa.durationForActivationPeriod(),
+    durationForActivationPeriod.toString(),
+    'durationForActivationPeriod should match that given in constructor'
+  )
+  assert.equal(
+    await poa.fundingGoalInCents(),
+    fundingGoal.toString(),
     'fundingGoalInCents should match that given in constructor'
   )
   assert.equal(
-    totalPerTokenPayout.toString(),
+    await poa.totalPerTokenPayout(),
     bigZero.toString(),
     'totalPerTokenPayout should start uninitialized'
   )
   assert.equal(
-    fundedEthAmountInWei.toString(),
+    await poa.fundedEthAmountInWei(),
     bigZero.toString(),
     'fundedEthAmountInWei should start uninitialized'
   )
   assert.equal(
+    await poa.totalSupply(),
     totalSupply.toString(),
-    defaultTotalSupply.toString(),
-    'totalSupply should match defaultTotalSupply'
+    'totalSupply should match that given in constructor'
   )
   assert.equal(
-    contractBalance.toString(),
+    await poa.balanceOf(poa.address),
     bigZero.toString(),
     'contract balance should be 0'
   )
   assert.equal(
-    stage.toString(),
+    await poa.stage(),
     bigZero.toString(),
-    'stage should start at 0 (PreFunding)'
+    'stage should start at 0 (Preview)'
   )
   assert.equal(
+    await poa.registry(),
     reg.address,
-    registry,
-    'registry should match actual registry address'
+    'registry address should match actual registry address'
   )
-  assert.equal(contractOwner, pmr.address, 'the owner should be pmr')
-  assert(paused, 'contract should start paused')
+  assert.equal(await poa.owner(), pmr.address, 'the owner should be pmr')
+  assert(await poa.paused(), 'contract should start paused')
 
-  assert.equal(
-    givenStartTimeForFundingPeriod.toString(),
-    startTimeForFundingPeriod.toString(),
-    'startTimeForFundingPeriod should match givenStartTimeForFundingPeriod given in constructor'
-  )
   return poa
 }
 

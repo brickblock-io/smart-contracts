@@ -185,7 +185,6 @@ describe("when in 'Preview' stage", async () => {
       await testUpdateName(poa, 'NewPoaName', { from: broker })
     })
 
-    // test updating symbol
     it('should NOT update symbol32 by non-broker', async () => {
       const newSymbol = 'N-SYM-POA'
       ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
@@ -203,7 +202,6 @@ describe("when in 'Preview' stage", async () => {
       await testUpdateSymbol(poa, 'N-SYM-POA', { from: broker })
     })
 
-    // test updating broker address
     it('should NOT update broker address by non-broker', async () => {
       const newBroker = whitelistedEthInvestors[0]
       ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
@@ -227,7 +225,6 @@ describe("when in 'Preview' stage", async () => {
       })
     })
 
-    // test updating total supply
     it('should NOT update total supply by non-broker', async () => {
       const anyHighEnoughTotalSupply = 2e18
       ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
@@ -248,7 +245,6 @@ describe("when in 'Preview' stage", async () => {
       })
     })
 
-    // test updating fiat currency
     it('should NOT update fiat currency by non-broker', async () => {
       const anyNewFiatCurrency = 'USD'
       ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
@@ -280,7 +276,6 @@ describe("when in 'Preview' stage", async () => {
       )
     })
 
-    // test updating funding goal in cents
     it('should NOT update funding goal in cents by non-broker', async () => {
       const newFundingGoalInCents = 2e9
       ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
@@ -301,7 +296,6 @@ describe("when in 'Preview' stage", async () => {
       })
     })
 
-    // test updating start time of funding period
     it('should NOT update start time of funding period by non-broker', async () => {
       const timestampHundredYearsInFuture = (
         Math.round(new Date().getTime() / 1000) +
@@ -331,7 +325,6 @@ describe("when in 'Preview' stage", async () => {
       )
     })
 
-    // test updating duration of ETH funding period
     it('should NOT update duration of ETH funding period by non-broker', async () => {
       const durationOfFiveDays = '432000'
       ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
@@ -352,7 +345,6 @@ describe("when in 'Preview' stage", async () => {
       })
     })
 
-    // test updating duration of activation period
     it('should NOT update duration of activation period by non-broker', async () => {
       const durationOfFiveWeeks = '3024000'
       ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
@@ -373,7 +365,6 @@ describe("when in 'Preview' stage", async () => {
       })
     })
 
-    // start core stage functionality
     it('should NOT startFiatSale, even if owner', async () => {
       await testWillThrow(testStartFiatSale, [poa, { from: owner, gasPrice }])
     })
