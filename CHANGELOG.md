@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.7.6"></a>
+## [3.7.6](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.7.5...v3.7.6) (2018-11-07)
+
+
+### Bug Fixes
+
+* **POA:** Refactor funding time variables. Introduced duration for fiat sale ([abf0611](https://git.brickblock-dev.io/platform/smart-contracts/commits/abf0611))
+* **POA:** Refactor funding time variables. Introduced duration for fiat sale ([0f8b212](https://git.brickblock-dev.io/platform/smart-contracts/commits/0f8b212))
+* **POA:** Refactor funding time variables. Introduced duration for fiat sale ([db5f368](https://git.brickblock-dev.io/platform/smart-contracts/commits/db5f368))
+* **POA:** Refactor funding time variables. Introduced duration for fiat sale ([2c3804d](https://git.brickblock-dev.io/platform/smart-contracts/commits/2c3804d))
+* **POA:** Refactor funding time variables. Introduced duration for fiat sale ([b33d93b](https://git.brickblock-dev.io/platform/smart-contracts/commits/b33d93b))
+
+
+
 <a name="3.7.5"></a>
 ## [3.7.5](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.7.4...v3.7.5) (2018-10-29)
 
