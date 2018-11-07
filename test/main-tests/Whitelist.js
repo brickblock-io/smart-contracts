@@ -1,74 +1,167 @@
-const Whitelist = artifacts.require('./Whitelist.sol')
-
+// Utils
 const { testWillThrow } = require('../helpers/general')
+const { addAddress, removeAddress } = require('../helpers/whitelist')
+
+// contract under test
+const Whitelist = artifacts.require('./Whitelist.sol')
 
 describe('when deployed', () => {
   contract('Whitelist', accounts => {
-    const ownerAddress = accounts[0]
-    const investor1Address = accounts[1]
-    let wht
+    const [ownerAddress, addressToWhitelist, anyAddress] = accounts
 
-    before('setup contract and relevant accounts', async () => {
-      wht = await Whitelist.new()
+    let whitelistContract
+    before('setup contract', async () => {
+      whitelistContract = await Whitelist.new({ from: ownerAddress })
     })
 
-    it('should have the owner set to contract creator', async () => {
-      const contractOwnerAddress = await wht.owner()
-      assert.equal(
-        contractOwnerAddress,
-        ownerAddress,
-        'the owner should match the address the contract was deployed from'
-      )
+    describe('initial state', () => {
+      it('should start with owner set as contract creator', async () => {
+        assert.equal(
+          await whitelistContract.owner(),
+          ownerAddress,
+          'should be the contract creator'
+        )
+
+        assert.equal(
+          await whitelistContract.owner({ from: anyAddress }),
+          ownerAddress,
+          'should be public state'
+        )
+      })
+
+      it('should start unpaused', async () => {
+        assert.equal(await whitelistContract.paused(), false, 'should be false')
+
+        assert.equal(
+          await whitelistContract.paused({ from: anyAddress }),
+          false,
+          'should be public state'
+        )
+      })
     })
 
-    it('should whitelist an address', async () => {
-      const preInvestor1Status = await wht.whitelisted(investor1Address)
-      assert(!preInvestor1Status, 'the investor status should start as false')
-      await wht.addAddress(investor1Address)
-      const postInvestor1Status = await wht.whitelisted(investor1Address)
-      assert(
-        postInvestor1Status,
-        'the investor status should be changed to true'
-      )
+    describe('when contract is unpaused', () => {
+      describe('when ownerAddress is sending transactions', () => {
+        it('should add an address', async () => {
+          await addAddress({
+            addressToWhitelist,
+            ownerAddress,
+            whitelistContract
+          })
+        })
+
+        it('should not add an already whitelisted address', async () => {
+          assert.equal(
+            await whitelistContract.whitelisted(addressToWhitelist),
+            true,
+            'address should be whitelisted'
+          )
+
+          await testWillThrow(whitelistContract.addAddress, [
+            addressToWhitelist,
+            { from: ownerAddress }
+          ])
+        })
+
+        it('should allow anyone to see whitelisted status of an address', async () => {
+          assert.equal(
+            await whitelistContract.whitelisted(addressToWhitelist, {
+              from: anyAddress
+            }),
+            true,
+            'should be public state'
+          )
+        })
+
+        it('should remove an address', async () => {
+          await removeAddress({
+            addressToWhitelist,
+            ownerAddress,
+            whitelistContract
+          })
+        })
+
+        it('should not remove an already non-whitelisted address', async () => {
+          await testWillThrow(whitelistContract.removeAddress, [
+            addressToWhitelist,
+            { from: ownerAddress }
+          ])
+        })
+
+        it('should allow anyone to see non-whitelisted status of an address', async () => {
+          assert.equal(
+            await whitelistContract.whitelisted(addressToWhitelist, {
+              from: anyAddress
+            }),
+            false,
+            'should be public state'
+          )
+        })
+      })
+
+      describe('when a non-owner address is sending transactions', () => {
+        it('should fail to add an address', async () => {
+          await testWillThrow(whitelistContract.addAddress, [
+            addressToWhitelist,
+            { from: anyAddress }
+          ])
+        })
+
+        it('should fail to remove an address', async () => {
+          await testWillThrow(whitelistContract.removeAddress, [
+            addressToWhitelist,
+            { from: anyAddress }
+          ])
+        })
+      })
     })
 
-    it('should not whitelist an already whitelisted address', async () => {
-      await testWillThrow(wht.addAddress, [
-        investor1Address,
-        { from: ownerAddress }
-      ])
-    })
+    describe('when contract is paused', () => {
+      before(async () => {
+        await whitelistContract.pause({ from: ownerAddress })
 
-    it('should de-whitelist and address', async () => {
-      const preInvestor1Status = await wht.whitelisted(investor1Address)
-      assert(preInvestor1Status, 'the investor status should be true')
-      await wht.removeAddress(investor1Address)
-      const postInvestor1Status = await wht.whitelisted(investor1Address)
-      assert(
-        !postInvestor1Status,
-        'the investor status should be changed to false'
-      )
-    })
+        assert.equal(await whitelistContract.paused(), true, 'should be true')
 
-    it('should not de-whitelist an already de-whitelisted address', async () => {
-      await testWillThrow(wht.removeAddress, [
-        investor1Address,
-        { from: ownerAddress }
-      ])
-    })
+        assert.equal(
+          await whitelistContract.paused({ from: anyAddress }),
+          true,
+          'should be public state'
+        )
+      })
 
-    it('should NOT whitelist as NOT owner', async () => {
-      await testWillThrow(wht.addAddress, [
-        investor1Address,
-        { from: investor1Address }
-      ])
-    })
+      it('should add an address', async () => {
+        await addAddress({
+          addressToWhitelist,
+          ownerAddress,
+          whitelistContract,
+          isPaused: true
+        })
+      })
 
-    it('should NOT de-whitelist as NOT owner', async () => {
-      await testWillThrow(wht.removeAddress, [
-        investor1Address,
-        { from: investor1Address }
-      ])
+      it('should return false for a whitelisted address', async () => {
+        assert.equal(
+          await whitelistContract.whitelisted(addressToWhitelist),
+          false,
+          'always returns false when paused'
+        )
+      })
+
+      it('should remove an address', async () => {
+        await removeAddress({
+          addressToWhitelist,
+          ownerAddress,
+          whitelistContract,
+          isPaused: true
+        })
+      })
+
+      it('should return false for a non-whitelisted address', async () => {
+        assert.equal(
+          await whitelistContract.whitelisted(addressToWhitelist),
+          false,
+          'always returns false when paused'
+        )
+      })
     })
   })
 })
