@@ -9,7 +9,7 @@ const {
   sendTransaction,
   getEtherBalance,
   getGasUsed,
-  waitForTxToBeMined
+  waitForTxToBeMined,
 } = require('./general')
 
 const trimBytes = string => string.replace(/\0/g, '')
@@ -24,7 +24,7 @@ const setupContracts = async () => {
   return {
     reg,
     exr,
-    exp
+    exp,
   }
 }
 
@@ -33,7 +33,7 @@ const testUninitializedSettings = async exr => {
     preCallInterval,
     preCallbackGasLimit,
     preQueryString,
-    preRatePenalty
+    preRatePenalty,
   ] = await exr.getCurrencySettings('USD')
 
   assert.equal(
@@ -67,7 +67,7 @@ const testSetCurrencySettings = async (
     preCallInterval,
     preCallbackGasLimit,
     preQueryString,
-    preRatePenalty
+    preRatePenalty,
   ] = await exr.getCurrencySettings(queryType)
 
   await exr.setCurrencySettings(
@@ -83,7 +83,7 @@ const testSetCurrencySettings = async (
     postCallInterval,
     postCallbackGasLimit,
     postQueryString,
-    postRatePenalty
+    postRatePenalty,
   ] = await exr.getCurrencySettings(queryType)
 
   assert(
@@ -130,7 +130,7 @@ const testSettingsExists = async (exr, queryType) => {
     callInterval,
     callbackGasLimit,
     queryString,
-    ratePenalty
+    ratePenalty,
   ] = await exr.getCurrencySettings(queryType)
   assert(callbackGasLimit.greaterThan(0), 'callbackGasLimit uninitialized')
   assert(queryString !== '', 'queryString uninitialized')
@@ -180,7 +180,7 @@ const testSetRate = async (
     callInterval,
     callbackGasLimit,
     queryString,
-    actualRatePenalty
+    actualRatePenalty,
   ] = await exr.getCurrencySettings(queryType)
 
   const shouldCallAgainWithQuery = await exp.shouldCallAgainWithQuery()
@@ -314,7 +314,7 @@ const testSelfDestruct = async (exr, exp, caller) => {
   const initialTxHash = await sendTransaction(web3, {
     from: funder,
     to: exp.address,
-    value: 1e18
+    value: 1e18,
   })
   await waitForTxToBeMined(initialTxHash)
   const preKillContractBalance = await getEtherBalance(exp.address)
@@ -380,7 +380,7 @@ const testSetRateRatesActiveFalse = async (exr, exp, rate, ratePenalty) => {
     preCallInterval,
     preCallbackGasLimit,
     preQueryString,
-    preRatePenalty
+    preRatePenalty,
   ] = await exr.getCurrencySettings(queryType)
 
   await exp.simulate__callback(prePendingQueryId, bigRate.toString())
@@ -392,7 +392,7 @@ const testSetRateRatesActiveFalse = async (exr, exp, rate, ratePenalty) => {
     postCallInterval,
     postCallbackGasLimit,
     postQueryString,
-    postRatePenalty
+    postRatePenalty,
   ] = await exr.getCurrencySettings(queryType)
 
   const shouldCallAgainWithQuery = await exp.shouldCallAgainWithQuery()
@@ -499,7 +499,7 @@ const testGetCurrencySettings = async (
     actualCallInterval,
     actualCallbackGasLimit,
     actualQueryString,
-    actualRatePenalty
+    actualRatePenalty,
   ] = await exr.getCurrencySettings(queryTypeString)
 
   assert.equal(
@@ -539,5 +539,5 @@ module.exports = {
   testSetQueryId,
   testSetRateRatesActiveFalse,
   testUpdatedCurrencySettings,
-  testGetCurrencySettings
+  testGetCurrencySettings,
 }

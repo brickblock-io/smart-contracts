@@ -8,12 +8,12 @@ const {
   getRemainingAmountInCentsDuringFiatFunding,
   testBuyTokens,
   testBuyTokensWithFiat,
-  testResetCurrencyRate
+  testResetCurrencyRate,
 } = require('../../test/helpers/poa')
 const {
   getRandomInt,
   getRandomBigInt,
-  getEtherBalance
+  getEtherBalance,
 } = require('../../test/helpers/general')
 
 class InvestmentRegistry {
@@ -33,7 +33,7 @@ class InvestmentRegistry {
       this.fiatInvestors[address] = {
         amountInCents,
         tokens,
-        investmentCount: 1
+        investmentCount: 1,
       }
     }
   }
@@ -47,7 +47,7 @@ class InvestmentRegistry {
     } else {
       this.ethInvestors[address] = {
         amountInWei,
-        investmentCount: 1
+        investmentCount: 1,
       }
     }
   }
@@ -63,7 +63,7 @@ class InvestmentRegistry {
   getAllInvestorAddresses() {
     return [
       ...this.getFiatInvestorAddresses(),
-      ...this.getEthInvestorAddresses()
+      ...this.getEthInvestorAddresses(),
     ]
   }
 
@@ -124,7 +124,7 @@ const fundFiatUntilRemainingTarget = async (
       await testBuyTokensWithFiat(poa, investor, randomAmount, {
         from: _custodian,
         gasPrice: _gasPrice,
-        expectedTokenDifferenceTolerance: 100000
+        expectedTokenDifferenceTolerance: 100000,
       })
 
       remainingFundableAmount = await getRemainingAmountInCentsDuringFiatFunding(
@@ -224,7 +224,7 @@ const fundEthUntilRemainingTarget = async (
     await testBuyTokens(poa, {
       from: investor,
       value: randomAmount,
-      gasPrice: gasPrice
+      gasPrice: gasPrice,
     })
 
     remainingFundableAmount = await getRemainingAmountInWeiDuringEthFunding(poa)
@@ -262,14 +262,14 @@ const displaySummary = async ({
   currency,
   investmentRegistry,
   totalPayout,
-  paidActivationFee
+  paidActivationFee,
 }) => {
   const fundingGoalFormatted = fundingGoal
     .div(100)
     .toNumber()
     .toLocaleString('en-US', {
       style: 'currency',
-      currency
+      currency,
     })
   const data = [[chalk.yellow('Funding Goal'), fundingGoalFormatted]]
 
@@ -283,17 +283,17 @@ const displaySummary = async ({
       .toNumber()
       .toLocaleString('en-US', {
         style: 'currency',
-        currency
-      })
+        currency,
+      }),
   ])
 
   data.push([
     chalk.yellow('Total FIAT Investors'),
-    investmentRegistry.fiatInvestorsCount()
+    investmentRegistry.fiatInvestorsCount(),
   ])
   data.push([
     chalk.yellow('Total FIAT Investment Count'),
-    investmentRegistry.getFiatInvestmentCount()
+    investmentRegistry.getFiatInvestmentCount(),
   ])
 
   // Eth Data
@@ -306,16 +306,16 @@ const displaySummary = async ({
       .toNumber()
       .toLocaleString('en-US', {
         style: 'currency',
-        currency: 'ETH'
-      })
+        currency: 'ETH',
+      }),
   ])
   data.push([
     chalk.yellow('Total ETH Investors'),
-    investmentRegistry.ethInvestorsCount()
+    investmentRegistry.ethInvestorsCount(),
   ])
   data.push([
     chalk.yellow('Total ETH Investment Count'),
-    investmentRegistry.getEthInvestmentCount()
+    investmentRegistry.getEthInvestmentCount(),
   ])
   // Payouts
   data.push([
@@ -325,8 +325,8 @@ const displaySummary = async ({
       .toNumber()
       .toLocaleString('en-US', {
         style: 'currency',
-        currency: 'ETH'
-      })
+        currency: 'ETH',
+      }),
   ])
 
   data.push([
@@ -336,8 +336,8 @@ const displaySummary = async ({
       .toNumber()
       .toLocaleString('en-US', {
         style: 'currency',
-        currency: 'ETH'
-      })
+        currency: 'ETH',
+      }),
   ])
   // eslint-disable-next-line
   console.log(table(data))
@@ -346,7 +346,7 @@ const displaySummary = async ({
 const getFundingGoal = async ({
   defaultFiatRate,
   defaultfundingGoal,
-  investors
+  investors,
 }) => {
   const totalAvailableCapInWei = await calculateSumBalanceOfAccounts(investors)
 
@@ -385,5 +385,5 @@ module.exports = {
   fundFiatUntilRemainingTarget,
   calculateSumBalanceOfAccounts,
   displaySummary,
-  getFundingGoal
+  getFundingGoal,
 }

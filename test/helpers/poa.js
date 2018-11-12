@@ -22,7 +22,7 @@ const {
   getGasUsed,
   sendTransaction,
   testWillThrow,
-  percentBigInt
+  percentBigInt,
 } = require('./general')
 const { finalizedBBK } = require('./bbk')
 const { testApproveAndLockMany } = require('./act')
@@ -30,7 +30,7 @@ const {
   testSetCurrencySettings,
   testFetchRate,
   testSetRate,
-  testSetQueryId
+  testSetQueryId,
 } = require('./exr')
 
 const stages = {
@@ -42,7 +42,7 @@ const stages = {
   FundingCancelled: '5',
   TimedOut: '6',
   Active: '7',
-  Terminated: '8'
+  Terminated: '8',
 }
 
 const accounts = web3.eth.accounts
@@ -74,11 +74,11 @@ const defaultIpfsHash = 'QmSUfCtXgb59G9tczrz2WuHNAbecV55KRBGXBbZkou5RtE'
 const newIpfsHash = 'Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u'
 const defaultIpfsHashArray32 = [
   web3.toHex(defaultIpfsHash.slice(0, 32)),
-  web3.toHex(defaultIpfsHash.slice(32))
+  web3.toHex(defaultIpfsHash.slice(32)),
 ]
 const newIpfsHashArray32 = [
   web3.toHex(newIpfsHash.slice(0, 32)),
-  web3.toHex(newIpfsHash.slice(32))
+  web3.toHex(newIpfsHash.slice(32)),
 ]
 // default buy amount of 1e18 wei including effect
 // of penalized fiat rate, which increases this amount
@@ -153,7 +153,7 @@ const timeTravelToActivationPeriodTimeout = async poa => {
 // sets up all contracts needed in the ecosystem for POA to function
 const setupEcosystem = async ({
   _bbkContributors = bbkContributors,
-  _whitelistedPoaBuyers = whitelistedPoaBuyers
+  _whitelistedPoaBuyers = whitelistedPoaBuyers,
 } = {}) => {
   const reg = await ContractRegistry.new()
   const act = await AccessToken.new(reg.address)
@@ -200,7 +200,7 @@ const setupEcosystem = async ({
     fmr,
     wht,
     pmr,
-    log
+    log,
   }
 }
 
@@ -223,7 +223,7 @@ const testSetCurrencyRate = async (
     queryString,
     ratePenalty,
     {
-      from: config.from
+      from: config.from,
     }
   )
 
@@ -241,7 +241,7 @@ const testSetCurrencyRateWithDefaultValues = async (exr, exp) => {
     defaultFiatRatePenalty,
     {
       from: owner,
-      value: 1e18
+      value: 1e18,
     }
   )
 }
@@ -249,11 +249,11 @@ const testSetCurrencyRateWithDefaultValues = async (exr, exp) => {
 const setupPoaProxyAndEcosystem = async ({
   _bbkContributors,
   _whitelistedPoaBuyers,
-  _fundingGoal = defaultFundingGoal
+  _fundingGoal = defaultFundingGoal,
 } = {}) => {
   const { reg, act, bbk, exr, exp, fmr, wht, pmr, log } = await setupEcosystem({
     _bbkContributors,
-    _whitelistedPoaBuyers
+    _whitelistedPoaBuyers,
   })
 
   await testSetCurrencyRate(
@@ -264,7 +264,7 @@ const setupPoaProxyAndEcosystem = async ({
     defaultFiatRatePenalty,
     {
       from: owner,
-      value: 1e18
+      value: 1e18,
     }
   )
   await testSetCurrencyRate(
@@ -275,7 +275,7 @@ const setupPoaProxyAndEcosystem = async ({
     defaultFiatRatePenalty,
     {
       from: owner,
-      value: 1e18
+      value: 1e18,
     }
   )
 
@@ -302,7 +302,7 @@ const setupPoaProxyAndEcosystem = async ({
     defaultActivationDuration,
     _fundingGoal,
     {
-      from: broker
+      from: broker,
     }
   )
 
@@ -320,7 +320,7 @@ const setupPoaProxyAndEcosystem = async ({
     pmr,
     poa,
     poatm,
-    log
+    log,
   }
 }
 
@@ -461,7 +461,7 @@ const testInitialization = async (exr, exp, reg, pmr) => {
     defaultFiatRatePenalty,
     {
       from: owner,
-      value: 1e18
+      value: 1e18,
     }
   )
 
@@ -899,7 +899,7 @@ const testBuyTokensWithFiat = async (poa, buyer, amountInCents, config) => {
   const preFundedAmountInCents = await poa.fundedFiatAmountInCents()
   await poa.buyFiat(buyer, amountInCents, {
     from: config.from,
-    gasPrice: config.gasPrice
+    gasPrice: config.gasPrice,
   })
 
   const postInvestedTokenAmountPerUser = await poa.fundedFiatAmountPerUserInTokens(
@@ -1005,7 +1005,7 @@ const testIncrementOfBalanceWhenBuyTokensWithFiat = async (
 
   await testBuyTokensWithFiat(poa, buyer, amountInCents, {
     from: custodian,
-    gasPrice
+    gasPrice,
   })
 
   const postInvestedTokenAmountPerUser = await poa.fundedFiatAmountPerUserInTokens(
@@ -1163,7 +1163,7 @@ const testPayActivationFee = async (
 
   const tx = await poa.payActivationFee({
     value: paidFeeAmount,
-    from
+    from,
   })
 
   const postFeeManagerBalance = await getEtherBalance(fmr.address)
@@ -1190,7 +1190,7 @@ const testPayActivationFee = async (
 
   return {
     tx,
-    paidFeeAmount
+    paidFeeAmount,
   }
 }
 
@@ -1347,7 +1347,7 @@ const testClaim = async (poa, config, isTerminated) => {
 
   const tx = await poa.claim({
     from: claimer,
-    gasPrice
+    gasPrice,
   })
   const gasUsed = tx.receipt.gasUsed || bigZero
   const gasCost = gasPrice.mul(gasUsed)
@@ -1396,7 +1396,7 @@ const testClaimAllPayouts = async (poa, poaTokenHolders) => {
     if (tokenHolderClaimAmount.greaterThan(0)) {
       const tx = await poa.claim({
         from: tokenHolder,
-        gasPrice
+        gasPrice,
       })
 
       const gasUsed = tx.receipt.gasUsed || bigZero
@@ -1517,7 +1517,7 @@ const testReclaim = async (poa, config, first = false) => {
 
   const tx = await poa.reclaim({
     from: claimer,
-    gasPrice
+    gasPrice,
   })
   const gasUsed = await getGasUsed(tx)
   const gasCost = gasPrice.mul(gasUsed)
@@ -1808,7 +1808,7 @@ const getAccountInformation = async (poa, address) => {
     tokenBalance,
     perTokenBalance,
     unclaimedBalance,
-    currentPayout
+    currentPayout,
   }
 }
 
@@ -1876,7 +1876,7 @@ const testProxyUnchanged = async (poa, first, state) => {
       stage: await poa.stage(),
       paused: await poa.paused(),
       registry: await poa.registry(),
-      contractOwner: await poa.owner()
+      contractOwner: await poa.owner(),
     }
   } else {
     assert.deepEqual(
@@ -1900,7 +1900,7 @@ const testProxyUnchanged = async (poa, first, state) => {
         stage: await poa.stage(),
         paused: await poa.paused(),
         registry: await poa.registry(),
-        contractOwner: await poa.owner()
+        contractOwner: await poa.owner(),
       },
       state
     )
@@ -1910,7 +1910,7 @@ const testProxyUnchanged = async (poa, first, state) => {
 const testPercent = async ({
   poa,
   totalAmount = new BigNumber(1e21),
-  partOfTotalAmount = new BigNumber(8e20)
+  partOfTotalAmount = new BigNumber(8e20),
 } = {}) => {
   const precisionOfPercentCalc = parseInt(
     (await poa.precisionOfPercentCalc.call()).toString()
@@ -2048,5 +2048,5 @@ module.exports = {
   timeTravelToEthFundingPeriod,
   timeTravelToFundingPeriodTimeout,
   timeTravelToActivationPeriodTimeout,
-  whitelistedPoaBuyers
+  whitelistedPoaBuyers,
 }

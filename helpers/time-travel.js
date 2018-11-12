@@ -54,5 +54,5 @@ module.exports = {
   getCurrentBlockTime,
   getTimeInFutureBySeconds,
   timeTravel,
-  timeTravelToTarget
+  timeTravelToTarget,
 }

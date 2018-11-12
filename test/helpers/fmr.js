@@ -39,7 +39,7 @@ const setupContracts = async (
     act,
     bbk,
     exr,
-    fmr
+    fmr,
   }
 }
 
@@ -146,5 +146,5 @@ const testPartialClaimFee = async (fmr, act, claimer, claimAmount, actRate) => {
 module.exports = {
   testPayFee,
   testPartialClaimFee,
-  setupContracts
+  setupContracts,
 }

@@ -7,7 +7,7 @@ const {
   sendTransaction,
   getReceipt,
   warpBlocks,
-  getEtherBalance
+  getEtherBalance,
 } = require('../helpers/general')
 
 const {
@@ -26,7 +26,7 @@ const {
   gasPrice,
   totalSupply,
   fundingGoal,
-  testClearDust
+  testClearDust,
 } = require('../helpers/cpoa')
 
 describe('when first deploying', () => {
@@ -161,7 +161,7 @@ describe('when in Funding stage', () => {
     it('should NOT whitelist investors if NOT owner', async () => {
       await testWillThrow(cpoa.whitelistAddress, [
         investors[0],
-        { from: custodian }
+        { from: custodian },
       ])
     })
 
@@ -182,7 +182,7 @@ describe('when in Funding stage', () => {
     it('should NOT blacklist investors if NOT owner', async () => {
       await testWillThrow(cpoa.blacklistAddress, [
         investors[0],
-        { from: custodian }
+        { from: custodian },
       ])
     })
 
@@ -207,7 +207,7 @@ describe('when in Funding stage', () => {
     it('should allow buying from whitelisted investors', async () => {
       await testMultiBuyTokens(investors, cpoa, {
         gasPrice,
-        value: new BigNumber(1e18)
+        value: new BigNumber(1e18),
       })
     })
 
@@ -217,8 +217,8 @@ describe('when in Funding stage', () => {
       await testWillThrow(cpoa.buy, [
         {
           from: nonInvestor,
-          value: 1e18
-        }
+          value: 1e18,
+        },
       ])
     })
 
@@ -232,8 +232,8 @@ describe('when in Funding stage', () => {
       await testWillThrow(cpoa.buy, [
         {
           from: investor,
-          value: smallInvestment
-        }
+          value: smallInvestment,
+        },
       ])
     })
 
@@ -241,7 +241,7 @@ describe('when in Funding stage', () => {
       await testFallbackBuy(web3, cpoa, {
         from: investors[0],
         value: new BigNumber(1e18),
-        gasPrice
+        gasPrice,
       })
     })
 
@@ -299,7 +299,7 @@ describe('when in Funding stage', () => {
       await testWillThrow(cpoa.transfer, [
         otherInvestor,
         investorTokenBalance.div(2),
-        { from: investor }
+        { from: investor },
       ])
     })
 
@@ -309,7 +309,7 @@ describe('when in Funding stage', () => {
       await testWillThrow(cpoa.approve, [
         otherInvestor,
         1e18,
-        { from: investor }
+        { from: investor },
       ])
     })
 
@@ -318,7 +318,7 @@ describe('when in Funding stage', () => {
     it('should move to pending stage when all tokens have been bought', async () => {
       await testBuyRemainingTokens(cpoa, accounts, {
         from: investors[0],
-        gasPrice
+        gasPrice,
       })
     })
 
@@ -356,13 +356,13 @@ describe('when in Pending stage', () => {
       )
       await testMultiBuyTokens(investors, cpoa, {
         value: investAmount,
-        gasPrice: new BigNumber(21e9)
+        gasPrice: new BigNumber(21e9),
       })
 
       // get last of contract's balance and buy it up
       await testBuyRemainingTokens(cpoa, accounts, {
         from: bigInvestor,
-        gasPrice: new BigNumber(21e9)
+        gasPrice: new BigNumber(21e9),
       })
 
       const contractStage = await cpoa.stage()
@@ -392,7 +392,7 @@ describe('when in Pending stage', () => {
     it('should NOT blacklist even if owner', async () => {
       await testWillThrow(cpoa.blacklistAddress, [
         investors[0],
-        { from: owner }
+        { from: owner },
       ])
     })
 
@@ -407,8 +407,8 @@ describe('when in Pending stage', () => {
         {
           to: cpoa.address,
           from: investor,
-          value: 1e18
-        }
+          value: 1e18,
+        },
       ])
     })
 
@@ -451,7 +451,7 @@ describe('when in Pending stage', () => {
       await testWillThrow(cpoa.transfer, [
         otherInvestor,
         investorTokenBalance.div(2),
-        { from: investor }
+        { from: investor },
       ])
     })
 
@@ -461,7 +461,7 @@ describe('when in Pending stage', () => {
       await testWillThrow(cpoa.approve, [
         otherInvestor,
         1e18,
-        { from: investor }
+        { from: investor },
       ])
     })
 
@@ -474,8 +474,8 @@ describe('when in Pending stage', () => {
         {
           from: owner,
           value: fee,
-          gasPrice
-        }
+          gasPrice,
+        },
       ])
     })
 
@@ -487,8 +487,8 @@ describe('when in Pending stage', () => {
         {
           from: custodian,
           value: highFee,
-          gasPrice
-        }
+          gasPrice,
+        },
       ])
     })
 
@@ -500,8 +500,8 @@ describe('when in Pending stage', () => {
         {
           from: custodian,
           value: lowFee,
-          gasPrice
-        }
+          gasPrice,
+        },
       ])
     })
 
@@ -525,7 +525,7 @@ describe('when in Pending stage', () => {
       const txHash = await cpoa.activate({
         from: custodian,
         value: fee,
-        gasPrice
+        gasPrice,
       })
 
       const tx = await getReceipt(txHash)
@@ -580,7 +580,7 @@ describe('when in Pending stage', () => {
 
       const txHash = await cpoa.claim({
         from: owner,
-        gasPrice
+        gasPrice,
       })
 
       const tx = await getReceipt(txHash)
@@ -620,7 +620,7 @@ describe('when in Pending stage', () => {
 
       const txHash = await cpoa.claim({
         from: custodian,
-        gasPrice
+        gasPrice,
       })
 
       const tx = await getReceipt(txHash)
@@ -658,8 +658,8 @@ describe('when in Pending stage', () => {
       await testWillThrow(cpoa.activate, [
         {
           from: custodian,
-          value: fee
-        }
+          value: fee,
+        },
       ])
     })
 
@@ -703,19 +703,19 @@ describe('when in Active stage', () => {
       // claim tokens for investors
       await testMultiBuyTokens(investors, cpoa, {
         value: investAmount,
-        gasPrice
+        gasPrice,
       })
 
       // buy remaining tokens to go into pending
       await testBuyRemainingTokens(cpoa, accounts, {
         from: bigInvestor,
-        gasPrice
+        gasPrice,
       })
 
       // activate the contract by custodian with proper fee
       await testActivation(cpoa, {
         from: custodian,
-        gasPrice
+        gasPrice,
       })
 
       await testOwnerWithdrawFees(cpoa, owner)
@@ -736,7 +736,7 @@ describe('when in Active stage', () => {
       const prePaused = await cpoa.paused()
       assert(!prePaused, 'the contract should NOT be paused')
       await cpoa.pause({
-        from: owner
+        from: owner,
       })
       const postPaused = await cpoa.paused()
       assert(postPaused, 'the contract should be paused')
@@ -750,7 +750,7 @@ describe('when in Active stage', () => {
       const prePaused = await cpoa.paused()
       assert(prePaused, 'the contract should be paused')
       await cpoa.unpause({
-        from: owner
+        from: owner,
       })
       const postPaused = await cpoa.paused()
       assert(!postPaused, 'the contract should NOT be paused')
@@ -774,7 +774,7 @@ describe('when in Active stage', () => {
       const tx = await cpoa.payout({
         from: custodian,
         value: payoutValue,
-        gasPrice
+        gasPrice,
       })
 
       const postContractTotalTokenPayout = await cpoa.totalPerTokenPayout()
@@ -849,7 +849,7 @@ describe('when in Active stage', () => {
 
         const tx = await cpoa.claim({
           from: investor,
-          gasPrice
+          gasPrice,
         })
         const gasUsed = tx.receipt.gasUsed
         const gasCost = gasPrice.mul(gasUsed)
@@ -893,7 +893,7 @@ describe('when in Active stage', () => {
       const preReceiverBalance = await cpoa.balanceOf(receiver)
 
       await cpoa.transfer(receiver, transferAmount, {
-        from: sender
+        from: sender,
       })
 
       const postSenderBalance = await cpoa.balanceOf(sender)
@@ -919,7 +919,7 @@ describe('when in Active stage', () => {
       await testWillThrow(cpoa.transfer, [
         receiver,
         sendAmount,
-        { from: sender }
+        { from: sender },
       ])
       await cpoa.unpause()
     })
@@ -931,7 +931,7 @@ describe('when in Active stage', () => {
       )
 
       await cpoa.approve(allowanceSpender, allowanceAmount, {
-        from: allowanceOwner
+        from: allowanceOwner,
       })
 
       const postSpenderAllowance = await cpoa.allowance(
@@ -951,7 +951,7 @@ describe('when in Active stage', () => {
       await testWillThrow(cpoa.approve, [
         allowanceOwner,
         allowanceAmount,
-        { from: allowanceSpender }
+        { from: allowanceSpender },
       ])
       await cpoa.unpause()
     })
@@ -969,7 +969,7 @@ describe('when in Active stage', () => {
         allowanceSpender,
         allowanceAmount,
         {
-          from: allowanceSpender
+          from: allowanceSpender,
         }
       )
 
@@ -999,14 +999,14 @@ describe('when in Active stage', () => {
 
     it('should NOT transferFrom when paused', async () => {
       await cpoa.approve(allowanceSpender, allowanceAmount, {
-        from: allowanceOwner
+        from: allowanceOwner,
       })
       await cpoa.pause()
       await testWillThrow(cpoa.transferFrom, [
         allowanceOwner,
         allowanceSpender,
         allowanceAmount,
-        { from: allowanceSpender }
+        { from: allowanceSpender },
       ])
       await cpoa.unpause()
     })
@@ -1029,7 +1029,7 @@ describe('when in Active stage', () => {
       assert(whitelisted, 'the investor should be whitelisted already')
       await testWillThrow(cpoa.blacklistAddress, [
         investors[0],
-        { from: owner }
+        { from: owner },
       ])
     })
 
@@ -1038,7 +1038,7 @@ describe('when in Active stage', () => {
       const whitelisted = await cpoa.whitelisted(whitelistedInvestor)
       assert(whitelisted, 'the investor should be whitelisted already')
       await testWillThrow(cpoa.buy, [
-        { from: whitelistedInvestor, value: 1e18 }
+        { from: whitelistedInvestor, value: 1e18 },
       ])
     })
 
@@ -1062,8 +1062,8 @@ describe('when in Active stage', () => {
         {
           from: investor,
           to: cpoa.address,
-          value: 1e18
-        }
+          value: 1e18,
+        },
       ])
     })
 
@@ -1082,7 +1082,7 @@ describe('when in Active stage', () => {
     it('should terminate if custodian', async () => {
       const preStage = await cpoa.stage()
       await cpoa.terminate({
-        from: custodian
+        from: custodian,
       })
       const postStage = await cpoa.stage()
       assert.equal(
@@ -1144,19 +1144,19 @@ describe('while in Terminated stage', async () => {
       // claim tokens for investors
       await testMultiBuyTokens(investors, cpoa, {
         value: investAmount,
-        gasPrice
+        gasPrice,
       })
 
       // // buy remaining tokens to go into pending
       await testBuyRemainingTokens(cpoa, accounts, {
         from: bigInvestor,
-        gasPrice
+        gasPrice,
       })
 
       // // activate the contract by custodian with proper fee
       await testActivation(cpoa, {
         from: custodian,
-        gasPrice
+        gasPrice,
       })
 
       currentStage = await cpoa.stage()
@@ -1171,12 +1171,12 @@ describe('while in Terminated stage', async () => {
 
       // set an allowance to test while terminated
       await cpoa.approve(allowanceSpender, allowanceAmount, {
-        from: allowanceOwner
+        from: allowanceOwner,
       })
 
       // terminate the contract
       await cpoa.terminate({
-        from: custodian
+        from: custodian,
       })
       currentStage = await cpoa.stage()
       assert.equal(
@@ -1195,8 +1195,8 @@ describe('while in Terminated stage', async () => {
       await testWillThrow(cpoa.payout, [
         {
           from: owner,
-          value: 1e18
-        }
+          value: 1e18,
+        },
       ])
     })
 
@@ -1214,7 +1214,7 @@ describe('while in Terminated stage', async () => {
       const tx = await cpoa.payout({
         from: custodian,
         value: payoutValue,
-        gasPrice
+        gasPrice,
       })
 
       const postContractTotalTokenPayout = await cpoa.totalPerTokenPayout()
@@ -1287,7 +1287,7 @@ describe('while in Terminated stage', async () => {
 
         const tx = await cpoa.claim({
           from: investor,
-          gasPrice
+          gasPrice,
         })
         const gasUsed = tx.receipt.gasUsed
         const gasCost = gasPrice.mul(gasUsed)
@@ -1347,7 +1347,7 @@ describe('while in Terminated stage', async () => {
       assert(whitelisted, 'the investor should be whitelisted already')
       await testWillThrow(cpoa.blacklistAddress, [
         whitelistedInvestor,
-        { from: owner }
+        { from: owner },
       ])
     })
 
@@ -1358,8 +1358,8 @@ describe('while in Terminated stage', async () => {
       await testWillThrow(cpoa.buy, [
         {
           from: whitelistedInvestor,
-          value: 1e18
-        }
+          value: 1e18,
+        },
       ])
     })
 
@@ -1383,8 +1383,8 @@ describe('while in Terminated stage', async () => {
         {
           from: investor,
           to: cpoa.address,
-          value: 1e18
-        }
+          value: 1e18,
+        },
       ])
     })
 
@@ -1395,7 +1395,7 @@ describe('while in Terminated stage', async () => {
       await testWillThrow(cpoa.transfer, [
         receiver,
         sendAmount,
-        { from: sender }
+        { from: sender },
       ])
     })
 
@@ -1403,7 +1403,7 @@ describe('while in Terminated stage', async () => {
       await testWillThrow(cpoa.approve, [
         allowanceOwner,
         allowanceAmount,
-        { from: allowanceSpender }
+        { from: allowanceSpender },
       ])
     })
 
@@ -1414,8 +1414,8 @@ describe('while in Terminated stage', async () => {
         allowanceSpender,
         allowanceAmount,
         {
-          from: allowanceSpender
-        }
+          from: allowanceSpender,
+        },
       ])
     })
 
@@ -1459,7 +1459,7 @@ describe('when timing out (going into stage 2 (failed))', () => {
       // claim tokens for investors
       await testMultiBuyTokens(investors, cpoa, {
         value: investAmount,
-        gasPrice: new BigNumber(21e9)
+        gasPrice: new BigNumber(21e9),
       })
       // warp ahead past timeoutBlock to setup for failure
       await warpBlocks(50)
@@ -1476,8 +1476,8 @@ describe('when timing out (going into stage 2 (failed))', () => {
       await testWillThrow(cpoa.buy, [
         {
           from: investors[0],
-          value: 1e18
-        }
+          value: 1e18,
+        },
       ])
 
       const stage = await cpoa.stage()
@@ -1493,8 +1493,8 @@ describe('when timing out (going into stage 2 (failed))', () => {
       await testWillThrow(cpoa.activate, [
         {
           from: custodian,
-          value: fee
-        }
+          value: fee,
+        },
       ])
 
       const stage = await cpoa.stage()
@@ -1527,7 +1527,7 @@ describe('when timing out (going into stage 2 (failed))', () => {
 
       const tx = await cpoa.reclaim({
         from: firstReclaimInvestor,
-        gasPrice
+        gasPrice,
       })
 
       const postTotalSupply = await cpoa.totalSupply()
@@ -1620,8 +1620,8 @@ describe('when timing out (going into stage 2 (failed))', () => {
       await testWillThrow(cpoa.blacklistAddress, [
         whitelistedInvestor,
         {
-          from: owner
-        }
+          from: owner,
+        },
       ])
     })
 
@@ -1630,7 +1630,7 @@ describe('when timing out (going into stage 2 (failed))', () => {
       const whitelisted = await cpoa.whitelisted(whitelistedInvestor)
       assert(whitelisted, 'the investor should be whitelisted already')
       await testWillThrow(cpoa.buy, [
-        { from: whitelistedInvestor, value: 1e18 }
+        { from: whitelistedInvestor, value: 1e18 },
       ])
     })
 
@@ -1670,8 +1670,8 @@ describe('when timing out (going into stage 2 (failed))', () => {
         otherInvestor,
         investorTokenBalance.div(2),
         {
-          from: investor
-        }
+          from: investor,
+        },
       ])
     })
 
@@ -1682,8 +1682,8 @@ describe('when timing out (going into stage 2 (failed))', () => {
         otherInvestor,
         1e18,
         {
-          from: investor
-        }
+          from: investor,
+        },
       ])
     })
 
@@ -1694,8 +1694,8 @@ describe('when timing out (going into stage 2 (failed))', () => {
         {
           from: investor,
           to: cpoa.address,
-          value: 1e18
-        }
+          value: 1e18,
+        },
       ])
     })
 
@@ -1710,7 +1710,7 @@ describe('when timing out (going into stage 2 (failed))', () => {
 
         const tx = await cpoa.reclaim({
           from: investor,
-          gasPrice
+          gasPrice,
         })
 
         const gasCost = gasPrice.mul(tx.receipt.gasUsed)
@@ -1804,20 +1804,20 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
       // claim tokens for investors
       await testMultiBuyTokens(investors, cpoa, {
         value: investAmount,
-        gasPrice
+        gasPrice,
       })
 
       // get last of contract's balance and buy it up
       await testBuyRemainingTokens(cpoa, accounts, {
         from: bigInvestor,
-        gasPrice
+        gasPrice,
       })
 
       // activate the contract by custodian with proper fee
 
       await testActivation(cpoa, {
         from: custodian,
-        gasPrice
+        gasPrice,
       })
       // the contract stage should be 3 (active)
 
@@ -1840,14 +1840,14 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
         await testPayout(cpoa, {
           from: custodian,
           value: payoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         await getAccountInformation(sender, cpoa)
         await getAccountInformation(receiver, cpoa)
 
         await testTransfer(receiver, senderAccount1.tokenBalance, cpoa, {
-          from: sender
+          from: sender,
         })
 
         const senderAccount3 = await getAccountInformation(sender, cpoa)
@@ -1856,7 +1856,7 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
         await testPayout(cpoa, {
           from: custodian,
           value: payoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         const senderAccount4 = await getAccountInformation(sender, cpoa)
@@ -1920,14 +1920,14 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
         await testPayout(cpoa, {
           from: custodian,
           value: payoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         await getAccountInformation(sender, cpoa)
         await getAccountInformation(receiver, cpoa)
 
         await testTransfer(receiver, senderAccount1.tokenBalance.div(2), cpoa, {
-          from: sender
+          from: sender,
         })
 
         const senderAccount3 = await getAccountInformation(sender, cpoa)
@@ -1936,7 +1936,7 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
         await testPayout(cpoa, {
           from: custodian,
           value: payoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         const senderAccount4 = await getAccountInformation(sender, cpoa)
@@ -2004,7 +2004,7 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
         await testPayout(cpoa, {
           from: custodian,
           value: payoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         await getAccountInformation(allowanceOwner, cpoa)
@@ -2028,7 +2028,7 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
         await testPayout(cpoa, {
           from: custodian,
           value: payoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         const allowanceOwnerAccount4 = await getAccountInformation(
@@ -2098,7 +2098,7 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
         await testPayout(cpoa, {
           from: custodian,
           value: payoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         await getAccountInformation(allowanceOwner, cpoa)
@@ -2122,7 +2122,7 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
         await testPayout(cpoa, {
           from: custodian,
           value: payoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         const allowanceOwnerAccount4 = await getAccountInformation(
@@ -2189,7 +2189,7 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
         await getAccountInformation(receiver, cpoa)
 
         await testTransfer(receiver, senderAccount1.tokenBalance, cpoa, {
-          from: sender
+          from: sender,
         })
 
         await getAccountInformation(sender, cpoa)
@@ -2197,7 +2197,7 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
         await testPayout(cpoa, {
           from: custodian,
           value: payoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         const senderAccount3 = await getAccountInformation(sender, cpoa)
@@ -2241,7 +2241,7 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
         await getAccountInformation(receiver, cpoa)
 
         await testTransfer(receiver, senderAccount1.tokenBalance.div(2), cpoa, {
-          from: sender
+          from: sender,
         })
 
         const senderAccount2 = await getAccountInformation(sender, cpoa)
@@ -2249,7 +2249,7 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
         await testPayout(cpoa, {
           from: custodian,
           value: payoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         const senderAccount3 = await getAccountInformation(sender, cpoa)
@@ -2311,7 +2311,7 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
         await testPayout(cpoa, {
           from: custodian,
           value: payoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         const allowanceOwnerAccount3 = await getAccountInformation(
@@ -2377,7 +2377,7 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
         await testPayout(cpoa, {
           from: custodian,
           value: payoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         const allowanceOwnerAccount3 = await getAccountInformation(

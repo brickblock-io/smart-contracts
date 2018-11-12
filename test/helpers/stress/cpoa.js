@@ -14,7 +14,7 @@ const getAccountInformation = async (address, contract) => {
   return {
     etherBalance,
     tokenBalance,
-    currentPayout
+    currentPayout,
   }
 }
 
@@ -60,7 +60,7 @@ const activeContract = async (
 
     await contract.buy({
       from: investor,
-      value: investAmount
+      value: investAmount,
     })
 
     const newFundedAmount = await contract.fundedAmount()
@@ -87,7 +87,7 @@ const activeContract = async (
   await contract.claim({ from: _owner })
   console.log('claiming for CUSTODIAN (activation contract value)')
   await contract.claim.sendTransaction({
-    from: _custodian
+    from: _custodian,
   })
   assert.equal(
     (await contract.stage()).toString(),
@@ -129,5 +129,5 @@ const claimAll = async (cpoa, investorAccounts) => {
 module.exports = {
   getAccountInformation,
   activeContract,
-  claimAll
+  claimAll,
 }

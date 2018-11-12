@@ -14,10 +14,6 @@
   "author": "Brickblock Dev Team <dev@brickblock.io>",
   "scripts": {
     "---SECTION:BLOCKCHAIN---": "-------------------- HOW TO START A LOCAL BLOCKCHAIN --------------------",
-    "start:dev:testrpc:comment": "no need for '--deterministic' see update: https://github.com/trufflesuite/truffle/releases",
-    "start": "concurrently --prefix '[{name}: {time}]' -n 'yarn start:dev, seed' -c 'bgBlue.bold.white,bgGreen.bold.white' 'yarn start:dev' 'yarn migrate:dev && yarn seed'",
-    "start:dev:comment": "We can't use the NODE_PATH=. from the .env file here because truffle doesn't appear to understand relative NODE_PATHs correctly :-/",
-    "start:dev": "NODE_PATH=$(pwd) truffle develop --network dev",
     "start:geth": "./scripts/geth/start-geth.sh",
     "---SECTION:BUILD---": "-------------------- HOW TO BUILD THE SMART CONTRACTS --------------------",
     "build:comment": "Compile smart contracts and output into the build/ dir",
@@ -34,8 +30,6 @@
     "migrate:kovan": "env-cmd .env truffle migrate --network kovan --reset",
     "migrate:ropsten": "env-cmd .env truffle migrate --network ropsten --reset",
     "migrate:rinkeby": "env-cmd .env truffle migrate --network rinkeby --reset",
-    "seed": "NODE_PATH=build NODE_ENV=development node scripts/seed.js",
-    "seed:ropsten": "NODE_PATH=build NODE_ENV=development node scripts/seed.ropsten.js",
     "---SECTION:TEST---": "-------------------- HOW TO TEST THE SMART CONTRACTS --------------------",
     "test": "yarn build && env-cmd .env truffle test",
     "test:gas-reporter": "GAS_REPORTER=true yarn test",
@@ -48,7 +42,7 @@
     "---SECTION:LINT---": "-------------------- HOW TO LINT --------------------",
     "lint": "yarn lint:sol && yarn lint:js",
     "lint:sol": "solium --dir ./contracts",
-    "lint:js": "prettier migrations/* scripts/*.js tests/* --write",
+    "lint:js": "eslint migrations/ scripts/ test/ --fix",
     "---SECTION:RELEASE---": "------------ RELEASE SCRIPTS ------------",
     "release:comment": "This script should only ever be automatically run by our CI. Manual releases are error-prone and can mess up version history",
     "release": "standard-version --message \"chore(release): %s [skip ci]\"",
@@ -78,7 +72,6 @@
     ],
     "*.js": [
       "eslint --fix",
-      "prettier --config .prettierrc --write",
       "git add"
     ]
   },

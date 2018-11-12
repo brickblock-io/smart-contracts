@@ -9,7 +9,7 @@ const {
   testClaimFee,
   testWithdrawEthFunds,
   testWithdrawActFunds,
-  testWithdrawBbkFunds
+  testWithdrawBbkFunds,
 } = require('../helpers/bat')
 
 const { timeTravel } = require('helpers')
@@ -238,7 +238,7 @@ describe('when withdrawing funds BEFORE BBK unlock block', () => {
         bbk,
         owner,
         withdrawalAmount,
-        1000
+        1000,
       ])
     })
   })
@@ -410,8 +410,8 @@ describe('when trying to withdraw as NOT owner', () => {
         otherAccount,
         withdrawalAmount,
         {
-          from: otherAccount
-        }
+          from: otherAccount,
+        },
       ])
     })
 
@@ -421,8 +421,8 @@ describe('when trying to withdraw as NOT owner', () => {
         otherAccount,
         withdrawalAmount,
         {
-          from: otherAccount
-        }
+          from: otherAccount,
+        },
       ])
     })
 
@@ -433,8 +433,8 @@ describe('when trying to withdraw as NOT owner', () => {
         otherAccount,
         withdrawalAmount,
         {
-          from: otherAccount
-        }
+          from: otherAccount,
+        },
       ])
     })
   })

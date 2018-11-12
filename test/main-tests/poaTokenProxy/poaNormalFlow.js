@@ -14,7 +14,7 @@ const {
   testStartEthSale,
   testUpdateProofOfCustody,
   timeTravelToEthFundingPeriod,
-  whitelistedPoaBuyers
+  whitelistedPoaBuyers,
 } = require('../../helpers/poa')
 const { gasPrice } = require('../../helpers/general.js')
 
@@ -44,20 +44,20 @@ describe("when going through Poa's normal flow", async () => {
       await testBuyTokens(poa, {
         from: whitelistedPoaBuyers[0],
         value: 5e17,
-        gasPrice
+        gasPrice,
       })
     })
 
     it("should buy all remaining tokens, moving to 'FundingSuccessful' stage", async () => {
       await testBuyRemainingTokens(poa, {
         from: whitelistedPoaBuyers[1],
-        gasPrice
+        gasPrice,
       })
     })
 
     it('should update proof of custody', async () => {
       await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
-        from: custodian
+        from: custodian,
       })
     })
 
@@ -67,7 +67,7 @@ describe("when going through Poa's normal flow", async () => {
 
     it('should activate with ipfs hash from custodian', async () => {
       await testActivate(poa, fmr, {
-        from: custodian
+        from: custodian,
       })
     })
 
@@ -79,7 +79,7 @@ describe("when going through Poa's normal flow", async () => {
       await testPayout(poa, fmr, {
         from: broker,
         value: 2e18,
-        gasPrice
+        gasPrice,
       })
     })
 

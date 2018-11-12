@@ -185,7 +185,7 @@ const testPayout = async (
 
   return {
     payoutAmount: distribute.amount,
-    gasUsed: tx.gasUsed
+    gasUsed: tx.gasUsed,
   }
 }
 
@@ -196,13 +196,13 @@ const getEmployeeData = async (
   const [
     initialPayout,
     quarterlyAmount,
-    index
+    index,
   ] = await employeeTokenSalaryPayoutContract.employees(employeeAddress)
 
   return {
     initialPayout,
     quarterlyAmount,
-    index
+    index,
   }
 }
 
@@ -210,5 +210,5 @@ module.exports = {
   testAddEmployee,
   testAddManyEmployees,
   testRemoveEmployee,
-  testPayout
+  testPayout,
 }

@@ -6,7 +6,7 @@ const migrationHelpers = require('../helpers')
 const poaActions = async (deployer, accounts, contracts, web3, network) => {
   const {
     general: { isValidAddress, isBigNumber, getAccounts },
-    deployment: { deployContracts }
+    deployment: { deployContracts },
   } = migrationHelpers
 
   const { executeAddress, executeTxConfig, executeFunctionName } = argv
@@ -17,7 +17,7 @@ const poaActions = async (deployer, accounts, contracts, web3, network) => {
   const instances = await deployContracts(deployer, accounts, contracts, {
     useExpStub: useStub,
     useExistingContracts: argv.useExistingContracts,
-    network
+    network,
   })
 
   let contractAddress

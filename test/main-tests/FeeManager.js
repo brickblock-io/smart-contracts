@@ -93,7 +93,7 @@ describe('when interacting with FeeManager', () => {
     it('should NOT allow fallback function payments', async () => {
       await testWillThrow(sendTransaction, [
         web3,
-        { from: feePayer, value: feeAmount, to: fmr.address }
+        { from: feePayer, value: feeAmount, to: fmr.address },
       ])
     })
 

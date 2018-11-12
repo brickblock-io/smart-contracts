@@ -3,7 +3,7 @@ const { table } = require('table')
 const {
   getEtherBalance,
   getRandomBigInt,
-  getRandomInt
+  getRandomInt,
 } = require('../test/helpers/general')
 const chalk = require('chalk')
 
@@ -15,7 +15,7 @@ const {
   testClaimFeeMany,
   testTransferActManyWithIndividualAmounts,
   generateRandomLockAmounts,
-  testRandomLockAndUnlock
+  testRandomLockAndUnlock,
 } = require('../test/helpers/act')
 
 describe('AccessToken Stress Tests', () => {
@@ -34,7 +34,7 @@ describe('AccessToken Stress Tests', () => {
         totalFeePaid: new BigNumber(0),
         contributorsPreBalance: [],
         totalLockPayClaimRound: 0,
-        totalLockPayTransferClaimRound: 0
+        totalLockPayTransferClaimRound: 0,
       }
       let bbk
       let act
@@ -58,7 +58,7 @@ describe('AccessToken Stress Tests', () => {
               address: contributor,
               balance: web3
                 .fromWei(await getEtherBalance(contributor))
-                .toString()
+                .toString(),
             }
             counters.contributorsPreBalance.push(contBalance)
           })
@@ -79,7 +79,7 @@ describe('AccessToken Stress Tests', () => {
           rounds: lockUnlockBbkRound,
           min: new BigNumber(1e10),
           logBalance: true,
-          logRoundInfo: true
+          logRoundInfo: true,
         })
         counters.totalLocksUnlocks += lockUnlockBbkRound
       })
@@ -123,7 +123,7 @@ describe('AccessToken Stress Tests', () => {
             contributors,
             await generateRandomLockAmounts(contributors, {
               min: new BigNumber(1e17),
-              logBalance: true
+              logBalance: true,
             })
           )
           counters.totalLocksUnlocks++
@@ -137,7 +137,7 @@ describe('AccessToken Stress Tests', () => {
           await testRandomLockAndUnlock(bbk, act, contributors, {
             rounds: randomLockUnlockCountAfterPayFee,
             logBalance: false,
-            logRoundInfo: true
+            logRoundInfo: true,
           })
           counters.totalLocksUnlocks += randomLockUnlockCountAfterPayFee
 
@@ -146,13 +146,13 @@ describe('AccessToken Stress Tests', () => {
 
           const tolerance = 1500 * (i + 1) // increase the tolerance exponentially on every iteration
           await testClaimFeeMany(act, fmr, contributors, actRate, {
-            actTotalSupplyToleranceAfterBurn: tolerance
+            actTotalSupplyToleranceAfterBurn: tolerance,
           })
 
           const randomLockUnlockCountAfterClaimFee = getRandomInt(1, 5)
 
           await testRandomLockAndUnlock(bbk, act, contributors, {
-            rounds: randomLockUnlockCountAfterClaimFee
+            rounds: randomLockUnlockCountAfterClaimFee,
           })
           counters.totalLocksUnlocks += randomLockUnlockCountAfterClaimFee
           counters.totalFeePaid = counters.totalFeePaid.plus(feeValue)
@@ -203,7 +203,7 @@ describe('AccessToken Stress Tests', () => {
             contributors,
             await generateRandomLockAmounts(contributors, {
               min: new BigNumber(1e17),
-              logBalance: true
+              logBalance: true,
             })
           )
           counters.totalLocksUnlocks++
@@ -230,7 +230,7 @@ describe('AccessToken Stress Tests', () => {
             [...contributors, recipient],
             actRate,
             {
-              actTotalSupplyToleranceAfterBurn: tolerance
+              actTotalSupplyToleranceAfterBurn: tolerance,
             }
           )
 
@@ -251,7 +251,7 @@ describe('AccessToken Stress Tests', () => {
 
       afterEach(async () => {
         const data = [
-          ['Total Lock & Unlock amount', counters.totalLocksUnlocks, '', '']
+          ['Total Lock & Unlock amount', counters.totalLocksUnlocks, '', ''],
         ]
 
         // insert Contributors initial balances
@@ -261,7 +261,7 @@ describe('AccessToken Stress Tests', () => {
             'contributor address',
             contItem.address,
             'balance',
-            contItem.balance
+            contItem.balance,
           ]) + ' ETH'
         })
 
@@ -274,7 +274,7 @@ describe('AccessToken Stress Tests', () => {
               contAddress,
               'balance',
               web3.fromWei(await getEtherBalance(contAddress)).toString() +
-                ' ETH'
+                ' ETH',
             ])
           })
         )
@@ -282,28 +282,28 @@ describe('AccessToken Stress Tests', () => {
           'Total Lock -> Pay -> Claim Rounds',
           counters.totalLockPayClaimRound,
           '',
-          ''
+          '',
         ])
 
         data.push([
           'Total Lock -> Pay -> Transfer -> Claim Rounds',
           counters.totalLockPayTransferClaimRound,
           '',
-          ''
+          '',
         ])
 
         data.push([
           'Total Fee Paid',
           web3.fromWei(counters.totalFeePaid).toString(),
           '',
-          ''
+          '',
         ])
 
         data.push([
           'ACT Recipient address',
           recipient,
           'balance',
-          web3.fromWei(await getEtherBalance(recipient)).toString() + ' ETH'
+          web3.fromWei(await getEtherBalance(recipient)).toString() + ' ETH',
         ])
 
         const actTotalsupply = (await act.totalSupply()).toString()
@@ -311,7 +311,7 @@ describe('AccessToken Stress Tests', () => {
           'Access Token total supply left over',
           actTotalsupply,
           'WEI',
-          ''
+          '',
         ])
 
         const fmrBalance = (await getEtherBalance(fmr.address)).toString()

@@ -13,7 +13,7 @@ const {
   getDefaultStartTimeForFundingPeriod,
   setupEcosystem,
   testProxyInitialization,
-  testSetCurrencyRateWithDefaultValues
+  testSetCurrencyRateWithDefaultValues,
 } = require('../../helpers/poa')
 const { testWillThrow, addressZero } = require('../../helpers/general.js')
 const BigNumber = require('bignumber.js')
@@ -31,8 +31,8 @@ const makeProxyInitializationArguments = async (customValues = {}) => [
   customValues.durationForActivationPeriod || defaultActivationDuration,
   customValues.fundingGoal || defaultFundingGoal,
   {
-    from: customValues.from || broker
-  }
+    from: customValues.from || broker,
+  },
 ]
 
 describe('when initializing PoaToken', () => {
@@ -88,7 +88,7 @@ describe('when initializing PoaToken', () => {
       await testWillThrow(testProxyInitialization, [
         reg,
         pmr,
-        await makeProxyInitializationArguments()
+        await makeProxyInitializationArguments(),
       ])
     })
 
@@ -96,7 +96,7 @@ describe('when initializing PoaToken', () => {
       await testWillThrow(testProxyInitialization, [
         reg,
         pmr,
-        await makeProxyInitializationArguments()
+        await makeProxyInitializationArguments(),
       ])
     })
 
@@ -107,8 +107,8 @@ describe('when initializing PoaToken', () => {
         reg,
         pmr,
         await makeProxyInitializationArguments({
-          from: custodian
-        })
+          from: custodian,
+        }),
       ])
     })
 
@@ -119,8 +119,8 @@ describe('when initializing PoaToken', () => {
         reg,
         pmr,
         await makeProxyInitializationArguments({
-          name32: emptyBytes32
-        })
+          name32: emptyBytes32,
+        }),
       ])
     })
 
@@ -131,8 +131,8 @@ describe('when initializing PoaToken', () => {
         reg,
         pmr,
         await makeProxyInitializationArguments({
-          symbol32: emptyBytes32
-        })
+          symbol32: emptyBytes32,
+        }),
       ])
     })
 
@@ -143,8 +143,8 @@ describe('when initializing PoaToken', () => {
         reg,
         pmr,
         await makeProxyInitializationArguments({
-          fiatCurrency32: emptyBytes32
-        })
+          fiatCurrency32: emptyBytes32,
+        }),
       ])
     })
 
@@ -155,16 +155,16 @@ describe('when initializing PoaToken', () => {
         reg,
         pmr,
         await makeProxyInitializationArguments({
-          custodian: addressZero
-        })
+          custodian: addressZero,
+        }),
       ])
 
       await testWillThrow(testProxyInitialization, [
         reg,
         pmr,
         await makeProxyInitializationArguments({
-          custodian: null
-        })
+          custodian: null,
+        }),
       ])
     })
 
@@ -175,16 +175,16 @@ describe('when initializing PoaToken', () => {
         reg,
         pmr,
         await makeProxyInitializationArguments({
-          totalSupply: 9e17
-        })
+          totalSupply: 9e17,
+        }),
       ])
 
       await testWillThrow(testProxyInitialization, [
         reg,
         pmr,
         await makeProxyInitializationArguments({
-          totalSupply: null
-        })
+          totalSupply: null,
+        }),
       ])
     })
 
@@ -198,8 +198,8 @@ describe('when initializing PoaToken', () => {
           // simulate day before
           startTimeForFundingPeriod: new BigNumber(Date.now())
             .div(1000)
-            .sub(60 * 60 * 24)
-        })
+            .sub(60 * 60 * 24),
+        }),
       ])
     })
 
@@ -211,8 +211,8 @@ describe('when initializing PoaToken', () => {
         pmr,
         await makeProxyInitializationArguments({
           // simulate 1 second less than 3 days
-          durationForFiatFundingPeriod: new BigNumber(60 * 60 * 24 * 3 - 1)
-        })
+          durationForFiatFundingPeriod: new BigNumber(60 * 60 * 24 * 3 - 1),
+        }),
       ])
     })
 
@@ -224,8 +224,8 @@ describe('when initializing PoaToken', () => {
         pmr,
         await makeProxyInitializationArguments({
           // simulate 1 second less than a day
-          durationForEthFundingPeriod: new BigNumber(60 * 60 * 24 - 1)
-        })
+          durationForEthFundingPeriod: new BigNumber(60 * 60 * 24 - 1),
+        }),
       ])
     })
 
@@ -237,8 +237,8 @@ describe('when initializing PoaToken', () => {
         pmr,
         await makeProxyInitializationArguments({
           // simulate 1 second less than 7 days
-          durationForActivationPeriod: new BigNumber(60 * 60 * 24 * 7 - 1)
-        })
+          durationForActivationPeriod: new BigNumber(60 * 60 * 24 * 7 - 1),
+        }),
       ])
     })
 
@@ -249,8 +249,8 @@ describe('when initializing PoaToken', () => {
         reg,
         pmr,
         await makeProxyInitializationArguments({
-          fundingGoal: new BigNumber(0)
-        })
+          fundingGoal: new BigNumber(0),
+        }),
       ])
     })
   })

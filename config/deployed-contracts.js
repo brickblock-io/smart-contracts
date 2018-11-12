@@ -8,21 +8,21 @@
 module.exports = {
   // mainnet
   '1': {
-    ContractRegistry: '0x5973376b603268fe4251d13040226078257014f8'
+    ContractRegistry: '0x5973376b603268fe4251d13040226078257014f8',
   },
 
   // rinkeby
   '4': {
-    ContractRegistry: '0xf166a2c755c2ad404b42c9be146acefbb3907aee'
+    ContractRegistry: '0xf166a2c755c2ad404b42c9be146acefbb3907aee',
   },
 
   // kovan
   '42': {
-    ContractRegistry: '0x138d5bb1eef88dad0b6dde5e46a746ef31a22f6e'
+    ContractRegistry: '0x138d5bb1eef88dad0b6dde5e46a746ef31a22f6e',
   },
 
   // local testnet (dedicated ganache when running `yarn ganache-cli --network 4448` in platform to run end-to-end tests against)
   '4448': {
-    ContractRegistry: '0xd3aa556287afe63102e5797bfddd2a1e8dbb3ea5'
-  }
+    ContractRegistry: '0xd3aa556287afe63102e5797bfddd2a1e8dbb3ea5',
+  },
 }

@@ -4,7 +4,7 @@ const {
   testAddEmployee,
   testAddManyEmployees,
   testRemoveEmployee,
-  testPayout
+  testPayout,
 } = require('../helpers/employeeTokenSalaryPayoutHelper')
 
 const EmployeeTokenSalaryPayoutArtifact = artifacts.require(
@@ -41,7 +41,7 @@ describe('when distributing BBK bonus payouts', () => {
         employeeTokenSalaryPayoutContract.address,
         new BigNumber('1e24'),
         {
-          from: bbkHolder
+          from: bbkHolder,
         }
       )
     })
@@ -53,7 +53,7 @@ describe('when distributing BBK bonus payouts', () => {
         defaultBbkSalaryAmount,
         defaultStartingBalance,
         {
-          from: owner
+          from: owner,
         }
       )
       await testRemoveEmployee(
@@ -62,7 +62,7 @@ describe('when distributing BBK bonus payouts', () => {
         employees[0],
         defaultEndingBalance,
         {
-          from: owner
+          from: owner,
         }
       )
     })
@@ -74,12 +74,12 @@ describe('when distributing BBK bonus payouts', () => {
         new BigNumber(defaultBbkSalaryAmount),
         defaultStartingBalance,
         {
-          from: owner
+          from: owner,
         }
       )
       await testPayout(bbk, employeeTokenSalaryPayoutContract, employees, {
         from: owner,
-        gasPrice
+        gasPrice,
       })
     })
 
@@ -90,7 +90,7 @@ describe('when distributing BBK bonus payouts', () => {
         new BigNumber(defaultBbkSalaryAmount),
         defaultStartingBalance,
         {
-          from: owner
+          from: owner,
         }
       )
       const expectedPayout = await employeeTokenSalaryPayoutContract.getTotalPayoutAmount()
@@ -101,7 +101,7 @@ describe('when distributing BBK bonus payouts', () => {
         employees,
         {
           from: owner,
-          gasPrice
+          gasPrice,
         }
       )
 

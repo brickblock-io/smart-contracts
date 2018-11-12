@@ -29,14 +29,14 @@ const {
   testStartEthSale,
   testUpdateProofOfCustody,
   timeTravelToEthFundingPeriod,
-  whitelistedPoaBuyers
+  whitelistedPoaBuyers,
 } = require('./poa')
 const {
   getAllSequentialStorage,
   bytes32StorageToAscii,
   getMappingStorage,
   getNestedMappingStorage,
-  trimRightBytes
+  trimRightBytes,
 } = require('./storage')
 
 const checkPreInitializedStorage = async (poa, reg) => {
@@ -63,7 +63,9 @@ const checkPreInitializedStorage = async (poa, reg) => {
 const parseProxyCommonStorage = (storage, stageInitialized) => ({
   poaTokenMaster: storage[0].data,
   poaCrowdsaleMaster: storage[1].data,
-  registry: stageInitialized ? '0x' + storage[2].data.slice(4) : storage[2].data
+  registry: stageInitialized
+    ? '0x' + storage[2].data.slice(4)
+    : storage[2].data,
 })
 
 const parseCommonStorage = (storage, stageInitialized) => ({
@@ -74,7 +76,7 @@ const parseCommonStorage = (storage, stageInitialized) => ({
   actualCustodian: storage[4].data,
   proofOfCustody32: [
     trimRightBytes(storage[5].data),
-    trimRightBytes(storage[6].data)
+    trimRightBytes(storage[6].data),
   ],
   commonTotalSupply: new BigNumber(storage[7].data),
   fundedFiatAmountInTokens: new BigNumber(storage[8].data),
@@ -94,7 +96,7 @@ const parseCommonStorage = (storage, stageInitialized) => ({
   durationForActivationPeriod: new BigNumber(storage[17].data),
   actualFiatCurrency32: bytes32StorageToAscii(storage[18].data),
   fundingGoalInCents: new BigNumber(storage[19].data),
-  fundedFiatAmountInCents: new BigNumber(storage[20].data)
+  fundedFiatAmountInCents: new BigNumber(storage[20].data),
 })
 
 const parseTokenStorage = storage => ({
@@ -105,7 +107,7 @@ const parseTokenStorage = storage => ({
   claimedPerTokenPayouts: storage[25].data,
   spentBalances: storage[26].data,
   receivedBalances: storage[27].data,
-  allowed: storage[28].data
+  allowed: storage[28].data,
 })
 
 const initializeContract = async (poa, reg) => {
@@ -135,7 +137,7 @@ const checkPostInitializedStorage = async (poa, reg, pmr) => {
   const {
     poaCrowdsaleMaster,
     poaTokenMaster,
-    registry
+    registry,
   } = parseProxyCommonStorage(storage, false)
   // common storage
   const {
@@ -155,7 +157,7 @@ const checkPostInitializedStorage = async (poa, reg, pmr) => {
     proofOfCustody32,
     stage,
     startTimeForFundingPeriod,
-    tokenInitialized
+    tokenInitialized,
   } = await parseCommonStorage(storage, false)
 
   // token storage
@@ -272,18 +274,18 @@ const enterActiveStage = async (poa, fmr) => {
   // buy all remaining tokens and move to `FundingSuccessful` stage
   await testBuyRemainingTokens(poa, {
     from: whitelistedPoaBuyers[0],
-    gasPrice
+    gasPrice,
   })
 
   await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
-    from: custodian
+    from: custodian,
   })
 
   await testPayActivationFee(poa, fmr)
 
   // move into "Active" stage
   await testActivate(poa, fmr, {
-    from: custodian
+    from: custodian,
   })
 
   // clean out broker balance for easier debugging
@@ -323,7 +325,7 @@ const checkPostActiveStorage = async (poa, reg, pmr) => {
     proofOfCustody32,
     stage,
     startTimeForFundingPeriod,
-    tokenInitialized
+    tokenInitialized,
   } = await parseCommonStorage(storage, true)
 
   // token storage
@@ -426,7 +428,7 @@ const checkPostActiveStorage = async (poa, reg, pmr) => {
     whitelistedPoaBuyers[0]
   )
   const {
-    nestedMappingValueStorage: allowedValue
+    nestedMappingValueStorage: allowedValue,
   } = await getNestedMappingStorage(
     poa.address,
     28,
@@ -461,7 +463,7 @@ const checkPostIsUpgradedStorage = async (poa, reg, pmr) => {
   const {
     poaTokenMaster,
     poaCrowdsaleMaster,
-    registry
+    registry,
   } = parseProxyCommonStorage(storage, true)
   // common storage
   const {
@@ -481,7 +483,7 @@ const checkPostIsUpgradedStorage = async (poa, reg, pmr) => {
     proofOfCustody32,
     stage,
     startTimeForFundingPeriod,
-    tokenInitialized
+    tokenInitialized,
   } = await parseCommonStorage(storage, true)
   // token storage
   const { allowed, actualOwner, name, symbol } = parseTokenStorage(storage)
@@ -591,7 +593,7 @@ const checkPostIsUpgradedStorage = async (poa, reg, pmr) => {
     whitelistedPoaBuyers[0]
   )
   const {
-    nestedMappingValueStorage: allowedValue
+    nestedMappingValueStorage: allowedValue,
   } = await getNestedMappingStorage(
     poa.address,
     28,
@@ -628,5 +630,5 @@ module.exports = {
   checkPostInitializedStorage,
   enterActiveStage,
   checkPostActiveStorage,
-  checkPostIsUpgradedStorage
+  checkPostIsUpgradedStorage,
 }

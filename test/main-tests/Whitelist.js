@@ -46,7 +46,7 @@ describe('when deployed', () => {
           await addAddress({
             addressToWhitelist,
             ownerAddress,
-            whitelistContract
+            whitelistContract,
           })
         })
 
@@ -59,14 +59,14 @@ describe('when deployed', () => {
 
           await testWillThrow(whitelistContract.addAddress, [
             addressToWhitelist,
-            { from: ownerAddress }
+            { from: ownerAddress },
           ])
         })
 
         it('should allow anyone to see whitelisted status of an address', async () => {
           assert.equal(
             await whitelistContract.whitelisted(addressToWhitelist, {
-              from: anyAddress
+              from: anyAddress,
             }),
             true,
             'should be public state'
@@ -77,21 +77,21 @@ describe('when deployed', () => {
           await removeAddress({
             addressToWhitelist,
             ownerAddress,
-            whitelistContract
+            whitelistContract,
           })
         })
 
         it('should not remove an already non-whitelisted address', async () => {
           await testWillThrow(whitelistContract.removeAddress, [
             addressToWhitelist,
-            { from: ownerAddress }
+            { from: ownerAddress },
           ])
         })
 
         it('should allow anyone to see non-whitelisted status of an address', async () => {
           assert.equal(
             await whitelistContract.whitelisted(addressToWhitelist, {
-              from: anyAddress
+              from: anyAddress,
             }),
             false,
             'should be public state'
@@ -103,14 +103,14 @@ describe('when deployed', () => {
         it('should fail to add an address', async () => {
           await testWillThrow(whitelistContract.addAddress, [
             addressToWhitelist,
-            { from: anyAddress }
+            { from: anyAddress },
           ])
         })
 
         it('should fail to remove an address', async () => {
           await testWillThrow(whitelistContract.removeAddress, [
             addressToWhitelist,
-            { from: anyAddress }
+            { from: anyAddress },
           ])
         })
       })
@@ -134,7 +134,7 @@ describe('when deployed', () => {
           addressToWhitelist,
           ownerAddress,
           whitelistContract,
-          isPaused: true
+          isPaused: true,
         })
       })
 
@@ -151,7 +151,7 @@ describe('when deployed', () => {
           addressToWhitelist,
           ownerAddress,
           whitelistContract,
-          isPaused: true
+          isPaused: true,
         })
       })
 

@@ -32,7 +32,7 @@ const setupRegistry = async () => {
     whitelist: wht,
     feeManager: fmr,
     accessToken: act,
-    registry: reg
+    registry: reg,
   }
 }
 
@@ -295,5 +295,5 @@ module.exports = {
   toBytes32,
   waitForReceiptStatusSuccessOrThrow,
   waitForTxToBeMined,
-  percentBigInt
+  percentBigInt,
 }

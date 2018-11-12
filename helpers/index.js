@@ -2,7 +2,7 @@ const {
   getCurrentBlockTime,
   getTimeInFutureBySeconds,
   timeTravel,
-  timeTravelToTarget
+  timeTravelToTarget,
 } = require('./time-travel')
 const { send } = require('./general')
 
@@ -11,5 +11,5 @@ module.exports = {
   getTimeInFutureBySeconds,
   timeTravel,
   timeTravelToTarget,
-  send
+  send,
 }

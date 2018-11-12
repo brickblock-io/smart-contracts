@@ -14,7 +14,7 @@ const {
   testSetQueryId,
   testSetRateRatesActiveFalse,
   testUpdatedCurrencySettings,
-  testGetCurrencySettings
+  testGetCurrencySettings,
 } = require('../helpers/exr')
 
 describe('when performing owner only functions', () => {
@@ -47,7 +47,7 @@ describe('when performing owner only functions', () => {
         callbackGasLimit,
         queryString,
         ratePenalty,
-        { from: notOwner }
+        { from: notOwner },
       ])
     })
 
@@ -72,7 +72,7 @@ describe('when performing owner only functions', () => {
         exr,
         exp,
         'USD',
-        { from: notOwner, value: 1e18 }
+        { from: notOwner, value: 1e18 },
       ])
     })
 
@@ -96,7 +96,7 @@ describe('when performing owner only functions', () => {
       await testWillThrow(testToggleRatesActive, [
         exr,
         true,
-        { from: notOwner }
+        { from: notOwner },
       ])
     })
   })

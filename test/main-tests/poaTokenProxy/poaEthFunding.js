@@ -24,13 +24,13 @@ const {
   testUnpause,
   testUpdateProofOfCustody,
   timeTravelToEthFundingPeriod,
-  whitelistedPoaBuyers
+  whitelistedPoaBuyers,
 } = require('../../helpers/poa')
 const {
   testWillThrow,
   gasPrice,
   getGasUsed,
-  getEtherBalance
+  getEtherBalance,
 } = require('../../helpers/general.js')
 
 describe("when in 'EthFunding' stage", () => {
@@ -63,7 +63,7 @@ describe("when in 'EthFunding' stage", () => {
         poa,
         pmr,
         { from: owner },
-        { callPoaDIrectly: false }
+        { callPoaDIrectly: false },
       ])
     })
 
@@ -84,7 +84,7 @@ describe("when in 'EthFunding' stage", () => {
         poa,
         pmr,
         { from: custodian },
-        { callPoaDirectly: true }
+        { callPoaDirectly: true },
       ])
     })
 
@@ -96,7 +96,7 @@ describe("when in 'EthFunding' stage", () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { from: broker, value: 1e18, gasPrice }
+        { from: broker, value: 1e18, gasPrice },
       ])
     })
 
@@ -108,7 +108,7 @@ describe("when in 'EthFunding' stage", () => {
       await testWillThrow(testUpdateProofOfCustody, [
         poa,
         defaultIpfsHashArray32,
-        { from: custodian }
+        { from: custodian },
       ])
     })
 
@@ -118,8 +118,8 @@ describe("when in 'EthFunding' stage", () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
     })
 
@@ -129,8 +129,8 @@ describe("when in 'EthFunding' stage", () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
     })
 
@@ -142,8 +142,8 @@ describe("when in 'EthFunding' stage", () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
       await testWillThrow(testTransferFrom, [
         poa,
@@ -151,8 +151,8 @@ describe("when in 'EthFunding' stage", () => {
         bbkContributors[0],
         1e17,
         {
-          from: whitelistedPoaBuyers[1]
-        }
+          from: whitelistedPoaBuyers[1],
+        },
       ])
     })
 
@@ -162,14 +162,14 @@ describe("when in 'EthFunding' stage", () => {
       await testBuyTokens(poa, {
         from: whitelistedPoaBuyers[0],
         value: 5e17,
-        gasPrice
+        gasPrice,
       })
     })
 
     it('should move into pending when all tokens are bought', async () => {
       await testBuyRemainingTokens(poa, {
         from: whitelistedPoaBuyers[1],
-        gasPrice
+        gasPrice,
       })
     })
   })
@@ -194,7 +194,7 @@ describe("when in 'EthFunding' stage", () => {
       await testBuyTokens(poa, {
         from: whitelistedPoaBuyers[0],
         value: 5e17,
-        gasPrice
+        gasPrice,
       })
     })
 
@@ -209,7 +209,7 @@ describe("when in 'EthFunding' stage", () => {
       const tx = await poa.buy({
         from: buyer,
         value: amount,
-        gasPrice
+        gasPrice,
       })
       const postBalance = await getEtherBalance(buyer)
       const gasUsed = await getGasUsed(tx)
@@ -236,7 +236,7 @@ describe("when in 'EthFunding' stage", () => {
       const tx = await poa.buy({
         from: buyer,
         value: remainingBuyableEth,
-        gasPrice
+        gasPrice,
       })
       const postBalance = await getEtherBalance(buyer)
       const gasUsed = await getGasUsed(tx)

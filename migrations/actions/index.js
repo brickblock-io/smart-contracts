@@ -3,5 +3,5 @@ const poaActions = require('./poa-actions')
 
 module.exports = {
   deploymentActions,
-  poaActions
+  poaActions,
 }

@@ -6,7 +6,7 @@ const {
   moveTokenToActive,
   testPauseToken,
   testUnpauseToken,
-  testTerminateToken
+  testTerminateToken,
 } = require('../helpers/pmr')
 
 describe('when creating a new instance of the contract', () => {
@@ -64,7 +64,7 @@ describe('when calling broker functions', () => {
         checkForEvent(
           'BrokerAdded',
           {
-            broker: addedBroker
+            broker: addedBroker,
           },
           await pmr.addBroker(addedBroker)
         )
@@ -100,8 +100,8 @@ describe('when calling broker functions', () => {
         await testWillThrow(pmr.addBroker, [
           anotherBroker,
           {
-            from: notOwner
-          }
+            from: notOwner,
+          },
         ])
       })
 
@@ -128,7 +128,7 @@ describe('when calling broker functions', () => {
           'BrokerStatusChanged',
           {
             broker: addedBroker,
-            active: false
+            active: false,
           },
           await pmr.delistBroker(addedBroker)
         )
@@ -152,8 +152,8 @@ describe('when calling broker functions', () => {
         await testWillThrow(pmr.delistBroker, [
           anotherBroker,
           {
-            from: notOwner
-          }
+            from: notOwner,
+          },
         ])
       })
     })
@@ -164,7 +164,7 @@ describe('when calling broker functions', () => {
           'BrokerStatusChanged',
           {
             broker: addedBroker,
-            active: true
+            active: true,
           },
           await pmr.listBroker(addedBroker)
         )
@@ -188,8 +188,8 @@ describe('when calling broker functions', () => {
         await testWillThrow(pmr.listBroker, [
           anotherBroker,
           {
-            from: notOwner
-          }
+            from: notOwner,
+          },
         ])
       })
     })
@@ -199,7 +199,7 @@ describe('when calling broker functions', () => {
         checkForEvent(
           'BrokerRemoved',
           {
-            broker: addedBroker
+            broker: addedBroker,
           },
           await pmr.removeBroker(addedBroker)
         )
@@ -223,8 +223,8 @@ describe('when calling broker functions', () => {
         await testWillThrow(pmr.removeBroker, [
           anotherBroker,
           {
-            from: notOwner
-          }
+            from: notOwner,
+          },
         ])
       })
 
@@ -277,7 +277,7 @@ describe('when calling token functions', () => {
     describe('when adding a token', () => {
       it('should emit TokenAdded', async () => {
         const { txReceipt, tokenAddress } = await addToken(pmr, {
-          from: listedBroker
+          from: listedBroker,
         })
 
         // setting this here for use in following tests in this contract block
@@ -286,7 +286,7 @@ describe('when calling token functions', () => {
         checkForEvent(
           'TokenAdded',
           {
-            token: addedToken
+            token: addedToken,
           },
           txReceipt
         )
@@ -320,7 +320,7 @@ describe('when calling token functions', () => {
 
       it('should allow for more tokens to be added', async () => {
         const { tokenAddress } = await addToken(pmr, {
-          from: listedBroker
+          from: listedBroker,
         })
 
         // setting this here for use in following tests in this contract block
@@ -339,8 +339,8 @@ describe('when calling token functions', () => {
         await testWillThrow(addToken, [
           pmr,
           {
-            from: delistedBroker
-          }
+            from: delistedBroker,
+          },
         ])
       })
 
@@ -348,8 +348,8 @@ describe('when calling token functions', () => {
         await testWillThrow(addToken, [
           pmr,
           {
-            from: notBroker
-          }
+            from: notBroker,
+          },
         ])
       })
     })
@@ -360,7 +360,7 @@ describe('when calling token functions', () => {
           'TokenStatusChanged',
           {
             token: addedToken,
-            active: true
+            active: true,
           },
           await pmr.listToken(addedToken)
         )
@@ -384,8 +384,8 @@ describe('when calling token functions', () => {
         await testWillThrow(pmr.listToken, [
           anotherToken,
           {
-            from: notOwner
-          }
+            from: notOwner,
+          },
         ])
       })
     })
@@ -396,7 +396,7 @@ describe('when calling token functions', () => {
           'TokenStatusChanged',
           {
             token: addedToken,
-            active: false
+            active: false,
           },
           await pmr.delistToken(addedToken)
         )
@@ -420,8 +420,8 @@ describe('when calling token functions', () => {
         await testWillThrow(pmr.delistToken, [
           anotherToken,
           {
-            from: notOwner
-          }
+            from: notOwner,
+          },
         ])
       })
     })
@@ -431,7 +431,7 @@ describe('when calling token functions', () => {
         checkForEvent(
           'TokenRemoved',
           {
-            token: addedToken
+            token: addedToken,
           },
           await pmr.removeToken(addedToken)
         )
@@ -455,8 +455,8 @@ describe('when calling token functions', () => {
         await testWillThrow(pmr.removeToken, [
           anotherToken,
           {
-            from: notOwner
-          }
+            from: notOwner,
+          },
         ])
       })
 
@@ -496,10 +496,10 @@ describe('when calling token convenience functions', () => {
 
       await pmr.addBroker(broker)
       const { tokenAddress: addedTokenAddress } = await addToken(pmr, {
-        from: broker
+        from: broker,
       })
       await pmr.listToken(addedTokenAddress, {
-        from: owner
+        from: owner,
       })
       addedToken = await IPoaTokenCrowdsale.at(addedTokenAddress)
       await moveTokenToActive(addedToken, fmr)
@@ -511,8 +511,8 @@ describe('when calling token convenience functions', () => {
           pmr,
           addedToken,
           {
-            from: notOwner
-          }
+            from: notOwner,
+          },
         ])
       })
 
@@ -524,7 +524,7 @@ describe('when calling token convenience functions', () => {
         )
 
         await testPauseToken(pmr, addedToken, {
-          from: owner
+          from: owner,
         })
 
         assert.equal(
@@ -541,8 +541,8 @@ describe('when calling token convenience functions', () => {
           pmr,
           addedToken,
           {
-            from: notOwner
-          }
+            from: notOwner,
+          },
         ])
       })
 
@@ -553,7 +553,7 @@ describe('when calling token convenience functions', () => {
           'token should begin paused'
         )
         await testUnpauseToken(pmr, addedToken, {
-          from: owner
+          from: owner,
         })
         assert.equal(
           await addedToken.paused(),
@@ -569,8 +569,8 @@ describe('when calling token convenience functions', () => {
           pmr,
           addedToken,
           {
-            from: notOwner
-          }
+            from: notOwner,
+          },
         ])
       })
 

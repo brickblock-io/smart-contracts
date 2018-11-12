@@ -28,7 +28,7 @@ const {
   testUnpause,
   testUpdateProofOfCustody,
   timeTravelToEthFundingPeriod,
-  whitelistedPoaBuyers
+  whitelistedPoaBuyers,
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
 
@@ -57,29 +57,29 @@ describe("when in 'Active' stage", () => {
       await testBuyTokens(poa, {
         from: whitelistedPoaBuyers[0],
         value: defaultBuyAmount,
-        gasPrice
+        gasPrice,
       })
 
       // save for testing token balances once Active
       commitments.push({
         address: whitelistedPoaBuyers[0],
-        amount: defaultBuyAmount
+        amount: defaultBuyAmount,
       })
 
       const commitAmount = await testBuyRemainingTokens(poa, {
         from: whitelistedPoaBuyers[1],
-        gasPrice
+        gasPrice,
       })
 
       // save for testing token balances once Active
       commitments.push({
         address: whitelistedPoaBuyers[1],
-        amount: commitAmount
+        amount: commitAmount,
       })
 
       // Set proof of custody
       await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
-        from: custodian
+        from: custodian,
       })
 
       // Pay the initial fee
@@ -87,7 +87,7 @@ describe("when in 'Active' stage", () => {
 
       // move into "Active" stage
       await testActivate(poa, fmr, {
-        from: custodian
+        from: custodian,
       })
 
       // clean out broker balance for easier debugging
@@ -107,7 +107,7 @@ describe("when in 'Active' stage", () => {
         poa,
         pmr,
         { from: owner },
-        { callPoaDirectly: false }
+        { callPoaDirectly: false },
       ])
     })
 
@@ -116,7 +116,7 @@ describe("when in 'Active' stage", () => {
         poa,
         pmr,
         { from: whitelistedPoaBuyers[0] },
-        { callPoaDirectly: true }
+        { callPoaDirectly: true },
       ])
     })
 
@@ -129,7 +129,7 @@ describe("when in 'Active' stage", () => {
         poa,
         pmr,
         { from: owner },
-        { callPoaDirectly: false }
+        { callPoaDirectly: false },
       ])
     })
 
@@ -138,7 +138,7 @@ describe("when in 'Active' stage", () => {
         poa,
         pmr,
         { from: whitelistedPoaBuyers[0] },
-        { callPoaDirectly: true }
+        { callPoaDirectly: true },
       ])
     })
 
@@ -153,7 +153,7 @@ describe("when in 'Active' stage", () => {
     it('should NOT buy, even if whitelisted', async () => {
       await testWillThrow(testBuyTokens, [
         poa,
-        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice }
+        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice },
       ])
     })
 
@@ -188,7 +188,7 @@ describe("when in 'Active' stage", () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { value: 100, from: broker, gasPrice }
+        { value: 100, from: broker, gasPrice },
       ])
     })
 
@@ -196,12 +196,12 @@ describe("when in 'Active' stage", () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { value: 2e18, from: owner, gasPrice }
+        { value: 2e18, from: owner, gasPrice },
       ])
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { value: 2e18, from: bbkContributors[0], gasPrice }
+        { value: 2e18, from: bbkContributors[0], gasPrice },
       ])
     })
 
@@ -211,7 +211,7 @@ describe("when in 'Active' stage", () => {
 
     it('should update proofOfCustody if custodian', async () => {
       await testUpdateProofOfCustody(poa, newIpfsHashArray32, {
-        from: custodian
+        from: custodian,
       })
     })
 
@@ -219,7 +219,7 @@ describe("when in 'Active' stage", () => {
       await testWillThrow(testUpdateProofOfCustody, [
         poa,
         newIpfsHashArray32,
-        { from: owner }
+        { from: owner },
       ])
     })
 
@@ -229,11 +229,11 @@ describe("when in 'Active' stage", () => {
         poa,
         [
           newIpfsHashArray32[0],
-          newIpfsHashArray32[1].slice(newIpfsHashArray32[1].length - 2)
+          newIpfsHashArray32[1].slice(newIpfsHashArray32[1].length - 2),
         ],
         {
-          from: custodian
-        }
+          from: custodian,
+        },
       ])
 
       // wrong hashing algo
@@ -241,14 +241,14 @@ describe("when in 'Active' stage", () => {
         poa,
         [newIpfsHashArray32[0].replace('Qm', 'Zr'), newIpfsHashArray32[1]],
         {
-          from: custodian
-        }
+          from: custodian,
+        },
       ])
     })
 
     it('should approve', async () => {
       await testApprove(poa, whitelistedPoaBuyers[1], 1e17, {
-        from: whitelistedPoaBuyers[0]
+        from: whitelistedPoaBuyers[0],
       })
     })
 
@@ -257,7 +257,7 @@ describe("when in 'Active' stage", () => {
         poa,
         custodian,
         1e17,
-        { from: whitelistedPoaBuyers[0] }
+        { from: whitelistedPoaBuyers[0] },
       ])
     })
 
@@ -267,13 +267,13 @@ describe("when in 'Active' stage", () => {
         whitelistedPoaBuyers[0],
         custodian,
         1e17,
-        { from: whitelistedPoaBuyers[1] }
+        { from: whitelistedPoaBuyers[1] },
       ])
     })
 
     it('should transfer to whitelisted addresses', async () => {
       await testTransfer(poa, whitelistedPoaBuyers[1], 1e17, {
-        from: whitelistedPoaBuyers[0]
+        from: whitelistedPoaBuyers[0],
       })
     })
 
@@ -284,7 +284,7 @@ describe("when in 'Active' stage", () => {
         whitelistedPoaBuyers[2],
         1e17,
         {
-          from: whitelistedPoaBuyers[1]
+          from: whitelistedPoaBuyers[1],
         }
       )
     })

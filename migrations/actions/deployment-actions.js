@@ -21,7 +21,7 @@ const deploymentActions = async (
     poaManager,
     whitelist,
     statistics,
-    ownerManagement: { transferOwnershipOfAllContracts }
+    ownerManagement: { transferOwnershipOfAllContracts },
   } = migrationHelpers
 
   const {
@@ -29,7 +29,7 @@ const deploymentActions = async (
     broker,
     custodian,
     whitelistedInvestor,
-    contributors
+    contributors,
   } = getAccounts(accounts)
 
   const ownerStartEtherBalance = await getEtherBalance(owner)
@@ -54,7 +54,7 @@ const deploymentActions = async (
     setRate: argv.setRate,
     finalizeBbk: argv.finalizeBbk,
     addBroker: argv.addBroker,
-    addToWhiteList: argv.addToWhiteList
+    addToWhiteList: argv.addToWhiteList,
   }
 
   let hasParams = false
@@ -75,7 +75,7 @@ const deploymentActions = async (
   const instances = await deployContracts(deployer, accounts, contracts, {
     useExpStub: useStub,
     useExistingContracts: argv.useExistingContracts,
-    network
+    network,
   })
   ownerPostEtherBalance = await getEtherBalance(owner)
   const deployContractsGasCost = ownerPreEtherBalance.sub(ownerPostEtherBalance)
@@ -104,7 +104,7 @@ const deploymentActions = async (
         queryString: `json(https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=${symbol}).${symbol}`,
         callIntervalInSec: argv.setRateInterval,
         callbackGasLimit: argv.setRateGasLimit,
-        useStub
+        useStub,
       },
       { from: owner }
     )
@@ -123,7 +123,7 @@ const deploymentActions = async (
         fountainAddress: instances.BrickblockAccount.address,
         contributors,
         tokenAmountPerContributor: new BigNumber(100e18),
-        network
+        network,
       },
       { from: owner }
     )
@@ -156,7 +156,7 @@ const deploymentActions = async (
       await sendTransaction({
         from: owner,
         to: broker,
-        value: new BigNumber(3.25e16)
+        value: new BigNumber(3.25e16),
       })
     }
 
@@ -173,7 +173,7 @@ const deploymentActions = async (
         durationForEthFundingPeriod: argv.deployPoaDurationForEthFunding,
         durationForActivationPeriod: argv.deployPoaDurationForActivation,
         fundingGoalInCents: argv.deployPoaFundingGoalInCents,
-        listToken: argv.deployPoaListToken
+        listToken: argv.deployPoaListToken,
       },
       { from: broker }
     )
@@ -203,7 +203,7 @@ const deploymentActions = async (
     await whitelist.addAddress(
       instances.Whitelist,
       {
-        investor: addressToWhiteList
+        investor: addressToWhiteList,
       },
       { from: owner }
     )
@@ -243,11 +243,11 @@ const deploymentActions = async (
       deployPoaTokenGasCost,
       whitelistAddressGasCost,
       changeOwnerGasCost,
-      totalGasCost
+      totalGasCost,
     },
     {
       web3,
-      network
+      network,
     }
   )
 }

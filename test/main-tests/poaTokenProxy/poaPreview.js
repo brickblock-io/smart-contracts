@@ -30,7 +30,7 @@ const {
   testUpdateSymbol,
   testUpdateTotalSupply,
   testUpdateProofOfCustody,
-  whitelistedPoaBuyers
+  whitelistedPoaBuyers,
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
 
@@ -56,14 +56,14 @@ describe("when in 'Preview' stage", async () => {
         poa,
         pmr,
         { from: owner },
-        { callPoaDirectly: false }
+        { callPoaDirectly: false },
       ])
     })
 
     it('should NOT buy, even if whitelisted', async () => {
       await testWillThrow(testBuyTokens, [
         poa,
-        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice }
+        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice },
       ])
     })
 
@@ -80,7 +80,7 @@ describe("when in 'Preview' stage", async () => {
         poa,
         pmr,
         { from: custodian },
-        { callPoaDirectly: true }
+        { callPoaDirectly: true },
       ])
     })
 
@@ -92,7 +92,7 @@ describe("when in 'Preview' stage", async () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { from: broker, value: 1e18, gasPrice }
+        { from: broker, value: 1e18, gasPrice },
       ])
     })
 
@@ -104,7 +104,7 @@ describe("when in 'Preview' stage", async () => {
       await testWillThrow(testUpdateProofOfCustody, [
         poa,
         defaultIpfsHashArray32,
-        { from: custodian }
+        { from: custodian },
       ])
     })
 
@@ -114,8 +114,8 @@ describe("when in 'Preview' stage", async () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
     })
 
@@ -125,8 +125,8 @@ describe("when in 'Preview' stage", async () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
     })
 
@@ -138,8 +138,8 @@ describe("when in 'Preview' stage", async () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
       await testWillThrow(testTransferFrom, [
         poa,
@@ -147,8 +147,8 @@ describe("when in 'Preview' stage", async () => {
         bbkContributors[0],
         1e17,
         {
-          from: whitelistedPoaBuyers[1]
-        }
+          from: whitelistedPoaBuyers[1],
+        },
       ])
     })
 
@@ -161,17 +161,17 @@ describe("when in 'Preview' stage", async () => {
       await testWillThrow(testUpdateName, [
         poa,
         'NotAllowedTokenName',
-        { from: owner }
+        { from: owner },
       ])
       await testWillThrow(testUpdateName, [
         poa,
         'NotAllowedTokenName',
-        { from: custodian }
+        { from: custodian },
       ])
       await testWillThrow(testUpdateName, [
         poa,
         'NotAllowedTokenName',
-        { from: whitelistedPoaBuyers[0] }
+        { from: whitelistedPoaBuyers[0] },
       ])
     })
 
@@ -187,7 +187,7 @@ describe("when in 'Preview' stage", async () => {
           await testWillThrow(testUpdateSymbol, [
             poa,
             newSymbol,
-            { from: fromAddress }
+            { from: fromAddress },
           ])
         }
       )
@@ -205,7 +205,7 @@ describe("when in 'Preview' stage", async () => {
           await testWillThrow(testUpdateBrokerAddress, [
             poa,
             newBroker,
-            { from: fromAddress }
+            { from: fromAddress },
           ])
         }
       )
@@ -213,11 +213,11 @@ describe("when in 'Preview' stage", async () => {
 
     it('should update broker address by broker', async () => {
       await testUpdateBrokerAddress(poa, whitelistedPoaBuyers[0], {
-        from: broker
+        from: broker,
       })
       // change it back again so we can continue to use `broker` as broker address
       await testUpdateBrokerAddress(poa, broker, {
-        from: whitelistedPoaBuyers[0]
+        from: whitelistedPoaBuyers[0],
       })
     })
 
@@ -229,7 +229,7 @@ describe("when in 'Preview' stage", async () => {
           await testWillThrow(testUpdateTotalSupply, [
             poa,
             anyHighEnoughTotalSupply,
-            { from: fromAddress }
+            { from: fromAddress },
           ])
         }
       )
@@ -238,7 +238,7 @@ describe("when in 'Preview' stage", async () => {
     it('should update total supply by broker', async () => {
       const anyHighEnoughTotalSupply = 2e18
       await testUpdateTotalSupply(poa, anyHighEnoughTotalSupply, {
-        from: broker
+        from: broker,
       })
     })
 
@@ -250,7 +250,7 @@ describe("when in 'Preview' stage", async () => {
           await testWillThrow(testUpdateFiatCurrency, [
             poa,
             anyNewFiatCurrency,
-            { from: fromAddress }
+            { from: fromAddress },
           ])
         }
       )
@@ -268,7 +268,7 @@ describe("when in 'Preview' stage", async () => {
           await testWillThrow(testUpdateFiatCurrency, [
             poa,
             uninitializedFiatCurrency,
-            { from: fromAddress }
+            { from: fromAddress },
           ])
         }
       )
@@ -282,7 +282,7 @@ describe("when in 'Preview' stage", async () => {
           await testWillThrow(testUpdateFundingGoalInCents, [
             poa,
             newFundingGoalInCents,
-            { from: fromAddress }
+            { from: fromAddress },
           ])
         }
       )
@@ -291,7 +291,7 @@ describe("when in 'Preview' stage", async () => {
     it('should update funding goal in cents by broker', async () => {
       const newFundingGoalInCents = 2e9
       await testUpdateFundingGoalInCents(poa, newFundingGoalInCents, {
-        from: broker
+        from: broker,
       })
     })
 
@@ -306,7 +306,7 @@ describe("when in 'Preview' stage", async () => {
           await testWillThrow(testUpdateStartTimeForFundingPeriod, [
             poa,
             timestampHundredYearsInFuture,
-            { from: fromAddress }
+            { from: fromAddress },
           ])
         }
       )
@@ -333,7 +333,7 @@ describe("when in 'Preview' stage", async () => {
           await testWillThrow(testUpdateDurationForEthFundingPeriod, [
             poa,
             durationOfFiveDays,
-            { from: fromAddress }
+            { from: fromAddress },
           ])
         }
       )
@@ -342,7 +342,7 @@ describe("when in 'Preview' stage", async () => {
     it('should update duration of ETH funding period by broker', async () => {
       const durationOfFiveDays = '432000'
       await testUpdateDurationForEthFundingPeriod(poa, durationOfFiveDays, {
-        from: broker
+        from: broker,
       })
     })
 
@@ -354,7 +354,7 @@ describe("when in 'Preview' stage", async () => {
           await testWillThrow(testUpdateDurationForActivationPeriod, [
             poa,
             durationOfFiveWeeks,
-            { from: fromAddress }
+            { from: fromAddress },
           ])
         }
       )
@@ -363,7 +363,7 @@ describe("when in 'Preview' stage", async () => {
     it('should update duration of activation period by broker', async () => {
       const durationOfFiveWeeks = '3024000'
       await testUpdateDurationForActivationPeriod(poa, durationOfFiveWeeks, {
-        from: broker
+        from: broker,
       })
     })
 
@@ -382,7 +382,7 @@ describe("when in 'Preview' stage", async () => {
         async fromAddress => {
           await testWillThrow(testStartPreFunding, [
             poa,
-            { from: fromAddress, gasPrice }
+            { from: fromAddress, gasPrice },
           ])
         }
       )

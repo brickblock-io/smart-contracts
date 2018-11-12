@@ -24,7 +24,7 @@ const {
   testUnpause,
   testUpdateProofOfCustody,
   timeTravelToEthFundingPeriod,
-  whitelistedPoaBuyers
+  whitelistedPoaBuyers,
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
 
@@ -33,7 +33,7 @@ describe("when in 'Terminated' stage", () => {
     const newIpfsHash = 'Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u'
     const newIpfsHashArray32 = [
       web3.toHex(newIpfsHash.slice(0, 32)),
-      web3.toHex(newIpfsHash.slice(32))
+      web3.toHex(newIpfsHash.slice(32)),
     ]
     let poa
     let fmr
@@ -57,17 +57,17 @@ describe("when in 'Terminated' stage", () => {
       await testBuyTokens(poa, {
         from: whitelistedPoaBuyers[0],
         value: 1e18,
-        gasPrice
+        gasPrice,
       })
 
       await testBuyRemainingTokens(poa, {
         from: whitelistedPoaBuyers[1],
-        gasPrice
+        gasPrice,
       })
 
       // Set proof of custody
       await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
-        from: custodian
+        from: custodian,
       })
 
       // Pay the initial fee
@@ -75,7 +75,7 @@ describe("when in 'Terminated' stage", () => {
 
       // move into 'Active' stage
       await testActivate(poa, fmr, {
-        from: custodian
+        from: custodian,
       })
 
       // clean out broker balance for easier debugging
@@ -95,7 +95,7 @@ describe("when in 'Terminated' stage", () => {
         poa,
         pmr,
         { from: owner },
-        { callPoaDirectly: false }
+        { callPoaDirectly: false },
       ])
     })
 
@@ -106,7 +106,7 @@ describe("when in 'Terminated' stage", () => {
     it('should NOT buy, even if whitelisted', async () => {
       await testWillThrow(testBuyTokens, [
         poa,
-        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice }
+        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice },
       ])
     })
 
@@ -123,7 +123,7 @@ describe("when in 'Terminated' stage", () => {
         poa,
         pmr,
         { from: custodian },
-        { callPoaDirectly: true }
+        { callPoaDirectly: true },
       ])
     })
 
@@ -137,8 +137,8 @@ describe("when in 'Terminated' stage", () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
     })
 
@@ -148,8 +148,8 @@ describe("when in 'Terminated' stage", () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
     })
 
@@ -161,8 +161,8 @@ describe("when in 'Terminated' stage", () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
       await testWillThrow(testTransferFrom, [
         poa,
@@ -170,8 +170,8 @@ describe("when in 'Terminated' stage", () => {
         bbkContributors[0],
         1e17,
         {
-          from: whitelistedPoaBuyers[1]
-        }
+          from: whitelistedPoaBuyers[1],
+        },
       ])
     })
 
@@ -192,7 +192,7 @@ describe("when in 'Terminated' stage", () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { value: 100, from: broker, gasPrice }
+        { value: 100, from: broker, gasPrice },
       ])
     })
 
@@ -200,12 +200,12 @@ describe("when in 'Terminated' stage", () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { value: 2e18, from: owner, gasPrice }
+        { value: 2e18, from: owner, gasPrice },
       ])
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { value: 2e18, from: whitelistedPoaBuyers[0], gasPrice }
+        { value: 2e18, from: whitelistedPoaBuyers[0], gasPrice },
       ])
     })
 
@@ -215,7 +215,7 @@ describe("when in 'Terminated' stage", () => {
 
     it('should update proofOfCustody if custodian', async () => {
       await testUpdateProofOfCustody(poa, newIpfsHashArray32, {
-        from: custodian
+        from: custodian,
       })
     })
 
@@ -223,7 +223,7 @@ describe("when in 'Terminated' stage", () => {
       await testWillThrow(testUpdateProofOfCustody, [
         poa,
         newIpfsHashArray32,
-        { from: owner }
+        { from: owner },
       ])
     })
 
@@ -232,14 +232,14 @@ describe("when in 'Terminated' stage", () => {
       await testWillThrow(testUpdateProofOfCustody, [
         poa,
         [newIpfsHashArray32[0], newIpfsHashArray32[1] + 'invalidExtraStuff'],
-        { from: owner }
+        { from: owner },
       ])
 
       // wrong hashing algo
       await testWillThrow(testUpdateProofOfCustody, [
         poa,
         [newIpfsHashArray32[0], 'Zr' + newIpfsHashArray32[1].slice(2)],
-        { from: owner }
+        { from: owner },
       ])
     })
   })

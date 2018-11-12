@@ -13,13 +13,13 @@ const showStatistics = (costs, globals) => {
     deployPoaTokenGasCost,
     whitelistAddressGasCost,
     changeOwnerGasCost,
-    totalGasCost
+    totalGasCost,
   } = costs
 
   const { web3, network } = globals
 
   const tableData = [
-    ['Action Name', 'Gas Cost GWei', 'Gas Cost Ether', 'Gas Used']
+    ['Action Name', 'Gas Cost GWei', 'Gas Cost Ether', 'Gas Used'],
   ]
 
   if (deployContractsGasCost) {
@@ -27,7 +27,7 @@ const showStatistics = (costs, globals) => {
       'Deploy Contracts',
       web3.fromWei(deployContractsGasCost, 'gwei').toString(),
       `Ξ ${web3.fromWei(deployContractsGasCost).toString()}`,
-      calculateUsedGasFromCost(network, deployContractsGasCost).toString()
+      calculateUsedGasFromCost(network, deployContractsGasCost).toString(),
     ])
   }
 
@@ -36,7 +36,7 @@ const showStatistics = (costs, globals) => {
       'Register Contracts',
       web3.fromWei(addToRegistryGasCost, 'gwei').toString(),
       `Ξ ${web3.fromWei(addToRegistryGasCost).toString()}`,
-      calculateUsedGasFromCost(network, addToRegistryGasCost).toString()
+      calculateUsedGasFromCost(network, addToRegistryGasCost).toString(),
     ])
   }
 
@@ -45,7 +45,7 @@ const showStatistics = (costs, globals) => {
       'Finalize BBK',
       web3.fromWei(finalizeBbkCrowdsaleGasCost, 'gwei').toString(),
       `Ξ ${web3.fromWei(finalizeBbkCrowdsaleGasCost).toString()}`,
-      calculateUsedGasFromCost(network, finalizeBbkCrowdsaleGasCost).toString()
+      calculateUsedGasFromCost(network, finalizeBbkCrowdsaleGasCost).toString(),
     ])
   }
 
@@ -54,7 +54,7 @@ const showStatistics = (costs, globals) => {
       'Set Fiat Rate',
       web3.fromWei(setFiatRateGasCost, 'gwei').toString(),
       `Ξ ${web3.fromWei(setFiatRateGasCost).toString()}`,
-      calculateUsedGasFromCost(network, setFiatRateGasCost).toString()
+      calculateUsedGasFromCost(network, setFiatRateGasCost).toString(),
     ])
   }
 
@@ -63,7 +63,7 @@ const showStatistics = (costs, globals) => {
       'Add Broker',
       web3.fromWei(addBrokerGasCost, 'gwei').toString(),
       `Ξ ${web3.fromWei(addBrokerGasCost).toString()}`,
-      calculateUsedGasFromCost(network, addBrokerGasCost).toString()
+      calculateUsedGasFromCost(network, addBrokerGasCost).toString(),
     ])
   }
 
@@ -72,7 +72,7 @@ const showStatistics = (costs, globals) => {
       'Deploy POA Token',
       web3.fromWei(deployPoaTokenGasCost, 'gwei').toString(),
       `Ξ ${web3.fromWei(deployPoaTokenGasCost).toString()}`,
-      calculateUsedGasFromCost(network, deployPoaTokenGasCost).toString()
+      calculateUsedGasFromCost(network, deployPoaTokenGasCost).toString(),
     ])
   }
 
@@ -81,7 +81,7 @@ const showStatistics = (costs, globals) => {
       'Whitelist Investor',
       web3.fromWei(whitelistAddressGasCost, 'gwei').toString(),
       `Ξ ${web3.fromWei(whitelistAddressGasCost).toString()}`,
-      calculateUsedGasFromCost(network, whitelistAddressGasCost).toString()
+      calculateUsedGasFromCost(network, whitelistAddressGasCost).toString(),
     ])
   }
 
@@ -90,7 +90,7 @@ const showStatistics = (costs, globals) => {
       'Change Owner',
       web3.fromWei(changeOwnerGasCost, 'gwei').toString(),
       `Ξ ${web3.fromWei(changeOwnerGasCost).toString()}`,
-      calculateUsedGasFromCost(network, changeOwnerGasCost).toString()
+      calculateUsedGasFromCost(network, changeOwnerGasCost).toString(),
     ])
   }
 
@@ -99,7 +99,7 @@ const showStatistics = (costs, globals) => {
       chalk.bold('Total'),
       web3.fromWei(totalGasCost, 'gwei').toString(),
       `Ξ ${web3.fromWei(totalGasCost).toString()}`,
-      calculateUsedGasFromCost(network, totalGasCost).toString()
+      calculateUsedGasFromCost(network, totalGasCost).toString(),
     ])
   }
 

@@ -23,7 +23,7 @@ const {
   testUpdateProofOfCustody,
   timeTravelToFundingPeriod,
   timeTravelToEthFundingPeriod,
-  whitelistedPoaBuyers
+  whitelistedPoaBuyers,
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
 
@@ -52,14 +52,14 @@ describe("when in 'PreFunding' stage", async () => {
         poa,
         pmr,
         { from: owner },
-        { callPoaDirectly: false }
+        { callPoaDirectly: false },
       ])
     })
 
     it('should NOT buy, even if whitelisted', async () => {
       await testWillThrow(testBuyTokens, [
         poa,
-        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice }
+        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice },
       ])
     })
 
@@ -76,7 +76,7 @@ describe("when in 'PreFunding' stage", async () => {
         poa,
         pmr,
         { from: custodian },
-        { callPoaDirectly: true }
+        { callPoaDirectly: true },
       ])
     })
 
@@ -88,7 +88,7 @@ describe("when in 'PreFunding' stage", async () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { from: broker, value: 1e18, gasPrice }
+        { from: broker, value: 1e18, gasPrice },
       ])
     })
 
@@ -100,7 +100,7 @@ describe("when in 'PreFunding' stage", async () => {
       await testWillThrow(testUpdateProofOfCustody, [
         poa,
         defaultIpfsHashArray32,
-        { from: custodian }
+        { from: custodian },
       ])
     })
 
@@ -110,8 +110,8 @@ describe("when in 'PreFunding' stage", async () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
     })
 
@@ -121,8 +121,8 @@ describe("when in 'PreFunding' stage", async () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
     })
 
@@ -134,8 +134,8 @@ describe("when in 'PreFunding' stage", async () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
       await testWillThrow(testTransferFrom, [
         poa,
@@ -143,8 +143,8 @@ describe("when in 'PreFunding' stage", async () => {
         bbkContributors[0],
         1e17,
         {
-          from: whitelistedPoaBuyers[1]
-        }
+          from: whitelistedPoaBuyers[1],
+        },
       ])
     })
 
@@ -158,7 +158,7 @@ describe("when in 'PreFunding' stage", async () => {
           async fromAddress => {
             await testWillThrow(testStartFiatSale, [
               poa,
-              { from: fromAddress, gasPrice }
+              { from: fromAddress, gasPrice },
             ])
           }
         )
@@ -171,7 +171,7 @@ describe("when in 'PreFunding' stage", async () => {
           async fromAddress => {
             await testWillThrow(testStartEthSale, [
               poa,
-              { from: fromAddress, gasPrice }
+              { from: fromAddress, gasPrice },
             ])
           }
         )

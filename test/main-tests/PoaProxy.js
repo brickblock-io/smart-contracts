@@ -12,7 +12,7 @@ const {
   checkPostInitializedStorage,
   enterActiveStage,
   checkPostActiveStorage,
-  checkPostIsUpgradedStorage
+  checkPostIsUpgradedStorage,
 } = require('../helpers/pxy')
 const {
   testApprove,
@@ -22,7 +22,7 @@ const {
   defaultFiatCurrency,
   defaultFiatRate,
   defaultFiatRatePenalty,
-  owner
+  owner,
 } = require('../helpers/poa')
 
 describe('when using PoaProxy contract to proxy a PoaToken', () => {
@@ -62,7 +62,7 @@ describe('when using PoaProxy contract to proxy a PoaToken', () => {
         defaultFiatRatePenalty,
         {
           from: owner,
-          value: 1e18
+          value: 1e18,
         }
       )
 
@@ -91,7 +91,7 @@ describe('when using PoaProxy contract to proxy a PoaToken', () => {
 
     it('should approve', async () => {
       await testApprove(poa, whitelistedPoaBuyers[1], 3e18, {
-        from: whitelistedPoaBuyers[0]
+        from: whitelistedPoaBuyers[0],
       })
     })
 
@@ -102,7 +102,7 @@ describe('when using PoaProxy contract to proxy a PoaToken', () => {
     it('should NOT upgrade to new master if NOT PoaManager (accounts[0] for test)', async () => {
       await testWillThrow(pxy.proxyChangeTokenMaster, [
         upoam.address,
-        { from: accounts[1] }
+        { from: accounts[1] },
       ])
     })
 

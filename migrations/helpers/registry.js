@@ -20,7 +20,7 @@ const addContractsToRegistry = async (
     PoaManager,
     PoaTokenMaster,
     PoaCrowdsaleMaster,
-    Whitelist
+    Whitelist,
   } = contracts
 
   await conditionalRegister(
@@ -138,5 +138,5 @@ const conditionalRegister = async (
 }
 
 module.exports = {
-  addContractsToRegistry
+  addContractsToRegistry,
 }

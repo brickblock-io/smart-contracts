@@ -6,7 +6,7 @@ const BigNumber = require('bignumber.js')
 const {
   sendTransaction,
   getReceipt,
-  getEtherBalance
+  getEtherBalance,
 } = require('../helpers/general')
 
 const totalSupply = new BigNumber(33e18)
@@ -34,7 +34,7 @@ async function testMultiBuyTokens(investors, contract, args) {
     const tx = await contract.buy({
       from: investor,
       value: investAmount,
-      gasPrice
+      gasPrice,
     })
     const postTokenBalance = await contract.balanceOf(investor)
     const postEtherBalance = await getEtherBalance(investor)
@@ -97,7 +97,7 @@ async function testFallbackBuy(web3, contract, args) {
     to: contract.address,
     from: investor,
     value: investAmount,
-    gasPrice
+    gasPrice,
   })
   const initialSupply = await contract.initialSupply()
   const tx = await getReceipt(txHash)
@@ -154,7 +154,7 @@ async function testBuyRemainingTokens(contract, accounts, args) {
   const tx = await contract.buy({
     from: investor,
     value: overpayAmountEth,
-    gasPrice
+    gasPrice,
   })
 
   const postInvestorTokenBalance = await contract.balanceOf(investor)
@@ -229,7 +229,7 @@ async function testOwnerWithdrawFees(cpoa, owner) {
   const preOwnerUnclaimedBalance = await cpoa.unclaimedPayoutTotals(owner)
   const txHash = await cpoa.claim({
     from: owner,
-    gasPrice
+    gasPrice,
   })
 
   const tx = await getReceipt(txHash)
@@ -271,7 +271,7 @@ async function testCustodianWithdrawFees(cpoa, custodian) {
 
   const txHash = await cpoa.claim({
     from: custodian,
-    gasPrice
+    gasPrice,
   })
 
   const tx = await getReceipt(txHash)
@@ -346,7 +346,7 @@ async function testApproveTransferFrom(
   )
 
   await contract.approve(allowanceSpender, allowanceAmount, {
-    from: allowanceOwner
+    from: allowanceOwner,
   })
 
   let postSpenderAllowance = await contract.allowance(
@@ -369,7 +369,7 @@ async function testApproveTransferFrom(
   )
 
   await contract.transferFrom(allowanceOwner, to, value, {
-    from: allowanceSpender
+    from: allowanceSpender,
   })
 
   const postOwnerTokenBalance = await contract.balanceOf(allowanceOwner)
@@ -473,7 +473,7 @@ async function testClaimAllPayouts(investors, contract) {
     if (investorClaimAmount.greaterThan(0)) {
       const tx = await contract.claim({
         from: investor,
-        gasPrice
+        gasPrice,
       })
 
       const gasUsed = tx.receipt.gasUsed || new BigNumber(0)
@@ -571,7 +571,7 @@ async function getAccountInformation(address, contract) {
   return {
     etherBalance,
     tokenBalance,
-    currentPayout
+    currentPayout,
   }
 }
 
@@ -582,7 +582,7 @@ const testClearDust = async (cpoa, investors) => {
 
     if (preUnclaimedBalance.greaterThan(0)) {
       await cpoa.claim({
-        from: investor
+        from: investor,
       })
       const postInvestorEthBalance = await getEtherBalance(investor)
       const postUnclaimedBalance = await cpoa.unclaimedPayoutTotals(investor)
@@ -618,5 +618,5 @@ module.exports = {
   totalSupply,
   fundingGoal,
   gasPrice,
-  testClearDust
+  testClearDust,
 }

@@ -22,7 +22,7 @@ const {
   testUnpause,
   testUpdateProofOfCustody,
   timeTravelToFundingPeriod,
-  whitelistedPoaBuyers
+  whitelistedPoaBuyers,
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
 
@@ -49,7 +49,7 @@ describe("when in 'FundingCancelled' stage", () => {
 
       await testBuyTokensWithFiat(poa, fiatInvestor, 100000, {
         from: custodian,
-        gasPrice
+        gasPrice,
       })
 
       await testCancelFunding(poa, custodian, true)
@@ -64,7 +64,7 @@ describe("when in 'FundingCancelled' stage", () => {
         poa,
         pmr,
         { from: owner },
-        { callPoaDirectly: false }
+        { callPoaDirectly: false },
       ])
     })
 
@@ -75,7 +75,7 @@ describe("when in 'FundingCancelled' stage", () => {
     it('should NOT buy, even if whitelisted', async () => {
       await testWillThrow(testBuyTokens, [
         poa,
-        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice }
+        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice },
       ])
     })
 
@@ -88,7 +88,7 @@ describe("when in 'FundingCancelled' stage", () => {
         poa,
         pmr,
         { from: custodian },
-        { callPoaDirectly: true }
+        { callPoaDirectly: true },
       ])
     })
 
@@ -96,7 +96,7 @@ describe("when in 'FundingCancelled' stage", () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { from: broker, value: 1e18, gasPrice }
+        { from: broker, value: 1e18, gasPrice },
       ])
     })
 
@@ -108,7 +108,7 @@ describe("when in 'FundingCancelled' stage", () => {
       await testWillThrow(testUpdateProofOfCustody, [
         poa,
         defaultIpfsHashArray32,
-        { from: custodian }
+        { from: custodian },
       ])
     })
 
@@ -118,8 +118,8 @@ describe("when in 'FundingCancelled' stage", () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
     })
 
@@ -129,8 +129,8 @@ describe("when in 'FundingCancelled' stage", () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
     })
 
@@ -142,8 +142,8 @@ describe("when in 'FundingCancelled' stage", () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
       await testWillThrow(testTransferFrom, [
         poa,
@@ -151,8 +151,8 @@ describe("when in 'FundingCancelled' stage", () => {
         bbkContributors[0],
         1e17,
         {
-          from: whitelistedPoaBuyers[1]
-        }
+          from: whitelistedPoaBuyers[1],
+        },
       ])
     })
 
@@ -167,8 +167,8 @@ describe("when in 'FundingCancelled' stage", () => {
         100000,
         {
           from: custodian,
-          gasPrice
-        }
+          gasPrice,
+        },
       ])
     })
 
@@ -178,8 +178,8 @@ describe("when in 'FundingCancelled' stage", () => {
         {
           from: whitelistedPoaBuyers[0],
           value: 5e17,
-          gasPrice
-        }
+          gasPrice,
+        },
       ])
     })
   })

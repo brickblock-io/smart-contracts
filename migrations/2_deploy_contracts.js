@@ -38,7 +38,7 @@ const contracts = {
   PoaManager,
   PoaTokenMaster,
   Whitelist,
-  IPoaTokenCrowdsale
+  IPoaTokenCrowdsale,
 }
 
 module.exports = (deployer, network, accounts) => {

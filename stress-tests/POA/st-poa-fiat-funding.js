@@ -3,7 +3,7 @@ const BigNumber = require('bignumber.js')
 const {
   getRandomBigInt,
   gasPrice,
-  testWillThrow
+  testWillThrow,
 } = require('test/helpers/general')
 const { timeTravel } = require('helpers')
 const {
@@ -22,14 +22,14 @@ const {
   testClaimAllPayouts,
   testPayout,
   defaultFiatCurrency,
-  defaultFiatRate
+  defaultFiatRate,
 } = require('test/helpers/poa')
 
 const {
   InvestmentRegistry,
   fundFiatUntilRemainingTarget,
   displaySummary,
-  getFundingGoal
+  getFundingGoal,
 } = require('../helpers/st-poa-helper')
 
 describe('PoaToken Stress Tests - test fiat funding only', () => {
@@ -46,10 +46,10 @@ describe('PoaToken Stress Tests - test fiat funding only', () => {
       fundingGoal = await getFundingGoal({
         defaultFiatRate,
         defaultfundingGoal: new BigNumber(1e8), // 1.000.000 EUR
-        investors: fiatInvestors
+        investors: fiatInvestors,
       })
       const contracts = await setupPoaProxyAndEcosystem({
-        _fundingGoal: fundingGoal
+        _fundingGoal: fundingGoal,
       })
 
       fmr = contracts.fmr
@@ -81,7 +81,7 @@ describe('PoaToken Stress Tests - test fiat funding only', () => {
       logger.info(
         `Remaining fundable amount: ${remainingFundableAmount.toString()}`,
         {
-          scope: 'Fiat funding'
+          scope: 'Fiat funding',
         }
       )
 
@@ -92,7 +92,7 @@ describe('PoaToken Stress Tests - test fiat funding only', () => {
         {
           from: custodian,
           gasPrice,
-          expectedTokenDifferenceTolerance: 100000
+          expectedTokenDifferenceTolerance: 100000,
         }
       )
     })
@@ -103,11 +103,11 @@ describe('PoaToken Stress Tests - test fiat funding only', () => {
       paidActivationFee = res.paidFeeAmount
 
       await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
-        from: custodian
+        from: custodian,
       })
 
       await testActivate(poa, fmr, {
-        from: custodian
+        from: custodian,
       })
     })
 
@@ -117,7 +117,7 @@ describe('PoaToken Stress Tests - test fiat funding only', () => {
         await testPayout(poa, fmr, {
           from: broker,
           value: getRandomBigInt(new BigNumber(1e18), new BigNumber(3e18)),
-          gasPrice
+          gasPrice,
         })
         totalPayout = totalPayout.add(payout)
       }
@@ -142,7 +142,7 @@ describe('PoaToken Stress Tests - test fiat funding only', () => {
         defaultFiatRate,
         investmentRegistry,
         totalPayout,
-        paidActivationFee
+        paidActivationFee,
       })
     })
   })

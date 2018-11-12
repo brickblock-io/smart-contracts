@@ -27,7 +27,7 @@ const {
   testStartEthSale,
   testUpdateProofOfCustody,
   timeTravelToEthFundingPeriod,
-  whitelistedPoaBuyers
+  whitelistedPoaBuyers,
 } = require('./poa')
 const { gasPrice } = require('./general')
 
@@ -54,7 +54,7 @@ const setupPoaManager = async () => {
     defaultFiatRatePenalty,
     {
       from: owner,
-      value: 1e18
+      value: 1e18,
     }
   )
 
@@ -62,7 +62,7 @@ const setupPoaManager = async () => {
     poatm,
     reg,
     pmr,
-    fmr
+    fmr,
   }
 }
 
@@ -85,7 +85,7 @@ const addToken = async (pmr, config) => {
 
   return {
     tokenAddress,
-    txReceipt
+    txReceipt,
   }
 }
 
@@ -100,17 +100,17 @@ const moveTokenToActive = async (poa, fmr) => {
 
   await testBuyRemainingTokens(poa, {
     from: whitelistedPoaBuyers[whitelistedPoaBuyers.length - 1],
-    gasPrice
+    gasPrice,
   })
 
   await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
-    from: custodian
+    from: custodian,
   })
 
   await testPayActivationFee(poa, fmr)
 
   await testActivate(poa, fmr, {
-    from: custodian
+    from: custodian,
   })
 }
 
@@ -146,5 +146,5 @@ module.exports = {
   moveTokenToActive,
   testPauseToken,
   testUnpauseToken,
-  testTerminateToken
+  testTerminateToken,
 }

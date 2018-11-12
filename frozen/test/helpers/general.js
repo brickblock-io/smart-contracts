@@ -86,5 +86,5 @@ module.exports = {
   getReceipt,
   sendTransaction,
   testWillThrow,
-  warpBlocks
+  warpBlocks,
 }

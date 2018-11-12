@@ -23,7 +23,7 @@ const {
   testUnpause,
   testUpdateProofOfCustody,
   timeTravelToEthFundingPeriod,
-  whitelistedPoaBuyers
+  whitelistedPoaBuyers,
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
 
@@ -50,7 +50,7 @@ describe("when in 'FundingSuccessful' stage", () => {
       // move into `FundingSuccessful` stage
       await testBuyRemainingTokens(poa, {
         from: whitelistedPoaBuyers[1],
-        gasPrice
+        gasPrice,
       })
     })
 
@@ -63,7 +63,7 @@ describe("when in 'FundingSuccessful' stage", () => {
         poa,
         pmr,
         { from: owner },
-        { callPoaDirectly: false }
+        { callPoaDirectly: false },
       ])
     })
 
@@ -74,7 +74,7 @@ describe("when in 'FundingSuccessful' stage", () => {
     it('should NOT buy, even if whitelisted', async () => {
       await testWillThrow(testBuyTokens, [
         poa,
-        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice }
+        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice },
       ])
     })
 
@@ -87,7 +87,7 @@ describe("when in 'FundingSuccessful' stage", () => {
         poa,
         pmr,
         { from: custodian },
-        { callPoaDirectly: true }
+        { callPoaDirectly: true },
       ])
     })
 
@@ -99,7 +99,7 @@ describe("when in 'FundingSuccessful' stage", () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { from: broker, value: 1e18, gasPrice }
+        { from: broker, value: 1e18, gasPrice },
       ])
     })
 
@@ -109,7 +109,7 @@ describe("when in 'FundingSuccessful' stage", () => {
 
     it('should updateProofOfCustody', async () => {
       await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
-        from: custodian
+        from: custodian,
       })
     })
 
@@ -119,8 +119,8 @@ describe("when in 'FundingSuccessful' stage", () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
     })
 
@@ -130,8 +130,8 @@ describe("when in 'FundingSuccessful' stage", () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
     })
 
@@ -143,8 +143,8 @@ describe("when in 'FundingSuccessful' stage", () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
       await testWillThrow(testTransferFrom, [
         poa,
@@ -152,8 +152,8 @@ describe("when in 'FundingSuccessful' stage", () => {
         bbkContributors[0],
         1e17,
         {
-          from: whitelistedPoaBuyers[1]
-        }
+          from: whitelistedPoaBuyers[1],
+        },
       ])
     })
 
@@ -172,7 +172,7 @@ describe("when in 'FundingSuccessful' stage", () => {
 
     it('should move into Active when activated', async () => {
       await testActivate(poa, fmr, {
-        from: custodian
+        from: custodian,
       })
     })
   })
@@ -199,7 +199,7 @@ describe("when in paying activation fee in 'FundingSuccessful' stage", () => {
       // move into `FundingSuccessful` stage
       await testBuyRemainingTokens(poa, {
         from: whitelistedPoaBuyers[1],
-        gasPrice
+        gasPrice,
       })
     })
 
@@ -220,7 +220,7 @@ describe("when in paying activation fee in 'FundingSuccessful' stage", () => {
       await testWillThrow(testPayActivationFee, [
         poa,
         fmr,
-        { value: underThresholdFee }
+        { value: underThresholdFee },
       ])
     })
 
@@ -234,7 +234,7 @@ describe("when in paying activation fee in 'FundingSuccessful' stage", () => {
       await testWillThrow(testPayActivationFee, [
         poa,
         fmr,
-        { value: overThresholdFee }
+        { value: overThresholdFee },
       ])
     })
 
@@ -246,7 +246,7 @@ describe("when in paying activation fee in 'FundingSuccessful' stage", () => {
         .floor()
 
       await testPayActivationFee(poa, fmr, {
-        value: validLowFee
+        value: validLowFee,
       })
     })
 
@@ -258,7 +258,7 @@ describe("when in paying activation fee in 'FundingSuccessful' stage", () => {
         .floor()
 
       await testPayActivationFee(poa, fmr, {
-        value: validHighFee
+        value: validHighFee,
       })
     })
   })

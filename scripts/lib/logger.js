@@ -4,7 +4,7 @@ const formatOut = bformat({ outputMode: 'long' })
 const logger = bunyan.createLogger({
   name: 'smartContracts',
   //src: true,
-  stream: formatOut
+  stream: formatOut,
 })
 
 process.env.LOG_LEVEL

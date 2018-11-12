@@ -10,14 +10,14 @@ module.exports = {
       host: 'localhost',
       port: 8545,
       network_id: 4447,
-      gasPrice: 1e9
+      gasPrice: 1e9,
     },
     devGeth: {
       host: 'localhost',
       port: 8545,
       network_id: '*',
       // Values below 6000000 fail often because of the required minimum block gas amount.
-      gas: 6300000
+      gas: 6300000,
     },
     ropsten: {
       network_id: 3,
@@ -29,7 +29,7 @@ module.exports = {
           providerUrl || 'https://ropsten.infura.io/v3/' + infuraApiKey,
           0,
           10
-        )
+        ),
     },
     kovan: {
       network_id: 42,
@@ -41,7 +41,7 @@ module.exports = {
           providerUrl || 'https://kovan.infura.io/v3/' + infuraApiKey,
           0,
           10
-        )
+        ),
     },
     rinkeby: {
       network_id: 4,
@@ -53,7 +53,7 @@ module.exports = {
           providerUrl || 'https://rinkeby.infura.io/v3/' + infuraApiKey,
           0,
           10
-        )
+        ),
     },
     mainnet: {
       network_id: 1,
@@ -65,7 +65,7 @@ module.exports = {
           providerUrl || 'https://mainnet.infura.io/v3/' + infuraApiKey,
           0,
           10
-        )
+        ),
     },
     // to be used when we want to interact in a local truffle console session
     hdwallet: {
@@ -81,13 +81,13 @@ module.exports = {
           10
         )
       },
-      network_id: '*'
-    }
+      network_id: '*',
+    },
   },
   compilers: {
     solc: {
-      version: '0.4.24'
-    }
+      version: '0.4.24',
+    },
   },
   mocha: {
     /*
@@ -101,6 +101,6 @@ module.exports = {
      * - Slow
      * - Doesn't display test duration
      */
-    reporter: process.env.GAS_REPORTER ? 'eth-gas-reporter' : 'spec'
-  }
+    reporter: process.env.GAS_REPORTER ? 'eth-gas-reporter' : 'spec',
+  },
 }

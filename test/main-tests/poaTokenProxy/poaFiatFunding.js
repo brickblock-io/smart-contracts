@@ -29,7 +29,7 @@ const {
   testUpdateProofOfCustody,
   timeTravelToFundingPeriod,
   timeTravelToEthFundingPeriod,
-  whitelistedPoaBuyers
+  whitelistedPoaBuyers,
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
 
@@ -64,7 +64,7 @@ describe("when in 'FiatFunding' stage", () => {
         poa,
         pmr,
         { from: owner },
-        { callPoaDirectly: false }
+        { callPoaDirectly: false },
       ])
     })
 
@@ -81,7 +81,7 @@ describe("when in 'FiatFunding' stage", () => {
         poa,
         pmr,
         { from: custodian },
-        { callPoaDirectly: true }
+        { callPoaDirectly: true },
       ])
     })
 
@@ -93,7 +93,7 @@ describe("when in 'FiatFunding' stage", () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { from: broker, value: 1e18, gasPrice }
+        { from: broker, value: 1e18, gasPrice },
       ])
     })
 
@@ -105,7 +105,7 @@ describe("when in 'FiatFunding' stage", () => {
       await testWillThrow(testUpdateProofOfCustody, [
         poa,
         defaultIpfsHashArray32,
-        { from: custodian }
+        { from: custodian },
       ])
     })
 
@@ -115,8 +115,8 @@ describe("when in 'FiatFunding' stage", () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
     })
 
@@ -126,8 +126,8 @@ describe("when in 'FiatFunding' stage", () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
     })
 
@@ -139,8 +139,8 @@ describe("when in 'FiatFunding' stage", () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
       await testWillThrow(testTransferFrom, [
         poa,
@@ -148,8 +148,8 @@ describe("when in 'FiatFunding' stage", () => {
         bbkContributors[0],
         1e17,
         {
-          from: whitelistedPoaBuyers[1]
-        }
+          from: whitelistedPoaBuyers[1],
+        },
       ])
     })
 
@@ -162,7 +162,7 @@ describe("when in 'FiatFunding' stage", () => {
     it('should allow FIAT buying', async () => {
       await testBuyTokensWithFiat(poa, fiatInvestor, 100, {
         from: custodian,
-        gasPrice
+        gasPrice,
       })
     })
 
@@ -173,8 +173,8 @@ describe("when in 'FiatFunding' stage", () => {
         0,
         {
           from: custodian,
-          gasPrice
-        }
+          gasPrice,
+        },
       ])
     })
 
@@ -204,8 +204,8 @@ describe("when in 'FiatFunding' stage", () => {
         investmentAmountInCents,
         {
           from: custodian,
-          gasPrice
-        }
+          gasPrice,
+        },
       ])
     })
 
@@ -215,8 +215,8 @@ describe("when in 'FiatFunding' stage", () => {
         {
           from: fiatInvestor,
           value: 5e17,
-          gasPrice
-        }
+          gasPrice,
+        },
       ])
     })
 
@@ -226,7 +226,7 @@ describe("when in 'FiatFunding' stage", () => {
 
       await testBuyTokensWithFiat(poa, fiatInvestor, 100000, {
         from: custodian,
-        gasPrice
+        gasPrice,
       })
     })
 
@@ -240,8 +240,8 @@ describe("when in 'FiatFunding' stage", () => {
         100000,
         {
           from: custodian,
-          gasPrice
-        }
+          gasPrice,
+        },
       ])
     })
   })
@@ -273,7 +273,7 @@ describe('when in FIAT Funding (stage 2) and funding goal is met during the fiat
 
       await testBuyTokensWithFiat(poa, fiatInvestor, investmentAmountInCents, {
         from: custodian,
-        gasPrice
+        gasPrice,
       })
 
       const postStage = await poa.stage()
@@ -332,7 +332,7 @@ describe('when in FIAT Funding (stage 2) and funding goal is met during the fiat
 
       await testBuyTokensWithFiat(poa, fiatInvestor, investmentAmountInCents, {
         from: custodian,
-        gasPrice
+        gasPrice,
       })
 
       await testRemoveTokensWithFiat(
@@ -341,7 +341,7 @@ describe('when in FIAT Funding (stage 2) and funding goal is met during the fiat
         investmentAmountInCents,
         {
           from: custodian,
-          gasPrice
+          gasPrice,
         }
       )
     })
@@ -357,8 +357,8 @@ describe('when in FIAT Funding (stage 2) and funding goal is met during the fiat
         investmentAmountInCents,
         {
           from: custodian,
-          gasPrice
-        }
+          gasPrice,
+        },
       ])
     })
 
@@ -369,7 +369,7 @@ describe('when in FIAT Funding (stage 2) and funding goal is met during the fiat
 
       await testBuyTokensWithFiat(poa, fiatInvestor, investmentAmountInCents, {
         from: custodian,
-        gasPrice
+        gasPrice,
       })
 
       await testWillThrow(testBuyTokensWithFiat, [
@@ -378,8 +378,8 @@ describe('when in FIAT Funding (stage 2) and funding goal is met during the fiat
         investmentAmountInCents,
         {
           from: fiatInvestor,
-          gasPrice
-        }
+          gasPrice,
+        },
       ])
     })
 
@@ -390,7 +390,7 @@ describe('when in FIAT Funding (stage 2) and funding goal is met during the fiat
 
       await testBuyTokensWithFiat(poa, fiatInvestor, investmentAmountInCents, {
         from: custodian,
-        gasPrice
+        gasPrice,
       })
 
       await testRemoveTokensWithFiat(
@@ -399,13 +399,13 @@ describe('when in FIAT Funding (stage 2) and funding goal is met during the fiat
         investmentAmountInCents,
         {
           from: custodian,
-          gasPrice
+          gasPrice,
         }
       )
 
       await testBuyTokensWithFiat(poa, fiatInvestor, investmentAmountInCents, {
         from: custodian,
-        gasPrice
+        gasPrice,
       })
 
       await testWillThrow(testRemoveTokensWithFiat, [
@@ -414,8 +414,8 @@ describe('when in FIAT Funding (stage 2) and funding goal is met during the fiat
         investmentAmountInCents,
         {
           from: fiatInvestor,
-          gasPrice
-        }
+          gasPrice,
+        },
       ])
     })
   })

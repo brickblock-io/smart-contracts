@@ -3,30 +3,31 @@ module.exports = {
   parserOptions: {
     ecmaFeatures: {
       generators: true,
-      experimentalObjectRestSpread: true
+      experimentalObjectRestSpread: true,
     },
     sourceType: 'module',
-    allowImportExportEverywhere: false
+    allowImportExportEverywhere: false,
   },
   extends: [
     'eslint:recommended',
     'plugin:import/errors',
     'plugin:import/warnings',
+    'plugin:prettier/recommended',
     'plugin:promise/recommended',
-    'plugin:security/recommended'
+    'plugin:security/recommended',
   ],
-  plugins: ['compat', 'prettier', 'promise', 'security'],
+  plugins: ['compat', 'promise', 'security'],
   settings: {
     'import/resolver': {
       node: {
         extensions: ['.js', '.jsx', '.json', '.css'],
-        paths: './src'
-      }
+        paths: './src',
+      },
     },
-    polyfills: ['fetch', 'promises']
+    polyfills: ['fetch', 'promises'],
   },
   env: {
-    node: true
+    node: true,
   },
   globals: {
     __DEV__: true,
@@ -53,7 +54,7 @@ module.exports = {
     test: true,
     xdescribe: true,
     xit: true,
-    web3: true
+    web3: true,
   },
   rules: {
     'compat/compat': 'error',
@@ -63,14 +64,6 @@ module.exports = {
     'import/prefer-default-export': 'error',
     'import/no-named-as-default': 'off',
     'import/no-unresolved': 'error',
-    'prettier/prettier': [
-      'error',
-      {
-        semi: false,
-        singleQuote: true,
-        trailingComma: 'none'
-      }
-    ],
     'promise/avoid-new': 'off',
     'security/detect-object-injection': 'off',
     'arrow-body-style': 'off',
@@ -78,7 +71,6 @@ module.exports = {
     'no-console': ['error', { allow: ['assert'] }],
     'no-shadow': 'error',
     'no-var': 'error',
-
     'padding-line-between-statements': [
       'error',
       { blankLine: 'always', prev: 'class', next: '*' },
@@ -89,8 +81,8 @@ module.exports = {
       { blankLine: 'always', prev: 'switch', next: '*' },
       { blankLine: 'always', prev: 'try', next: '*' },
       { blankLine: 'always', prev: 'while', next: '*' },
-      { blankLine: 'always', prev: 'with', next: '*' }
+      { blankLine: 'always', prev: 'with', next: '*' },
     ],
-    'prefer-const': 'error'
-  }
+    'prefer-const': 'error',
+  },
 }

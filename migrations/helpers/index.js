@@ -41,5 +41,5 @@ module.exports = {
   statistics,
   ownerManagement,
   deployment,
-  registry
+  registry,
 }

@@ -30,13 +30,13 @@ const {
   timeTravelToFundingPeriod,
   timeTravelToFundingPeriodTimeout,
   timeTravelToActivationPeriodTimeout,
-  whitelistedPoaBuyers
+  whitelistedPoaBuyers,
 } = require('../../helpers/poa')
 const {
   gasPrice,
   areInRange,
   getEtherBalance,
-  testWillThrow
+  testWillThrow,
 } = require('../../helpers/general.js')
 const BigNumber = require('bignumber.js')
 
@@ -73,18 +73,18 @@ describe('De-whitelisted POA holders', () => {
           whitelistedPoaBuyers[
             Math.floor(Math.random() * whitelistedPoaBuyers.length)
           ],
-        gasPrice
+        gasPrice,
       })
 
       await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
-        from: custodian
+        from: custodian,
       })
 
       await testPayActivationFee(poa, fmr)
 
       // move into Active
       await testActivate(poa, fmr, {
-        from: custodian
+        from: custodian,
       })
 
       senderBalance = await poa.balanceOf(sender)
@@ -97,8 +97,8 @@ describe('De-whitelisted POA holders', () => {
         receiver,
         senderBalance,
         {
-          from: sender
-        }
+          from: sender,
+        },
       ])
     })
 
@@ -109,8 +109,8 @@ describe('De-whitelisted POA holders', () => {
         receiver,
         senderBalance,
         {
-          from: sender
-        }
+          from: sender,
+        },
       ])
     })
 
@@ -122,8 +122,8 @@ describe('De-whitelisted POA holders', () => {
         receiver,
         senderBalance,
         {
-          from: sender
-        }
+          from: sender,
+        },
       ])
     })
   })
@@ -153,7 +153,7 @@ describe('when handling unhappy paths', async () => {
       await testBuyTokens(poa, {
         from: whitelistedPoaBuyers[0],
         value: tokenBuyAmount,
-        gasPrice
+        gasPrice,
       })
 
       await timeTravelToFundingPeriodTimeout(poa)
@@ -172,7 +172,7 @@ describe('when handling unhappy paths', async () => {
       // buy all remaining tokens and move to `FundingSuccessful` stage
       await testBuyRemainingTokens(poa, {
         from: whitelistedPoaBuyers[0],
-        gasPrice
+        gasPrice,
       })
 
       await timeTravelToActivationPeriodTimeout(poa)
@@ -192,7 +192,7 @@ describe('when handling unhappy paths', async () => {
       // buy all remaining tokens and move to `FundingSuccessful` stage
       await testBuyRemainingTokens(poa, {
         from: whitelistedPoaBuyers[0],
-        gasPrice
+        gasPrice,
       })
 
       await timeTravelToActivationPeriodTimeout(poa)
@@ -227,7 +227,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
       // buy with fiat
       await testBuyTokensWithFiat(poa, fiatBuyer, 1000, {
         from: custodian,
-        gasPrice
+        gasPrice,
       })
 
       await timeTravelToEthFundingPeriod(poa)
@@ -242,18 +242,18 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           whitelistedPoaBuyers[
             Math.floor(Math.random() * whitelistedPoaBuyers.length)
           ],
-        gasPrice
+        gasPrice,
       })
 
       await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
-        from: custodian
+        from: custodian,
       })
 
       await testPayActivationFee(poa, fmr)
 
       // move into Active
       await testActivate(poa, fmr, {
-        from: custodian
+        from: custodian,
       })
 
       // clean out broker balance for easier debugging
@@ -279,7 +279,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         await testPayout(poa, fmr, {
           from: broker,
           value: defaultPayoutAmount,
-          gasPrice
+          gasPrice,
         })
         senderAccount = await getAccountInformation(poa, sender)
         receiverAccount = await getAccountInformation(poa, receiver)
@@ -311,7 +311,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         )
 
         await testTransfer(poa, receiver, senderAccount.tokenBalance, {
-          from: sender
+          from: sender,
         })
 
         // now need to account for unclaimedPayouts
@@ -325,7 +325,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         await testPayout(poa, fmr, {
           from: broker,
           value: defaultPayoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         // another payout has occured we need to account for perToken as well
@@ -377,7 +377,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         await testPayout(poa, fmr, {
           from: broker,
           value: defaultPayoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         senderAccount = await getAccountInformation(poa, sender)
@@ -414,7 +414,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           receiver,
           senderAccount.tokenBalance.div(2).floor(),
           {
-            from: sender
+            from: sender,
           }
         )
 
@@ -429,7 +429,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         await testPayout(poa, fmr, {
           from: broker,
           value: defaultPayoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         // another payout has occured we need to account for perToken as well
@@ -482,7 +482,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         await testPayout(poa, fmr, {
           from: broker,
           value: defaultPayoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         senderAccount = await getAccountInformation(poa, sender)
@@ -515,7 +515,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         )
 
         await testApprove(poa, spender, senderAccount.tokenBalance, {
-          from: sender
+          from: sender,
         })
         await testTransferFrom(
           poa,
@@ -523,7 +523,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           receiver,
           senderAccount.tokenBalance,
           {
-            from: spender
+            from: spender,
           }
         )
         // now need to account for unclaimedPayouts
@@ -537,7 +537,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         await testPayout(poa, fmr, {
           from: broker,
           value: defaultPayoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         // another payout has occured we need to account for perToken as well
@@ -590,7 +590,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         await testPayout(poa, fmr, {
           from: broker,
           value: defaultPayoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         senderAccount = await getAccountInformation(poa, sender)
@@ -623,7 +623,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         )
 
         await testApprove(poa, spender, senderAccount.tokenBalance, {
-          from: sender
+          from: sender,
         })
         await testTransferFrom(
           poa,
@@ -631,7 +631,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           receiver,
           senderAccount.tokenBalance.div(2).floor(),
           {
-            from: spender
+            from: spender,
           }
         )
 
@@ -646,7 +646,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         await testPayout(poa, fmr, {
           from: broker,
           value: defaultPayoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         // another payout has occured we need to account for perToken as well
@@ -691,13 +691,13 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         let receiverAccount = await getAccountInformation(poa, receiver)
 
         await testTransfer(poa, receiver, senderAccount.tokenBalance, {
-          from: sender
+          from: sender,
         })
 
         await testPayout(poa, fmr, {
           from: broker,
           value: defaultPayoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         const fee = defaultPayoutAmount.mul(feeRateInPermille).div(1e3)
@@ -744,14 +744,14 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           receiver,
           senderAccount.tokenBalance.div(2).floor(),
           {
-            from: sender
+            from: sender,
           }
         )
 
         await testPayout(poa, fmr, {
           from: broker,
           value: defaultPayoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         const fee = defaultPayoutAmount.mul(feeRateInPermille).div(1e3)
@@ -798,7 +798,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         let receiverAccount = await getAccountInformation(poa, receiver)
 
         await testApprove(poa, spender, senderAccount.tokenBalance, {
-          from: sender
+          from: sender,
         })
 
         await testTransferFrom(
@@ -807,14 +807,14 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           receiver,
           senderAccount.tokenBalance,
           {
-            from: spender
+            from: spender,
           }
         )
 
         await testPayout(poa, fmr, {
           from: broker,
           value: defaultPayoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         const fee = defaultPayoutAmount.mul(feeRateInPermille).div(1e3)
@@ -858,7 +858,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         let receiverAccount = await getAccountInformation(poa, receiver)
 
         await testApprove(poa, spender, senderAccount.tokenBalance, {
-          from: sender
+          from: sender,
         })
 
         await testTransferFrom(
@@ -867,14 +867,14 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           receiver,
           senderAccount.tokenBalance.div(2).floor(),
           {
-            from: spender
+            from: spender,
           }
         )
 
         await testPayout(poa, fmr, {
           from: broker,
           value: defaultPayoutAmount,
-          gasPrice
+          gasPrice,
         })
 
         const fee = defaultPayoutAmount.mul(feeRateInPermille).div(1e3)
@@ -944,7 +944,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       // buy with fiat
       await testBuyTokensWithFiat(poa, fiatBuyer, 1000, {
         from: custodian,
-        gasPrice
+        gasPrice,
       })
 
       await timeTravelToEthFundingPeriod(poa)
@@ -973,32 +973,32 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
         const purchase = await testBuyTokens(poa, {
           from,
           value: defaultBuyAmount,
-          gasPrice
+          gasPrice,
         })
 
         commitments.push({
           address: from,
-          amount: purchase
+          amount: purchase,
         })
       }
 
       const purchase = await testBuyRemainingTokens(poa, {
         from: whitelistedPoaBuyers[0],
-        gasPrice
+        gasPrice,
       })
 
       // this matches the first buyer's first purchase (whitelistedPoaBuers[0])
       commitments[0].amount = purchase
 
       await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
-        from: custodian
+        from: custodian,
       })
 
       await testPayActivationFee(poa, fmr)
 
       await testActivate(poa, fmr, {
         from: custodian,
-        gasPrice
+        gasPrice,
       })
 
       await testActiveBalances(poa, commitments)
@@ -1021,32 +1021,32 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
         const purchase = await testBuyTokens(poa, {
           from,
           value: defaultBuyAmount,
-          gasPrice
+          gasPrice,
         })
 
         commitments.push({
           address: from,
-          amount: purchase
+          amount: purchase,
         })
       }
 
       const purchase = await testBuyRemainingTokens(poa, {
         from: whitelistedPoaBuyers[0],
-        gasPrice
+        gasPrice,
       })
 
       // this matches the first buyer's first purchase (whitelistedPoaBuers[0])
       commitments[0].amount = purchase
 
       await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
-        from: custodian
+        from: custodian,
       })
 
       await testPayActivationFee(poa, fmr)
 
       await testActivate(poa, fmr, {
         from: custodian,
-        gasPrice
+        gasPrice,
       })
 
       await testActiveBalances(poa, commitments)
@@ -1062,7 +1062,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       await testBuyTokens(poa, {
         from: whitelistedPoaBuyers[0],
         value: preNeededWei,
-        gasPrice
+        gasPrice,
       })
 
       const postStage = await poa.stage()
@@ -1087,7 +1087,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       await testBuyTokens(poa, {
         from: whitelistedPoaBuyers[0],
         value: preNeededWei.div(2),
-        gasPrice
+        gasPrice,
       })
 
       // rate doubles
@@ -1101,7 +1101,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       const tx = await poa.buy({
         from: whitelistedPoaBuyers[1],
         value: preNeededWei.div(2).floor(),
-        gasPrice
+        gasPrice,
       })
       const { gasUsed } = tx.receipt
       const gasCost = gasPrice.mul(gasUsed)
@@ -1144,7 +1144,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       await testBuyTokens(poa, {
         from: whitelistedPoaBuyers[0],
         value: preNeededWei.div(2),
-        gasPrice
+        gasPrice,
       })
       // The intention is to double the rate. However, we compensate the fiat
       // rate penalty of 2% by increasing the rate slighly more. This way,

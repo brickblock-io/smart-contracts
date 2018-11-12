@@ -33,7 +33,7 @@ describe('when using the contract registry', () => {
       await testWillThrow(reg.updateContractAddress, [
         contractNameInRegistry,
         brokenGrc.address,
-        { from: notOwner }
+        { from: notOwner },
       ])
     })
 
@@ -109,14 +109,14 @@ describe('when using the contract registry', () => {
       it('should not allow updating with the same address', async () => {
         await testWillThrow(reg.updateContractAddress, [
           contractNameInRegistry,
-          fixedGrc.address
+          fixedGrc.address,
         ])
       })
 
       it('should not allow updating when the address is not a contract', async () => {
         await testWillThrow(reg.updateContractAddress, [
           contractNameInRegistry,
-          '0x00000000000000000000000000000000'
+          '0x00000000000000000000000000000000',
         ])
       })
     })

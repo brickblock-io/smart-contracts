@@ -148,7 +148,7 @@ describe('during the ico', () => {
         const preDead = await bbk.dead()
 
         const txHash = await bbk.toggleDead.sendTransaction({
-          from: ownerAddress
+          from: ownerAddress,
         })
         await waitForTxToBeMined(txHash)
 
@@ -161,7 +161,7 @@ describe('during the ico', () => {
         const preDead = await bbk.dead()
 
         const txHash = await bbk.toggleDead.sendTransaction({
-          from: ownerAddress
+          from: ownerAddress,
         })
         await waitForTxToBeMined(txHash)
 
@@ -185,8 +185,8 @@ describe('during the ico', () => {
             bonusRecipientAddress,
             distributeAmount,
             {
-              from: bonusAddress
-            }
+              from: bonusAddress,
+            },
           ])
         })
       })
@@ -199,8 +199,8 @@ describe('during the ico', () => {
             ownerAddress,
             distributeAmount,
             {
-              from: ownerAddress
-            }
+              from: ownerAddress,
+            },
           ])
         })
 
@@ -214,7 +214,7 @@ describe('during the ico', () => {
             bonusRecipientAddress,
             distributeAmount,
             {
-              from: ownerAddress
+              from: ownerAddress,
             }
           )
           await waitForTxToBeMined(txHash)
@@ -245,8 +245,8 @@ describe('during the ico', () => {
             bonusRecipientAddress,
             overDistributeAmount,
             {
-              from: ownerAddress
-            }
+              from: ownerAddress,
+            },
           ])
         })
       })
@@ -261,8 +261,8 @@ describe('during the ico', () => {
             contributorAddress,
             distributeAmount,
             {
-              from: contributorAddress
-            }
+              from: contributorAddress,
+            },
           ])
         })
       })
@@ -275,8 +275,8 @@ describe('during the ico', () => {
             ownerAddress,
             distributeAmount,
             {
-              from: ownerAddress
-            }
+              from: ownerAddress,
+            },
           ])
         })
 
@@ -309,7 +309,7 @@ describe('during the ico', () => {
 
           await testWillThrow(bbk.distributeTokens, [
             contributorAddress,
-            distributeAmount
+            distributeAmount,
           ])
 
           const postContractBalance = await bbk.balanceOf(bbkAddress)
@@ -338,7 +338,7 @@ describe('during the ico', () => {
             const txHash = await bbk.changeFountainContractAddress.sendTransaction(
               fountainAddress,
               {
-                from: ownerAddress
+                from: ownerAddress,
               }
             )
             await waitForTxToBeMined(txHash)
@@ -359,7 +359,7 @@ describe('during the ico', () => {
         describe('when fountainAddress is NOT a contract', () => {
           it('should NOT change the fountainAddress', async () => {
             await testWillThrow(bbk.changeFountainContractAddress, [
-              contributorAddress
+              contributorAddress,
             ])
           })
         })
@@ -379,8 +379,8 @@ describe('during the ico', () => {
           await testWillThrow(bbk.changeFountainContractAddress, [
             fountainAddress,
             {
-              from: contributorAddress
-            }
+              from: contributorAddress,
+            },
           ])
         })
       })
@@ -568,7 +568,7 @@ describe('after the ico', () => {
         recipient,
         transferAmount,
         {
-          from: sender
+          from: sender,
         }
       )
       await waitForTxToBeMined(txHash)
@@ -600,7 +600,7 @@ describe('after the ico', () => {
         accounts[5],
         testAmount,
         {
-          from: accounts[4]
+          from: accounts[4],
         }
       )
       await waitForTxToBeMined(txHash)
@@ -619,8 +619,8 @@ describe('after the ico', () => {
         accounts[5],
         testAmount,
         {
-          from: accounts[4]
-        }
+          from: accounts[4],
+        },
       ])
 
       await bbk.unpause()
@@ -630,7 +630,7 @@ describe('after the ico', () => {
       await unpauseIfPaused(bbk)
       const preAllowance = await bbk.allowance(accounts[4], accounts[5])
       await bbk.increaseApproval(accounts[5], testAmount, {
-        from: accounts[4]
+        from: accounts[4],
       })
       const postAllowance = await bbk.allowance(accounts[4], accounts[5])
       assert.equal(
@@ -647,8 +647,8 @@ describe('after the ico', () => {
         accounts[5],
         testAmount,
         {
-          from: accounts[4]
-        }
+          from: accounts[4],
+        },
       ])
 
       await bbk.unpause()
@@ -658,7 +658,7 @@ describe('after the ico', () => {
       await unpauseIfPaused(bbk)
       const preAllowance = await bbk.allowance(accounts[4], accounts[5])
       await bbk.decreaseApproval(accounts[5], testAmount, {
-        from: accounts[4]
+        from: accounts[4],
       })
       const postAllowance = await bbk.allowance(accounts[4], accounts[5])
       assert.equal(
@@ -675,8 +675,8 @@ describe('after the ico', () => {
         accounts[5],
         testAmount,
         {
-          from: accounts[4]
-        }
+          from: accounts[4],
+        },
       ])
 
       await bbk.unpause()
@@ -692,7 +692,7 @@ describe('after the ico', () => {
         accounts[5],
         approveAmount,
         {
-          from: accounts[4]
+          from: accounts[4],
         }
       )
       await waitForTxToBeMined(approveTxHash)
@@ -701,7 +701,7 @@ describe('after the ico', () => {
         accounts[3],
         approveTransferAmount,
         {
-          from: accounts[5]
+          from: accounts[5],
         }
       )
       await waitForTxToBeMined(transferFromTxHash)
@@ -735,8 +735,8 @@ describe('after the ico', () => {
             bonusRecipientAddress,
             distributeAmount,
             {
-              from: bonusAddress
-            }
+              from: bonusAddress,
+            },
           ])
         })
       })
@@ -749,8 +749,8 @@ describe('after the ico', () => {
             owner,
             distributeAmount,
             {
-              from: owner
-            }
+              from: owner,
+            },
           ])
         })
 
@@ -764,7 +764,7 @@ describe('after the ico', () => {
             bonusRecipientAddress,
             distributeAmount,
             {
-              from: owner
+              from: owner,
             }
           )
           await waitForTxToBeMined(txHash)
@@ -796,8 +796,8 @@ describe('after the ico', () => {
             bonusRecipientAddress,
             overDistributeAmount,
             {
-              from: owner
-            }
+              from: owner,
+            },
           ])
         })
       })
@@ -808,7 +808,7 @@ describe('after the ico', () => {
         const preDead = await bbk.dead()
 
         const txHash = await bbk.toggleDead.sendTransaction({
-          from: owner
+          from: owner,
         })
         await waitForTxToBeMined(txHash)
 
@@ -821,7 +821,7 @@ describe('after the ico', () => {
         const preDead = await bbk.dead()
 
         const txHash = await bbk.toggleDead.sendTransaction({
-          from: owner
+          from: owner,
         })
         await waitForTxToBeMined(txHash)
 

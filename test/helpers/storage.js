@@ -14,7 +14,7 @@ const getAllSequentialStorage = async addr => {
 
     sequentialStorage.push({
       slot,
-      data
+      data,
     })
     slot++
 
@@ -44,7 +44,7 @@ const findMappingStorage = async (address, key, startSlot, endSlot) => {
       return {
         mappingValueStorage,
         mappingValueSlot,
-        mappingSlot
+        mappingSlot,
       }
     }
   }
@@ -59,7 +59,7 @@ const getMappingSlot = (mappingSlot, key) => {
   const mappingSlotPadded = standardizeInput(mappingSlot)
   const keyPadded = standardizeInput(key)
   const slot = web3.sha3(keyPadded.concat(mappingSlotPadded), {
-    encoding: 'hex'
+    encoding: 'hex',
   })
 
   return slot
@@ -84,7 +84,7 @@ const getNestedMappingStorage = async (address, mappingSlot, key, key2) => {
   return {
     nestedMappingSlot,
     nestedMappingValueSlot,
-    nestedMappingValueStorage
+    nestedMappingValueStorage,
   }
 }
 
@@ -116,7 +116,7 @@ const findNestedMappingStorage = async (
         nestedMappingValueStorage,
         mappingSlot,
         nestedMappingSlot,
-        nestedMappingValueSlot
+        nestedMappingValueSlot,
       }
     }
   }
@@ -179,5 +179,5 @@ module.exports = {
   findNestedMappingStorage,
   shortHexStringStorageToAscii,
   bytes32StorageToAscii,
-  trimRightBytes
+  trimRightBytes,
 }

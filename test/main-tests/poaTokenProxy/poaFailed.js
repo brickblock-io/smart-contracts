@@ -23,7 +23,7 @@ const {
   testUpdateProofOfCustody,
   timeTravelToFundingPeriodTimeout,
   timeTravelToEthFundingPeriod,
-  whitelistedPoaBuyers
+  whitelistedPoaBuyers,
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
 const BigNumber = require('bignumber.js')
@@ -53,18 +53,18 @@ describe("when in 'TimedOut' stage", () => {
       await testBuyTokens(poa, {
         from: whitelistedPoaBuyers[0],
         value: tokenBuyAmount,
-        gasPrice
+        gasPrice,
       })
       await testBuyTokens(poa, {
         from: whitelistedPoaBuyers[1],
         value: tokenBuyAmount,
-        gasPrice
+        gasPrice,
       })
 
       await testBuyTokens(poa, {
         from: whitelistedPoaBuyers[2],
         value: tokenBuyAmount,
-        gasPrice
+        gasPrice,
       })
 
       await timeTravelToFundingPeriodTimeout(poa)
@@ -79,7 +79,7 @@ describe("when in 'TimedOut' stage", () => {
         poa,
         pmr,
         { from: owner },
-        { callPoaDirectly: false }
+        { callPoaDirectly: false },
       ])
     })
 
@@ -90,7 +90,7 @@ describe("when in 'TimedOut' stage", () => {
     it('should NOT buy, even if whitelisted', async () => {
       await testWillThrow(testBuyTokens, [
         poa,
-        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice }
+        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice },
       ])
     })
 
@@ -103,7 +103,7 @@ describe("when in 'TimedOut' stage", () => {
         poa,
         pmr,
         { from: custodian },
-        { callPoaDirectly: true }
+        { callPoaDirectly: true },
       ])
     })
 
@@ -111,7 +111,7 @@ describe("when in 'TimedOut' stage", () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { from: broker, value: 1e18, gasPrice }
+        { from: broker, value: 1e18, gasPrice },
       ])
     })
 
@@ -123,7 +123,7 @@ describe("when in 'TimedOut' stage", () => {
       await testWillThrow(testUpdateProofOfCustody, [
         poa,
         defaultIpfsHashArray32,
-        { from: custodian }
+        { from: custodian },
       ])
     })
 
@@ -133,8 +133,8 @@ describe("when in 'TimedOut' stage", () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
     })
 
@@ -144,8 +144,8 @@ describe("when in 'TimedOut' stage", () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
     })
 
@@ -157,8 +157,8 @@ describe("when in 'TimedOut' stage", () => {
         whitelistedPoaBuyers[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0]
-        }
+          from: whitelistedPoaBuyers[0],
+        },
       ])
       await testWillThrow(testTransferFrom, [
         poa,
@@ -166,8 +166,8 @@ describe("when in 'TimedOut' stage", () => {
         bbkContributors[0],
         1e17,
         {
-          from: whitelistedPoaBuyers[1]
-        }
+          from: whitelistedPoaBuyers[1],
+        },
       ])
     })
 

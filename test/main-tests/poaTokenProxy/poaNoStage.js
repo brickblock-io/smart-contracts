@@ -6,7 +6,7 @@ const {
   testFallback,
   testFiatCentsToWei,
   testWeiToFiatCents,
-  whitelistedPoaBuyers
+  whitelistedPoaBuyers,
 } = require('../../helpers/poa')
 const { testWillThrow } = require('../../helpers/general.js')
 const BigNumber = require('bignumber.js')
@@ -36,13 +36,13 @@ describe('when testing stage independent functions', () => {
       await testWillThrow(testChangeCustodianAddress, [
         poa,
         whitelistedPoaBuyers[1],
-        { from: whitelistedPoaBuyers[2] }
+        { from: whitelistedPoaBuyers[2] },
       ])
     })
 
     it('should change changeCustodianAddress', async () => {
       await testChangeCustodianAddress(poa, whitelistedPoaBuyers[2], {
-        from: custodian
+        from: custodian,
       })
     })
 
@@ -50,7 +50,7 @@ describe('when testing stage independent functions', () => {
       await testFallback({
         from: whitelistedPoaBuyers[0],
         value: 3e17,
-        to: poa.address
+        to: poa.address,
       })
     })
   })

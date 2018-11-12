@@ -9,7 +9,7 @@ const {
   testClaimEvents,
   testTerminateEvents,
   testChangeCustodianEvents,
-  testReclaimEvents
+  testReclaimEvents,
 } = require('../helpers/log')
 const { setupPoaProxyAndEcosystem } = require('../helpers/poa')
 

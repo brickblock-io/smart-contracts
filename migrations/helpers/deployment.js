@@ -35,7 +35,7 @@ const deployContracts = async (
     PoaCrowdsaleMaster: PoaCrowdsaleMasterABI,
     Whitelist: WhitelistABI,
     ExchangeRateProvider: ExchangeRateProviderABI,
-    ExchangeRateProviderStub: ExchangeRateProviderStubABI
+    ExchangeRateProviderStub: ExchangeRateProviderStubABI,
   } = contracts
   const owner = accounts[0]
   const bonusAddress = accounts[1]
@@ -48,7 +48,7 @@ const deployContracts = async (
     deployer,
     { from: owner },
     useExistingContracts,
-    ContractRegistryABI
+    ContractRegistryABI,
   ]
 
   /*
@@ -292,7 +292,7 @@ const deployContract = async (
     await deployer.deploy.apply(deployer, [
       contractAbi,
       ...contractParams,
-      config
+      config,
     ])
   } else {
     await deployer.deploy.apply(deployer, [contractAbi, config])
@@ -345,5 +345,5 @@ const toUnderscoreCapitalCase = value => {
 module.exports = {
   unixTimeWithOffsetInSec,
   deployContracts,
-  deployContract
+  deployContract,
 }

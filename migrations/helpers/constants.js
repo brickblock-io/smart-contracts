@@ -12,5 +12,5 @@ module.exports = {
   oneWeekInSec,
   twoWeeksInSec,
   oneHundredThousandTokensInWei,
-  oneHundredThousandEuroInCents
+  oneHundredThousandEuroInCents,
 }

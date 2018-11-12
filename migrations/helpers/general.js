@@ -62,7 +62,7 @@ const getAccounts = accounts => {
     broker: accounts[1],
     custodian: accounts[2],
     whitelistedInvestor: accounts[3],
-    contributors: accounts.slice(4, 6)
+    contributors: accounts.slice(4, 6),
   }
 }
 
@@ -75,5 +75,5 @@ module.exports = {
   sendTransaction,
   isValidAddress,
   getAccounts,
-  isBigNumber
+  isBigNumber,
 }

@@ -7,7 +7,7 @@ const path = require('path')
 const directories = {
   cwd: __dirname,
   frozen: path.join(__dirname, '../frozen'),
-  node_modules: path.join(__dirname, '../node_modules')
+  node_modules: path.join(__dirname, '../node_modules'),
 }
 
 const execPromise = (command, options) =>

@@ -18,18 +18,18 @@ const finalizeBbkCrowdsale = async (
   params = {
     contributors: [],
     fountainAddress: null,
-    tokenAmountPerContributor: null
+    tokenAmountPerContributor: null,
   },
   txConfig = {
     from: null,
-    gas: null
+    gas: null,
   }
 ) => {
   const {
     contributors,
     fountainAddress,
     tokenAmountPerContributor,
-    network
+    network,
   } = params
 
   console.log(chalk.cyan('\n------------------------------'))
@@ -86,5 +86,5 @@ const finalizeBbkCrowdsale = async (
 }
 
 module.exports = {
-  finalizeBbkCrowdsale
+  finalizeBbkCrowdsale,
 }

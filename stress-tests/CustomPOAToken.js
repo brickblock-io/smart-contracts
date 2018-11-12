@@ -38,7 +38,7 @@ describe('CustomPoaToken Stress Tests', () => {
           const meta = await cpoa.payout({
             from: custodian,
             value: BigNumber.random(18).mul(1e18),
-            gasPrice: new BigNumber(21e9)
+            gasPrice: new BigNumber(21e9),
           })
           console.log(
             'payout : ',
@@ -48,7 +48,7 @@ describe('CustomPoaToken Stress Tests', () => {
           // claim owner fees
           console.log('claiming for OWNER')
           await cpoa.claim({
-            from: owner
+            from: owner,
           })
           // claim or investors
           await claimAll(cpoa, investors)
@@ -96,7 +96,7 @@ describe('CustomPoaToken Stress Tests', () => {
           const meta = await cpoa.payout({
             from: custodian,
             value: BigNumber.random(16).mul(1e16),
-            gasPrice: new BigNumber(21e9)
+            gasPrice: new BigNumber(21e9),
           })
           console.log(
             'payout : ',
@@ -109,7 +109,7 @@ describe('CustomPoaToken Stress Tests', () => {
         // claim owner fees
         console.log('claiming for OWNER')
         await cpoa.claim({
-          from: owner
+          from: owner,
         })
         // claim for all investors
         await claimAll(cpoa, investors)
@@ -160,7 +160,7 @@ describe('CustomPoaToken Stress Tests', () => {
           // do a any Payout
           const payoutMeta = await cpoa.payout({
             from: custodian,
-            value: BigNumber.random(18).mul(1e18)
+            value: BigNumber.random(18).mul(1e18),
           })
           const payoutTotal = payoutMeta.logs[0].args.amount
           console.log(`payout of ${payoutTotal} was paid`)
@@ -188,7 +188,7 @@ describe('CustomPoaToken Stress Tests', () => {
             `${sender} gave ${value.div(1e18)} tokens to ${receipient}`
           )
           await cpoa.transfer(receipient, value, {
-            from: sender
+            from: sender,
           })
 
           console.log('claiming all')
@@ -196,7 +196,7 @@ describe('CustomPoaToken Stress Tests', () => {
           // claim owner fees
           console.log('claiming for OWNER')
           await cpoa.claim({
-            from: owner
+            from: owner,
           })
           // claim or investors
           const payouts = await claimAll(cpoa, investors)
@@ -261,13 +261,13 @@ describe('CustomPoaToken Stress Tests', () => {
             `${sender} gave ${value.div(1e18)} tokens to ${receipient}`
           )
           await cpoa.transfer(receipient, value, {
-            from: sender
+            from: sender,
           })
 
           // do a any Payout
           const payoutMeta = await cpoa.payout({
             from: custodian,
-            value: BigNumber.random(18).mul(1e18)
+            value: BigNumber.random(18).mul(1e18),
           })
           const payoutTotal = payoutMeta.logs[0].args.amount
           console.log(`payout of ${payoutTotal} was paid`)
@@ -302,7 +302,7 @@ describe('CustomPoaToken Stress Tests', () => {
         // claim owner fees
         console.log('claiming for OWNER')
         await cpoa.claim({
-          from: owner
+          from: owner,
         })
         // claim for investors
         const finalPayouts = await claimAll(cpoa, investors)

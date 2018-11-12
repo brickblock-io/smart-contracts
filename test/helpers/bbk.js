@@ -25,5 +25,5 @@ const finalizedBBK = async (
 
 module.exports = {
   distributeBbkToMany,
-  finalizedBBK
+  finalizedBBK,
 }

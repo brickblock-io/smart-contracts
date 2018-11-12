@@ -34,7 +34,7 @@ describe('when analyzing gas costs', () => {
       //getCurrencySettings
       const txFetchRate = await exr.fetchRate(queryType, {
         from: owner,
-        value: 1e18
+        value: 1e18,
       })
 
       data.push(['txFetchRate', txFetchRate.receipt.gasUsed])

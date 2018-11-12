@@ -44,7 +44,7 @@ const setupContracts = async (
     act,
     bbk,
     fmr,
-    bat
+    bat,
   }
 }
 
@@ -245,5 +245,5 @@ module.exports = {
   testClaimFee,
   testWithdrawEthFunds,
   testWithdrawActFunds,
-  testWithdrawBbkFunds
+  testWithdrawBbkFunds,
 }

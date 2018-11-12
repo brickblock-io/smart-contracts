@@ -23,7 +23,7 @@ const {
   timeTravelToEthFundingPeriod,
   timeTravelToFundingPeriod,
   timeTravelToFundingPeriodTimeout,
-  whitelistedPoaBuyers
+  whitelistedPoaBuyers,
 } = require('./poa')
 
 const testPreviewToPreFundingEvent = async (poa, reg, pmr, log) => {
@@ -99,7 +99,7 @@ const testBuyTokensEvents = async (poa, reg, pmr, log) => {
   await testBuyTokens(poa, {
     from,
     value,
-    gasPrice
+    gasPrice,
   })
 
   const { args: triggeredPoaLogger } = await waitForEvent(PoaLoggerBuyEvent)
@@ -128,7 +128,7 @@ const testBuyRemainingTokensEvents = async (poa, reg, pmr, log) => {
 
   const value = await testBuyRemainingTokens(poa, {
     from,
-    gasPrice
+    gasPrice,
   })
 
   const { args: triggeredPoaLogger } = await waitForEvent(PoaLoggerBuyEvent)
@@ -155,7 +155,7 @@ const testActivateEvents = async (poa, reg, pmr, fmr, log) => {
   const PoaLoggerProofOfCustodyUpdatedEvent = log.ProofOfCustodyUpdated()
 
   await testUpdateProofOfCustody(poa, defaultIpfsHashArray32, {
-    from: custodian
+    from: custodian,
   })
 
   const { args: triggeredPoaLoggerProof } = await waitForEvent(
@@ -166,7 +166,7 @@ const testActivateEvents = async (poa, reg, pmr, fmr, log) => {
 
   await testActivate(poa, fmr, {
     from: custodian,
-    gasPrice
+    gasPrice,
   })
 
   const { args: triggeredPoaLoggerStage } = await waitForEvent(
@@ -204,7 +204,7 @@ const testPayoutEvents = async (poa, reg, pmr, fmr, log) => {
   await testPayout(poa, fmr, {
     from,
     value,
-    gasPrice
+    gasPrice,
   })
 
   const { args: triggeredPoaLogger } = await waitForEvent(PoaLoggerPayoutEvent)
@@ -227,7 +227,7 @@ const testClaimEvents = async (poa, reg, pmr, log) => {
 
   await testClaim(poa, {
     from,
-    gasPrice
+    gasPrice,
   })
 
   const { args: triggeredPoaLogger } = await waitForEvent(PoaLoggerClaimEvent)
@@ -258,7 +258,7 @@ const testTerminateEvents = async (poa, reg, pmr, log) => {
     pmr,
     {
       from,
-      gasPrice
+      gasPrice,
     },
     { callPoaDirectly: true }
   )
@@ -282,7 +282,7 @@ const testChangeCustodianEvents = async (poa, reg, pmr, log) => {
 
   await testChangeCustodianAddress(poa, newCustodian, {
     from,
-    gasPrice
+    gasPrice,
   })
 
   const { args: triggeredPoaLoggerEvent } = await waitForEvent(
@@ -325,7 +325,7 @@ const testReclaimEvents = async () => {
   await testBuyTokens(poa, {
     from,
     value,
-    gasPrice
+    gasPrice,
   })
   await timeTravelToFundingPeriodTimeout(poa)
 
@@ -378,5 +378,5 @@ module.exports = {
   testPreFundingToFiatFundingEvent,
   testFiatFundingToEthFundingEvent,
   testReclaimEvents,
-  testTerminateEvents
+  testTerminateEvents,
 }

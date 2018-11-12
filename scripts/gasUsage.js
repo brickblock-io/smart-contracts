@@ -71,7 +71,7 @@ async function createBB() {
     const contract = BB.new({
       from: broker,
       gas: maxGas,
-      data: Brickblock.unlinked_binary
+      data: Brickblock.unlinked_binary,
     })
     return awaitReceipt(contract.transactionHash)
   } catch (err) {
@@ -92,7 +92,7 @@ async function createToken(aToken) {
       aToken.totalSupply,
       {
         from: broker,
-        gas: maxGas
+        gas: maxGas,
       }
     )
     const txid = await bb.addToken.sendTransaction(
@@ -103,7 +103,7 @@ async function createToken(aToken) {
       aToken.totalSupply,
       {
         from: broker,
-        gas: maxGas
+        gas: maxGas,
       }
     )
     return new Promise((resolve, reject) => {
@@ -123,7 +123,7 @@ async function createToken(aToken) {
           resolve({
             addr: event.args.token,
             gasUsed: receipt.gasUsed,
-            estimateGas: estimateGas
+            estimateGas: estimateGas,
           })
           watcher.stopWatching()
         }
@@ -142,7 +142,7 @@ async function buyTokens(aToken, amount, investee) {
 
     const args = {
       from: investee,
-      value: amount
+      value: amount,
     }
     const estimateGas = await poa.buy.estimateGas(args)
     const txid = await poa.buy.sendTransaction(args)
@@ -171,7 +171,7 @@ async function activatePoA(aToken, signee) {
       signature.r,
       signature.s,
       {
-        from: broker
+        from: broker,
       }
     )
     const txid = await poa.activate.sendTransaction(
@@ -179,7 +179,7 @@ async function activatePoA(aToken, signee) {
       signature.r,
       signature.s,
       {
-        from: broker
+        from: broker,
       }
     )
     const ret = await awaitReceipt(txid)
@@ -216,11 +216,11 @@ async function liquidated(aToken, amount, investee) {
     const poa = await PoaToken.at(aToken.addr)
     const estimateGas = await poa.liquidated.estimateGas(investee, {
       from: broker,
-      value: amount
+      value: amount,
     })
     const txid = await poa.liquidated.sendTransaction(investee, {
       from: broker,
-      value: amount
+      value: amount,
     })
     const ret = await awaitReceipt(txid)
     ret.estimateGas = estimateGas
@@ -237,11 +237,11 @@ async function payout(aToken, amount) {
     const poa = await PoaToken.at(aToken.addr)
     const estimateGas = await poa.payout.estimateGas({
       from: broker,
-      value: amount
+      value: amount,
     })
     const txid = await poa.payout.sendTransaction({
       from: broker,
-      value: amount
+      value: amount,
     })
     const ret = await awaitReceipt(txid)
     ret.estimateGas = estimateGas
@@ -274,7 +274,7 @@ async function transfer(aToken, from, to, amount) {
     if (!amount) amount = await poa.balanceOf(from)
 
     const estimateGas = await poa.transfer.estimateGas(to, amount, {
-      from: from
+      from: from,
     })
     const txid = await poa.transfer.sendTransaction(to, amount, { from: from })
     const ret = await awaitReceipt(txid)
@@ -308,7 +308,7 @@ async function collectGasUsage() {
     symbol: 'TST',
     custodian: broker,
     timeout: day,
-    totalSupply: 5 * 10e17
+    totalSupply: 5 * 10e17,
   }
 
   const secondToken = {
@@ -316,7 +316,7 @@ async function collectGasUsage() {
     symbol: 'SCD',
     custodian: broker,
     timeout: day,
-    totalSupply: 2 * 10e17
+    totalSupply: 2 * 10e17,
   }
 
   const failedToken = {
@@ -324,7 +324,7 @@ async function collectGasUsage() {
     symbol: 'FLD',
     custodian: broker,
     timeout: 2, // 2 seconds
-    totalSupply: 2 * 10e17
+    totalSupply: 2 * 10e17,
   }
   const results = {}
 
@@ -341,14 +341,14 @@ async function collectGasUsage() {
     const createResponse = await createToken(aToken)
     results.creation = {
       gasUsage: createResponse.gasUsed,
-      gasEstim: createResponse.estimateGas
+      gasEstim: createResponse.estimateGas,
     }
     aToken.addr = createResponse.addr
 
     const secondTokenResponse = await createToken(secondToken)
     results.otherCreation = {
       gasUsage: secondTokenResponse.gasUsed,
-      gasEstim: secondTokenResponse.estimateGas
+      gasEstim: secondTokenResponse.estimateGas,
     }
     secondToken.addr = secondTokenResponse.addr
 
@@ -356,74 +356,74 @@ async function collectGasUsage() {
     const firstBuyResponse = await buyTokens(aToken, 1 * 10e17, investor2)
     results.buySome = {
       gasUsage: firstBuyResponse.gasUsed,
-      gasEstim: firstBuyResponse.estimateGas
+      gasEstim: firstBuyResponse.estimateGas,
     }
 
     const secondBuyResponse = await buyTokens(aToken, 1 * 10e17, investor2)
     results.buySomeMore = {
       gasUsage: secondBuyResponse.gasUsed,
-      gasEstim: secondBuyResponse.estimateGas
+      gasEstim: secondBuyResponse.estimateGas,
     }
 
     const buyAll = await buyTokens(aToken, null, investor) // buy all remaining
     results.buyAllFirst = {
       gasUsage: buyAll.gasUsed,
-      gasEstim: buyAll.estimateGas
+      gasEstim: buyAll.estimateGas,
     }
 
     await buyTokens(secondToken, 1 * 10e17, investor2)
     const buyAllSecondResponse = await buyTokens(secondToken, null, investor2)
     results.buyAllSecond = {
       gasUsage: buyAllSecondResponse.gasUsed,
-      gasEstim: buyAllSecondResponse.estimateGas
+      gasEstim: buyAllSecondResponse.estimateGas,
     }
 
     const failedActivationResponse = await activatePoA(aToken, investor)
     results.failedActivation = {
       gasUsage: failedActivationResponse.gasUsed,
-      gasEstim: failedActivationResponse.estimateGas
+      gasEstim: failedActivationResponse.estimateGas,
     }
 
     const activationResponse = await activatePoA(aToken, broker)
     results.activation = {
       gasUsage: activationResponse.gasUsed,
-      gasEstim: activationResponse.estimateGas
+      gasEstim: activationResponse.estimateGas,
     }
 
     const sellSomeResponse = await sell(aToken, 1 * 10e17, investor2)
     results.sellSome = {
       gasUsage: sellSomeResponse.gasUsed,
-      gasEstim: sellSomeResponse.estimateGas
+      gasEstim: sellSomeResponse.estimateGas,
     }
 
     const sellSomeMoreResponse = await sell(aToken, 1 * 10e16, investor2)
     results.sellSomeMore = {
       gasUsage: sellSomeMoreResponse.gasUsed,
-      gasEstim: sellSomeMoreResponse.estimateGas
+      gasEstim: sellSomeMoreResponse.estimateGas,
     }
 
     const sellAllResponse = await sell(aToken, null, investor2)
     results.sellAll = {
       gasUsage: sellAllResponse.gasUsed,
-      gasEstim: sellAllResponse.estimateGas
+      gasEstim: sellAllResponse.estimateGas,
     }
 
     const sellWithoutTokensResponse = await sell(aToken, null, investor2)
     results.sellWithoutTokens = {
       gasUsage: sellWithoutTokensResponse.gasUsed,
-      gasEstim: sellWithoutTokensResponse.estimateGas
+      gasEstim: sellWithoutTokensResponse.estimateGas,
     }
 
     const liquidatedSomeResponse = await liquidated(aToken, 1 * 1e18, investor2)
     results.liquidateSome = {
       gasUsage: liquidatedSomeResponse.gasUsed,
-      gasEstim: liquidatedSomeResponse.estimateGas
+      gasEstim: liquidatedSomeResponse.estimateGas,
     }
 
     const liquidatedAllResponse = await liquidated(aToken, 1 * 10e17, investor2)
     results.liquidateAll = {
       gasUsage: liquidatedAllResponse.gasUsed,
-      gasEstim: liquidatedAllResponse.estimateGas
+      gasEstim: liquidatedAllResponse.estimateGas,
     }
 
     await activatePoA(secondToken, broker)
@@ -435,31 +435,31 @@ async function collectGasUsage() {
     )
     results.liquidateWholeContract = {
       gasUsage: liquidateWholeContractResponse.gasUsed,
-      gasEstim: liquidateWholeContractResponse.estimateGas
+      gasEstim: liquidateWholeContractResponse.estimateGas,
     }
 
     const firstPayoutResponse = await payout(aToken, 1 * 10e17)
     results.firstPayout = {
       gasUsage: firstPayoutResponse.gasUsed,
-      gasEstim: firstPayoutResponse.estimateGas
+      gasEstim: firstPayoutResponse.estimateGas,
     }
 
     const firstClaimResponse = await claim(aToken, investor)
     results.firstClaim = {
       gasUsage: firstClaimResponse.gasUsed,
-      gasEstim: firstClaimResponse.estimateGas
+      gasEstim: firstClaimResponse.estimateGas,
     }
 
     const secondPayoutResponse = await payout(aToken, 1 * 10e17)
     results.secondPayout = {
       gasUsage: secondPayoutResponse.gasUsed,
-      gesEstim: secondPayoutResponse.estimateGas
+      gesEstim: secondPayoutResponse.estimateGas,
     }
 
     const secondClaimResponse = await claim(aToken, investor)
     results.secondClaim = {
       gasUsage: secondClaimResponse.gasUsed,
-      gasEstim: secondClaimResponse.estimateGas
+      gasEstim: secondClaimResponse.estimateGas,
     }
 
     const transferFirstResponse = await transfer(
@@ -470,7 +470,7 @@ async function collectGasUsage() {
     )
     results.firstTransfer = {
       gasUsage: transferFirstResponse.gasUsed,
-      gasEstim: transferFirstResponse.estimateGas
+      gasEstim: transferFirstResponse.estimateGas,
     }
 
     const transferSecondResponse = await transfer(
@@ -481,7 +481,7 @@ async function collectGasUsage() {
     )
     results.secondTransfer = {
       gasUsage: transferSecondResponse.gasUsed,
-      gasEstim: transferSecondResponse.estimateGas
+      gasEstim: transferSecondResponse.estimateGas,
     }
 
     await payout(aToken, 1 * 10e17)
@@ -493,13 +493,13 @@ async function collectGasUsage() {
     )
     results.transferWithPayout = {
       gasUsage: transferWithPayoutResponse.gasUsed,
-      gasEstim: transferWithPayoutResponse.estimateGas
+      gasEstim: transferWithPayoutResponse.estimateGas,
     }
 
     const transferAllResponse = await transfer(aToken, investor, investor2)
     results.transferAll = {
       gasUsage: transferAllResponse.gasUsed,
-      gasEstim: transferAllResponse.estimateGas
+      gasEstim: transferAllResponse.estimateGas,
     }
 
     await payout(aToken, 1 * 10e17)
@@ -510,13 +510,13 @@ async function collectGasUsage() {
     )
     results.transferAllWithPayout = {
       gasUsage: transferAllWithPayoutResponse.gasUsed,
-      gasEstim: transferAllWithPayoutResponse.estimateGas
+      gasEstim: transferAllWithPayoutResponse.estimateGas,
     }
 
     const reclaimResponse = await reclaim(failedToken, investor2)
     results.reclaim = {
       gasUsage: reclaimResponse.gasUsed,
-      gasEstim: reclaimResponse.estimateGas
+      gasEstim: reclaimResponse.estimateGas,
     }
 
     console.log('Results : ', JSON.stringify(results, 2, 2))

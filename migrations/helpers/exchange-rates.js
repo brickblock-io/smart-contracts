@@ -10,11 +10,11 @@ const setFiatRate = async (
       'json(https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=EUR).EUR',
     callIntervalInSec: 30,
     callbackGasLimit: 150000,
-    useStub: true
+    useStub: true,
   },
   txConfig = {
     from: null,
-    gas: null
+    gas: null,
   }
 ) => {
   const {
@@ -22,7 +22,7 @@ const setFiatRate = async (
     queryString,
     callIntervalInSec,
     callbackGasLimit,
-    useStub
+    useStub,
   } = params
 
   console.log(
@@ -81,5 +81,5 @@ const setFiatRate = async (
 }
 
 module.exports = {
-  setFiatRate
+  setFiatRate,
 }

@@ -13,7 +13,7 @@ const {
   gasPrice,
   bigZero,
   testIsInRange,
-  getRandomBigInt
+  getRandomBigInt,
 } = require('./general')
 
 const BigNumber = require('bignumber.js')
@@ -54,7 +54,7 @@ const setupContracts = async (
     act,
     bbk,
     exr,
-    fmr
+    fmr,
   }
 }
 
@@ -142,14 +142,14 @@ const testPayFee = async (
     const lockedBbk = await act.lockedBbkOf(bbkHolder)
     preContributorsActBalances[bbkHolder] = {
       actBalance,
-      lockedBbk
+      lockedBbk,
     }
   }
 
   const txid = await fmr.payFee({
     from: feePayer,
     value: actAmount,
-    gasPrice
+    gasPrice,
   })
 
   const tx = await getReceipt(txid)
@@ -165,7 +165,7 @@ const testPayFee = async (
     const lockedBbk = await act.lockedBbkOf(bbkHolder)
     postContributorsActBalance[bbkHolder] = {
       actBalance,
-      lockedBbk
+      lockedBbk,
     }
 
     const expectedPerTokenRate = weiAsAct
@@ -218,7 +218,7 @@ const testClaimFeeMany = async (
     preContributorBalances[claimer] = {
       preActBalance,
       preEthBalance,
-      preActAsWei
+      preActAsWei,
     }
   }
 
@@ -226,11 +226,11 @@ const testClaimFeeMany = async (
     const {
       preActBalance,
       preEthBalance,
-      preActAsWei
+      preActAsWei,
     } = preContributorBalances[claimer]
     const txid = await fmr.claimFee(preActBalance, {
       from: claimer,
-      gasPrice
+      gasPrice,
     })
     const tx = await getReceipt(txid)
     const gasCost = gasPrice.mul(tx.gasUsed)
@@ -385,7 +385,7 @@ const testTransferFromAct = async (act, accountOwner, to, spender, value) => {
   return {
     accountOwner: postSenderBalance,
     to: postReceiverBalance,
-    spender: postSpenderAllowance
+    spender: postSpenderAllowance,
   }
 }
 
@@ -459,7 +459,7 @@ const testRandomLockAndUnlock = async (
     rounds = 10,
     min = new BigNumber(1e15),
     logBalance = false,
-    logRoundInfo = true
+    logRoundInfo = true,
   } = {}
 ) => {
   for (let i = 0; i < rounds; i++) {
@@ -470,7 +470,7 @@ const testRandomLockAndUnlock = async (
       contributors,
       await generateRandomLockAmounts(contributors, {
         min,
-        logBalance
+        logBalance,
       })
     )
 
@@ -571,5 +571,5 @@ module.exports = {
   testTransferActManyWithIndividualAmounts,
   generateRandomLockAmounts,
   testRandomLockAndUnlock,
-  testUpgradeAct
+  testUpgradeAct,
 }

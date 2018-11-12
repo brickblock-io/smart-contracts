@@ -37,5 +37,5 @@ const addAddress = async (
 }
 
 module.exports = {
-  addAddress
+  addAddress,
 }

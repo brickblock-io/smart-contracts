@@ -28,10 +28,10 @@ const transferOwnershipOfAllContracts = async (contracts, owner, newOwner) => {
   logger.info('total gas used', totalGasUsed)
 
   return {
-    gasUsed: totalGasUsed
+    gasUsed: totalGasUsed,
   }
 }
 
 module.exports = {
-  transferOwnershipOfAllContracts
+  transferOwnershipOfAllContracts,
 }

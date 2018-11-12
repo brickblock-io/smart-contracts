@@ -15,7 +15,7 @@ const {
   testApproveActMany,
   testTransferFromAct,
   testTransferFromActMany,
-  testUpgradeAct
+  testUpgradeAct,
 } = require('../helpers/act')
 
 describe('when interacting with BBK', () => {
@@ -51,7 +51,7 @@ describe('when interacting with BBK', () => {
         bbk,
         act,
         contributor,
-        lockAmount
+        lockAmount,
       ])
     })
 
@@ -389,7 +389,7 @@ describe('when testing different scenarios...', () => {
         actRate
       )
       const claimers = [
-        ...contributors.filter(account => account != contributor)
+        ...contributors.filter(account => account != contributor),
       ]
       await testClaimFeeMany(act, fmr, claimers, actRate)
       await testUpgradeAct(

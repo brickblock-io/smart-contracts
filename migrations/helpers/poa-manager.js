@@ -5,14 +5,14 @@ const {
   oneHundredThousandEuroInCents,
   oneHundredThousandTokensInWei,
   oneWeekInSec,
-  twoWeeksInSec
+  twoWeeksInSec,
 } = require('./constants')
 const { unixTimeWithOffsetInSec } = require('./general.js')
 
 const addBroker = async (
   poaManager,
   params = {
-    broker: ''
+    broker: '',
   },
   txConfig
 ) => {
@@ -54,7 +54,7 @@ const deployPoa = async (
     durationForEthFundingPeriod: oneWeekInSec,
     durationForActivationPeriod: twoWeeksInSec,
     fundingGoalInCents: oneHundredThousandEuroInCents,
-    listToken: true
+    listToken: true,
   },
   txConfig = {}
 ) => {
@@ -68,7 +68,7 @@ const deployPoa = async (
     durationForEthFundingPeriod,
     durationForActivationPeriod,
     fundingGoalInCents,
-    listToken
+    listToken,
   } = params
   console.log(
     chalk.cyan(
@@ -125,5 +125,5 @@ const deployPoa = async (
 
 module.exports = {
   addBroker,
-  deployPoa
+  deployPoa,
 }

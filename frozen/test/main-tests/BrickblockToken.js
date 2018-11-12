@@ -97,7 +97,7 @@ const chaosTransferMonkey = async (BBK, accountsWithBBK) => {
         randomIntegerInRange(10, 30) / 100
       )
       await BBK.transfer.sendTransaction(receiver, amountToTransfer, {
-        from: sender
+        from: sender,
       })
     } else {
       // approve and transferFrom scenario
@@ -109,14 +109,14 @@ const chaosTransferMonkey = async (BBK, accountsWithBBK) => {
       )
 
       await BBK.approve.sendTransaction(receiver, approvalAmount, {
-        from: sender
+        from: sender,
       })
       await BBK.transferFrom.sendTransaction(
         sender,
         transferFromReceiver,
         transferAmount,
         {
-          from: receiver
+          from: receiver,
         }
       )
     }
@@ -224,7 +224,7 @@ describe('during the ico', () => {
         const preDead = await bbk.dead()
 
         await bbk.toggleDead.sendTransaction({
-          from: ownerAddress
+          from: ownerAddress,
         })
 
         const postDead = await bbk.dead()
@@ -236,7 +236,7 @@ describe('during the ico', () => {
         const preDead = await bbk.dead()
 
         await bbk.toggleDead.sendTransaction({
-          from: ownerAddress
+          from: ownerAddress,
         })
 
         const postDead = await bbk.dead()
@@ -247,7 +247,7 @@ describe('during the ico', () => {
       it('should NOT toggle dead when not owner', async () => {
         try {
           await bbk.toggleDead.sendTransaction({
-            from: accounts[9]
+            from: accounts[9],
           })
           assert(false, 'the contract should throw here')
         } catch (error) {
@@ -270,7 +270,7 @@ describe('during the ico', () => {
               bonusRecipientAddress,
               distributeAmount,
               {
-                from: bonusAddress
+                from: bonusAddress,
               }
             )
             assert(false, 'the contract should throw here')
@@ -292,7 +292,7 @@ describe('during the ico', () => {
               ownerAddress,
               distributeAmount,
               {
-                from: ownerAddress
+                from: ownerAddress,
               }
             )
             assert(false, 'the contract should throw here')
@@ -314,7 +314,7 @@ describe('during the ico', () => {
             bonusRecipientAddress,
             distributeAmount,
             {
-              from: ownerAddress
+              from: ownerAddress,
             }
           )
 
@@ -345,7 +345,7 @@ describe('during the ico', () => {
               bonusRecipientAddress,
               overDistributeAmount,
               {
-                from: ownerAddress
+                from: ownerAddress,
               }
             )
             assert(false, 'the contract should throw here')
@@ -368,7 +368,7 @@ describe('during the ico', () => {
               contributorAddress,
               distributeAmount,
               {
-                from: contributorAddress
+                from: contributorAddress,
               }
             )
             assert(false, 'the contract should throw in this case')
@@ -390,7 +390,7 @@ describe('during the ico', () => {
               ownerAddress,
               distributeAmount,
               {
-                from: ownerAddress
+                from: ownerAddress,
               }
             )
             assert(false, 'the contract should throw in this case')
@@ -466,7 +466,7 @@ describe('during the ico', () => {
             await bbk.changeFountainContractAddress.sendTransaction(
               fountainAddress,
               {
-                from: ownerAddress
+                from: ownerAddress,
               }
             )
             const postAddress = await bbk.fountainContractAddress()
@@ -521,7 +521,7 @@ describe('during the ico', () => {
             await bbk.changeFountainContractAddress.sendTransaction(
               fountainAddress,
               {
-                from: contributorAddress
+                from: contributorAddress,
               }
             )
             assert(false, 'the contract should throw here')
@@ -714,7 +714,7 @@ describe('after the ico', () => {
       await pauseIfUnpaused(bbk)
       try {
         await bbk.pause.sendTransaction({
-          from: accounts[1]
+          from: accounts[1],
         })
       } catch (error) {
         assert.equal(
@@ -735,7 +735,7 @@ describe('after the ico', () => {
       await pauseIfUnpaused(bbk)
       try {
         await bbk.unpause.sendTransaction({
-          from: accounts[1]
+          from: accounts[1],
         })
       } catch (error) {
         assert.equal(
@@ -788,7 +788,7 @@ describe('after the ico', () => {
       const preRecipientBalance = await bbk.balanceOf(recipient)
       const transferAmount = new BigNumber(1e18)
       await bbk.transfer.sendTransaction(recipient, transferAmount, {
-        from: sender
+        from: sender,
       })
       const postSenderBalance = await bbk.balanceOf(recipient)
       const postRecipientBalance = await bbk.balanceOf(recipient)
@@ -823,7 +823,7 @@ describe('after the ico', () => {
     it('should set allowances for other addresses', async () => {
       const preAllowance = await bbk.allowance(accounts[4], accounts[5])
       await bbk.approve.sendTransaction(accounts[5], testAmount, {
-        from: accounts[4]
+        from: accounts[4],
       })
       const postAllowance = await bbk.allowance(accounts[4], accounts[5])
       assert.equal(
@@ -837,7 +837,7 @@ describe('after the ico', () => {
       await pauseIfUnpaused(bbk)
       try {
         await bbk.approve.sendTransaction(accounts[5], testAmount, {
-          from: accounts[4]
+          from: accounts[4],
         })
         assert(false, 'should throw when paused')
       } catch (error) {
@@ -854,7 +854,7 @@ describe('after the ico', () => {
       await unpauseIfPaused(bbk)
       const preAllowance = await bbk.allowance(accounts[4], accounts[5])
       await bbk.increaseApproval(accounts[5], testAmount, {
-        from: accounts[4]
+        from: accounts[4],
       })
       const postAllowance = await bbk.allowance(accounts[4], accounts[5])
       assert.equal(
@@ -868,7 +868,7 @@ describe('after the ico', () => {
       await pauseIfUnpaused(bbk)
       try {
         await bbk.increaseApproval(accounts[5], testAmount, {
-          from: accounts[4]
+          from: accounts[4],
         })
         assert(false, 'should throw when paused')
       } catch (error) {
@@ -885,7 +885,7 @@ describe('after the ico', () => {
       await unpauseIfPaused(bbk)
       const preAllowance = await bbk.allowance(accounts[4], accounts[5])
       await bbk.decreaseApproval(accounts[5], testAmount, {
-        from: accounts[4]
+        from: accounts[4],
       })
       const postAllowance = await bbk.allowance(accounts[4], accounts[5])
       assert.equal(
@@ -899,7 +899,7 @@ describe('after the ico', () => {
       await pauseIfUnpaused(bbk)
       try {
         await bbk.decreaseApproval(accounts[5], testAmount, {
-          from: accounts[4]
+          from: accounts[4],
         })
         assert(false, 'should throw when paused')
       } catch (error) {
@@ -919,14 +919,14 @@ describe('after the ico', () => {
       const approveAmount = testAmount
       const approveTransferAmount = approveAmount.div(2)
       await bbk.approve.sendTransaction(accounts[5], approveAmount, {
-        from: accounts[4]
+        from: accounts[4],
       })
       await bbk.transferFrom.sendTransaction(
         accounts[4],
         accounts[3],
         approveTransferAmount,
         {
-          from: accounts[5]
+          from: accounts[5],
         }
       )
       const postApproval = await bbk.allowance(accounts[4], accounts[5])
@@ -960,7 +960,7 @@ describe('after the ico', () => {
               bonusRecipientAddress,
               distributeAmount,
               {
-                from: bonusAddress
+                from: bonusAddress,
               }
             )
             assert(false, 'the contract should throw here')
@@ -982,7 +982,7 @@ describe('after the ico', () => {
               owner,
               distributeAmount,
               {
-                from: owner
+                from: owner,
               }
             )
             assert(false, 'the contract should throw here')
@@ -1004,7 +1004,7 @@ describe('after the ico', () => {
             bonusRecipientAddress,
             distributeAmount,
             {
-              from: owner
+              from: owner,
             }
           )
 
@@ -1036,7 +1036,7 @@ describe('after the ico', () => {
               bonusRecipientAddress,
               overDistributeAmount,
               {
-                from: owner
+                from: owner,
               }
             )
             assert(false, 'the contract should throw here')
@@ -1055,7 +1055,7 @@ describe('after the ico', () => {
         const preDead = await bbk.dead()
 
         await bbk.toggleDead.sendTransaction({
-          from: owner
+          from: owner,
         })
 
         const postDead = await bbk.dead()
@@ -1067,7 +1067,7 @@ describe('after the ico', () => {
         const preDead = await bbk.dead()
 
         await bbk.toggleDead.sendTransaction({
-          from: owner
+          from: owner,
         })
 
         const postDead = await bbk.dead()
@@ -1078,7 +1078,7 @@ describe('after the ico', () => {
       it('should NOT toggle dead when not owner', async () => {
         try {
           await bbk.toggleDead.sendTransaction({
-            from: accounts[9]
+            from: accounts[9],
           })
           assert(false, 'the contract should throw here')
         } catch (error) {
