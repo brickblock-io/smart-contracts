@@ -168,14 +168,15 @@ const deploymentActions = async (
         fiatCurrency: argv.deployPoaCurrency,
         custodian: argv.deployPoaCustodian || custodian,
         totalSupply: argv.deployPoaTotalSupply,
-        // startTimeForEthFundingPeriod needs a little offset so that it isn't too close to `block.timestamp` which would fail
-        startTimeForEthFundingPeriod: argv.deployPoaStartTimeForEthFunding,
+        // startTimeForFundingPeriod needs a little offset so that it isn't too close to `block.timestamp` which would fail
+        startTimeForFundingPeriod: argv.deployPoaStartTimeForFunding,
+        durationForFiatFundingPeriod: argv.deployPoaDurationForFiatFunding,
         durationForEthFundingPeriod: argv.deployPoaDurationForEthFunding,
         durationForActivationPeriod: argv.deployPoaDurationForActivation,
         fundingGoalInCents: argv.deployPoaFundingGoalInCents,
         listToken: argv.deployPoaListToken,
       },
-      { from: broker }
+      { from: argv.deployPoaBroker || broker }
     )
     brokerPostEtherBalance = await getEtherBalance(broker)
     deployPoaTokenGasCost = brokerPreEtherBalance.sub(brokerPostEtherBalance)

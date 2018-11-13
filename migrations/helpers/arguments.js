@@ -54,6 +54,11 @@ const yargs = require('yargs')
     describe: 'Deploys an example POA token',
     default: false,
   })
+  .option('deployPoa-broker', {
+    alias: 'dp-broker',
+    describe: 'Broker address that deploys POA Token',
+    default: false,
+  })
   .option('deployPoa-totalSupply', {
     alias: 'dp-ts',
     describe: 'Total supply of POA Token in wei',
@@ -79,11 +84,17 @@ const yargs = require('yargs')
     describe: 'Symbol of POA Token',
     default: 'BBK-RE-DE123',
   })
-  .option('deployPoa-startTimeForEthFunding', {
+  .option('deployPoa-startTimeForFunding', {
     alias: 'dp-start',
     describe:
-      'Start Time for eth funding period in unix time in seconds format. Default is 60 seconds after from now.',
+      'Start time for funding period as UNIX time in seconds. Default is 60 seconds from now.',
     default: unixTimeWithOffsetInSec(60),
+  })
+  .option('deployPoa-durationForFiatFunding', {
+    alias: 'dp-df',
+    describe:
+      'Duration for fiat funding period in seconds. Default is 1 week from start time.',
+    default: oneWeekInSec,
   })
   .option('deployPoa-durationForEthFunding', {
     alias: 'dp-de',

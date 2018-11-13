@@ -46,7 +46,7 @@ module.exports = {
     rinkeby: {
       network_id: 4,
       gas: 6.5e6,
-      gasPrice: 1e9,
+      gasPrice: 5e9,
       provider: () =>
         new HDWalletProvider(
           testnetMnemonic,

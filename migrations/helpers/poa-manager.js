@@ -50,7 +50,8 @@ const deployPoa = async (
     symbol: 'BBK-RE-DE123',
     fiatCurrency: 'EUR',
     totalSupply: oneHundredThousandTokensInWei,
-    startTimeForEthFundingPeriod: unixTimeWithOffsetInSec(600),
+    startTimeForFundingPeriod: unixTimeWithOffsetInSec(600),
+    durationForFiatFundingPeriod: oneWeekInSec,
     durationForEthFundingPeriod: oneWeekInSec,
     durationForActivationPeriod: twoWeeksInSec,
     fundingGoalInCents: oneHundredThousandEuroInCents,
@@ -64,7 +65,8 @@ const deployPoa = async (
     fiatCurrency,
     custodian,
     totalSupply,
-    startTimeForEthFundingPeriod,
+    startTimeForFundingPeriod,
+    durationForFiatFundingPeriod,
     durationForEthFundingPeriod,
     durationForActivationPeriod,
     fundingGoalInCents,
@@ -78,13 +80,15 @@ const deployPoa = async (
   console.log(
     chalk.cyan(`🚀  Deploying POA "${name}" with symbol "${symbol}"…\n`)
   )
+
   const tx = await poaManager.addToken(
     name,
     symbol,
     fiatCurrency,
     custodian,
     totalSupply,
-    startTimeForEthFundingPeriod,
+    startTimeForFundingPeriod,
+    durationForFiatFundingPeriod,
     durationForEthFundingPeriod,
     durationForActivationPeriod,
     fundingGoalInCents,
