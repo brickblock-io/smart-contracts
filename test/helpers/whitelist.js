@@ -2,7 +2,7 @@ const addAddress = async ({
   addressToWhitelist,
   ownerAddress,
   whitelistContract,
-  isPaused
+  isPaused,
 }) => {
   assert.equal(
     await whitelistContract.whitelisted(addressToWhitelist),
@@ -11,7 +11,7 @@ const addAddress = async ({
   )
 
   await whitelistContract.addAddress(addressToWhitelist, {
-    from: ownerAddress
+    from: ownerAddress,
   })
 
   assert.equal(
@@ -25,7 +25,7 @@ const removeAddress = async ({
   addressToWhitelist,
   ownerAddress,
   whitelistContract,
-  isPaused
+  isPaused,
 }) => {
   assert.equal(
     await whitelistContract.whitelisted(addressToWhitelist),
@@ -34,7 +34,7 @@ const removeAddress = async ({
   )
 
   await whitelistContract.removeAddress(addressToWhitelist, {
-    from: ownerAddress
+    from: ownerAddress,
   })
 
   assert.equal(
