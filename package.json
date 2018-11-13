@@ -63,7 +63,7 @@
     "repl": "truffle console --network hdwallet",
     "---SECTION:DIAGRAMS---": "--- GENERATE IMAGE ASSETS FOR SMART CONTRACT ECOSYSTEM DIAGRAMS ---",
     "diagram:render:comment": "using the mermaid.cli tool -> there is an online editor here https://mermaidjs.github.io/mermaid-live-editor",
-    "diagram:render": "node sequence-diagrams/render.js"
+    "diagram:render": "node docs/sequence-diagrams/render.js"
   },
   "lint-staged": {
     "*.sol": [
