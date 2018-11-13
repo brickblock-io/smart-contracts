@@ -1461,19 +1461,20 @@ const testFirstReclaim = async (poa, config, shouldBeFundingSuccessful) => {
   )
 }
 
-const testSetStageToTimedOut = async (poa, shouldBeFundingSuccessful) => {
+const testSetStageToTimedOut = async poa => {
   const preStage = await poa.stage()
 
   await poa.setStageToTimedOut()
 
   const postStage = await poa.stage()
 
-  assert.equal(
-    preStage.toString(),
-    shouldBeFundingSuccessful ? stages.FundingSuccessful : stages.EthFunding,
-    `preStage should be ${
-      shouldBeFundingSuccessful ? 'FundingSuccessful' : 'EthFunding'
-    }`
+  assert(
+    preStage.toString() === stages.Preview ||
+      preStage.toString() === stages.PreFunding ||
+      preStage.toString() === stages.FiatFunding ||
+      preStage.toString() === stages.EthFunding ||
+      preStage.toString() === stages.FundingSuccessful,
+    `preStage maximum should be Stages.FundingSuccessful`
   )
 
   assert.equal(
@@ -1483,17 +1484,18 @@ const testSetStageToTimedOut = async (poa, shouldBeFundingSuccessful) => {
   )
 }
 
-const testCancelFunding = async (poa, from, shoulBeFiatFunding) => {
+const testCancelFunding = async (poa, from) => {
   const preStage = await poa.stage()
 
   await poa.cancelFunding({ from })
 
   const postStage = await poa.stage()
 
-  assert.equal(
-    preStage.toString(),
-    shoulBeFiatFunding ? stages.FiatFunding : stages.PreFunding,
-    `preStage should be ${shoulBeFiatFunding ? 'FiatFunding' : 'PreFunding'}`
+  assert(
+    preStage.toString() === stages.Preview ||
+      preStage.toString() === stages.PreFunding ||
+      preStage.toString() === stages.FiatFunding,
+    `preStage maximum should be Stages.FiatFunding`
   )
 
   assert.equal(

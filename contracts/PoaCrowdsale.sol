@@ -720,7 +720,7 @@ contract PoaCrowdsale is PoaCommon {
 
   function setStageToTimedOut()
     external
-    atEitherStage(Stages.EthFunding, Stages.FundingSuccessful)
+    atMaxStage(Stages.FundingSuccessful)
     checkTimeout
     returns (bool)
   {
@@ -767,7 +767,7 @@ contract PoaCrowdsale is PoaCommon {
   function cancelFunding()
     external
     onlyCustodian
-    atEitherStage(Stages.PreFunding, Stages.FiatFunding)
+    atMaxStage(Stages.FiatFunding)
     returns (bool)
   {
     enterStage(Stages.FundingCancelled);

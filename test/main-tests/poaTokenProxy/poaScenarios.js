@@ -197,7 +197,7 @@ describe('when handling unhappy paths', async () => {
 
       await timeTravelToActivationPeriodTimeout(poa)
 
-      await testSetStageToTimedOut(poa, true)
+      await testSetStageToTimedOut(poa)
     })
   })
 })

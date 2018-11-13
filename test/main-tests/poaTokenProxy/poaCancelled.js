@@ -39,7 +39,7 @@ describe("when in 'FundingCancelled' stage", () => {
       fmr = contracts.fmr
       pmr = contracts.pmr
 
-      // move from `Pending` to `PreFunding` stage
+      // move from `Preview` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
       await timeTravelToFundingPeriod(poa)
@@ -52,7 +52,7 @@ describe("when in 'FundingCancelled' stage", () => {
         gasPrice,
       })
 
-      await testCancelFunding(poa, custodian, true)
+      await testCancelFunding(poa, custodian)
     })
 
     it('should start paused', async () => {
@@ -181,6 +181,39 @@ describe("when in 'FundingCancelled' stage", () => {
           gasPrice,
         },
       ])
+    })
+  })
+})
+
+describe("when in 'Preview' stage", () => {
+  contract('PoaToken', () => {
+    let poa
+
+    before('setup contracts', async () => {
+      const contracts = await setupPoaProxyAndEcosystem()
+      poa = contracts.poa
+    })
+
+    it('Custodian should be able to cancel', async () => {
+      await testCancelFunding(poa, custodian)
+    })
+  })
+})
+
+describe("when in 'PreFunding' stage", () => {
+  contract('PoaToken', () => {
+    let poa
+
+    before('setup contracts', async () => {
+      const contracts = await setupPoaProxyAndEcosystem()
+      poa = contracts.poa
+
+      // move from `Preview` to `PreFunding` stage
+      await testStartPreFunding(poa, { from: broker, gasPrice })
+    })
+
+    it('Custodian should be able to cancel', async () => {
+      await testCancelFunding(poa, custodian)
     })
   })
 })

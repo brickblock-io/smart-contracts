@@ -15,12 +15,14 @@ const {
   testReclaimAll,
   testSetStageToTimedOut,
   testStartPreFunding,
+  testStartFiatSale,
   testStartEthSale,
   testTerminate,
   testTransfer,
   testTransferFrom,
   testUnpause,
   testUpdateProofOfCustody,
+  timeTravelToFundingPeriod,
   timeTravelToFundingPeriodTimeout,
   timeTravelToEthFundingPeriod,
   whitelistedPoaBuyers,
@@ -191,6 +193,68 @@ describe("when in 'TimedOut' stage", () => {
 
     it('should reclaim all tokens', async () => {
       await testReclaimAll(poa, whitelistedPoaBuyers)
+    })
+  })
+})
+
+describe("when in 'Preview' stage but funding period is over", async () => {
+  contract('PoaTokenProxy', () => {
+    let poa
+
+    before('setup contracts', async () => {
+      const contracts = await setupPoaProxyAndEcosystem()
+      poa = contracts.poa
+
+      await timeTravelToFundingPeriodTimeout(poa)
+    })
+
+    it('should setTimedOut', async () => {
+      await testSetStageToTimedOut(poa)
+    })
+  })
+})
+
+describe("when in 'PreFunding' stage but funding period is over", async () => {
+  contract('PoaTokenProxy', () => {
+    let poa
+
+    before('setup contracts', async () => {
+      const contracts = await setupPoaProxyAndEcosystem()
+      poa = contracts.poa
+
+      // move from `Pending` to `PreFunding` stage
+      await testStartPreFunding(poa, { from: broker, gasPrice })
+
+      await timeTravelToFundingPeriodTimeout(poa)
+    })
+
+    it('should setTimedOut', async () => {
+      await testSetStageToTimedOut(poa)
+    })
+  })
+})
+
+describe("when in 'FiatFunding' stage but funding period is over", async () => {
+  contract('PoaTokenProxy', () => {
+    let poa
+
+    before('setup contracts', async () => {
+      const contracts = await setupPoaProxyAndEcosystem()
+      poa = contracts.poa
+
+      // move from `Preview` to `PreFunding` stage
+      await testStartPreFunding(poa, { from: broker, gasPrice })
+
+      await timeTravelToFundingPeriod(poa)
+
+      // move from `PreFunding` to `FiatFunding` stage
+      await testStartFiatSale(poa, { from: broker, gasPrice })
+
+      await timeTravelToFundingPeriodTimeout(poa)
+    })
+
+    it('should setTimedOut', async () => {
+      await testSetStageToTimedOut(poa)
     })
   })
 })

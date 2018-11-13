@@ -153,6 +153,11 @@ contract PoaCommon is PoaProxyCommon {
     _;
   }
 
+  modifier atMaxStage(Stages _stage) {
+    require(stage <= _stage);
+    _;
+  }
+
   /**
     @notice Check that the most common hashing algo is used (keccak256)
     and that its length is correct. In theory, it could be different.
