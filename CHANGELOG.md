@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.8.1"></a>
+## [3.8.1](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.8.0...v3.8.1) (2018-11-16)
+
+
+### Bug Fixes
+
+* Minor changes to POA cancel and timeout conditions. Improved tests ([1114224](https://git.brickblock-dev.io/platform/smart-contracts/commits/1114224))
+* Minor changes to POA cancel and timeout conditions. Improved tests ([acd234d](https://git.brickblock-dev.io/platform/smart-contracts/commits/acd234d))
+* Updated CLI tool to work with new time variables. Added Broker address as argument [skip ci] ([acac3ad](https://git.brickblock-dev.io/platform/smart-contracts/commits/acac3ad))
+
+
+
 <a name="3.8.0"></a>
 # [3.8.0](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.7.6...v3.8.0) (2018-11-08)
 
