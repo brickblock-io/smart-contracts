@@ -23,6 +23,21 @@ interface IPoaTokenCrowdsale {
     view
     returns (uint256);
 
+  function claimedPerTokenPayouts(address _address)
+    external
+    view
+    returns (uint256);
+
+  function spentBalances(address _address)
+    external
+    view
+    returns (uint256);
+
+  function receivedBalances(address _address)
+    external
+    view
+    returns (uint256);
+
   function initializeToken(
     bytes32 _name32, // bytes32 of name string
     bytes32 _symbol32, // bytes32 of symbol string
@@ -111,8 +126,7 @@ interface IPoaTokenCrowdsale {
     view
     returns (bool);
 
-  function currentPayout
-  (
+  function currentPayout(
     address _address,
     bool _includeUnclaimed
   )
@@ -129,31 +143,27 @@ interface IPoaTokenCrowdsale {
     external
     returns (uint256);
 
-  function updateProofOfCustody
-  (
+  function updateProofOfCustody(
     bytes32[2] _ipfsHash
   )
     external
     returns (bool);
 
-  function balanceOf
-  (
+  function balanceOf(
     address _address
   )
     external
     view
     returns (uint256);
 
-  function transfer
-  (
+  function transfer(
     address _to,
     uint256 _value
   )
     external
     returns (bool);
 
-  function transferFrom
-  (
+  function transferFrom(
     address _from,
     address _to,
     uint256 _value
@@ -166,8 +176,7 @@ interface IPoaTokenCrowdsale {
     view
     returns (bool _paused);
 
-  function allowance
-  (
+  function allowance(
     address _owner,
     address _spender
   )
@@ -224,16 +233,14 @@ interface IPoaTokenCrowdsale {
     external
     returns (uint256);
 
-  function buyFiat
-  (
+  function buyFiat(
     address _contributor,
     uint256 _amountInCents
   )
     external
     returns (bool);
 
-  function removeFiat
-  (
+  function removeFiat(
     address _contributor,
     uint256 _amountInCents
   )
@@ -279,7 +286,8 @@ interface IPoaTokenCrowdsale {
   function percent(
     uint256 numerator,
     uint256 denominator,
-    uint256 precision)
+    uint256 precision
+  )
     external
     returns(uint256 quotient);
 
@@ -365,24 +373,21 @@ interface IPoaTokenCrowdsale {
     view
     returns (uint256);
 
-  function calculateFee
-  (
+  function calculateFee(
     uint256 _value
   )
     external
     pure
     returns (uint256);
 
-  function getContractAddress
-  (
+  function getContractAddress(
     string _name
   )
     external
     view
     returns (address _contractAddress);
 
-  function isWhitelisted
-  (
+  function isWhitelisted(
     address _address
   )
     external
@@ -409,8 +414,7 @@ interface IPoaTokenCrowdsale {
     view
     returns (uint256 _fundedFiatAmountInTokens);
 
-  function fundedFiatAmountPerUserInTokens
-  (
+  function fundedFiatAmountPerUserInTokens(
     address _address
   )
     external
@@ -422,8 +426,7 @@ interface IPoaTokenCrowdsale {
     view
     returns (uint256 _fundedEthAmountInWei);
 
-  function fundedEthAmountPerUserInWei
-  (
+  function fundedEthAmountPerUserInWei(
     address _address
   )
     external
@@ -435,8 +438,7 @@ interface IPoaTokenCrowdsale {
     view
     returns (address _registry);
 
-  function unclaimedPayoutTotals
-  (
+  function unclaimedPayoutTotals(
     address _address
   )
     external

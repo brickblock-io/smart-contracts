@@ -40,7 +40,7 @@ contract PoaToken is PoaCommon {
   // used for calculating balanceOf by adding received balances
   mapping(address => uint256) public receivedBalances;
   // allowance of spender to spend owners tokens
-  mapping (address => mapping (address => uint256)) internal allowed;
+  mapping(address => mapping (address => uint256)) internal allowed;
 
   /********************************
   * end poaToken specific storage *
