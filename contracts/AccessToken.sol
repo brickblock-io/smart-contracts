@@ -160,6 +160,7 @@ contract AccessToken is PausableToken {
     totalLockedBBK = totalLockedBBK.add(_amount);
     require(_bbk.transferFrom(msg.sender, this, _amount));
     emit BbkLocked(msg.sender, _amount, totalLockedBBK);
+
     return true;
   }
 
@@ -185,6 +186,7 @@ contract AccessToken is PausableToken {
     totalLockedBBK = totalLockedBBK.sub(_amount);
     require(_bbk.transfer(msg.sender, _amount));
     emit BbkUnlocked(msg.sender, _amount, totalLockedBBK);
+
     return true;
   }
 
@@ -212,6 +214,7 @@ contract AccessToken is PausableToken {
     mintedActFromPastLockPeriodsPerUser[owner] = mintedActFromPastLockPeriodsPerUser[owner].add(_delta);
     totalSupply_ = totalSupply_.add(_amount);
     emit Mint(_amount);
+
     return true;
   }
 
@@ -297,6 +300,7 @@ contract AccessToken is PausableToken {
     spentAct[msg.sender] = spentAct[msg.sender].add(_value);
     receivedAct[_to] = receivedAct[_to].add(_value);
     emit Transfer(msg.sender, _to, _value);
+
     return true;
   }
 
@@ -327,6 +331,7 @@ contract AccessToken is PausableToken {
     receivedAct[_to] = receivedAct[_to].add(_value);
     allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
     emit Transfer(_from, _to, _value);
+
     return true;
   }
 
@@ -353,6 +358,7 @@ contract AccessToken is PausableToken {
     spentAct[_address] = spentAct[_address].add(_value);
     totalSupply_ = totalSupply_.sub(_value);
     emit Burn(_address, _value);
+
     return true;
   }
 }

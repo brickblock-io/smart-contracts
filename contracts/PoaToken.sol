@@ -163,8 +163,7 @@ contract PoaToken is PoaCommon {
    * @dev Only allowed in `Stages.Preview` by Broker
    * @param _newName32 The new name
    */
-  function updateName
-  (
+  function updateName(
     bytes32 _newName32
   )
     external
@@ -179,8 +178,7 @@ contract PoaToken is PoaCommon {
    * @dev Only allowed in `Stages.Preview` by Broker
    * @param _newSymbol32 The new symbol
    */
-  function updateSymbol
-  (
+  function updateSymbol(
     bytes32 _newSymbol32
   )
     external
@@ -195,8 +193,7 @@ contract PoaToken is PoaCommon {
    * @dev Only allowed in `Stages.Preview` by Broker
    * @param _newBroker The new Broker address
    */
-  function updateBrokerAddress
-  (
+  function updateBrokerAddress(
     address _newBroker
   )
     external
@@ -211,8 +208,7 @@ contract PoaToken is PoaCommon {
    * @dev Only allowed in `Stages.Preview` by Broker
    * @param _newTotalSupply The new total supply
    */
-  function updateTotalSupply
-  (
+  function updateTotalSupply(
     uint256 _newTotalSupply
   )
     external
@@ -234,8 +230,7 @@ contract PoaToken is PoaCommon {
    * @notice Set name for POA Token
    * @param _newName32 The new name
    */
-  function setName
-  (
+  function setName(
     bytes32 _newName32
   )
     internal
@@ -250,8 +245,7 @@ contract PoaToken is PoaCommon {
    * @notice Set symbol for POA Token
    * @param _newSymbol32 The new symbol
    */
-  function setSymbol
-  (
+  function setSymbol(
     bytes32 _newSymbol32
   )
     internal
@@ -266,8 +260,7 @@ contract PoaToken is PoaCommon {
    * @notice Set Broker address for POA Token
    * @param _newBroker The new Broker address
    */
-  function setBrokerAddress
-  (
+  function setBrokerAddress(
     address _newBroker
   )
     internal
@@ -282,8 +275,7 @@ contract PoaToken is PoaCommon {
    * @notice Set Custodian address for POA Token
    * @param _newCustodian The new Custodian address
    */
-  function setCustodianAddress
-  (
+  function setCustodianAddress(
     address _newCustodian
   )
     internal
@@ -300,8 +292,7 @@ contract PoaToken is PoaCommon {
    *      be greather than 1e18
    * @param _newTotalSupply The new total supply
    */
-  function setTotalSupply
-  (
+  function setTotalSupply(
     uint256 _newTotalSupply
   )
     internal
@@ -330,8 +321,7 @@ contract PoaToken is PoaCommon {
    * @param _newCustodian The new Custodian address
    * @return true when successful
    */
-  function changeCustodianAddress
-  (
+  function changeCustodianAddress(
     address _newCustodian
   )
     external
@@ -345,6 +335,7 @@ contract PoaToken is PoaCommon {
     );
 
     setCustodianAddress(_newCustodian);
+
     return true;
   }
 
@@ -366,6 +357,7 @@ contract PoaToken is PoaCommon {
 
     // set Stage to PreFunding
     enterStage(Stages.PreFunding);
+
     return true;
   }
 
@@ -385,6 +377,7 @@ contract PoaToken is PoaCommon {
     paused = true;
     getContractAddress("PoaLogger")
       .call(bytes4(keccak256("logTerminated()")));
+
     return true;
   }
 
@@ -402,7 +395,6 @@ contract PoaToken is PoaCommon {
     whenNotPaused
   {
     paused = true;
-
     emit Pause();
   }
 
@@ -459,8 +451,7 @@ contract PoaToken is PoaCommon {
   *********************************/
 
   /// @notice get current payout for perTokenPayout and unclaimed
-  function currentPayout
-  (
+  function currentPayout(
     address _address,
     bool _includeUnclaimed
   )
@@ -495,8 +486,7 @@ contract PoaToken is PoaCommon {
 
   /// @notice settle up perToken balances and move into unclaimedPayoutTotals in order
   /// to ensure that token transfers will not result in inaccurate balances
-  function settleUnclaimedPerTokenPayouts
-  (
+  function settleUnclaimedPerTokenPayouts(
     address _from,
     address _to
   )
@@ -513,6 +503,7 @@ contract PoaToken is PoaCommon {
       .add(currentPayout(_to, false));
     // same as above for to
     claimedPerTokenPayouts[_to] = totalPerTokenPayout;
+
     return true;
   }
 
@@ -550,6 +541,7 @@ contract PoaToken is PoaCommon {
       bytes4(keccak256("logPayout(uint256)")),
       _payoutAmount.sub(_delta)
     );
+
     return true;
   }
 
@@ -579,6 +571,7 @@ contract PoaToken is PoaCommon {
       msg.sender,
       _payoutAmount
     );
+
     return _payoutAmount;
   }
 
@@ -590,8 +583,7 @@ contract PoaToken is PoaCommon {
      that have received the actual securities that this contract
      tokenizes.
    */
-  function updateProofOfCustody
-  (
+  function updateProofOfCustody(
     bytes32[2] _ipfsHash
   )
     external
@@ -607,6 +599,7 @@ contract PoaToken is PoaCommon {
       bytes4(keccak256("logProofOfCustodyUpdated()")),
       _ipfsHash
     );
+
     return true;
   }
 
@@ -619,35 +612,26 @@ contract PoaToken is PoaCommon {
   ************************/
 
   /// @notice used for calculating starting balance once activated
-  function startingBalance
-  (
+  function startingBalance(
     address _address
   )
     internal
     view
     returns (uint256)
   {
-    if (isFiatInvestor(_address)) {
-      // Token balances will only show in "Active" stage
-      // and "Terminated" stage. Why also in "Terminated"?
-      // Because there can still be pending payouts
-      return stage >= Stages.Active
-        ? fundedFiatAmountPerUserInTokens[_address]
-        : 0;
-    } else {
-      return stage >= Stages.Active
-        ? fundedEthAmountPerUserInWei[_address]
-          .mul(
-            totalSupply_.sub(fundedFiatAmountInTokens)
-          )
-          .div(fundedEthAmountInWei)
-        : 0;
+    if (stage < Stages.Active) {
+      return 0;
     }
+
+    return isFiatInvestor(_address)
+      ? fundedFiatAmountPerUserInTokens[_address]
+      : fundedEthAmountPerUserInWei[_address]
+      .mul(totalSupply_.sub(fundedFiatAmountInTokens))
+      .div(fundedEthAmountInWei);
   }
 
   /// @notice ERC20 compliant balanceOf: uses NoobCoin pattern: https://github.com/TovarishFin/NoobCoin
-  function balanceOf
-  (
+  function balanceOf(
     address _address
   )
     public
@@ -663,8 +647,7 @@ contract PoaToken is PoaCommon {
     @notice ERC20 compliant transfer:
     - uses NoobCoin pattern combined with settling payout balances: https://github.com/TovarishFin/NoobCoin
   */
-  function transfer
-  (
+  function transfer(
     address _to,
     uint256 _value
   )
@@ -682,6 +665,7 @@ contract PoaToken is PoaCommon {
     spentBalances[msg.sender] = spentBalances[msg.sender].add(_value);
     receivedBalances[_to] = receivedBalances[_to].add(_value);
     emit Transfer(msg.sender, _to, _value);
+
     return true;
   }
 
@@ -689,8 +673,7 @@ contract PoaToken is PoaCommon {
     @notice ERC20 compliant transferFrom:
     - uses NoobCoin pattern combined with settling payout balances: https://github.com/TovarishFin/NoobCoin
   */
-  function transferFrom
-  (
+  function transferFrom(
     address _from,
     address _to,
     uint256 _value
@@ -711,14 +694,14 @@ contract PoaToken is PoaCommon {
     receivedBalances[_to] = receivedBalances[_to].add(_value);
     allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
     emit Transfer(_from, _to, _value);
+
     return true;
   }
 
   /**
     @notice ERCO compliant approve
   */
-  function approve
-  (
+  function approve(
     address _spender,
     uint256 _value
   )
@@ -728,14 +711,14 @@ contract PoaToken is PoaCommon {
   {
     allowed[msg.sender][_spender] = _value;
     emit Approval(msg.sender, _spender, _value);
+
     return true;
   }
 
   /**
     @notice openZeppelin implementation of increaseApproval
   */
-  function increaseApproval
-  (
+  function increaseApproval(
     address _spender,
     uint _addedValue
   )
@@ -746,14 +729,14 @@ contract PoaToken is PoaCommon {
     allowed[msg.sender][_spender] = (
       allowed[msg.sender][_spender].add(_addedValue));
     emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
+
     return true;
   }
 
   /**
     @notice openZeppelin implementation of decreaseApproval
   */
-  function decreaseApproval
-  (
+  function decreaseApproval(
     address _spender,
     uint _subtractedValue
   )
@@ -768,6 +751,7 @@ contract PoaToken is PoaCommon {
       allowed[msg.sender][_spender] = oldValue.sub(_subtractedValue);
     }
     emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
+
     return true;
   }
 

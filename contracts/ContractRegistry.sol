@@ -20,6 +20,7 @@ contract ContractRegistry is Ownable {
   {
     uint256 _size;
     assembly { _size := extcodesize(_address) }
+
     return _size > 0;
   }
 
@@ -43,6 +44,7 @@ contract ContractRegistry is Ownable {
     returns (address)
   {
     require(contractAddresses[keccak256(_name)] != address(0));
+
     return contractAddresses[keccak256(_name)];
   }
 
@@ -52,6 +54,7 @@ contract ContractRegistry is Ownable {
     returns (address)
   {
     require(contractAddresses[_name32] != address(0));
+
     return contractAddresses[_name32];
   }
 }

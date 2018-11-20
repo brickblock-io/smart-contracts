@@ -56,13 +56,16 @@ contract PoaProxy is PoaProxyCommon {
     making sure it has code. Used during upgrading to make
     sure the new addresses to upgrade to are smart contracts.
    */
-  function isContract(address _address)
+  function isContract(
+    address _address
+  )
     private
     view
     returns (bool)
   {
     uint256 _size;
     assembly { _size := extcodesize(_address) }
+
     return _size > 0;
   }
 
@@ -76,7 +79,9 @@ contract PoaProxy is PoaProxyCommon {
    *****************************/
 
   /// @notice Update the stored "poaTokenMaster" address to upgrade the PoaToken master contract
-  function proxyChangeTokenMaster(address _newMaster)
+  function proxyChangeTokenMaster(
+    address _newMaster
+  )
     public
     returns (bool)
   {
@@ -97,7 +102,9 @@ contract PoaProxy is PoaProxyCommon {
   }
 
   /// @notice Update the stored `poaCrowdsaleMaster` address to upgrade the PoaCrowdsale master contract
-  function proxyChangeCrowdsaleMaster(address _newMaster)
+  function proxyChangeCrowdsaleMaster(
+    address _newMaster
+  )
     public
     returns (bool)
   {

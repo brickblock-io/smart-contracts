@@ -82,6 +82,7 @@ contract PoaManager is Ownable {
     // used to check for existence in modifier [doesEntityExist]
     uint256 index = entityList.length;
     EntityState memory entity = EntityState(index, _active);
+
     return entity;
   }
 
@@ -369,6 +370,8 @@ contract PoaManager is Ownable {
     _proxyToken.proxyChangeTokenMaster(
       registry.getContractAddress("PoaTokenMaster")
     );
+
+    return true;
   }
 
   // upgrade an existing PoaCrowdsale proxy to what is stored in ContractRegistry
@@ -382,5 +385,7 @@ contract PoaManager is Ownable {
     _proxyToken.proxyChangeCrowdsaleMaster(
       registry.getContractAddress("PoaCrowdsaleMaster")
     );
+
+    return true;
   }
 }

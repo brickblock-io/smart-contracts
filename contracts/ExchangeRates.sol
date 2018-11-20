@@ -116,6 +116,7 @@ contract ExchangeRates is Ownable {
       _callbackGasLimit,
       _queryType
     );
+
     return true;
   }
 
@@ -140,6 +141,7 @@ contract ExchangeRates is Ownable {
     } else {
       emit NotEnoughBalance();
     }
+
     return true;
   }
 
@@ -210,6 +212,7 @@ contract ExchangeRates is Ownable {
       _ratePenalty
     );
     emit SettingsUpdated(_currencyName);
+
     return true;
   }
 
@@ -225,6 +228,7 @@ contract ExchangeRates is Ownable {
     Settings storage _settings = currencySettings[toUpperCase(_currencyName)];
     _settings.queryString = _queryString;
     emit SettingsUpdated(_currencyName);
+
     return true;
   }
 
@@ -240,6 +244,7 @@ contract ExchangeRates is Ownable {
     Settings storage _settings = currencySettings[toUpperCase(_currencyName)];
     _settings.callInterval = _callInterval;
     emit SettingsUpdated(_currencyName);
+
     return true;
   }
 
@@ -255,6 +260,7 @@ contract ExchangeRates is Ownable {
     Settings storage _settings = currencySettings[toUpperCase(_currencyName)];
     _settings.callbackGasLimit = _callbackGasLimit;
     emit SettingsUpdated(_currencyName);
+
     return true;
   }
 
@@ -273,6 +279,7 @@ contract ExchangeRates is Ownable {
     Settings storage _settings = currencySettings[toUpperCase(_currencyName)];
     _settings.ratePenalty = _ratePenalty;
     emit SettingsUpdated(_currencyName);
+
     return true;
   }
 
@@ -288,6 +295,7 @@ contract ExchangeRates is Ownable {
     );
     provider.setCallbackGasPrice(_gasPrice);
     emit SettingsUpdated("ALL");
+
     return true;
   }
 
@@ -300,6 +308,7 @@ contract ExchangeRates is Ownable {
   {
     ratesActive = !ratesActive;
     emit SettingsUpdated("ALL");
+
     return true;
   }
 
@@ -318,6 +327,7 @@ contract ExchangeRates is Ownable {
     returns (uint256, uint256, string, uint256)
   {
     Settings memory _settings = currencySettings[_queryTypeString];
+
     return (
       _settings.callInterval,
       _settings.callbackGasLimit,
@@ -334,6 +344,7 @@ contract ExchangeRates is Ownable {
   {
     uint256 _rate = rates[keccak256(abi.encodePacked(toUpperCase(_queryTypeString)))];
     require(_rate > 0);
+
     return _rate;
   }
 
@@ -346,6 +357,7 @@ contract ExchangeRates is Ownable {
   {
     uint256 _rate = rates[_queryType32];
     require(_rate > 0);
+
     return _rate;
   }
 
@@ -379,6 +391,7 @@ contract ExchangeRates is Ownable {
         );
       }
     }
+
     return string(_stringBytes);
   }
 

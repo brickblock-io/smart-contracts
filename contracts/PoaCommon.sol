@@ -203,7 +203,9 @@ contract PoaCommon is PoaProxyCommon {
   * Start Common Lifecycle Functions *
   ***********************************/
 
-  function enterStage(Stages _stage)
+  function enterStage(
+    Stages _stage
+  )
     internal
   {
     stage = _stage;
@@ -224,7 +226,9 @@ contract PoaCommon is PoaProxyCommon {
 
   /// @notice Utility function calculating the necessary fee for a given amount
   /// @return uint256 Payable fee
-  function calculateFee(uint256 _value)
+  function calculateFee(
+    uint256 _value
+  )
     public
     pure
     returns (uint256)
@@ -234,7 +238,9 @@ contract PoaCommon is PoaProxyCommon {
 
   /// @notice Pay fee to FeeManager contract
   /// @return true if fee payment succeeded, or false if it failed
-  function payFee(uint256 _value)
+  function payFee(
+    uint256 _value
+  )
     internal
     returns (bool)
   {
@@ -260,8 +266,7 @@ contract PoaCommon is PoaProxyCommon {
 
   /// @notice Checks if a given address is whitelisted
   /// @return true if address is whitelisted, false if not
-  function isWhitelisted
-  (
+  function isWhitelisted(
     address _address
   )
     public

@@ -35,6 +35,7 @@ contract BrickblockAccount is Ownable {
       registry.getContractAddress("BrickblockToken")
     );
     uint256 _companyFunds = bbk.balanceOf(address(bbk));
+
     return bbk.transferFrom(address(bbk), address(this), _companyFunds);
   }
 
@@ -68,6 +69,7 @@ contract BrickblockAccount is Ownable {
     IAccessToken act = IAccessToken(
       registry.getContractAddress("AccessToken")
     );
+
     return act.unlockBBK(_value);
   }
 
@@ -81,6 +83,7 @@ contract BrickblockAccount is Ownable {
     IFeeManager fmr = IFeeManager(
       registry.getContractAddress("FeeManager")
     );
+
     return fmr.claimFee(_value);
   }
 
@@ -94,6 +97,7 @@ contract BrickblockAccount is Ownable {
   {
     require(address(this).balance >= _value);
     _address.transfer(_value);
+
     return true;
   }
 
@@ -108,6 +112,7 @@ contract BrickblockAccount is Ownable {
     IAccessToken act = IAccessToken(
       registry.getContractAddress("AccessToken")
     );
+
     return act.transfer(_address, _value);
   }
 
@@ -123,6 +128,7 @@ contract BrickblockAccount is Ownable {
     IBrickblockToken bbk = IBrickblockToken(
       registry.getContractAddress("BrickblockToken")
     );
+
     return bbk.transfer(_address, _value);
   }
 

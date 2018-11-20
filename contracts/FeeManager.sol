@@ -26,7 +26,6 @@ contract FeeManager {
     view
     returns (uint256)
   {
-
     return _wei.mul(actRate);
   }
 
@@ -47,6 +46,7 @@ contract FeeManager {
       registry.getContractAddress("AccessToken")
     );
     require(act.distribute(weiToAct(msg.value)));
+
     return true;
   }
 
@@ -61,6 +61,7 @@ contract FeeManager {
     );
     require(act.burn(msg.sender, _value));
     msg.sender.transfer(actToWei(_value));
+
     return true;
   }
 }

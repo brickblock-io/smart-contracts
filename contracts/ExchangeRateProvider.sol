@@ -51,6 +51,7 @@ contract ExchangeRateProvider is usingOraclize {
     returns (bool)
   {
     oraclize_setCustomGasPrice(_gasPrice);
+
     return true;
   }
 
@@ -84,6 +85,7 @@ contract ExchangeRateProvider is usingOraclize {
       // set the queryId on ExchangeRates so that it knows about it and can
       // accept it when __callback tries to set the rate
       setQueryId(_queryId, _queryType);
+
       return true;
     }
   }
