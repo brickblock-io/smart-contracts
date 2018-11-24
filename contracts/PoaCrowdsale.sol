@@ -409,6 +409,7 @@ contract PoaCrowdsale is PoaCommon {
     require(_amountInCents > 0);
 
     fundedFiatAmountInCents = fundedFiatAmountInCents.add(_amountInCents);
+
     // Do not allow investments that exceed the funding goal
     require(fundedFiatAmountInCents <= fundingGoalInCents);
 
@@ -464,8 +465,13 @@ contract PoaCrowdsale is PoaCommon {
     require(!isFiatInvestor(msg.sender));
 
     /**
+<<<<<<< HEAD
      * In case ETH went up in value against fiat since the last buyWithEth(), we
      * might have reached our funding goal already without considering `msg.value`.
+=======
+     * In case ETH went up in value against fiat since the last buy(), we might
+     * have reached our funding goal already without considering `msg.value`.
+>>>>>>> 42101f1... fix: buy() improvements
      * If so, move to stage `FundingSuccessful` and fully refund `msg.value`.
      **/
     if (checkFundingSuccessful()) {
@@ -476,7 +482,11 @@ contract PoaCrowdsale is PoaCommon {
     }
 
     /**
+<<<<<<< HEAD
      * If this buyWithEth() hits the funding goal, we refund all Wei that exceed
+=======
+     * If this buy() hits the funding goal, we refund all Wei that exceed
+>>>>>>> 42101f1... fix: buy() improvements
      * the goal and obtain `_fundAmount` as effectivly funded amount. Otherwise,
      * `_fundAmount == msg.value`.
      **/
@@ -500,7 +510,16 @@ contract PoaCrowdsale is PoaCommon {
     returns (uint256)
   {
     // Partially refund `msg.value` in case funding goal is exceeded
+<<<<<<< HEAD
     if (isFundingGoalReached(_amount)) {
+=======
+    if (
+      fundingGoalInCents <=
+      weiToFiatCents(
+        fundedEthAmountInWei.add(_amount)
+      ).add(fundedFiatAmountInCents).add(1)
+    ) {
+>>>>>>> 42101f1... fix: buy() improvements
       enterStage(Stages.FundingSuccessful);
 
       // Calculate Wei amount that exceeds funding goal
@@ -517,6 +536,7 @@ contract PoaCrowdsale is PoaCommon {
       }
     }
     return _amount;
+<<<<<<< HEAD
   }
 
   /// @notice Check if `fundingGoalInCents` is reached while allowing 1c tolerance
@@ -529,6 +549,8 @@ contract PoaCrowdsale is PoaCommon {
       weiToFiatCents(
         fundedEthAmountInWei.add(_withWeiAmount)
       ).add(fundedFiatAmountInCents).add(1);
+=======
+>>>>>>> 42101f1... fix: buy() improvements
   }
 
   /**
@@ -540,7 +562,11 @@ contract PoaCrowdsale is PoaCommon {
     atStage(Stages.EthFunding)
     returns (bool)
   {
+<<<<<<< HEAD
     if (isFundingGoalReached(0)) {
+=======
+    if (weiToFiatCents(fundedEthAmountInWei).add(fundedFiatAmountInCents) >= fundingGoalInCents) {
+>>>>>>> 42101f1... fix: buy() improvements
       enterStage(Stages.FundingSuccessful);
       return true;
     }
