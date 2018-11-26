@@ -465,35 +465,38 @@ contract PoaCrowdsale is PoaCommon {
     require(!isFiatInvestor(msg.sender));
 
     /**
-<<<<<<< HEAD
      * In case ETH went up in value against fiat since the last buyWithEth(), we
      * might have reached our funding goal already without considering `msg.value`.
-=======
-     * In case ETH went up in value against fiat since the last buy(), we might
-     * have reached our funding goal already without considering `msg.value`.
->>>>>>> 42101f1... fix: buy() improvements
      * If so, move to stage `FundingSuccessful` and fully refund `msg.value`.
      **/
-    if (checkFundingSuccessful()) {
+    if (isFundingGoalReached(0)) {
+      enterStage(Stages.FundingSuccessful);
+
       if (msg.value > 0) {
         msg.sender.transfer(msg.value);
       }
+
       return false;
     }
 
     /**
-<<<<<<< HEAD
-     * If this buyWithEth() hits the funding goal, we refund all Wei that exceed
-=======
-     * If this buy() hits the funding goal, we refund all Wei that exceed
->>>>>>> 42101f1... fix: buy() improvements
-     * the goal and obtain `_fundAmount` as effectivly funded amount. Otherwise,
-     * `_fundAmount == msg.value`.
+     * If this `buyWithEth()` hits the funding goal, we refund all wei that exceed
+     * the goal and keep only the missing `_fundAmount` inside the contract. Otherwise,
+     * the `_fundAmount` will be equal to `msg.value`.
      **/
-    uint256 _fundAmount = refundExceedingAmountAndGetRemaining(msg.value);
+    (uint256 _fundAmount, uint256 _refundAmount) = calculateFundingAmount(msg.value);
+    if (isFundingGoalReached(msg.value)) {
+      enterStage(Stages.FundingSuccessful);
 
-    // Track investment amount per user in case a user needs
-    // to reclaim their funds in case of a failed funding
+      if (_refundAmount > 0) {
+        msg.sender.transfer(_refundAmount);
+      }
+    }
+
+    /**
+     * Track investment amount per user. In case of non-successful funding,
+     * an invenstor needs to be able to reclaim their funds.
+     **/
     fundedEthAmountPerUserInWei[msg.sender] = fundedEthAmountPerUserInWei[msg.sender]
       .add(_fundAmount);
     fundedEthAmountInWei = fundedEthAmountInWei.add(_fundAmount);
@@ -505,38 +508,22 @@ contract PoaCrowdsale is PoaCommon {
     return true;
   }
 
-  function refundExceedingAmountAndGetRemaining(uint256 _amount)
+  function calculateFundingAmount(uint256 _fullAmount)
     internal
-    returns (uint256)
+    view
+    returns (uint256, uint256)
   {
-    // Partially refund `msg.value` in case funding goal is exceeded
-<<<<<<< HEAD
-    if (isFundingGoalReached(_amount)) {
-=======
-    if (
-      fundingGoalInCents <=
-      weiToFiatCents(
-        fundedEthAmountInWei.add(_amount)
-      ).add(fundedFiatAmountInCents).add(1)
-    ) {
->>>>>>> 42101f1... fix: buy() improvements
-      enterStage(Stages.FundingSuccessful);
-
+    if (isFundingGoalReached(_fullAmount)) {
       // Calculate Wei amount that exceeds funding goal
       uint256 _refundAmount = fiatCentsToWei(fundedFiatAmountInCents)
         .add(fundedEthAmountInWei)
-        .add(_amount)
+        .add(_fullAmount)
         .sub(fiatCentsToWei(fundingGoalInCents));
 
-      // Refund the exceeding amount and return the delta left used for funding
-      if (_refundAmount > 0) {
-        msg.sender.transfer(_refundAmount);
-
-        return _amount.sub(_refundAmount);
-      }
+      return (_fullAmount.sub(_refundAmount), _refundAmount);
     }
-    return _amount;
-<<<<<<< HEAD
+
+    return (_fullAmount, 0);
   }
 
   /// @notice Check if `fundingGoalInCents` is reached while allowing 1c tolerance
@@ -549,32 +536,9 @@ contract PoaCrowdsale is PoaCommon {
       weiToFiatCents(
         fundedEthAmountInWei.add(_withWeiAmount)
       ).add(fundedFiatAmountInCents).add(1);
-=======
->>>>>>> 42101f1... fix: buy() improvements
   }
 
-  /**
-   * @notice In case `fundingGoalInCents` is reached, move to `FundingSuccessful` stage.
-   *         Due to fluctuating fiat rates, this is a `public` function.
-   */
-  function checkFundingSuccessful()
-    public
-    atStage(Stages.EthFunding)
-    returns (bool)
-  {
-<<<<<<< HEAD
-    if (isFundingGoalReached(0)) {
-=======
-    if (weiToFiatCents(fundedEthAmountInWei).add(fundedFiatAmountInCents) >= fundingGoalInCents) {
->>>>>>> 42101f1... fix: buy() improvements
-      enterStage(Stages.FundingSuccessful);
-      return true;
-    }
-
-    return false;
-  }
-
-  ///@notice Returns the total amount of fee needed for activation
+  /// @notice Returns the total amount of fee needed for activation
   function calculateTotalFee()
     public
     view
@@ -676,14 +640,13 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /**
-   @notice Used for manually setting Stage to TimedOut when no users have bought any tokens;
-   if no `buyWithEth()`s occurred before the funding deadline, the token would be stuck in Funding.
-   It can also optionally be used when activate is not called by custodian within
-   durationForActivationPeriod or when no one else has called reclaim after a timeout.
-
+   @notice Used for manually moving into the `TimedOut` in case no one has bought any tokens.
+   If no `buyWithFiat()` or `buyWithEth()` occurrs before the funding deadline, the token would
+   be stuck in either the `FiatFunding` or `EthFunding` stage.
+   Additionally, it can be used when the custodian hasn't called `activate()` before the
+   `activationDeadline` or when no investor has called `reclaim()` after a timeout.
   */
-
-  function setStageToTimedOut()
+  function manualCheckForTimeout()
     external
     atMaxStage(Stages.FundingSuccessful)
     checkTimeout
@@ -694,6 +657,25 @@ contract PoaCrowdsale is PoaCommon {
     }
 
     return true;
+  }
+
+  /**
+   * @notice In case the funding goal is reached without an explicit buy,
+   * most likely due to ETH appreciating in value over fiat, then this public
+   * function can be manually called to tip the contract over into the
+   * `FuFundingSuccessful` stage
+   */
+  function manualCheckForFundingSuccessful()
+    public
+    atStage(Stages.EthFunding)
+    returns (bool)
+  {
+    if (isFundingGoalReached(0)) {
+      enterStage(Stages.FundingSuccessful);
+      return true;
+    }
+
+    return false;
   }
 
   /// @notice Users can reclaim their invested ETH if the funding goal was not met within the funding deadline
@@ -775,7 +757,7 @@ contract PoaCrowdsale is PoaCommon {
   {
     bytes4 _sig = bytes4(keccak256("getRate32(bytes32)"));
     address _exchangeRates = getContractAddress("ExchangeRates");
-    bytes32 _fiatCurrency = keccak256(fiatCurrency());
+    bytes32 _fiatCurrency = keccak256(abi.encodePacked(fiatCurrency()));
 
     assembly {
       let _call := mload(0x40) // set _call to free memory pointer
