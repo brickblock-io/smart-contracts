@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="4.0.0"></a>
+# [4.0.0](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.9.0...v4.0.0) (2018-11-27)
+
+
+### Chores
+
+* renamed some PoaCrowdsale functions ([d38386e](https://git.brickblock-dev.io/platform/smart-contracts/commits/d38386e))
+
+
+### BREAKING CHANGES
+
+* Portal will need to be updated because it relies on the old names of the buy-functions
+
+
+
 <a name="3.9.2"></a>
 ## [3.9.2](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.9.0...v3.9.2) (2018-11-27)
 
