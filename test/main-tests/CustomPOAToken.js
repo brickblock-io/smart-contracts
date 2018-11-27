@@ -214,7 +214,7 @@ describe('when in Funding stage', () => {
     it('should NOT allow buying for blacklisted investors', async () => {
       const nonInvestorStatus = await cpoa.whitelisted(nonInvestor)
       assert(!nonInvestorStatus, 'the investor should NOT be whitelisted')
-      await testWillThrow(cpoa.buy, [
+      await testWillThrow(cpoa.buyWithEth, [
         {
           from: nonInvestor,
           value: 1e18,
@@ -229,7 +229,7 @@ describe('when in Funding stage', () => {
       const whitelisted = await cpoa.whitelisted(investor)
       assert(whitelisted, 'the investor should be whitelisted')
       const smallInvestment = new BigNumber(0)
-      await testWillThrow(cpoa.buy, [
+      await testWillThrow(cpoa.buyWithEth, [
         {
           from: investor,
           value: smallInvestment,
@@ -397,7 +397,9 @@ describe('when in Pending stage', () => {
     })
 
     it('should NOT buy even if whitelisted', async () => {
-      await testWillThrow(cpoa.buy, [{ from: investors[0], value: 1e18 }])
+      await testWillThrow(cpoa.buyWithEth, [
+        { from: investors[0], value: 1e18 },
+      ])
     })
 
     it('should NOT buy using the fallback function', async () => {
@@ -1037,7 +1039,7 @@ describe('when in Active stage', () => {
       const whitelistedInvestor = investors[0]
       const whitelisted = await cpoa.whitelisted(whitelistedInvestor)
       assert(whitelisted, 'the investor should be whitelisted already')
-      await testWillThrow(cpoa.buy, [
+      await testWillThrow(cpoa.buyWithEth, [
         { from: whitelistedInvestor, value: 1e18 },
       ])
     })
@@ -1355,7 +1357,7 @@ describe('while in Terminated stage', async () => {
       const whitelistedInvestor = investors[0]
       const whitelisted = await cpoa.whitelisted(whitelistedInvestor)
       assert(whitelisted, 'the investor should be whitelisted already')
-      await testWillThrow(cpoa.buy, [
+      await testWillThrow(cpoa.buyWithEth, [
         {
           from: whitelistedInvestor,
           value: 1e18,
@@ -1473,7 +1475,7 @@ describe('when timing out (going into stage 2 (failed))', () => {
     })
 
     it('should NOT timeout to failed when buying after timeoutblock, it should throw', async () => {
-      await testWillThrow(cpoa.buy, [
+      await testWillThrow(cpoa.buyWithEth, [
         {
           from: investors[0],
           value: 1e18,
@@ -1629,7 +1631,7 @@ describe('when timing out (going into stage 2 (failed))', () => {
       const whitelistedInvestor = investors[0]
       const whitelisted = await cpoa.whitelisted(whitelistedInvestor)
       assert(whitelisted, 'the investor should be whitelisted already')
-      await testWillThrow(cpoa.buy, [
+      await testWillThrow(cpoa.buyWithEth, [
         { from: whitelistedInvestor, value: 1e18 },
       ])
     })

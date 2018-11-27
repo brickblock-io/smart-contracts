@@ -221,7 +221,7 @@ contract CustomPOAToken is PausableToken {
 
   // start lifecycle functions
 
-  function buy()
+  function buyWithEth()
     public
     payable
     checkTimeout
@@ -290,7 +290,7 @@ contract CustomPOAToken is PausableToken {
     unclaimedPayoutTotals[owner] = unclaimedPayoutTotals[owner].add(_fee);
     // custodian value set to claimable. can now be claimed via claim function
     // set all eth in contract other than fee as claimable.
-    // should only be buy()s. this ensures buy() dust is cleared
+    // should only be buyWithEth()s. this ensures buyWithEth() dust is cleared
     unclaimedPayoutTotals[custodian] = unclaimedPayoutTotals[custodian]
       .add(address(this).balance.sub(_fee));
     // allow trading of tokens
@@ -389,7 +389,7 @@ contract CustomPOAToken is PausableToken {
   }
 
   // used to manually set Stage to Failed when no users have bought any tokens
-  // if no buy()s occurred before timeoutBlock token would be stuck in Funding
+  // if no buyWithEth()s occurred before timeoutBlock token would be stuck in Funding
   function setFailed()
     external
     atStage(Stages.Funding)
@@ -530,6 +530,6 @@ contract CustomPOAToken is PausableToken {
     public
     payable
   {
-    buy();
+    buyWithEth();
   }
 }

@@ -23,7 +23,7 @@ const {
   timeTravelToEthFundingPeriod,
   timeTravelToFundingPeriod,
   timeTravelToFundingPeriodTimeout,
-  whitelistedPoaBuyers,
+  whitelistedEthInvestors,
 } = require('./poa')
 
 const testPreviewToPreFundingEvent = async (poa, reg, pmr, log) => {
@@ -52,7 +52,7 @@ const testPreFundingToFiatFundingEvent = async (poa, reg, pmr, log) => {
   await timeTravelToFundingPeriod(poa)
 
   // move from `PreFunding` to `FiatFunding` stage
-  await testStartFiatSale(poa, { from: whitelistedPoaBuyers[0], gasPrice })
+  await testStartFiatSale(poa, { from: whitelistedEthInvestors[0], gasPrice })
 
   const { args: triggeredPoaLogger } = await waitForEvent(PoaLoggerStageEvent)
 
@@ -74,7 +74,7 @@ const testFiatFundingToEthFundingEvent = async (poa, reg, pmr, log) => {
   await timeTravelToEthFundingPeriod(poa)
 
   // move from `FiatFunding` to `EthFunding` stage
-  await testStartEthSale(poa, { from: whitelistedPoaBuyers[0], gasPrice })
+  await testStartEthSale(poa, { from: whitelistedEthInvestors[0], gasPrice })
 
   const { args: triggeredPoaLogger } = await waitForEvent(PoaLoggerStageEvent)
 
@@ -91,7 +91,7 @@ const testFiatFundingToEthFundingEvent = async (poa, reg, pmr, log) => {
 }
 
 const testBuyTokensEvents = async (poa, reg, pmr, log) => {
-  const from = whitelistedPoaBuyers[0]
+  const from = whitelistedEthInvestors[0]
   const value = new BigNumber(1e18)
 
   const PoaLoggerBuyEvent = log.Buy()
@@ -122,7 +122,7 @@ const testBuyTokensEvents = async (poa, reg, pmr, log) => {
 }
 
 const testBuyRemainingTokensEvents = async (poa, reg, pmr, log) => {
-  const from = whitelistedPoaBuyers[1]
+  const from = whitelistedEthInvestors[1]
 
   const PoaLoggerBuyEvent = log.Buy()
 
@@ -221,7 +221,7 @@ const testPayoutEvents = async (poa, reg, pmr, fmr, log) => {
 }
 
 const testClaimEvents = async (poa, reg, pmr, log) => {
-  const from = whitelistedPoaBuyers[0]
+  const from = whitelistedEthInvestors[0]
 
   const PoaLoggerClaimEvent = log.Claim()
 
@@ -308,7 +308,7 @@ const testChangeCustodianEvents = async (poa, reg, pmr, log) => {
 
 const testReclaimEvents = async () => {
   const value = new BigNumber(1e18)
-  const from = whitelistedPoaBuyers[0]
+  const from = whitelistedEthInvestors[0]
 
   // need a whole new instance in order to test this...
   const { poa, log, pmr } = await setupPoaProxyAndEcosystem()

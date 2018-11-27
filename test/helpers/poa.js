@@ -52,8 +52,8 @@ const custodian = accounts[2]
 const bbkBonusAddress = accounts[3]
 const bbkContributors = accounts.slice(4, 6)
 // overlap with bbkContributors... need more than 2 buyer accounts
-const whitelistedPoaBuyers = accounts.slice(4, 8)
-const fiatBuyer = accounts[9]
+const whitelistedEthInvestors = accounts.slice(4, 8)
+const whitelistedFiatInvestor = accounts[9]
 const bbkTokenDistAmount = new BigNumber(1e18)
 const actRate = new BigNumber(1e3)
 const defaultName = 'TestPoa'
@@ -151,17 +151,14 @@ const timeTravelToActivationPeriodTimeout = async poa => {
 }
 
 // sets up all contracts needed in the ecosystem for POA to function
-const setupEcosystem = async ({
-  _bbkContributors = bbkContributors,
-  _whitelistedPoaBuyers = whitelistedPoaBuyers,
-} = {}) => {
+const setupEcosystem = async () => {
   const reg = await ContractRegistry.new()
   const act = await AccessToken.new(reg.address)
   const bbk = await finalizedBBK(
     owner,
     bbkBonusAddress,
     act.address,
-    _bbkContributors,
+    bbkContributors,
     bbkTokenDistAmount
   )
   const exr = await ExchangeRates.new(reg.address)
@@ -171,7 +168,7 @@ const setupEcosystem = async ({
   const pmr = await PoaManager.new(reg.address)
   const log = await PoaLogger.new(reg.address)
 
-  for (const buyer of _whitelistedPoaBuyers) {
+  for (const buyer of [...whitelistedEthInvestors, whitelistedFiatInvestor]) {
     const preWhitelisted = await wht.whitelisted(buyer)
     await wht.addAddress(buyer)
     const postWhitelisted = await wht.whitelisted(buyer)
@@ -189,7 +186,7 @@ const setupEcosystem = async ({
   await reg.updateContractAddress('PoaManager', pmr.address)
   await reg.updateContractAddress('PoaLogger', log.address)
 
-  testApproveAndLockMany(bbk, act, _bbkContributors, bbkTokenDistAmount)
+  testApproveAndLockMany(bbk, act, bbkContributors, bbkTokenDistAmount)
 
   return {
     reg,
@@ -246,15 +243,8 @@ const testSetCurrencyRateWithDefaultValues = async (exr, exp) => {
   )
 }
 
-const setupPoaProxyAndEcosystem = async ({
-  _bbkContributors,
-  _whitelistedPoaBuyers,
-  _fundingGoal = defaultFundingGoal,
-} = {}) => {
-  const { reg, act, bbk, exr, exp, fmr, wht, pmr, log } = await setupEcosystem({
-    _bbkContributors,
-    _whitelistedPoaBuyers,
-  })
+const setupPoaProxyAndEcosystem = async () => {
+  const { reg, act, bbk, exr, exp, fmr, wht, pmr, log } = await setupEcosystem()
 
   await testSetCurrencyRate(
     exr,
@@ -300,7 +290,7 @@ const setupPoaProxyAndEcosystem = async ({
     defaultFiatFundingDuration,
     defaultEthFundingDuration,
     defaultActivationDuration,
-    _fundingGoal,
+    defaultFundingGoal,
     {
       from: broker,
     }
@@ -897,7 +887,7 @@ const testBuyTokensWithFiat = async (poa, buyer, amountInCents, config) => {
   )
   const preFundedAmountInTokens = await poa.fundedFiatAmountInTokens()
   const preFundedAmountInCents = await poa.fundedFiatAmountInCents()
-  await poa.buyFiat(buyer, amountInCents, {
+  await poa.buyWithFiat(buyer, amountInCents, {
     from: config.from,
     gasPrice: config.gasPrice,
   })
@@ -1031,7 +1021,7 @@ const testBuyTokens = async (poa, config) => {
   const preTokenBalance = await poa.balanceOf(buyer)
   const preFundedAmount = await poa.fundedEthAmountInWei()
   const preUserWeiInvested = await poa.fundedEthAmountPerUserInWei(buyer)
-  const tx = await poa.buy(config)
+  const tx = await poa.buyWithEth(config)
   const gasUsed = await getGasUsed(tx)
   const gasCost = new BigNumber(gasUsed).mul(config.gasPrice)
 
@@ -1072,7 +1062,7 @@ const testBuyTokens = async (poa, config) => {
 }
 
 const testBuyTokensMulti = async (poa, buyAmount) => {
-  for (const buyer of whitelistedPoaBuyers) {
+  for (const buyer of whitelistedEthInvestors) {
     await testBuyTokens(poa, { from: buyer, value: buyAmount, gasPrice })
   }
 }
@@ -1093,7 +1083,7 @@ const testBuyRemainingTokens = async (poa, config) => {
   const preEthBalance = await getEtherBalance(buyer)
   const preTokenBalance = await poa.balanceOf(buyer)
   const preFundedWei = await poa.fundedEthAmountInWei()
-  const tx = await poa.buy(config)
+  const tx = await poa.buyWithEth(config)
   const gasUsed = await getGasUsed(tx)
   const gasCost = new BigNumber(gasUsed).mul(config.gasPrice)
 
@@ -1982,7 +1972,6 @@ module.exports = {
   defaultSymbol32,
   defaultTotalSupply,
   emptyBytes32,
-  fiatBuyer,
   getAccountInformation,
   getDefaultStartTimeForFundingPeriod,
   getExpectedTokenAmount,
@@ -2050,5 +2039,6 @@ module.exports = {
   timeTravelToEthFundingPeriod,
   timeTravelToFundingPeriodTimeout,
   timeTravelToActivationPeriodTimeout,
-  whitelistedPoaBuyers,
+  whitelistedEthInvestors,
+  whitelistedFiatInvestor,
 }

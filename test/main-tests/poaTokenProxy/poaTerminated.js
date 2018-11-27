@@ -24,7 +24,7 @@ const {
   testUnpause,
   testUpdateProofOfCustody,
   timeTravelToEthFundingPeriod,
-  whitelistedPoaBuyers,
+  whitelistedEthInvestors,
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
 
@@ -55,13 +55,13 @@ describe("when in 'Terminated' stage", () => {
 
       // move into `FundingSuccessful` stage
       await testBuyTokens(poa, {
-        from: whitelistedPoaBuyers[0],
+        from: whitelistedEthInvestors[0],
         value: 1e18,
         gasPrice,
       })
 
       await testBuyRemainingTokens(poa, {
-        from: whitelistedPoaBuyers[1],
+        from: whitelistedEthInvestors[1],
         gasPrice,
       })
 
@@ -106,7 +106,7 @@ describe("when in 'Terminated' stage", () => {
     it('should NOT buy, even if whitelisted', async () => {
       await testWillThrow(testBuyTokens, [
         poa,
-        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice },
+        { from: whitelistedEthInvestors[0], value: 3e17, gasPrice },
       ])
     })
 
@@ -128,16 +128,19 @@ describe("when in 'Terminated' stage", () => {
     })
 
     it('should NOT reclaim, even if owning tokens', async () => {
-      await testWillThrow(testReclaim, [poa, { from: whitelistedPoaBuyers[0] }])
+      await testWillThrow(testReclaim, [
+        poa,
+        { from: whitelistedEthInvestors[0] },
+      ])
     })
 
     it('should NOT transfer', async () => {
       await testWillThrow(testTransfer, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
     })
@@ -145,10 +148,10 @@ describe("when in 'Terminated' stage", () => {
     it('should NOT approve', async () => {
       await testWillThrow(testApprove, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
     })
@@ -158,19 +161,19 @@ describe("when in 'Terminated' stage", () => {
       // that approval was attempted as well.
       await testWillThrow(testApprove, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
       await testWillThrow(testTransferFrom, [
         poa,
-        whitelistedPoaBuyers[0],
+        whitelistedEthInvestors[0],
         bbkContributors[0],
         1e17,
         {
-          from: whitelistedPoaBuyers[1],
+          from: whitelistedEthInvestors[1],
         },
       ])
     })
@@ -181,7 +184,10 @@ describe("when in 'Terminated' stage", () => {
     // start core stage functionality
 
     it('should NOT claim if no payouts', async () => {
-      await testWillThrow(testClaim, [poa, { from: whitelistedPoaBuyers[0] }])
+      await testWillThrow(testClaim, [
+        poa,
+        { from: whitelistedEthInvestors[0] },
+      ])
     })
 
     it('should payout as broker', async () => {
@@ -205,12 +211,12 @@ describe("when in 'Terminated' stage", () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { value: 2e18, from: whitelistedPoaBuyers[0], gasPrice },
+        { value: 2e18, from: whitelistedEthInvestors[0], gasPrice },
       ])
     })
 
     it('should claim if payout has been made', async () => {
-      await testClaim(poa, { from: whitelistedPoaBuyers[0] }, true)
+      await testClaim(poa, { from: whitelistedEthInvestors[0] }, true)
     })
 
     it('should update proofOfCustody if custodian', async () => {

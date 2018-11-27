@@ -2,7 +2,6 @@ const {
   broker,
   custodian,
   defaultIpfsHashArray32,
-  fiatBuyer,
   getAccountInformation,
   setupPoaProxyAndEcosystem,
   stages,
@@ -30,7 +29,8 @@ const {
   timeTravelToFundingPeriod,
   timeTravelToFundingPeriodTimeout,
   timeTravelToActivationPeriodTimeout,
-  whitelistedPoaBuyers,
+  whitelistedEthInvestors,
+  whitelistedFiatInvestor,
 } = require('../../helpers/poa')
 const {
   gasPrice,
@@ -52,8 +52,8 @@ describe('De-whitelisted POA holders', () => {
   contract('PoaTokenProxy', () => {
     beforeEach('setup contracts', async () => {
       const contracts = await setupPoaProxyAndEcosystem()
-      sender = whitelistedPoaBuyers[0]
-      receiver = whitelistedPoaBuyers[1]
+      sender = whitelistedEthInvestors[0]
+      receiver = whitelistedEthInvestors[1]
       poa = contracts.poa
       fmr = contracts.fmr
       wht = contracts.wht
@@ -70,8 +70,8 @@ describe('De-whitelisted POA holders', () => {
 
       await testBuyRemainingTokens(poa, {
         from:
-          whitelistedPoaBuyers[
-            Math.floor(Math.random() * whitelistedPoaBuyers.length)
+          whitelistedEthInvestors[
+            Math.floor(Math.random() * whitelistedEthInvestors.length)
           ],
         gasPrice,
       })
@@ -151,13 +151,13 @@ describe('when handling unhappy paths', async () => {
 
       // buy tokens to reclaim when failed
       await testBuyTokens(poa, {
-        from: whitelistedPoaBuyers[0],
+        from: whitelistedEthInvestors[0],
         value: tokenBuyAmount,
         gasPrice,
       })
 
       await timeTravelToFundingPeriodTimeout(poa)
-      await testFirstReclaim(poa, { from: whitelistedPoaBuyers[0] })
+      await testFirstReclaim(poa, { from: whitelistedEthInvestors[0] })
     })
 
     it('should hit checkTimeout when reclaiming after durationForActivationPeriod', async () => {
@@ -171,13 +171,13 @@ describe('when handling unhappy paths', async () => {
 
       // buy all remaining tokens and move to `FundingSuccessful` stage
       await testBuyRemainingTokens(poa, {
-        from: whitelistedPoaBuyers[0],
+        from: whitelistedEthInvestors[0],
         gasPrice,
       })
 
       await timeTravelToActivationPeriodTimeout(poa)
 
-      await testFirstReclaim(poa, { from: whitelistedPoaBuyers[0] }, true)
+      await testFirstReclaim(poa, { from: whitelistedEthInvestors[0] }, true)
     })
 
     it('should setStageToTimedOut by anyone when durationForActivationPeriod has occured', async () => {
@@ -191,7 +191,7 @@ describe('when handling unhappy paths', async () => {
 
       // buy all remaining tokens and move to `FundingSuccessful` stage
       await testBuyRemainingTokens(poa, {
-        from: whitelistedPoaBuyers[0],
+        from: whitelistedEthInvestors[0],
         gasPrice,
       })
 
@@ -225,7 +225,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
       await testStartFiatSale(poa, { from: broker, gasPrice })
 
       // buy with fiat
-      await testBuyTokensWithFiat(poa, fiatBuyer, 1000, {
+      await testBuyTokensWithFiat(poa, whitelistedFiatInvestor, 1000, {
         from: custodian,
         gasPrice,
       })
@@ -239,8 +239,8 @@ describe('when trying various scenarios involving payout, transfer, approve, and
 
       await testBuyRemainingTokens(poa, {
         from:
-          whitelistedPoaBuyers[
-            Math.floor(Math.random() * whitelistedPoaBuyers.length)
+          whitelistedEthInvestors[
+            Math.floor(Math.random() * whitelistedEthInvestors.length)
           ],
         gasPrice,
       })
@@ -265,8 +265,8 @@ describe('when trying various scenarios involving payout, transfer, approve, and
 
     describe('payout -> transfer 100% -> payout', () => {
       it('should have correct currentPayout and claims all users', async () => {
-        const sender = whitelistedPoaBuyers[0]
-        const receiver = whitelistedPoaBuyers[1]
+        const sender = whitelistedEthInvestors[0]
+        const receiver = whitelistedEthInvestors[1]
         let senderAccount
         let receiverAccount
         let expectedSenderPayout = new BigNumber(0)
@@ -357,14 +357,17 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           should match expectedPayout ${expectedReceiverPayout.toString()}`
         )
 
-        await testClaimAllPayouts(poa, [...whitelistedPoaBuyers, fiatBuyer])
+        await testClaimAllPayouts(poa, [
+          ...whitelistedEthInvestors,
+          whitelistedFiatInvestor,
+        ])
       })
     })
 
     describe('payout -> transfer 50% -> payout', () => {
       it('should have correct currentPayout and claims all users', async () => {
-        const sender = whitelistedPoaBuyers[0]
-        const receiver = whitelistedPoaBuyers[1]
+        const sender = whitelistedEthInvestors[0]
+        const receiver = whitelistedEthInvestors[1]
         let senderAccount
         let receiverAccount
         let expectedSenderPayout = new BigNumber(0)
@@ -461,15 +464,18 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           should match expectedPayout ${expectedReceiverPayout.toString()}`
         )
 
-        await testClaimAllPayouts(poa, [...whitelistedPoaBuyers, fiatBuyer])
+        await testClaimAllPayouts(poa, [
+          ...whitelistedEthInvestors,
+          whitelistedFiatInvestor,
+        ])
       })
     })
 
     describe('payout -> transferFrom 100% -> payout', () => {
       it('should have correct currentPayout and claims all users', async () => {
-        const sender = whitelistedPoaBuyers[0]
-        const receiver = whitelistedPoaBuyers[1]
-        const spender = whitelistedPoaBuyers[2]
+        const sender = whitelistedEthInvestors[0]
+        const receiver = whitelistedEthInvestors[1]
+        const spender = whitelistedEthInvestors[2]
         let senderAccount
         let receiverAccount
         let expectedSenderPayout = new BigNumber(0)
@@ -569,15 +575,18 @@ describe('when trying various scenarios involving payout, transfer, approve, and
             should match expectedPayout ${expectedReceiverPayout.toString()}`
         )
 
-        await testClaimAllPayouts(poa, [...whitelistedPoaBuyers, fiatBuyer])
+        await testClaimAllPayouts(poa, [
+          ...whitelistedEthInvestors,
+          whitelistedFiatInvestor,
+        ])
       })
     })
 
     describe('payout -> transferFrom 50% -> payout', () => {
       it('should have correct currentPayout and claims all users', async () => {
-        const sender = whitelistedPoaBuyers[0]
-        const receiver = whitelistedPoaBuyers[1]
-        const spender = whitelistedPoaBuyers[2]
+        const sender = whitelistedEthInvestors[0]
+        const receiver = whitelistedEthInvestors[1]
+        const spender = whitelistedEthInvestors[2]
         let senderAccount
         let receiverAccount
         let expectedSenderPayout = new BigNumber(0)
@@ -678,14 +687,17 @@ describe('when trying various scenarios involving payout, transfer, approve, and
             should match expectedPayout ${expectedReceiverPayout.toString()}`
         )
 
-        await testClaimAllPayouts(poa, [...whitelistedPoaBuyers, fiatBuyer])
+        await testClaimAllPayouts(poa, [
+          ...whitelistedEthInvestors,
+          whitelistedFiatInvestor,
+        ])
       })
     })
 
     describe('transfer 100% -> payout', () => {
       it('should have correct currentPayout and claims all users', async () => {
-        const sender = whitelistedPoaBuyers[0]
-        const receiver = whitelistedPoaBuyers[1]
+        const sender = whitelistedEthInvestors[0]
+        const receiver = whitelistedEthInvestors[1]
 
         let senderAccount = await getAccountInformation(poa, sender)
         let receiverAccount = await getAccountInformation(poa, receiver)
@@ -727,14 +739,17 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           should match expectedPayout ${expectedReceiverPayout.toString()}`
         )
 
-        await testClaimAllPayouts(poa, [...whitelistedPoaBuyers, fiatBuyer])
+        await testClaimAllPayouts(poa, [
+          ...whitelistedEthInvestors,
+          whitelistedFiatInvestor,
+        ])
       })
     })
 
     describe('transfer 50% -> payout', () => {
       it('should have correct currentPayout and claims all users', async () => {
-        const sender = whitelistedPoaBuyers[0]
-        const receiver = whitelistedPoaBuyers[1]
+        const sender = whitelistedEthInvestors[0]
+        const receiver = whitelistedEthInvestors[1]
 
         let senderAccount = await getAccountInformation(poa, sender)
         let receiverAccount = await getAccountInformation(poa, receiver)
@@ -784,15 +799,18 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           should match expectedPayout ${expectedReceiverPayout.toString()}`
         )
 
-        await testClaimAllPayouts(poa, [...whitelistedPoaBuyers, fiatBuyer])
+        await testClaimAllPayouts(poa, [
+          ...whitelistedEthInvestors,
+          whitelistedFiatInvestor,
+        ])
       })
     })
 
     describe('transferFrom 100% -> payout', () => {
       it('should have correct currentPayout and claims all users', async () => {
-        const sender = whitelistedPoaBuyers[0]
-        const receiver = whitelistedPoaBuyers[1]
-        const spender = whitelistedPoaBuyers[2]
+        const sender = whitelistedEthInvestors[0]
+        const receiver = whitelistedEthInvestors[1]
+        const spender = whitelistedEthInvestors[2]
 
         let senderAccount = await getAccountInformation(poa, sender)
         let receiverAccount = await getAccountInformation(poa, receiver)
@@ -844,15 +862,18 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           should match expectedPayout ${expectedReceiverPayout.toString()}`
         )
 
-        await testClaimAllPayouts(poa, [...whitelistedPoaBuyers, fiatBuyer])
+        await testClaimAllPayouts(poa, [
+          ...whitelistedEthInvestors,
+          whitelistedFiatInvestor,
+        ])
       })
     })
 
     describe('transferFrom 50% -> payout', () => {
       it('should have correct currentPayout and claims all users', async () => {
-        const sender = whitelistedPoaBuyers[0]
-        const receiver = whitelistedPoaBuyers[1]
-        const spender = whitelistedPoaBuyers[2]
+        const sender = whitelistedEthInvestors[0]
+        const receiver = whitelistedEthInvestors[1]
+        const spender = whitelistedEthInvestors[2]
 
         let senderAccount = await getAccountInformation(poa, sender)
         let receiverAccount = await getAccountInformation(poa, receiver)
@@ -908,7 +929,10 @@ describe('when trying various scenarios involving payout, transfer, approve, and
           should match expectedPayout ${expectedReceiverPayout.toString()}`
         )
 
-        await testClaimAllPayouts(poa, [...whitelistedPoaBuyers, fiatBuyer])
+        await testClaimAllPayouts(poa, [
+          ...whitelistedEthInvestors,
+          whitelistedFiatInvestor,
+        ])
       })
     })
   })
@@ -942,7 +966,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       await testStartFiatSale(poa, { from: broker, gasPrice })
 
       // buy with fiat
-      await testBuyTokensWithFiat(poa, fiatBuyer, 1000, {
+      await testBuyTokensWithFiat(poa, whitelistedFiatInvestor, 1000, {
         from: custodian,
         gasPrice,
       })
@@ -960,7 +984,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       const commitments = []
       // decrease by 10 percent
       const decreaseRate = 0.1
-      for (const from of whitelistedPoaBuyers) {
+      for (const from of whitelistedEthInvestors) {
         const preFundingGoalInWei = await poa.fundingGoalInWei()
         rate = rate.sub(rate.mul(decreaseRate)).floor()
         await testResetCurrencyRate(exr, exp, 'EUR', rate, ratePenalty)
@@ -983,7 +1007,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       }
 
       const purchase = await testBuyRemainingTokens(poa, {
-        from: whitelistedPoaBuyers[0],
+        from: whitelistedEthInvestors[0],
         gasPrice,
       })
 
@@ -1008,7 +1032,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       const commitments = []
       // increase by 10 percent
       const increaseRate = 0.1
-      for (const from of whitelistedPoaBuyers) {
+      for (const from of whitelistedEthInvestors) {
         const preFundingGoalInWei = await poa.fundingGoalInWei()
         rate = rate.add(rate.mul(increaseRate)).floor()
         await testResetCurrencyRate(exr, exp, 'EUR', rate, ratePenalty)
@@ -1031,7 +1055,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       }
 
       const purchase = await testBuyRemainingTokens(poa, {
-        from: whitelistedPoaBuyers[0],
+        from: whitelistedEthInvestors[0],
         gasPrice,
       })
 
@@ -1060,7 +1084,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       await testResetCurrencyRate(exr, exp, 'EUR', rate, ratePenalty)
 
       await testBuyTokens(poa, {
-        from: whitelistedPoaBuyers[0],
+        from: whitelistedEthInvestors[0],
         value: preNeededWei,
         gasPrice,
       })
@@ -1085,7 +1109,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
 
       // buy half of tokens based on original rate
       await testBuyTokens(poa, {
-        from: whitelistedPoaBuyers[0],
+        from: whitelistedEthInvestors[0],
         value: preNeededWei.div(2),
         gasPrice,
       })
@@ -1095,11 +1119,13 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       await testResetCurrencyRate(exr, exp, 'EUR', rate, ratePenalty)
 
       const interimStage = await poa.stage()
-      const preSecondEthBalance = await getEtherBalance(whitelistedPoaBuyers[1])
+      const preSecondEthBalance = await getEtherBalance(
+        whitelistedEthInvestors[1]
+      )
 
       // try to buy after rate doubling (fundingGoal should be met)
-      const tx = await poa.buy({
-        from: whitelistedPoaBuyers[1],
+      const tx = await poa.buyWithEth({
+        from: whitelistedEthInvestors[1],
         value: preNeededWei.div(2).floor(),
         gasPrice,
       })
@@ -1108,10 +1134,10 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
 
       const postStage = await poa.stage()
       const postSecondEthBalance = await getEtherBalance(
-        whitelistedPoaBuyers[1]
+        whitelistedEthInvestors[1]
       )
       const postSecondTokenBalance = await poa.balanceOf(
-        whitelistedPoaBuyers[1]
+        whitelistedEthInvestors[1]
       )
 
       assert.equal(
@@ -1142,7 +1168,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
 
       // buy half of tokens based on original rate
       await testBuyTokens(poa, {
-        from: whitelistedPoaBuyers[0],
+        from: whitelistedEthInvestors[0],
         value: preNeededWei.div(2),
         gasPrice,
       })

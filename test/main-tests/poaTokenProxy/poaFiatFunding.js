@@ -29,16 +29,16 @@ const {
   testUpdateProofOfCustody,
   timeTravelToFundingPeriod,
   timeTravelToEthFundingPeriod,
-  whitelistedPoaBuyers,
+  whitelistedEthInvestors,
+  whitelistedFiatInvestor,
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
 
 describe("when in 'FiatFunding' stage", () => {
-  contract('PoaToken', accounts => {
+  contract('PoaToken', () => {
     let poa
     let fmr
     let pmr
-    const fiatInvestor = accounts[3]
 
     before('setup contracts', async () => {
       const contracts = await setupPoaProxyAndEcosystem()
@@ -86,7 +86,10 @@ describe("when in 'FiatFunding' stage", () => {
     })
 
     it('should NOT reclaim, even if owning tokens', async () => {
-      await testWillThrow(testReclaim, [poa, { from: whitelistedPoaBuyers[0] }])
+      await testWillThrow(testReclaim, [
+        poa,
+        { from: whitelistedEthInvestors[0] },
+      ])
     })
 
     it('should NOT payout, even if broker', async () => {
@@ -98,7 +101,10 @@ describe("when in 'FiatFunding' stage", () => {
     })
 
     it('should NOT claim since there are no payouts', async () => {
-      await testWillThrow(testClaim, [poa, { from: whitelistedPoaBuyers[0] }])
+      await testWillThrow(testClaim, [
+        poa,
+        { from: whitelistedEthInvestors[0] },
+      ])
     })
 
     it('should NOT updateProofOfCustody, even if valid and from custodian', async () => {
@@ -112,10 +118,10 @@ describe("when in 'FiatFunding' stage", () => {
     it('should NOT transfer', async () => {
       await testWillThrow(testTransfer, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
     })
@@ -123,10 +129,10 @@ describe("when in 'FiatFunding' stage", () => {
     it('should NOT approve', async () => {
       await testWillThrow(testApprove, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
     })
@@ -136,19 +142,19 @@ describe("when in 'FiatFunding' stage", () => {
       // that approval was attempted as well.
       await testWillThrow(testApprove, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
       await testWillThrow(testTransferFrom, [
         poa,
-        whitelistedPoaBuyers[0],
+        whitelistedEthInvestors[0],
         bbkContributors[0],
         1e17,
         {
-          from: whitelistedPoaBuyers[1],
+          from: whitelistedEthInvestors[1],
         },
       ])
     })
@@ -160,7 +166,7 @@ describe("when in 'FiatFunding' stage", () => {
     // start core stage functionality
 
     it('should allow FIAT buying', async () => {
-      await testBuyTokensWithFiat(poa, fiatInvestor, 100, {
+      await testBuyTokensWithFiat(poa, whitelistedFiatInvestor, 100, {
         from: custodian,
         gasPrice,
       })
@@ -169,7 +175,7 @@ describe("when in 'FiatFunding' stage", () => {
     it('should NOT allow FIAT buying less than 1 cents', async () => {
       await testWillThrow(testBuyTokensWithFiat, [
         poa,
-        fiatInvestor,
+        whitelistedFiatInvestor,
         0,
         {
           from: custodian,
@@ -189,7 +195,7 @@ describe("when in 'FiatFunding' stage", () => {
 
       await testIncrementOfBalanceWhenBuyTokensWithFiat(
         poa,
-        fiatInvestor,
+        whitelistedFiatInvestor,
         investmentAmountInCents
       )
     })
@@ -200,7 +206,7 @@ describe("when in 'FiatFunding' stage", () => {
 
       await testWillThrow(testBuyTokensWithFiat, [
         poa,
-        fiatInvestor,
+        whitelistedFiatInvestor,
         investmentAmountInCents,
         {
           from: custodian,
@@ -213,7 +219,7 @@ describe("when in 'FiatFunding' stage", () => {
       await testWillThrow(testBuyTokens, [
         poa,
         {
-          from: fiatInvestor,
+          from: whitelistedFiatInvestor,
           value: 5e17,
           gasPrice,
         },
@@ -224,7 +230,7 @@ describe("when in 'FiatFunding' stage", () => {
     it("should allow FIAT investment during ETH funding period when 'startEthSale' is not called", async () => {
       await timeTravelToEthFundingPeriod(poa)
 
-      await testBuyTokensWithFiat(poa, fiatInvestor, 100000, {
+      await testBuyTokensWithFiat(poa, whitelistedFiatInvestor, 100000, {
         from: custodian,
         gasPrice,
       })
@@ -236,7 +242,7 @@ describe("when in 'FiatFunding' stage", () => {
 
       await testWillThrow(testBuyTokensWithFiat, [
         poa,
-        fiatInvestor,
+        whitelistedFiatInvestor,
         100000,
         {
           from: custodian,
@@ -248,9 +254,8 @@ describe("when in 'FiatFunding' stage", () => {
 })
 
 describe('when in FIAT Funding (stage 2) and funding goal is met during the fiat funding', () => {
-  contract('PoaToken', accounts => {
+  contract('PoaToken', () => {
     let poa
-    const fiatInvestor = accounts[3]
 
     beforeEach('setup contracts', async () => {
       const contracts = await setupPoaProxyAndEcosystem()
@@ -271,14 +276,19 @@ describe('when in FIAT Funding (stage 2) and funding goal is met during the fiat
         poa
       )
 
-      await testBuyTokensWithFiat(poa, fiatInvestor, investmentAmountInCents, {
-        from: custodian,
-        gasPrice,
-      })
+      await testBuyTokensWithFiat(
+        poa,
+        whitelistedFiatInvestor,
+        investmentAmountInCents,
+        {
+          from: custodian,
+          gasPrice,
+        }
+      )
 
       const postStage = await poa.stage()
       const postInvestorBalance = await poa.fundedFiatAmountPerUserInTokens(
-        fiatInvestor
+        whitelistedFiatInvestor
       )
 
       assert.equal(
@@ -302,13 +312,13 @@ describe('when in FIAT Funding (stage 2) and funding goal is met during the fiat
       for (let index = 0; index < 5; index++) {
         await testIncrementOfBalanceWhenBuyTokensWithFiat(
           poa,
-          fiatInvestor,
+          whitelistedFiatInvestor,
           investmentAmountInCentsPerBuy
         )
       }
 
       const postInvestorBalance = await poa.fundedFiatAmountPerUserInTokens(
-        fiatInvestor
+        whitelistedFiatInvestor
       )
       const postStage = await poa.stage()
 
@@ -330,14 +340,19 @@ describe('when in FIAT Funding (stage 2) and funding goal is met during the fiat
         poa
       )).div(2)
 
-      await testBuyTokensWithFiat(poa, fiatInvestor, investmentAmountInCents, {
-        from: custodian,
-        gasPrice,
-      })
+      await testBuyTokensWithFiat(
+        poa,
+        whitelistedFiatInvestor,
+        investmentAmountInCents,
+        {
+          from: custodian,
+          gasPrice,
+        }
+      )
 
       await testRemoveTokensWithFiat(
         poa,
-        fiatInvestor,
+        whitelistedFiatInvestor,
         investmentAmountInCents,
         {
           from: custodian,
@@ -353,7 +368,7 @@ describe('when in FIAT Funding (stage 2) and funding goal is met during the fiat
 
       await testWillThrow(testRemoveTokensWithFiat, [
         poa,
-        fiatInvestor,
+        whitelistedFiatInvestor,
         investmentAmountInCents,
         {
           from: custodian,
@@ -362,22 +377,27 @@ describe('when in FIAT Funding (stage 2) and funding goal is met during the fiat
       ])
     })
 
-    it('buyFiat should be callable by only custodian', async () => {
+    it('buyWithFiat should be callable by only custodian', async () => {
       const investmentAmountInCents = (await getRemainingAmountInCentsDuringFiatFunding(
         poa
       )).div(5)
 
-      await testBuyTokensWithFiat(poa, fiatInvestor, investmentAmountInCents, {
-        from: custodian,
-        gasPrice,
-      })
+      await testBuyTokensWithFiat(
+        poa,
+        whitelistedFiatInvestor,
+        investmentAmountInCents,
+        {
+          from: custodian,
+          gasPrice,
+        }
+      )
 
       await testWillThrow(testBuyTokensWithFiat, [
         poa,
-        fiatInvestor,
+        whitelistedFiatInvestor,
         investmentAmountInCents,
         {
-          from: fiatInvestor,
+          from: whitelistedFiatInvestor,
           gasPrice,
         },
       ])
@@ -388,14 +408,9 @@ describe('when in FIAT Funding (stage 2) and funding goal is met during the fiat
         poa
       )).div(5)
 
-      await testBuyTokensWithFiat(poa, fiatInvestor, investmentAmountInCents, {
-        from: custodian,
-        gasPrice,
-      })
-
-      await testRemoveTokensWithFiat(
+      await testBuyTokensWithFiat(
         poa,
-        fiatInvestor,
+        whitelistedFiatInvestor,
         investmentAmountInCents,
         {
           from: custodian,
@@ -403,17 +418,32 @@ describe('when in FIAT Funding (stage 2) and funding goal is met during the fiat
         }
       )
 
-      await testBuyTokensWithFiat(poa, fiatInvestor, investmentAmountInCents, {
-        from: custodian,
-        gasPrice,
-      })
+      await testRemoveTokensWithFiat(
+        poa,
+        whitelistedFiatInvestor,
+        investmentAmountInCents,
+        {
+          from: custodian,
+          gasPrice,
+        }
+      )
+
+      await testBuyTokensWithFiat(
+        poa,
+        whitelistedFiatInvestor,
+        investmentAmountInCents,
+        {
+          from: custodian,
+          gasPrice,
+        }
+      )
 
       await testWillThrow(testRemoveTokensWithFiat, [
         poa,
-        fiatInvestor,
+        whitelistedFiatInvestor,
         investmentAmountInCents,
         {
-          from: fiatInvestor,
+          from: whitelistedFiatInvestor,
           gasPrice,
         },
       ])

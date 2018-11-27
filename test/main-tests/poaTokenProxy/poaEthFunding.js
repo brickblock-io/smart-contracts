@@ -24,7 +24,7 @@ const {
   testUnpause,
   testUpdateProofOfCustody,
   timeTravelToEthFundingPeriod,
-  whitelistedPoaBuyers,
+  whitelistedEthInvestors,
 } = require('../../helpers/poa')
 const {
   testWillThrow,
@@ -89,7 +89,10 @@ describe("when in 'EthFunding' stage", () => {
     })
 
     it('should NOT reclaim, even if owning tokens', async () => {
-      await testWillThrow(testReclaim, [poa, { from: whitelistedPoaBuyers[0] }])
+      await testWillThrow(testReclaim, [
+        poa,
+        { from: whitelistedEthInvestors[0] },
+      ])
     })
 
     it('should NOT payout, even if broker', async () => {
@@ -101,7 +104,10 @@ describe("when in 'EthFunding' stage", () => {
     })
 
     it('should NOT claim since there are no payouts', async () => {
-      await testWillThrow(testClaim, [poa, { from: whitelistedPoaBuyers[0] }])
+      await testWillThrow(testClaim, [
+        poa,
+        { from: whitelistedEthInvestors[0] },
+      ])
     })
 
     it('should NOT updateProofOfCustody, even if valid and from custodian', async () => {
@@ -115,10 +121,10 @@ describe("when in 'EthFunding' stage", () => {
     it('should NOT transfer', async () => {
       await testWillThrow(testTransfer, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
     })
@@ -126,10 +132,10 @@ describe("when in 'EthFunding' stage", () => {
     it('should NOT approve', async () => {
       await testWillThrow(testApprove, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
     })
@@ -139,19 +145,19 @@ describe("when in 'EthFunding' stage", () => {
       // that approval was attempted as well.
       await testWillThrow(testApprove, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
       await testWillThrow(testTransferFrom, [
         poa,
-        whitelistedPoaBuyers[0],
+        whitelistedEthInvestors[0],
         bbkContributors[0],
         1e17,
         {
-          from: whitelistedPoaBuyers[1],
+          from: whitelistedEthInvestors[1],
         },
       ])
     })
@@ -160,7 +166,7 @@ describe("when in 'EthFunding' stage", () => {
 
     it('should allow buying', async () => {
       await testBuyTokens(poa, {
-        from: whitelistedPoaBuyers[0],
+        from: whitelistedEthInvestors[0],
         value: 5e17,
         gasPrice,
       })
@@ -168,7 +174,7 @@ describe("when in 'EthFunding' stage", () => {
 
     it('should move into pending when all tokens are bought', async () => {
       await testBuyRemainingTokens(poa, {
-        from: whitelistedPoaBuyers[1],
+        from: whitelistedEthInvestors[1],
         gasPrice,
       })
     })
@@ -192,21 +198,21 @@ describe("when in 'EthFunding' stage", () => {
       await testStartEthSale(poa)
 
       await testBuyTokens(poa, {
-        from: whitelistedPoaBuyers[0],
+        from: whitelistedEthInvestors[0],
         value: 5e17,
         gasPrice,
       })
     })
 
     it('should refund the extra amount if it exceeds the funding goal', async () => {
-      const buyer = whitelistedPoaBuyers[0]
+      const buyer = whitelistedEthInvestors[0]
       const extraAmount = new BigNumber(1e18)
       const remainingBuyableEth = await getRemainingAmountInWeiDuringEthFunding(
         poa
       )
       const amount = remainingBuyableEth.plus(extraAmount)
       const preBalance = await getEtherBalance(buyer)
-      const tx = await poa.buy({
+      const tx = await poa.buyWithEth({
         from: buyer,
         value: amount,
         gasPrice,
@@ -228,12 +234,12 @@ describe("when in 'EthFunding' stage", () => {
     })
 
     it('should NOT refund if the amount does not exceeds the funding goal', async () => {
-      const buyer = whitelistedPoaBuyers[0]
+      const buyer = whitelistedEthInvestors[0]
       const remainingBuyableEth = await getRemainingAmountInWeiDuringEthFunding(
         poa
       )
       const preBalance = await getEtherBalance(buyer)
-      const tx = await poa.buy({
+      const tx = await poa.buyWithEth({
         from: buyer,
         value: remainingBuyableEth,
         gasPrice,

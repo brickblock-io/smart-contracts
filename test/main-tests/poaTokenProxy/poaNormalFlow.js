@@ -14,7 +14,7 @@ const {
   testStartEthSale,
   testUpdateProofOfCustody,
   timeTravelToEthFundingPeriod,
-  whitelistedPoaBuyers,
+  whitelistedEthInvestors,
 } = require('../../helpers/poa')
 const { gasPrice } = require('../../helpers/general.js')
 
@@ -42,7 +42,7 @@ describe("when going through Poa's normal flow", async () => {
 
     it('should allow buying', async () => {
       await testBuyTokens(poa, {
-        from: whitelistedPoaBuyers[0],
+        from: whitelistedEthInvestors[0],
         value: 5e17,
         gasPrice,
       })
@@ -50,7 +50,7 @@ describe("when going through Poa's normal flow", async () => {
 
     it("should buy all remaining tokens, moving to 'FundingSuccessful' stage", async () => {
       await testBuyRemainingTokens(poa, {
-        from: whitelistedPoaBuyers[1],
+        from: whitelistedEthInvestors[1],
         gasPrice,
       })
     })
@@ -84,7 +84,7 @@ describe("when going through Poa's normal flow", async () => {
     })
 
     it('should allow all token holders to claim', async () => {
-      await testClaimAllPayouts(poa, whitelistedPoaBuyers)
+      await testClaimAllPayouts(poa, whitelistedEthInvestors)
     })
   })
 })

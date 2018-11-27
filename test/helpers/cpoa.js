@@ -25,7 +25,7 @@ async function testMultiBuyTokens(investors, contract, args) {
     const preTokenBalance = await contract.balanceOf(investor)
     const preEtherBalance = await getEtherBalance(investor)
     await contract.whitelistAddress(investor)
-    const tx = await contract.buy({
+    const tx = await contract.buyWithEth({
       from: investor,
       value: investAmount,
       gasPrice,
@@ -145,7 +145,7 @@ async function testBuyRemainingTokens(contract, accounts, args) {
   const overpayAmountEth = fundingGoal.sub(preFundedAmount).add(1e18)
   const refundAmount = preFundedAmount.add(overpayAmountEth).sub(fundingGoal)
 
-  const tx = await contract.buy({
+  const tx = await contract.buyWithEth({
     from: investor,
     value: overpayAmountEth,
     gasPrice,

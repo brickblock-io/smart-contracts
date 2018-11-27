@@ -25,7 +25,7 @@ const {
   timeTravelToFundingPeriod,
   timeTravelToFundingPeriodTimeout,
   timeTravelToEthFundingPeriod,
-  whitelistedPoaBuyers,
+  whitelistedEthInvestors,
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
 const BigNumber = require('bignumber.js')
@@ -53,18 +53,18 @@ describe("when in 'TimedOut' stage", () => {
 
       // purchase tokens to reclaim when failed
       await testBuyTokens(poa, {
-        from: whitelistedPoaBuyers[0],
+        from: whitelistedEthInvestors[0],
         value: tokenBuyAmount,
         gasPrice,
       })
       await testBuyTokens(poa, {
-        from: whitelistedPoaBuyers[1],
+        from: whitelistedEthInvestors[1],
         value: tokenBuyAmount,
         gasPrice,
       })
 
       await testBuyTokens(poa, {
-        from: whitelistedPoaBuyers[2],
+        from: whitelistedEthInvestors[2],
         value: tokenBuyAmount,
         gasPrice,
       })
@@ -92,7 +92,7 @@ describe("when in 'TimedOut' stage", () => {
     it('should NOT buy, even if whitelisted', async () => {
       await testWillThrow(testBuyTokens, [
         poa,
-        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice },
+        { from: whitelistedEthInvestors[0], value: 3e17, gasPrice },
       ])
     })
 
@@ -118,7 +118,10 @@ describe("when in 'TimedOut' stage", () => {
     })
 
     it('should NOT claim since there are no payouts', async () => {
-      await testWillThrow(testClaim, [poa, { from: whitelistedPoaBuyers[0] }])
+      await testWillThrow(testClaim, [
+        poa,
+        { from: whitelistedEthInvestors[0] },
+      ])
     })
 
     it('should NOT updateProofOfCustody, even if valid and from custodian', async () => {
@@ -132,10 +135,10 @@ describe("when in 'TimedOut' stage", () => {
     it('should NOT transfer', async () => {
       await testWillThrow(testTransfer, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
     })
@@ -143,10 +146,10 @@ describe("when in 'TimedOut' stage", () => {
     it('should NOT approve', async () => {
       await testWillThrow(testApprove, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
     })
@@ -156,19 +159,19 @@ describe("when in 'TimedOut' stage", () => {
       // that approval was attempted as well.
       await testWillThrow(testApprove, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
       await testWillThrow(testTransferFrom, [
         poa,
-        whitelistedPoaBuyers[0],
+        whitelistedEthInvestors[0],
         bbkContributors[0],
         1e17,
         {
-          from: whitelistedPoaBuyers[1],
+          from: whitelistedEthInvestors[1],
         },
       ])
     })
@@ -188,11 +191,11 @@ describe("when in 'TimedOut' stage", () => {
     })
 
     it('should reclaim', async () => {
-      await testReclaim(poa, { from: whitelistedPoaBuyers[0] }, true)
+      await testReclaim(poa, { from: whitelistedEthInvestors[0] }, true)
     })
 
     it('should reclaim all tokens', async () => {
-      await testReclaimAll(poa, whitelistedPoaBuyers)
+      await testReclaimAll(poa, whitelistedEthInvestors)
     })
   })
 })

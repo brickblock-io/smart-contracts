@@ -82,8 +82,8 @@ const deploymentActions = async (
 
   if (actions.register) {
     /*
-    * Add contract instances to our contract registry
-    */
+     * Add contract instances to our contract registry
+     */
     ownerPreEtherBalance = await getEtherBalance(owner)
     await addContractsToRegistry(instances, { from: owner })
     ownerPostEtherBalance = await getEtherBalance(owner)
@@ -92,8 +92,8 @@ const deploymentActions = async (
 
   if (actions.setRate) {
     /*
-    * Set ETH <> Fiat exchange rate in our oracle
-    */
+     * Set ETH <> Fiat exchange rate in our oracle
+     */
     ownerPreEtherBalance = await getEtherBalance(owner)
     const symbol = argv.setRateSymbol
     await exchangeRates.setFiatRate(
@@ -114,8 +114,8 @@ const deploymentActions = async (
 
   if (actions.finalizeBbk) {
     /*
-    * Finalize BBK crowdsale and distribute tokens to accounts[4-6]
-    */
+     * Finalize BBK crowdsale and distribute tokens to accounts[4-6]
+     */
     ownerPreEtherBalance = await getEtherBalance(owner)
     await brickblockToken.finalizeBbkCrowdsale(
       instances.BrickblockToken,
@@ -135,8 +135,8 @@ const deploymentActions = async (
 
   if (actions.addBroker) {
     /*
-    * Add broker to list of active brokers in PoaManager
-    */
+     * Add broker to list of active brokers in PoaManager
+     */
     ownerPreEtherBalance = await getEtherBalance(owner)
     await poaManager.addBroker(
       instances.PoaManager,
@@ -149,8 +149,8 @@ const deploymentActions = async (
 
   if (argv.deployPoa) {
     /*
-    * Deploy new POA token from the previously added broker address
-    */
+     * Deploy new POA token from the previously added broker address
+     */
     const brokerPreEtherBalance = await getEtherBalance(broker)
     if (brokerPreEtherBalance.lt('3.25e16')) {
       await sendTransaction({
@@ -184,8 +184,8 @@ const deploymentActions = async (
 
   if (actions.addToWhiteList) {
     /*
-    * Whitelist accounts[4] to be able to buy POA tokens in platform
-    */
+     * Whitelist accounts[4] to be able to buy POA tokens in platform
+     */
 
     let addressToWhiteList
     if (isValidAddress(argv.addToWhiteList)) {
@@ -214,9 +214,9 @@ const deploymentActions = async (
 
   if (argv.changeOwner) {
     /*
-    * Used for changing ownership of all contracts to the real owner
-    * Usually used on mainnet deployment
-    */
+     * Used for changing ownership of all contracts to the real owner
+     * Usually used on mainnet deployment
+     */
     ownerPreEtherBalance = await getEtherBalance(owner)
 
     const newOwner = process.env.NEW_OWNER

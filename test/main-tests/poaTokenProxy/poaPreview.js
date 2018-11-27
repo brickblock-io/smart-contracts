@@ -30,7 +30,7 @@ const {
   testUpdateSymbol,
   testUpdateTotalSupply,
   testUpdateProofOfCustody,
-  whitelistedPoaBuyers,
+  whitelistedEthInvestors,
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
 
@@ -63,7 +63,7 @@ describe("when in 'Preview' stage", async () => {
     it('should NOT buy, even if whitelisted', async () => {
       await testWillThrow(testBuyTokens, [
         poa,
-        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice },
+        { from: whitelistedEthInvestors[0], value: 3e17, gasPrice },
       ])
     })
 
@@ -85,7 +85,10 @@ describe("when in 'Preview' stage", async () => {
     })
 
     it('should NOT reclaim', async () => {
-      await testWillThrow(testReclaim, [poa, { from: whitelistedPoaBuyers[0] }])
+      await testWillThrow(testReclaim, [
+        poa,
+        { from: whitelistedEthInvestors[0] },
+      ])
     })
 
     it('should NOT payout, even if broker', async () => {
@@ -97,7 +100,10 @@ describe("when in 'Preview' stage", async () => {
     })
 
     it('should NOT claim since there are no payouts', async () => {
-      await testWillThrow(testClaim, [poa, { from: whitelistedPoaBuyers[0] }])
+      await testWillThrow(testClaim, [
+        poa,
+        { from: whitelistedEthInvestors[0] },
+      ])
     })
 
     it('should NOT updateProofOfCustody, even if valid and from custodian', async () => {
@@ -111,10 +117,10 @@ describe("when in 'Preview' stage", async () => {
     it('should NOT transfer', async () => {
       await testWillThrow(testTransfer, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
     })
@@ -122,10 +128,10 @@ describe("when in 'Preview' stage", async () => {
     it('should NOT approve', async () => {
       await testWillThrow(testApprove, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
     })
@@ -135,19 +141,19 @@ describe("when in 'Preview' stage", async () => {
       // that approval was attempted as well.
       await testWillThrow(testApprove, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
       await testWillThrow(testTransferFrom, [
         poa,
-        whitelistedPoaBuyers[0],
+        whitelistedEthInvestors[0],
         bbkContributors[0],
         1e17,
         {
-          from: whitelistedPoaBuyers[1],
+          from: whitelistedEthInvestors[1],
         },
       ])
     })
@@ -171,7 +177,7 @@ describe("when in 'Preview' stage", async () => {
       await testWillThrow(testUpdateName, [
         poa,
         'NotAllowedTokenName',
-        { from: whitelistedPoaBuyers[0] },
+        { from: whitelistedEthInvestors[0] },
       ])
     })
 
@@ -182,7 +188,7 @@ describe("when in 'Preview' stage", async () => {
     // test updating symbol
     it('should NOT update symbol32 by non-broker', async () => {
       const newSymbol = 'N-SYM-POA'
-      ;[owner, custodian, whitelistedPoaBuyers[0]].forEach(
+      ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
         async fromAddress => {
           await testWillThrow(testUpdateSymbol, [
             poa,
@@ -199,8 +205,8 @@ describe("when in 'Preview' stage", async () => {
 
     // test updating broker address
     it('should NOT update broker address by non-broker', async () => {
-      const newBroker = whitelistedPoaBuyers[0]
-      ;[owner, custodian, whitelistedPoaBuyers[0]].forEach(
+      const newBroker = whitelistedEthInvestors[0]
+      ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
         async fromAddress => {
           await testWillThrow(testUpdateBrokerAddress, [
             poa,
@@ -212,19 +218,19 @@ describe("when in 'Preview' stage", async () => {
     })
 
     it('should update broker address by broker', async () => {
-      await testUpdateBrokerAddress(poa, whitelistedPoaBuyers[0], {
+      await testUpdateBrokerAddress(poa, whitelistedEthInvestors[0], {
         from: broker,
       })
       // change it back again so we can continue to use `broker` as broker address
       await testUpdateBrokerAddress(poa, broker, {
-        from: whitelistedPoaBuyers[0],
+        from: whitelistedEthInvestors[0],
       })
     })
 
     // test updating total supply
     it('should NOT update total supply by non-broker', async () => {
       const anyHighEnoughTotalSupply = 2e18
-      ;[owner, custodian, whitelistedPoaBuyers[0]].forEach(
+      ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
         async fromAddress => {
           await testWillThrow(testUpdateTotalSupply, [
             poa,
@@ -245,7 +251,7 @@ describe("when in 'Preview' stage", async () => {
     // test updating fiat currency
     it('should NOT update fiat currency by non-broker', async () => {
       const anyNewFiatCurrency = 'USD'
-      ;[owner, custodian, whitelistedPoaBuyers[0]].forEach(
+      ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
         async fromAddress => {
           await testWillThrow(testUpdateFiatCurrency, [
             poa,
@@ -263,7 +269,7 @@ describe("when in 'Preview' stage", async () => {
 
     it('should NOT update fiat currency with uninitialized rate', async () => {
       const uninitializedFiatCurrency = 'XYZ'
-      ;[owner, custodian, whitelistedPoaBuyers[0]].forEach(
+      ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
         async fromAddress => {
           await testWillThrow(testUpdateFiatCurrency, [
             poa,
@@ -277,7 +283,7 @@ describe("when in 'Preview' stage", async () => {
     // test updating funding goal in cents
     it('should NOT update funding goal in cents by non-broker', async () => {
       const newFundingGoalInCents = 2e9
-      ;[owner, custodian, whitelistedPoaBuyers[0]].forEach(
+      ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
         async fromAddress => {
           await testWillThrow(testUpdateFundingGoalInCents, [
             poa,
@@ -301,7 +307,7 @@ describe("when in 'Preview' stage", async () => {
         Math.round(new Date().getTime() / 1000) +
         3600 * 24 * 365 * 100
       ).toString()
-      ;[owner, custodian, whitelistedPoaBuyers[0]].forEach(
+      ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
         async fromAddress => {
           await testWillThrow(testUpdateStartTimeForFundingPeriod, [
             poa,
@@ -328,7 +334,7 @@ describe("when in 'Preview' stage", async () => {
     // test updating duration of ETH funding period
     it('should NOT update duration of ETH funding period by non-broker', async () => {
       const durationOfFiveDays = '432000'
-      ;[owner, custodian, whitelistedPoaBuyers[0]].forEach(
+      ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
         async fromAddress => {
           await testWillThrow(testUpdateDurationForEthFundingPeriod, [
             poa,
@@ -349,7 +355,7 @@ describe("when in 'Preview' stage", async () => {
     // test updating duration of activation period
     it('should NOT update duration of activation period by non-broker', async () => {
       const durationOfFiveWeeks = '3024000'
-      ;[owner, custodian, whitelistedPoaBuyers[0]].forEach(
+      ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
         async fromAddress => {
           await testWillThrow(testUpdateDurationForActivationPeriod, [
             poa,
@@ -378,7 +384,7 @@ describe("when in 'Preview' stage", async () => {
 
     it('should NOT move to "PreFunding" stage if not broker', async () => {
       // eslint-disable-next-line prettier/prettier
-      ;[owner, custodian, whitelistedPoaBuyers[0]].forEach(
+      ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
         async fromAddress => {
           await testWillThrow(testStartPreFunding, [
             poa,

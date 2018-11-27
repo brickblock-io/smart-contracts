@@ -23,7 +23,7 @@ const {
   testUnpause,
   testUpdateProofOfCustody,
   timeTravelToEthFundingPeriod,
-  whitelistedPoaBuyers,
+  whitelistedEthInvestors,
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
 
@@ -49,7 +49,7 @@ describe("when in 'FundingSuccessful' stage", () => {
 
       // move into `FundingSuccessful` stage
       await testBuyRemainingTokens(poa, {
-        from: whitelistedPoaBuyers[1],
+        from: whitelistedEthInvestors[1],
         gasPrice,
       })
     })
@@ -74,7 +74,7 @@ describe("when in 'FundingSuccessful' stage", () => {
     it('should NOT buy, even if whitelisted', async () => {
       await testWillThrow(testBuyTokens, [
         poa,
-        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice },
+        { from: whitelistedEthInvestors[0], value: 3e17, gasPrice },
       ])
     })
 
@@ -92,7 +92,10 @@ describe("when in 'FundingSuccessful' stage", () => {
     })
 
     it('should NOT reclaim, even if owning tokens', async () => {
-      await testWillThrow(testReclaim, [poa, { from: whitelistedPoaBuyers[0] }])
+      await testWillThrow(testReclaim, [
+        poa,
+        { from: whitelistedEthInvestors[0] },
+      ])
     })
 
     it('should NOT payout, even if broker', async () => {
@@ -104,7 +107,10 @@ describe("when in 'FundingSuccessful' stage", () => {
     })
 
     it('should NOT claim since there are no payouts', async () => {
-      await testWillThrow(testClaim, [poa, { from: whitelistedPoaBuyers[0] }])
+      await testWillThrow(testClaim, [
+        poa,
+        { from: whitelistedEthInvestors[0] },
+      ])
     })
 
     it('should updateProofOfCustody', async () => {
@@ -116,10 +122,10 @@ describe("when in 'FundingSuccessful' stage", () => {
     it('should NOT transfer', async () => {
       await testWillThrow(testTransfer, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
     })
@@ -127,10 +133,10 @@ describe("when in 'FundingSuccessful' stage", () => {
     it('should NOT approve', async () => {
       await testWillThrow(testApprove, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
     })
@@ -140,19 +146,19 @@ describe("when in 'FundingSuccessful' stage", () => {
       // that approval was attempted as well.
       await testWillThrow(testApprove, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
       await testWillThrow(testTransferFrom, [
         poa,
-        whitelistedPoaBuyers[0],
+        whitelistedEthInvestors[0],
         bbkContributors[0],
         1e17,
         {
-          from: whitelistedPoaBuyers[1],
+          from: whitelistedEthInvestors[1],
         },
       ])
     })
@@ -198,7 +204,7 @@ describe("when in paying activation fee in 'FundingSuccessful' stage", () => {
 
       // move into `FundingSuccessful` stage
       await testBuyRemainingTokens(poa, {
-        from: whitelistedPoaBuyers[1],
+        from: whitelistedEthInvestors[1],
         gasPrice,
       })
     })

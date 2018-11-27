@@ -16,7 +16,7 @@ const {
 } = require('../helpers/pxy')
 const {
   testApprove,
-  whitelistedPoaBuyers,
+  whitelistedEthInvestors,
   setupEcosystem,
   testSetCurrencyRate,
   defaultFiatCurrency,
@@ -90,8 +90,8 @@ describe('when using PoaProxy contract to proxy a PoaToken', () => {
     })
 
     it('should approve', async () => {
-      await testApprove(poa, whitelistedPoaBuyers[1], 3e18, {
-        from: whitelistedPoaBuyers[0],
+      await testApprove(poa, whitelistedEthInvestors[1], 3e18, {
+        from: whitelistedEthInvestors[0],
       })
     })
 

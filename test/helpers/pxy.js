@@ -29,7 +29,7 @@ const {
   testStartEthSale,
   testUpdateProofOfCustody,
   timeTravelToEthFundingPeriod,
-  whitelistedPoaBuyers,
+  whitelistedEthInvestors,
 } = require('./poa')
 const {
   getAllSequentialStorage,
@@ -273,7 +273,7 @@ const enterActiveStage = async (poa, fmr) => {
 
   // buy all remaining tokens and move to `FundingSuccessful` stage
   await testBuyRemainingTokens(poa, {
-    from: whitelistedPoaBuyers[0],
+    from: whitelistedEthInvestors[0],
     gasPrice,
   })
 
@@ -294,8 +294,8 @@ const enterActiveStage = async (poa, fmr) => {
 
 /*
   assumes that:
-  - enterActiveStage() has been run to give buy all tokens as whitelistedPoaBuyers[0]
-  - testApprove() has been run to give whitelistedPoaBuyers[1] approval to spend whitelistedPoaBuyers[0]'s tokens
+  - enterActiveStage() has been run to give buy all tokens as whitelistedEthInvestors[0]
+  - testApprove() has been run to give whitelistedEthInvestors[1] approval to spend whitelistedEthInvestors[0]'s tokens
 */
 const checkPostActiveStorage = async (poa, reg, pmr) => {
   // get all storage
@@ -425,15 +425,15 @@ const checkPostActiveStorage = async (poa, reg, pmr) => {
   const investmentPerUserInWei = await getMappingStorage(
     poa.address,
     11,
-    whitelistedPoaBuyers[0]
+    whitelistedEthInvestors[0]
   )
   const {
     nestedMappingValueStorage: allowedValue,
   } = await getNestedMappingStorage(
     poa.address,
     28,
-    whitelistedPoaBuyers[0],
-    whitelistedPoaBuyers[1]
+    whitelistedEthInvestors[0],
+    whitelistedEthInvestors[1]
   )
   assert.equal(
     new BigNumber(allowedValue).toString(),
@@ -590,15 +590,15 @@ const checkPostIsUpgradedStorage = async (poa, reg, pmr) => {
   const investmentPerUserInWei = await getMappingStorage(
     poa.address,
     11,
-    whitelistedPoaBuyers[0]
+    whitelistedEthInvestors[0]
   )
   const {
     nestedMappingValueStorage: allowedValue,
   } = await getNestedMappingStorage(
     poa.address,
     28,
-    whitelistedPoaBuyers[0],
-    whitelistedPoaBuyers[1]
+    whitelistedEthInvestors[0],
+    whitelistedEthInvestors[1]
   )
 
   assert.equal(

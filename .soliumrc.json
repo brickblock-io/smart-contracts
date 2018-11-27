@@ -15,7 +15,7 @@
     "no-empty-blocks": "error",
     "pragma-on-top": "error",
     "quotes": ["error", "double"],
-    "uppercase": "warning",
+    "uppercase": "off",
     "visibility-first": "error",
     "whitespace": "error",
 

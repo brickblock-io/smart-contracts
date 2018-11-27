@@ -6,7 +6,7 @@ const {
   testFallback,
   testFiatCentsToWei,
   testWeiToFiatCents,
-  whitelistedPoaBuyers,
+  whitelistedEthInvestors,
 } = require('../../helpers/poa')
 const { testWillThrow } = require('../../helpers/general.js')
 const BigNumber = require('bignumber.js')
@@ -35,20 +35,20 @@ describe('when testing stage independent functions', () => {
     it('should NOT changeCustodianAddress when NOT custodian', async () => {
       await testWillThrow(testChangeCustodianAddress, [
         poa,
-        whitelistedPoaBuyers[1],
-        { from: whitelistedPoaBuyers[2] },
+        whitelistedEthInvestors[1],
+        { from: whitelistedEthInvestors[2] },
       ])
     })
 
     it('should change changeCustodianAddress', async () => {
-      await testChangeCustodianAddress(poa, whitelistedPoaBuyers[2], {
+      await testChangeCustodianAddress(poa, whitelistedEthInvestors[2], {
         from: custodian,
       })
     })
 
     it('should NOT allow payable fallback to run', async () => {
       await testFallback({
-        from: whitelistedPoaBuyers[0],
+        from: whitelistedEthInvestors[0],
         value: 3e17,
         to: poa.address,
       })

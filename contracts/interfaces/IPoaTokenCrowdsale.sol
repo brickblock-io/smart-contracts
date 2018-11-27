@@ -233,21 +233,21 @@ interface IPoaTokenCrowdsale {
     external
     returns (uint256);
 
-  function buyFiat(
-    address _contributor,
+  function buyWithFiat(
+    address _fiatInvestor,
     uint256 _amountInCents
   )
     external
     returns (bool);
 
   function removeFiat(
-    address _contributor,
+    address _fiatInvestor,
     uint256 _amountInCents
   )
     external
     returns (bool);
 
-  function buy()
+  function buyWithEth()
     external
     payable
     returns (bool);

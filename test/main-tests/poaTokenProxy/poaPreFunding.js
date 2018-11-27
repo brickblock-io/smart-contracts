@@ -23,7 +23,7 @@ const {
   testUpdateProofOfCustody,
   timeTravelToFundingPeriod,
   timeTravelToEthFundingPeriod,
-  whitelistedPoaBuyers,
+  whitelistedEthInvestors,
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
 
@@ -59,7 +59,7 @@ describe("when in 'PreFunding' stage", async () => {
     it('should NOT buy, even if whitelisted', async () => {
       await testWillThrow(testBuyTokens, [
         poa,
-        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice },
+        { from: whitelistedEthInvestors[0], value: 3e17, gasPrice },
       ])
     })
 
@@ -81,7 +81,10 @@ describe("when in 'PreFunding' stage", async () => {
     })
 
     it('should NOT reclaim', async () => {
-      await testWillThrow(testReclaim, [poa, { from: whitelistedPoaBuyers[0] }])
+      await testWillThrow(testReclaim, [
+        poa,
+        { from: whitelistedEthInvestors[0] },
+      ])
     })
 
     it('should NOT payout, even if broker', async () => {
@@ -93,7 +96,10 @@ describe("when in 'PreFunding' stage", async () => {
     })
 
     it('should NOT claim since there are no payouts', async () => {
-      await testWillThrow(testClaim, [poa, { from: whitelistedPoaBuyers[0] }])
+      await testWillThrow(testClaim, [
+        poa,
+        { from: whitelistedEthInvestors[0] },
+      ])
     })
 
     it('should NOT updateProofOfCustody, even if valid and from custodian', async () => {
@@ -107,10 +113,10 @@ describe("when in 'PreFunding' stage", async () => {
     it('should NOT transfer', async () => {
       await testWillThrow(testTransfer, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
     })
@@ -118,10 +124,10 @@ describe("when in 'PreFunding' stage", async () => {
     it('should NOT approve', async () => {
       await testWillThrow(testApprove, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
     })
@@ -131,19 +137,19 @@ describe("when in 'PreFunding' stage", async () => {
       // that approval was attempted as well.
       await testWillThrow(testApprove, [
         poa,
-        whitelistedPoaBuyers[1],
+        whitelistedEthInvestors[1],
         1e17,
         {
-          from: whitelistedPoaBuyers[0],
+          from: whitelistedEthInvestors[0],
         },
       ])
       await testWillThrow(testTransferFrom, [
         poa,
-        whitelistedPoaBuyers[0],
+        whitelistedEthInvestors[0],
         bbkContributors[0],
         1e17,
         {
-          from: whitelistedPoaBuyers[1],
+          from: whitelistedEthInvestors[1],
         },
       ])
     })
@@ -154,7 +160,7 @@ describe("when in 'PreFunding' stage", async () => {
 
     it("should NOT move to 'FiatFunding' stage by ANYONE", async () => {
       await Promise.all(
-        [broker, custodian, owner, whitelistedPoaBuyers[0]].map(
+        [broker, custodian, owner, whitelistedEthInvestors[0]].map(
           async fromAddress => {
             await testWillThrow(testStartFiatSale, [
               poa,
@@ -167,7 +173,7 @@ describe("when in 'PreFunding' stage", async () => {
 
     it("should NOT move to 'EthFunding' stage by ANYONE", async () => {
       await Promise.all(
-        [broker, custodian, owner, whitelistedPoaBuyers[0]].map(
+        [broker, custodian, owner, whitelistedEthInvestors[0]].map(
           async fromAddress => {
             await testWillThrow(testStartEthSale, [
               poa,
@@ -196,14 +202,20 @@ describe("when in 'PreFunding' stage and funding periods are reached", async () 
       await timeTravelToFundingPeriod(poa)
 
       // move from `PreFunding` to `FiatFunding` stage
-      await testStartFiatSale(poa, { from: whitelistedPoaBuyers[0], gasPrice })
+      await testStartFiatSale(poa, {
+        from: whitelistedEthInvestors[0],
+        gasPrice,
+      })
     })
 
     it("should move to 'EthFunding' stage by ANYONE when startTimeForFundingPeriod+durationForFiatFundingPeriod is reached", async () => {
       await timeTravelToEthFundingPeriod(poa)
 
       // move from `PreFunding` to `EthFunding` stage
-      await testStartEthSale(poa, { from: whitelistedPoaBuyers[0], gasPrice })
+      await testStartEthSale(poa, {
+        from: whitelistedEthInvestors[0],
+        gasPrice,
+      })
     })
   })
 })

@@ -27,7 +27,7 @@ const {
   testStartEthSale,
   testUpdateProofOfCustody,
   timeTravelToEthFundingPeriod,
-  whitelistedPoaBuyers,
+  whitelistedEthInvestors,
 } = require('./poa')
 const { gasPrice } = require('./general')
 
@@ -99,7 +99,7 @@ const moveTokenToActive = async (poa, fmr) => {
   await testStartEthSale(poa)
 
   await testBuyRemainingTokens(poa, {
-    from: whitelistedPoaBuyers[whitelistedPoaBuyers.length - 1],
+    from: whitelistedEthInvestors[whitelistedEthInvestors.length - 1],
     gasPrice,
   })
 

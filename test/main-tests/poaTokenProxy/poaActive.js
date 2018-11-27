@@ -28,7 +28,7 @@ const {
   testUnpause,
   testUpdateProofOfCustody,
   timeTravelToEthFundingPeriod,
-  whitelistedPoaBuyers,
+  whitelistedEthInvestors,
 } = require('../../helpers/poa')
 const { testWillThrow, gasPrice } = require('../../helpers/general.js')
 
@@ -55,25 +55,25 @@ describe("when in 'Active' stage", () => {
 
       // move into `FundingSuccessful` stage
       await testBuyTokens(poa, {
-        from: whitelistedPoaBuyers[0],
+        from: whitelistedEthInvestors[0],
         value: defaultBuyAmount,
         gasPrice,
       })
 
       // save for testing token balances once Active
       commitments.push({
-        address: whitelistedPoaBuyers[0],
+        address: whitelistedEthInvestors[0],
         amount: defaultBuyAmount,
       })
 
       const commitAmount = await testBuyRemainingTokens(poa, {
-        from: whitelistedPoaBuyers[1],
+        from: whitelistedEthInvestors[1],
         gasPrice,
       })
 
       // save for testing token balances once Active
       commitments.push({
-        address: whitelistedPoaBuyers[1],
+        address: whitelistedEthInvestors[1],
         amount: commitAmount,
       })
 
@@ -115,7 +115,7 @@ describe("when in 'Active' stage", () => {
       await testWillThrow(testPause, [
         poa,
         pmr,
-        { from: whitelistedPoaBuyers[0] },
+        { from: whitelistedEthInvestors[0] },
         { callPoaDirectly: true },
       ])
     })
@@ -137,7 +137,7 @@ describe("when in 'Active' stage", () => {
       await testWillThrow(testUnpause, [
         poa,
         pmr,
-        { from: whitelistedPoaBuyers[0] },
+        { from: whitelistedEthInvestors[0] },
         { callPoaDirectly: true },
       ])
     })
@@ -153,7 +153,7 @@ describe("when in 'Active' stage", () => {
     it('should NOT buy, even if whitelisted', async () => {
       await testWillThrow(testBuyTokens, [
         poa,
-        { from: whitelistedPoaBuyers[0], value: 3e17, gasPrice },
+        { from: whitelistedEthInvestors[0], value: 3e17, gasPrice },
       ])
     })
 
@@ -166,7 +166,10 @@ describe("when in 'Active' stage", () => {
     })
 
     it('should NOT reclaim, even if owning tokens', async () => {
-      await testWillThrow(testReclaim, [poa, { from: whitelistedPoaBuyers[0] }])
+      await testWillThrow(testReclaim, [
+        poa,
+        { from: whitelistedEthInvestors[0] },
+      ])
     })
 
     it('should NOT checkFundingSuccessful', async () => {
@@ -176,7 +179,10 @@ describe("when in 'Active' stage", () => {
     // start core stage functionality
 
     it('should NOT claim if no payouts', async () => {
-      await testWillThrow(testClaim, [poa, { from: whitelistedPoaBuyers[0] }])
+      await testWillThrow(testClaim, [
+        poa,
+        { from: whitelistedEthInvestors[0] },
+      ])
     })
 
     it('should payout as broker OR custodian', async () => {
@@ -206,7 +212,7 @@ describe("when in 'Active' stage", () => {
     })
 
     it('should claim if payout has been made', async () => {
-      await testClaim(poa, { from: whitelistedPoaBuyers[0] })
+      await testClaim(poa, { from: whitelistedEthInvestors[0] })
     })
 
     it('should update proofOfCustody if custodian', async () => {
@@ -247,8 +253,8 @@ describe("when in 'Active' stage", () => {
     })
 
     it('should approve', async () => {
-      await testApprove(poa, whitelistedPoaBuyers[1], 1e17, {
-        from: whitelistedPoaBuyers[0],
+      await testApprove(poa, whitelistedEthInvestors[1], 1e17, {
+        from: whitelistedEthInvestors[0],
       })
     })
 
@@ -257,34 +263,34 @@ describe("when in 'Active' stage", () => {
         poa,
         custodian,
         1e17,
-        { from: whitelistedPoaBuyers[0] },
+        { from: whitelistedEthInvestors[0] },
       ])
     })
 
     it('should NOT transferFrom to NOT whitelisted address', async () => {
       await testWillThrow(testTransferFrom, [
         poa,
-        whitelistedPoaBuyers[0],
+        whitelistedEthInvestors[0],
         custodian,
         1e17,
-        { from: whitelistedPoaBuyers[1] },
+        { from: whitelistedEthInvestors[1] },
       ])
     })
 
     it('should transfer to whitelisted addresses', async () => {
-      await testTransfer(poa, whitelistedPoaBuyers[1], 1e17, {
-        from: whitelistedPoaBuyers[0],
+      await testTransfer(poa, whitelistedEthInvestors[1], 1e17, {
+        from: whitelistedEthInvestors[0],
       })
     })
 
     it('should transferFrom to whitelisted address', async () => {
       await testTransferFrom(
         poa,
-        whitelistedPoaBuyers[0],
-        whitelistedPoaBuyers[2],
+        whitelistedEthInvestors[0],
+        whitelistedEthInvestors[2],
         1e17,
         {
-          from: whitelistedPoaBuyers[1],
+          from: whitelistedEthInvestors[1],
         }
       )
     })

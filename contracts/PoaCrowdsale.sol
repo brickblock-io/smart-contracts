@@ -45,8 +45,8 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /// @notice Ensure that a buyer is whitelisted before buying
-  modifier isBuyWhitelisted() {
-    require(isWhitelisted(msg.sender));
+  modifier isAddressWhitelisted(address _address) {
+    require(isWhitelisted(_address));
     _;
   }
 
@@ -423,48 +423,40 @@ contract PoaCrowdsale is PoaCommon {
     @notice Used for fiat investments during 'FiatFunding' stage.
     All fiat balances are updated manually by the custodian.
    */
-  function buyFiat(
-    address _contributor,
+  function buyWithFiat(
+    address _fiatInvestor,
     uint256 _amountInCents
   )
     external
     atStage(Stages.FiatFunding)
+    isAddressWhitelisted(_fiatInvestor)
     onlyCustodian
     returns (bool)
   {
     require(_amountInCents > 0);
 
-    uint256 _newFundedFiatAmountInCents = fundedFiatAmountInCents.add(_amountInCents);
+    fundedFiatAmountInCents = fundedFiatAmountInCents.add(_amountInCents);
+    // Do not allow investments that exceed the funding goal
+    require(fundedFiatAmountInCents <= fundingGoalInCents);
 
-    // Make sure, investment amount isn't higher than the funding goal.
-    // This is also a little protection against typos with one too many zeros :)
-    if (fundingGoalInCents.sub(_newFundedFiatAmountInCents) >= 0) {
-      // update total fiat funded amount in cents
-      fundedFiatAmountInCents = fundedFiatAmountInCents
-        .add(_amountInCents);
+    // Update total funded fiat amount in tokens
+    uint256 _tokenAmount = calculateTokenAmountForAmountInCents(_amountInCents);
+    fundedFiatAmountInTokens = fundedFiatAmountInTokens.add(_tokenAmount);
 
-      // update total fiat funded amount in tokens
-      uint256 _tokenAmount = calculateTokenAmountForAmountInCents(_amountInCents);
-      fundedFiatAmountInTokens = fundedFiatAmountInTokens
-        .add(_tokenAmount);
+    // Update balance of fiat investor
+    fundedFiatAmountPerUserInTokens[_fiatInvestor] = fundedFiatAmountPerUserInTokens[_fiatInvestor]
+      .add(_tokenAmount);
 
-      // update balance of fiat investor
-      fundedFiatAmountPerUserInTokens[_contributor] = fundedFiatAmountPerUserInTokens[_contributor]
-        .add(_tokenAmount);
-
-      // if funded amount reaches the funding goal, enter FundingSuccessful stage
-      if (fundedFiatAmountInCents == fundingGoalInCents) {
-        enterStage(Stages.FundingSuccessful);
-      }
-
-      return true;
-    } else {
-      return false;
+    // If we reached the funding goal, enter stage `FundingSuccessful`
+    if (fundedFiatAmountInCents == fundingGoalInCents) {
+      enterStage(Stages.FundingSuccessful);
     }
+
+    return true;
   }
 
   function removeFiat(
-    address _contributor,
+    address _fiatInvestor,
     uint256 _amountInCents
   )
     external
@@ -472,131 +464,110 @@ contract PoaCrowdsale is PoaCommon {
     onlyCustodian
     returns(bool)
   {
-    require(_amountInCents >= 0);
+    require(_amountInCents > 0);
 
     uint256 _tokenAmount = calculateTokenAmountForAmountInCents(_amountInCents);
 
-    // update funded fiat amount totals
+    // Update total funded fiat amounts
     fundedFiatAmountInCents = fundedFiatAmountInCents.sub(_amountInCents);
     fundedFiatAmountInTokens = fundedFiatAmountInTokens.sub(_tokenAmount);
 
-    // update balance of investor
-    fundedFiatAmountPerUserInTokens[_contributor] = fundedFiatAmountPerUserInTokens[_contributor].sub(_tokenAmount);
+    // Update individual balance of fiat investor
+    fundedFiatAmountPerUserInTokens[_fiatInvestor] = fundedFiatAmountPerUserInTokens[_fiatInvestor].sub(_tokenAmount);
 
     return true;
   }
 
   /// @notice Used for funding through ETH during the 'EthFunding' stage
-  function buy()
+  function buyWithEth()
     external
     payable
     checkTimeout
     atStage(Stages.EthFunding)
-    isBuyWhitelisted
+    isAddressWhitelisted(msg.sender)
     returns (bool)
   {
-    // prevent FiatFunding addresses from contributing to funding to keep total supply correct
-    if (isFiatInvestor(msg.sender)) {
-      return false;
-    }
+    // prevent FiatFunding addresses from contributing to ETH funding to keep total supply correct
+    require(!isFiatInvestor(msg.sender));
 
-    /*
-     * In case ETH went up in value against Fiat, weiToFiatCents(fundedEthAmountInWei)
-     * could have tipped us over the fundingGoal in which case we want to:
-     * 1. Enter the 'FundingSuccessful' stage
-     * 2. Refund the sent ETH amount immediately
-     * 3. Return 'false' to prevent a case where buying after reaching fundingGoal results in a buyer earning money
-     */
-    if (weiToFiatCents(fundedEthAmountInWei).add(fundedFiatAmountInCents) > fundingGoalInCents) {
-      enterStage(Stages.FundingSuccessful);
+    /**
+     * In case ETH went up in value against fiat since the last buyWithEth(), we
+     * might have reached our funding goal already without considering `msg.value`.
+     * If so, move to stage `FundingSuccessful` and fully refund `msg.value`.
+     **/
+    if (checkFundingSuccessful()) {
       if (msg.value > 0) {
         msg.sender.transfer(msg.value);
       }
       return false;
     }
 
-    // Get total funded amount (Fiat funding + ETH funding incl. this investment)
-    // with the most current ETH <> Fiat exchange rate available
-    uint256 _totalFundedAmountInCents = weiToFiatCents(fundedEthAmountInWei.add(msg.value))
-      .add(fundedFiatAmountInCents);
+    /**
+     * If this buyWithEth() hits the funding goal, we refund all Wei that exceed
+     * the goal and obtain `_fundAmount` as effectivly funded amount. Otherwise,
+     * `_fundAmount == msg.value`.
+     **/
+    uint256 _fundAmount = refundExceedingAmountAndGetRemaining(msg.value);
 
-    // check if funding goal was met
-    if (_totalFundedAmountInCents < fundingGoalInCents) {
-      // give a range due to fun fun integer division
-      if (fundingGoalInCents.sub(_totalFundedAmountInCents) > 1) {
-        // continue sale if more than 1 fiat cent is missing from funding goal
-        return applyFunding(msg.value);
-      } else {
-        // Finish sale if less than 1 fiat cent is missing from funding goal.
-        // No refunds for overpayment should be given for these tiny amounts.
-        return endFunding(false);
-      }
-    } else {
-      // Finish sale if funding goal was met.
-      // A refund for overpayment should be given.
-      return endFunding(true);
-    }
-  }
-
-  /// @notice Buy and continue funding process (when funding goal not met)
-  function applyFunding(
-    uint256 _payAmount
-  )
-    internal
-    returns (bool)
-  {
     // Track investment amount per user in case a user needs
     // to reclaim their funds in case of a failed funding
     fundedEthAmountPerUserInWei[msg.sender] = fundedEthAmountPerUserInWei[msg.sender]
-      .add(_payAmount);
-
-    // Increment the funded amount
-    fundedEthAmountInWei = fundedEthAmountInWei.add(_payAmount);
+      .add(_fundAmount);
+    fundedEthAmountInWei = fundedEthAmountInWei.add(_fundAmount);
 
     getContractAddress("PoaLogger").call(
-      bytes4(keccak256("logBuy(address,uint256)")), msg.sender, _payAmount
+      bytes4(keccak256("logBuy(address,uint256)")), msg.sender, _fundAmount
     );
 
     return true;
   }
 
-  /// @notice Buy and finish funding process (when funding goal met)
-  function endFunding(
-    bool _shouldRefund
-  )
+  function refundExceedingAmountAndGetRemaining(uint256 _amount)
     internal
-    returns (bool)
+    returns (uint256)
   {
-    enterStage(Stages.FundingSuccessful);
-    uint256 _refundAmount = _shouldRefund
-      ? fiatCentsToWei(fundedFiatAmountInCents)
+    // Partially refund `msg.value` in case funding goal is exceeded
+    if (isFundingGoalReached(_amount)) {
+      enterStage(Stages.FundingSuccessful);
+
+      // Calculate Wei amount that exceeds funding goal
+      uint256 _refundAmount = fiatCentsToWei(fundedFiatAmountInCents)
         .add(fundedEthAmountInWei)
-        .add(msg.value)
-        .sub(fiatCentsToWei(fundingGoalInCents))
-      : 0;
+        .add(_amount)
+        .sub(fiatCentsToWei(fundingGoalInCents));
 
+      // Refund the exceeding amount and return the delta left used for funding
+      if (_refundAmount > 0) {
+        msg.sender.transfer(_refundAmount);
 
-    // Transfer refund amount back to user
-    if (_refundAmount > 0) {
-      msg.sender.transfer(_refundAmount);
+        return _amount.sub(_refundAmount);
+      }
     }
-
-    // Actual Ξ amount to buy after refund
-    uint256 _payAmount = msg.value.sub(_refundAmount);
-    applyFunding(_payAmount);
-
-    return true;
+    return _amount;
   }
 
-  /// @notice check if fundingGoalInCents has been met due to fluctuating fiat rates
-  function checkFundingSuccessful()
-    external
-    atEitherStage(Stages.FiatFunding, Stages.EthFunding)
+  /// @notice Check if `fundingGoalInCents` is reached while allowing 1c tolerance
+  function isFundingGoalReached(uint256 _withWeiAmount)
+    public
+    view
     returns (bool)
   {
-    uint256 _currentFundedCents = weiToFiatCents(fundedEthAmountInWei);
+    return fundingGoalInCents <=
+      weiToFiatCents(
+        fundedEthAmountInWei.add(_withWeiAmount)
+      ).add(fundedFiatAmountInCents).add(1);
+  }
 
-    if (_currentFundedCents >= fundingGoalInCents) {
+  /**
+   * @notice In case `fundingGoalInCents` is reached, move to `FundingSuccessful` stage.
+   *         Due to fluctuating fiat rates, this is a `public` function.
+   */
+  function checkFundingSuccessful()
+    public
+    atStage(Stages.EthFunding)
+    returns (bool)
+  {
+    if (isFundingGoalReached(0)) {
       enterStage(Stages.FundingSuccessful);
       return true;
     }
@@ -707,7 +678,7 @@ contract PoaCrowdsale is PoaCommon {
 
   /**
    @notice Used for manually setting Stage to TimedOut when no users have bought any tokens;
-   if no `buy()`s occurred before the funding deadline, the token would be stuck in Funding.
+   if no `buyWithEth()`s occurred before the funding deadline, the token would be stuck in Funding.
    It can also optionally be used when activate is not called by custodian within
    durationForActivationPeriod or when no one else has called reclaim after a timeout.
 

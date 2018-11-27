@@ -58,7 +58,7 @@ const activeContract = async (
     const whitelisted = await contract.whitelisted(investor)
     assert(whitelisted, 'the investor should be whiteliseted')
 
-    await contract.buy({
+    await contract.buyWithEth({
       from: investor,
       value: investAmount,
     })
