@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.9.0"></a>
+# [3.9.0](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.8.3...v3.9.0) (2018-11-27)
+
+
+### Bug Fixes
+
+* extract hard coded url parts to variables ([22908f6](https://git.brickblock-dev.io/platform/smart-contracts/commits/22908f6))
+
+
+### Features
+
+* trigger ganache deploy ([217349f](https://git.brickblock-dev.io/platform/smart-contracts/commits/217349f))
+
+
+
 <a name="3.8.3"></a>
 ## [3.8.3](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.8.2...v3.8.3) (2018-11-27)
 
