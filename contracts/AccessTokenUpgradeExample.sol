@@ -19,9 +19,7 @@ contract AccessTokenUpgradeExample is AccessToken {
 
   constructor(address _registry) public AccessToken(_registry) {}
 
-  function balanceOf(
-    address _address
-  )
+  function balanceOf(address _address)
     public
     view
     returns (uint256)

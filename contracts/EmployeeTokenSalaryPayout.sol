@@ -23,13 +23,12 @@ contract EmployeeTokenSalaryPayout is Ownable {
     uint256 index;
   }
 
-
   mapping(address => Employee) public employees;
   address[] public employeeAddressList;
 
   IBrickblockToken bbkToken;
 
-  constructor (IBrickblockToken _bbkToken)
+  constructor(IBrickblockToken _bbkToken)
     public
   {
     require(_bbkToken != address(0));
@@ -44,7 +43,7 @@ contract EmployeeTokenSalaryPayout is Ownable {
   )
     public
     onlyOwner
-    returns(bool)
+    returns (bool)
   {
     Employee storage _employee = employees[_beneficiary];
 
@@ -63,10 +62,13 @@ contract EmployeeTokenSalaryPayout is Ownable {
     return true;
   }
 
-  function removeEmployee (address _beneficiary, uint256 _endingBalance)
+  function removeEmployee(
+    address _beneficiary,
+    uint256 _endingBalance
+  )
     public
     onlyOwner
-    returns(bool)
+    returns (bool)
   {
     Employee memory _deletedUser = employees[_beneficiary];
 
@@ -89,10 +91,13 @@ contract EmployeeTokenSalaryPayout is Ownable {
     return true;
   }
 
-  function updateQuarterlyAmount(address _beneficiary, uint256 newAmount)
+  function updateQuarterlyAmount(
+    address _beneficiary,
+    uint256 newAmount
+  )
     public
     onlyOwner
-    returns(bool)
+    returns (bool)
   {
     require(_beneficiary != address(0));
     require(newAmount > 0);
@@ -104,17 +109,20 @@ contract EmployeeTokenSalaryPayout is Ownable {
     return true;
   }
 
-  function payout(address _beneficiary, uint256 _bbkAmount)
+  function payout(
+    address _beneficiary,
+    uint256 _bbkAmount
+  )
     private
-    returns(bool)
+    returns (bool)
   {
-    return(bbkToken.transfer(_beneficiary, _bbkAmount));
+    return (bbkToken.transfer(_beneficiary, _bbkAmount));
   }
 
   function getTotalPayoutAmount()
     public
     view
-    returns(uint256)
+    returns (uint256)
   {
     uint256 _totalAmount;
 

@@ -4,8 +4,8 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
 contract ContractRegistry is Ownable {
-
   uint8 public constant version = 1;
+
   mapping (bytes32 => address) private contractAddresses;
 
   event UpdateContract(string name, address indexed contractAddress);
@@ -24,7 +24,10 @@ contract ContractRegistry is Ownable {
     return _size > 0;
   }
 
-  function updateContractAddress(string _name, address _address)
+  function updateContractAddress(
+    string _name,
+    address _address
+  )
     public
     onlyOwner
     returns (address)

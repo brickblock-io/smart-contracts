@@ -19,8 +19,7 @@ contract BrickblockToken is PausableToken {
   bool public tokenSaleActive;
   bool public dead = false;
 
-  event TokenSaleFinished
-  (
+  event TokenSaleFinished(
     uint256 totalSupply,
     uint256 distributedTokens,
     uint256 bonusTokens,
@@ -36,9 +35,7 @@ contract BrickblockToken is PausableToken {
     _;
   }
 
-  constructor(
-    address _bonusDistributionAddress
-  )
+  constructor(address _bonusDistributionAddress)
     public
   {
     require(_bonusDistributionAddress != address(0));
@@ -89,11 +86,15 @@ contract BrickblockToken is PausableToken {
     require(_newAddress != address(this));
     require(_newAddress != owner);
     fountainContractAddress = _newAddress;
+
     return true;
   }
 
   // Custom transfer function that enables us to distribute tokens while contract is paused. Cannot be used after end of token sale
-  function distributeTokens(address _contributor, uint256 _value)
+  function distributeTokens(
+    address _contributor,
+    uint256 _value
+  )
     external
     onlyOwner
     supplyAvailable(_value)
@@ -105,11 +106,15 @@ contract BrickblockToken is PausableToken {
     balances[address(this)] = balances[address(this)].sub(_value);
     balances[_contributor] = balances[_contributor].add(_value);
     emit Transfer(address(this), _contributor, _value);
+
     return true;
   }
 
   // Distribute tokens reserved for partners and staff to a wallet owned by Brickblock
-  function distributeBonusTokens(address _recipient, uint256 _value)
+  function distributeBonusTokens(
+    address _recipient,
+    uint256 _value
+  )
     external
     onlyOwner
     returns (bool)
@@ -119,6 +124,7 @@ contract BrickblockToken is PausableToken {
     balances[bonusDistributionAddress] = balances[bonusDistributionAddress].sub(_value);
     balances[_recipient] = balances[_recipient].add(_value);
     emit Transfer(bonusDistributionAddress, _recipient, _value);
+
     return true;
   }
 
@@ -154,7 +160,7 @@ contract BrickblockToken is PausableToken {
       bonusTokens,
       companyTokens
     );
-    // everything went well return true
+
     return true;
   }
 }

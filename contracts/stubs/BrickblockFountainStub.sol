@@ -38,7 +38,7 @@ contract BrickblockFountainStub is Ownable {
   function balanceOf(address _user)
     public
     view
-    returns(uint256 balance)
+    returns (uint256 balance)
   {
     return balances[_user].tokens;
   }

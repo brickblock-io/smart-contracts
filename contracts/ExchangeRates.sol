@@ -67,9 +67,7 @@ contract ExchangeRates is Ownable {
   }
 
   // sets registry for talking to ExchangeRateProvider
-  constructor(
-    address _registryAddress
-  )
+  constructor(address _registryAddress)
     public
     payable
   {

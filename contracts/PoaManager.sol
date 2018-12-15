@@ -48,9 +48,7 @@ contract PoaManager is Ownable {
     _;
   }
 
-  constructor(
-    address _registryAddress
-  )
+  constructor(address _registryAddress)
     public
   {
     require(_registryAddress != address(0));
@@ -61,7 +59,10 @@ contract PoaManager is Ownable {
   // Entity functions
   //
 
-  function doesEntityExist(address _entityAddress, EntityState entity)
+  function doesEntityExist(
+    address _entityAddress,
+    EntityState entity
+  )
     private
     pure
     returns (bool)
@@ -235,8 +236,7 @@ contract PoaManager is Ownable {
     @param _durationForActivationPeriod How long a custodian has to activate token, given in seconds
     @param _fundingGoalInCents Given as fiat cents
    */
-  function addToken
-  (
+  function addToken(
     bytes32 _name32,
     bytes32 _symbol32,
     bytes32 _fiatCurrency32,
@@ -360,9 +360,7 @@ contract PoaManager is Ownable {
   }
 
   // upgrade an existing PoaToken proxy to what is stored in ContractRegistry
-  function upgradeToken(
-    PoaProxy _proxyToken
-  )
+  function upgradeToken(PoaProxy _proxyToken)
     external
     onlyOwner
     returns (bool)
@@ -375,9 +373,7 @@ contract PoaManager is Ownable {
   }
 
   // upgrade an existing PoaCrowdsale proxy to what is stored in ContractRegistry
-  function upgradeCrowdsale(
-    PoaProxy _proxyToken
-  )
+  function upgradeCrowdsale(PoaProxy _proxyToken)
     external
     onlyOwner
     returns (bool)

@@ -2,9 +2,8 @@ pragma solidity 0.4.24;
 
 import "./PoaCommon.sol";
 
-/* solium-disable security/no-block-members */
-/* solium-disable security/no-low-level-calls */
 
+/* solium-disable security/no-block-members */
 
 /**
   @title This contract acts as a master copy for use with PoaProxy in conjunction
@@ -116,9 +115,7 @@ contract PoaCrowdsale is PoaCommon {
    * @param _newFiatCurrency32 The new fiat currency
    *        in symbol notation (e.g. EUR, GBP, USD, etc.)
    */
-  function updateFiatCurrency(
-    bytes32 _newFiatCurrency32
-  )
+  function updateFiatCurrency(bytes32 _newFiatCurrency32)
     external
     onlyBroker
     atStage(Stages.Preview)
@@ -132,9 +129,7 @@ contract PoaCrowdsale is PoaCommon {
    * @param _newFundingGoalInCents The new funding goal in
    *        cents
    */
-  function updateFundingGoalInCents(
-    uint256 _newFundingGoalInCents
-  )
+  function updateFundingGoalInCents(uint256 _newFundingGoalInCents)
     external
     onlyBroker
     atStage(Stages.Preview)
@@ -148,9 +143,7 @@ contract PoaCrowdsale is PoaCommon {
    * @param _newStartTimeForFundingPeriod The new start
    *        time for funding period as UNIX timestamp in seconds
    */
-  function updateStartTimeForFundingPeriod(
-    uint256 _newStartTimeForFundingPeriod
-  )
+  function updateStartTimeForFundingPeriod(uint256 _newStartTimeForFundingPeriod)
     external
     onlyBroker
     atStage(Stages.Preview)
@@ -164,9 +157,7 @@ contract PoaCrowdsale is PoaCommon {
    * @param _newDurationForFiatFundingPeriod The new duration
    *        for fiat funding period as seconds
    */
-  function updateDurationForFiatFundingPeriod(
-    uint256 _newDurationForFiatFundingPeriod
-  )
+  function updateDurationForFiatFundingPeriod(uint256 _newDurationForFiatFundingPeriod)
     external
     onlyBroker
     atStage(Stages.Preview)
@@ -180,9 +171,7 @@ contract PoaCrowdsale is PoaCommon {
    * @param _newDurationForEthFundingPeriod The new duration
    *        for ETH funding period as seconds
    */
-  function updateDurationForEthFundingPeriod(
-    uint256 _newDurationForEthFundingPeriod
-  )
+  function updateDurationForEthFundingPeriod(uint256 _newDurationForEthFundingPeriod)
     external
     onlyBroker
     atStage(Stages.Preview)
@@ -196,9 +185,7 @@ contract PoaCrowdsale is PoaCommon {
    * @param _newDurationForActivationPeriod The new duration
    *        for ETH funding period in seconds
    */
-  function updateDurationForActivationPeriod(
-    uint256 _newDurationForActivationPeriod
-  )
+  function updateDurationForActivationPeriod(uint256 _newDurationForActivationPeriod)
     external
     onlyBroker
     atStage(Stages.Preview)
@@ -219,9 +206,7 @@ contract PoaCrowdsale is PoaCommon {
    * @param _newFiatCurrency32 The new fiat currency
    *        in symbol notation (e.g. EUR, GBP, USD, etc.)
    */
-  function setFiatCurrency(
-    bytes32 _newFiatCurrency32
-  )
+  function setFiatCurrency(bytes32 _newFiatCurrency32)
     internal
   {
     require(_newFiatCurrency32 != bytes32(0));
@@ -240,9 +225,7 @@ contract PoaCrowdsale is PoaCommon {
    * @param _newFundingGoalInCents The new funding goal in
    *        cents
    */
-  function setFundingGoalInCents(
-    uint256 _newFundingGoalInCents
-  )
+  function setFundingGoalInCents(uint256 _newFundingGoalInCents)
     internal
   {
     require(_newFundingGoalInCents < totalSupply_);
@@ -258,9 +241,7 @@ contract PoaCrowdsale is PoaCommon {
    * @param _newStartTimeForFundingPeriod The new start
    *        time for funding period as UNIX timestamp in seconds
    */
-  function setStartTimeForFundingPeriod(
-    uint256 _newStartTimeForFundingPeriod
-  )
+  function setStartTimeForFundingPeriod(uint256 _newStartTimeForFundingPeriod)
     internal
   {
     require(_newStartTimeForFundingPeriod > block.timestamp);
@@ -276,9 +257,7 @@ contract PoaCrowdsale is PoaCommon {
    * @param _newDurationForFiatFundingPeriod The new duration
    *        for fiat funding period as seconds
    */
-  function setDurationForFiatFundingPeriod(
-    uint256 _newDurationForFiatFundingPeriod
-  )
+  function setDurationForFiatFundingPeriod(uint256 _newDurationForFiatFundingPeriod)
     internal
   {
     // Check if `_newDurationForFiatFundingPeriod` is at least 3 days. If set
@@ -301,9 +280,7 @@ contract PoaCrowdsale is PoaCommon {
    * @param _newDurationForEthFundingPeriod The new duration
    *        for ETH funding period as seconds
    */
-  function setDurationForEthFundingPeriod(
-    uint256 _newDurationForEthFundingPeriod
-  )
+  function setDurationForEthFundingPeriod(uint256 _newDurationForEthFundingPeriod)
     internal
   {
     // Check if `_newDurationForEthFundingPeriod` is at least 1 day. If set
@@ -326,9 +303,7 @@ contract PoaCrowdsale is PoaCommon {
    * @param _newDurationForActivationPeriod The new duration
    *        for ETH funding period in seconds
    */
-  function setDurationForActivationPeriod(
-    uint256 _newDurationForActivationPeriod
-  )
+  function setDurationForActivationPeriod(uint256 _newDurationForActivationPeriod)
     internal
   {
     // Check if `_newDurationForActivationPeriod` is at least 1 week.
@@ -400,12 +375,10 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /// @notice Used for the calculation of token amount to be given to FIAT investor
-  function calculateTokenAmountForAmountInCents(
-    uint256 _amountInCents
-  )
+  function calculateTokenAmountForAmountInCents(uint256 _amountInCents)
     public
     view
-    returns(uint256)
+    returns (uint256)
   {
     //_percentOfFundingGoal multipled by precisionOfPercentCalc to get a more accurate result
     uint256 _percentOfFundingGoal = percent(
@@ -462,7 +435,7 @@ contract PoaCrowdsale is PoaCommon {
     external
     atStage(Stages.FiatFunding)
     onlyCustodian
-    returns(bool)
+    returns (bool)
   {
     require(_amountInCents > 0);
 
@@ -580,7 +553,7 @@ contract PoaCrowdsale is PoaCommon {
     public
     view
     atStage(Stages.FundingSuccessful)
-    returns(uint256)
+    returns (uint256)
   {
     uint256 _fundedFiatAmountInWei = fiatCentsToWei(fundedFiatAmountInCents);
     uint256 _fiatFee = calculateFee(_fundedFiatAmountInWei);
@@ -603,7 +576,7 @@ contract PoaCrowdsale is PoaCommon {
     public
     payable
     atStage(Stages.FundingSuccessful)
-    returns(bool)
+    returns (bool)
   {
     // Prevent paying more than once
     require(isActivationFeePaid == false);
@@ -759,9 +732,8 @@ contract PoaCrowdsale is PoaCommon {
   )
     public
     pure
-    returns(uint256)
+    returns (uint256)
   {
-
     // caution, check safe-to-multiply here
     uint256 _safeNumerator = _numerator.mul(uint256(10e27).rpow(_precision.add(1)));
     // with rounding of last digit
@@ -805,9 +777,7 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /// @notice Returns fiat value in cents of given wei amount
-  function weiToFiatCents(
-    uint256 _wei
-  )
+  function weiToFiatCents(uint256 _wei)
     public
     view
     returns (uint256)
@@ -817,9 +787,7 @@ contract PoaCrowdsale is PoaCommon {
   }
 
   /// @notice Returns wei value from fiat cents
-  function fiatCentsToWei(
-    uint256 _cents
-  )
+  function fiatCentsToWei(uint256 _cents)
     public
     view
     returns (uint256)

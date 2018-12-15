@@ -19,9 +19,12 @@
     "visibility-first": "error",
     "whitespace": "error",
 
-    "security/enforce-explicit-visibility": ["error"],
+    "security/enforce-loop-bounds": "warning",
     "security/no-assign-params": "off",
-    "security/no-block-members": ["warning"],
-    "security/no-inline-assembly": "off"
+    "security/no-func-overriding": "error",
+    "security/no-inline-assembly": "off",
+    "security/no-low-level-calls": "off",
+    "security/no-suicide-or-selfdestruct": "error",
+    "security/no-var": "error"
   }
 }

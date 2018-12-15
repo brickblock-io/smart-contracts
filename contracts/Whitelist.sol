@@ -13,7 +13,7 @@ contract Whitelist is Pausable {
   function whitelisted(address _address)
     public
     view
-    returns(bool)
+    returns (bool)
   {
     if (paused) {
       return false;

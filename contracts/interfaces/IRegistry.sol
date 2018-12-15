@@ -4,7 +4,7 @@ pragma solidity 0.4.24;
 interface IRegistry {
   function owner()
     external
-    returns(address);
+    returns (address);
 
   function updateContractAddress(
     string _name,

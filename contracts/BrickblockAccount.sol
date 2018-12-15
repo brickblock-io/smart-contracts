@@ -6,21 +6,19 @@ import "./interfaces/IBrickblockToken.sol";
 import "./interfaces/IFeeManager.sol";
 import "./interfaces/IAccessToken.sol";
 
-/* solium-disable security/no-block-members */
-
 
 contract BrickblockAccount is Ownable {
   uint8 public constant version = 1;
   uint256 public releaseTimeOfCompanyBBKs;
   IRegistry private registry;
 
-  constructor
-  (
+  constructor(
     address _registryAddress,
     uint256 _releaseTimeOfCompanyBBKs
   )
     public
   {
+    // solium-disable-next-line security/no-block-members
     require(_releaseTimeOfCompanyBBKs > block.timestamp);
     releaseTimeOfCompanyBBKs = _releaseTimeOfCompanyBBKs;
     registry = IRegistry(_registryAddress);
@@ -39,10 +37,7 @@ contract BrickblockAccount is Ownable {
     return bbk.transferFrom(address(bbk), address(this), _companyFunds);
   }
 
-  function lockBBK
-  (
-    uint256 _value
-  )
+  function lockBBK(uint256 _value)
     external
     onlyOwner
     returns (bool)
@@ -59,9 +54,7 @@ contract BrickblockAccount is Ownable {
     return act.lockBBK(_value);
   }
 
-  function unlockBBK(
-    uint256 _value
-  )
+  function unlockBBK(uint256 _value)
     external
     onlyOwner
     returns (bool)
@@ -73,9 +66,7 @@ contract BrickblockAccount is Ownable {
     return act.unlockBBK(_value);
   }
 
-  function claimFee(
-    uint256 _value
-  )
+  function claimFee(uint256 _value)
     external
     onlyOwner
     returns (bool)
@@ -124,6 +115,7 @@ contract BrickblockAccount is Ownable {
     onlyOwner
     returns (bool)
   {
+    // solium-disable-next-line security/no-block-members
     require(block.timestamp >= releaseTimeOfCompanyBBKs);
     IBrickblockToken bbk = IBrickblockToken(
       registry.getContractAddress("BrickblockToken")

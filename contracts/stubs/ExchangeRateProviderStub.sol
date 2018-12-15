@@ -183,6 +183,7 @@ contract ExchangeRateProviderStub {
     public
     onlyExchangeRates
   {
+    // solium-disable-next-line security/no-suicide-or-selfdestruct
     selfdestruct(_address);
   }
 

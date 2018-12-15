@@ -202,7 +202,7 @@ interface IPoaTokenCrowdsale {
 
   function precisionOfPercentCalc()
     external
-    returns(uint256);
+    returns (uint256);
 
   function initializeCrowdsale(
     bytes32 _fiatCurrency32,                // fiat currency string, e.g. 'EUR'
@@ -255,12 +255,12 @@ interface IPoaTokenCrowdsale {
   function calculateTotalFee()
     external
     view
-    returns(uint256);
+    returns (uint256);
 
   function payActivationFee()
     external
     payable
-    returns(bool);
+    returns (bool);
 
   function activate()
     external
@@ -289,7 +289,7 @@ interface IPoaTokenCrowdsale {
     uint256 precision
   )
     external
-    returns(uint256 quotient);
+    returns (uint256 quotient);
 
   function weiToFiatCents(uint256 _wei)
     external

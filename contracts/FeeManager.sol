@@ -12,9 +12,8 @@ contract FeeManager {
   uint256 actRate = 1000;
 
   IRegistry private registry;
-  constructor(
-    address _registryAddress
-  )
+
+  constructor(address _registryAddress)
     public
   {
     require(_registryAddress != address(0));
@@ -50,9 +49,7 @@ contract FeeManager {
     return true;
   }
 
-  function claimFee(
-    uint256 _value
-  )
+  function claimFee(uint256 _value)
     public
     returns (bool)
   {

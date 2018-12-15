@@ -35,9 +35,7 @@ contract ExchangeRateProvider is usingOraclize {
     _;
   }
 
-  constructor(
-    address _registryAddress
-  )
+  constructor(address _registryAddress)
     public
   {
     require(_registryAddress != address(0));
@@ -91,7 +89,10 @@ contract ExchangeRateProvider is usingOraclize {
   }
 
   // set queryIds on ExchangeRates for later validation when __callback happens
-  function setQueryId(bytes32 _identifier, string _queryType)
+  function setQueryId(
+    bytes32 _identifier,
+    string _queryType
+  )
     private
     returns (bool)
   {
@@ -100,12 +101,15 @@ contract ExchangeRateProvider is usingOraclize {
       registry.getContractAddress("ExchangeRates")
     );
     // run setQueryId on ExchangeRates
-    _exchangeRates.setQueryId(_identifier, _queryType);
+    return _exchangeRates.setQueryId(_identifier, _queryType);
   }
 
   // callback function for returned results of oraclize call
   // solium-disable-next-line mixedcase
-  function __callback(bytes32 _queryId, string _result)
+  function __callback(
+    bytes32 _queryId,
+    string _result
+  )
     public
     onlyOraclizer
   {
@@ -153,6 +157,7 @@ contract ExchangeRateProvider is usingOraclize {
     public
     onlyExchangeRates
   {
+    // solium-disable-next-line security/no-suicide-or-selfdestruct
     selfdestruct(_address);
   }
 

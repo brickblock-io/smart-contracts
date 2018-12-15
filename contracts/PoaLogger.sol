@@ -74,9 +74,7 @@ contract PoaLogger {
   );
 
   // event triggers for each event
-  function logStage(
-    uint256 stage
-  )
+  function logStage(uint256 stage)
     external
     onlyActivePoaToken
   {
@@ -106,9 +104,7 @@ contract PoaLogger {
     );
   }
 
-  function logPayout(
-    uint256 _amount
-  )
+  function logPayout(uint256 _amount)
     external
     onlyActivePoaToken
   {
@@ -121,7 +117,7 @@ contract PoaLogger {
   function logClaim(
     address _claimer,
     uint256 _payout
-    )
+  )
     external
     onlyActivePoaToken
   {

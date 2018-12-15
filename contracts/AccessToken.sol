@@ -109,8 +109,7 @@ contract AccessToken is PausableToken {
     uint256 totalLockedAmount
   );
 
-  modifier onlyContract(string _contractName)
-  {
+  modifier onlyContract(string _contractName) {
     require(
       msg.sender == registry.getContractAddress(_contractName)
     );
@@ -126,9 +125,7 @@ contract AccessToken is PausableToken {
 
   /// @notice Check an address for amount of currently locked BBK
   /// works similar to basic ERC20 balanceOf
-  function lockedBbkOf(
-    address _address
-  )
+  function lockedBbkOf(address _address)
     external
     view
     returns (uint256)
@@ -142,9 +139,7 @@ contract AccessToken is PausableToken {
     2. Keeps a record of BBK transfers via events
     @param _amount BBK token amount to lock
   */
-  function lockBBK(
-    uint256 _amount
-  )
+  function lockBBK(uint256 _amount)
     external
     returns (bool)
   {
@@ -168,9 +163,7 @@ contract AccessToken is PausableToken {
     2. Keeps a record of BBK transfers via events
     @param _amount BBK token amount to unlock
   */
-  function unlockBBK(
-    uint256 _amount
-  )
+  function unlockBBK(uint256 _amount)
     external
     returns (bool)
   {
@@ -194,9 +187,7 @@ contract AccessToken is PausableToken {
     @param _amount Amount of fee to be distributed to ACT holders
     @dev Accepts calls only from our `FeeManager` contract
   */
-  function distribute(
-    uint256 _amount
-  )
+  function distribute(uint256 _amount)
     external
     onlyContract("FeeManager")
     returns (bool)
@@ -220,9 +211,7 @@ contract AccessToken is PausableToken {
     @notice Calculates minted ACT from "Current Lock Period" for a given address
     @param _address ACT holder address
    */
-  function getMintedActFromCurrentLockPeriod(
-    address _address
-  )
+  function getMintedActFromCurrentLockPeriod(address _address)
     private
     view
     returns (uint256)
@@ -236,9 +225,7 @@ contract AccessToken is PausableToken {
     @notice Transfers "Current Lock Period" balance sheet to "Past Lock Periods" balance sheet.
     Ensures that BBK transfers won't affect accrued ACT balances.
    */
-  function settleCurrentLockPeriod(
-    address _address
-  )
+  function settleCurrentLockPeriod(address _address)
     private
     returns (bool)
   {
@@ -258,9 +245,7 @@ contract AccessToken is PausableToken {
     @param _address Sender address
     @return uint256
   */
-  function balanceOf(
-    address _address
-  )
+  function balanceOf(address _address)
     public
     view
     returns (uint256)

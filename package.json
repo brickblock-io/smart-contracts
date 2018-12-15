@@ -41,7 +41,7 @@
     "test:exr-gas": "env-cmd .env yarn truffle test test/misc/ExchangeRateGasCosts.js",
     "---SECTION:LINT---": "-------------------- HOW TO LINT --------------------",
     "lint": "yarn lint:sol && yarn lint:js",
-    "lint:sol": "solium --dir ./contracts",
+    "lint:sol": "solium --dir contracts/ --fix",
     "lint:js": "eslint migrations/ scripts/ test/ --fix",
     "---SECTION:RELEASE---": "------------ RELEASE SCRIPTS ------------",
     "release:comment": "This script should only ever be automatically run by our CI. Manual releases are error-prone and can mess up version history",
@@ -66,8 +66,8 @@
     "diagram:render": "node docs/sequence-diagrams/render.js"
   },
   "lint-staged": {
-    "*.sol": [
-      "solium -f",
+    "contracts/**/*.sol": [
+      "solium --fix -f",
       "git add"
     ],
     "*.js": [
@@ -108,7 +108,7 @@
     "rimraf": "^2.6.2",
     "solc": "0.4.24",
     "solidity-coverage": "^0.5.5",
-    "solium": "^1.1.7",
+    "solium": "^1.1.8",
     "standard-version": "^4.3.0",
     "table": "^4.0.3",
     "truffle": "4.1.13",

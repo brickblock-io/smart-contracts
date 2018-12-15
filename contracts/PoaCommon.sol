@@ -1,5 +1,3 @@
-/* solium-disable security/no-low-level-calls */
-
 pragma solidity 0.4.24;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
@@ -259,7 +257,7 @@ contract PoaCommon is PoaProxyCommon {
   )
     internal
     view
-    returns(bool)
+    returns (bool)
   {
     return fundedFiatAmountPerUserInTokens[_buyer] != 0;
   }

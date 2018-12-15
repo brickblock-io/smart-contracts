@@ -32,9 +32,7 @@ contract PoaProxyCommon {
   *********************************/
 
   /// @notice Gets a given contract address by bytes32 in order to save gas
-  function getContractAddress(
-    string _name
-  )
+  function getContractAddress(string _name)
     public
     view
     returns (address _contractAddress)

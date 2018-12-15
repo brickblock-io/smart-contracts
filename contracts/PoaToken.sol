@@ -4,9 +4,6 @@ import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./PoaCommon.sol";
 
-/* solium-disable security/no-block-members */
-/* solium-disable security/no-low-level-calls */
-
 
 /**
   @title This acts as a master copy for use with PoaProxy in conjunction
@@ -163,9 +160,7 @@ contract PoaToken is PoaCommon {
    * @dev Only allowed in `Stages.Preview` by Broker
    * @param _newName32 The new name
    */
-  function updateName(
-    bytes32 _newName32
-  )
+  function updateName(bytes32 _newName32)
     external
     onlyBroker
     atStage(Stages.Preview)
@@ -178,9 +173,7 @@ contract PoaToken is PoaCommon {
    * @dev Only allowed in `Stages.Preview` by Broker
    * @param _newSymbol32 The new symbol
    */
-  function updateSymbol(
-    bytes32 _newSymbol32
-  )
+  function updateSymbol(bytes32 _newSymbol32)
     external
     onlyBroker
     atStage(Stages.Preview)
@@ -193,9 +186,7 @@ contract PoaToken is PoaCommon {
    * @dev Only allowed in `Stages.Preview` by Broker
    * @param _newBroker The new Broker address
    */
-  function updateBrokerAddress(
-    address _newBroker
-  )
+  function updateBrokerAddress(address _newBroker)
     external
     onlyBroker
     atStage(Stages.Preview)
@@ -208,9 +199,7 @@ contract PoaToken is PoaCommon {
    * @dev Only allowed in `Stages.Preview` by Broker
    * @param _newTotalSupply The new total supply
    */
-  function updateTotalSupply(
-    uint256 _newTotalSupply
-  )
+  function updateTotalSupply(uint256 _newTotalSupply)
     external
     onlyBroker
     atStage(Stages.Preview)
@@ -230,9 +219,7 @@ contract PoaToken is PoaCommon {
    * @notice Set name for POA Token
    * @param _newName32 The new name
    */
-  function setName(
-    bytes32 _newName32
-  )
+  function setName(bytes32 _newName32)
     internal
   {
     require(_newName32 != bytes32(0));
@@ -245,9 +232,7 @@ contract PoaToken is PoaCommon {
    * @notice Set symbol for POA Token
    * @param _newSymbol32 The new symbol
    */
-  function setSymbol(
-    bytes32 _newSymbol32
-  )
+  function setSymbol(bytes32 _newSymbol32)
     internal
   {
     require(_newSymbol32 != bytes32(0));
@@ -260,9 +245,7 @@ contract PoaToken is PoaCommon {
    * @notice Set Broker address for POA Token
    * @param _newBroker The new Broker address
    */
-  function setBrokerAddress(
-    address _newBroker
-  )
+  function setBrokerAddress(address _newBroker)
     internal
   {
     require(_newBroker != address(0));
@@ -275,9 +258,7 @@ contract PoaToken is PoaCommon {
    * @notice Set Custodian address for POA Token
    * @param _newCustodian The new Custodian address
    */
-  function setCustodianAddress(
-    address _newCustodian
-  )
+  function setCustodianAddress(address _newCustodian)
     internal
   {
     require(_newCustodian != address(0));
@@ -292,9 +273,7 @@ contract PoaToken is PoaCommon {
    *      be greather than 1e18
    * @param _newTotalSupply The new total supply
    */
-  function setTotalSupply(
-    uint256 _newTotalSupply
-  )
+  function setTotalSupply(uint256 _newTotalSupply)
     internal
   {
     require(_newTotalSupply >= 1e18);
@@ -321,9 +300,7 @@ contract PoaToken is PoaCommon {
    * @param _newCustodian The new Custodian address
    * @return true when successful
    */
-  function changeCustodianAddress(
-    address _newCustodian
-  )
+  function changeCustodianAddress(address _newCustodian)
     external
     onlyCustodian
     returns (bool)
@@ -353,6 +330,7 @@ contract PoaToken is PoaCommon {
     returns (bool)
   {
     // check that `startTimeForFundingPeriod` lies in the future
+    // solium-disable-next-line security/no-block-members
     require(startTimeForFundingPeriod > block.timestamp);
 
     // set Stage to PreFunding
@@ -583,9 +561,7 @@ contract PoaToken is PoaCommon {
      that have received the actual securities that this contract
      tokenizes.
    */
-  function updateProofOfCustody(
-    bytes32[2] _ipfsHash
-  )
+  function updateProofOfCustody(bytes32[2] _ipfsHash)
     external
     onlyCustodian
     validIpfsHash(_ipfsHash)
@@ -612,9 +588,7 @@ contract PoaToken is PoaCommon {
   ************************/
 
   /// @notice used for calculating starting balance once activated
-  function startingBalance(
-    address _address
-  )
+  function startingBalance(address _address)
     internal
     view
     returns (uint256)
@@ -631,9 +605,7 @@ contract PoaToken is PoaCommon {
   }
 
   /// @notice ERC20 compliant balanceOf: uses NoobCoin pattern: https://github.com/TovarishFin/NoobCoin
-  function balanceOf(
-    address _address
-  )
+  function balanceOf(address _address)
     public
     view
     returns (uint256)

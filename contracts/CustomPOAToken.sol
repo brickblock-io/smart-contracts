@@ -83,8 +83,7 @@ contract CustomPOAToken is PausableToken {
   // end stage related modifiers
 
   // token totalSupply must be more than fundingGoal!
-  constructor
-  (
+  constructor(
     string _name,
     string _symbol,
     address _broker,
@@ -160,6 +159,7 @@ contract CustomPOAToken is PausableToken {
   {
     // only allow unpausing when in Active stage
     require(stage == Stages.Active);
+
     return super.unpause();
   }
 
@@ -269,6 +269,7 @@ contract CustomPOAToken is PausableToken {
     // send out event giving info on amount bought as well as claimable dust
     emit Transfer(this, msg.sender, _buyAmount);
     emit BuyEvent(msg.sender, _buyAmount);
+
     return true;
   }
 
@@ -337,7 +338,10 @@ contract CustomPOAToken is PausableToken {
   // start payout related functions
 
   // get current payout for perTokenPayout and unclaimed
-  function currentPayout(address _address, bool _includeUnclaimed)
+  function currentPayout(
+    address _address,
+    bool _includeUnclaimed
+  )
     public
     view
     returns (uint256)
@@ -368,12 +372,14 @@ contract CustomPOAToken is PausableToken {
     return _includeUnclaimed
       ? _totalPerTokenUnclaimedConverted.add(unclaimedPayoutTotals[_address])
       : _totalPerTokenUnclaimedConverted;
-
   }
 
   // settle up perToken balances and move into unclaimedPayoutTotals in order
   // to ensure that token transfers will not result in inaccurate balances
-  function settleUnclaimedPerTokenPayouts(address _from, address _to)
+  function settleUnclaimedPerTokenPayouts(
+    address _from,
+    address _to
+  )
     private
     returns (bool)
   {
@@ -385,6 +391,7 @@ contract CustomPOAToken is PausableToken {
     unclaimedPayoutTotals[_to] = unclaimedPayoutTotals[_to].add(currentPayout(_to, false));
     // same as above for to
     claimedPerTokenPayouts[_to] = totalPerTokenPayout;
+
     return true;
   }
 
@@ -399,6 +406,7 @@ contract CustomPOAToken is PausableToken {
     if (stage == Stages.Funding) {
       revert();
     }
+
     return true;
   }
 
@@ -424,6 +432,7 @@ contract CustomPOAToken is PausableToken {
     uint256 _reclaimTotal = tokensToWei(_tokenBalance);
     // send Ξ back to sender
     msg.sender.transfer(_reclaimTotal);
+
     return true;
   }
 
@@ -458,6 +467,7 @@ contract CustomPOAToken is PausableToken {
     unclaimedPayoutTotals[owner] = unclaimedPayoutTotals[owner].add(_fee).add(_delta);
     // let the world know that a payout has happened for this token
     emit PayoutEvent(_payoutAmount);
+
     return true;
   }
 
@@ -484,6 +494,7 @@ contract CustomPOAToken is PausableToken {
     emit ClaimEvent(_payoutAmount);
     // transfer Ξ payable amount to sender
     msg.sender.transfer(_payoutAmount);
+
     return _payoutAmount;
   }
 
@@ -492,8 +503,7 @@ contract CustomPOAToken is PausableToken {
   // start ERC20 overrides
 
   // same as ERC20 transfer other than settling unclaimed payouts
-  function transfer
-  (
+  function transfer(
     address _to,
     uint256 _value
   )
@@ -503,12 +513,12 @@ contract CustomPOAToken is PausableToken {
   {
     // move perToken payout balance to unclaimedPayoutTotals
     require(settleUnclaimedPerTokenPayouts(msg.sender, _to));
+
     return super.transfer(_to, _value);
   }
 
   // same as ERC20 transfer other than settling unclaimed payouts
-  function transferFrom
-  (
+  function transferFrom(
     address _from,
     address _to,
     uint256 _value
@@ -519,6 +529,7 @@ contract CustomPOAToken is PausableToken {
   {
     // move perToken payout balance to unclaimedPayoutTotals
     require(settleUnclaimedPerTokenPayouts(_from, _to));
+
     return super.transferFrom(_from, _to, _value);
   }
 
