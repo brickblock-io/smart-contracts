@@ -1,6 +1,5 @@
 pragma solidity 0.4.24;
 
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "../interfaces/IRegistry.sol";
 import "../interfaces/IExchangeRates.sol";
 
@@ -23,23 +22,19 @@ contract ExchangeRateProviderStub {
   uint256 public callbackGasPrice;
 
   // ensure that only the oracle or ExchangeRates contract are allowed
-  modifier onlyAllowed()
-  {
+  modifier onlyAllowed() {
     require(
       msg.sender == registry.getContractAddress("ExchangeRates")
     );
     _;
   }
 
-  modifier onlyExchangeRates()
-  {
+  modifier onlyExchangeRates() {
     require(msg.sender == registry.getContractAddress("ExchangeRates"));
     _;
   }
 
-  constructor(
-    address _registryAddress
-  )
+  constructor(address _registryAddress)
     public
   {
     require(_registryAddress != address(0));
@@ -84,12 +79,16 @@ contract ExchangeRateProviderStub {
       // simulate _queryId by hashing first element of bytes32 array
       pendingTestQueryId = keccak256(abi.encodePacked(_queryString));
       setQueryId(pendingTestQueryId, _queryType);
+
       return true;
     }
   }
 
   // set queryIds on ExchangeRates for later validation when __callback happens
-  function setQueryId(bytes32 _identifier, string _queryType)
+  function setQueryId(
+    bytes32 _identifier,
+    string _queryType
+  )
     public
     returns (bool)
   {
@@ -104,7 +103,10 @@ contract ExchangeRateProviderStub {
 
   // SIMULATE: callback function to get results of oraclize call
   // solium-disable-next-line mixedcase
-  function simulate__callback(bytes32 _queryId, string _result)
+  function simulate__callback(
+    bytes32 _queryId,
+    string _result
+  )
     public
   {
     // make sure that the caller is oraclize
@@ -152,7 +154,10 @@ contract ExchangeRateProviderStub {
   }
 
   // parseInt(parseFloat*10^_b)
-  function parseInt(string _a, uint _b)
+  function parseInt(
+    string _a,
+    uint _b
+  )
     internal
     pure
     returns (uint)

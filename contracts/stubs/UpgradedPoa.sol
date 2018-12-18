@@ -4,7 +4,6 @@ import "../PoaToken.sol";
 
 
 contract UpgradedPoa is PoaToken {
-
   bool public isUpgraded;
 
   function setUpgrade()

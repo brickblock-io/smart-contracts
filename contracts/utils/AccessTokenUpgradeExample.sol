@@ -12,12 +12,15 @@ pragma solidity 0.4.24;
  * the same proxy pattern we are using for the POA contract.
  */
 
-import "./AccessToken.sol";
+import "../AccessToken.sol";
 
 
 contract AccessTokenUpgradeExample is AccessToken {
 
-  constructor(address _registry) public AccessToken(_registry) {}
+  constructor(address _registry)
+    public
+    AccessToken(_registry)
+  {}
 
   function balanceOf(address _address)
     public

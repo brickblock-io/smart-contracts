@@ -4,15 +4,16 @@ pragma solidity 0.4.24;
 contract BrokenRemoteContractStub {
   uint256 public testNumber;
 
-  constructor(
-    uint256 _testNumber
-  )
+  constructor(uint256 _testNumber)
     public
   {
     testNumber = _testNumber;
   }
 
-  function add(uint256 _num1, uint256 _num2)
+  function add(
+    uint256 _num1,
+    uint256 _num2
+  )
     public
     pure
     returns (uint256)

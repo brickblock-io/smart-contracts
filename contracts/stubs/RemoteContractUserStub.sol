@@ -17,21 +17,16 @@ interface RemoteContractStubInterface {
     pure
     returns (uint256);
 
-  function setTestNumber(
-    uint256 _number
-  )
+  function setTestNumber(uint256 _number)
     external
     returns (bool);
 }
 
 
 contract RemoteContractUserStub {
-
   IRegistry private registry;
 
-  constructor(
-    address _registryAddress
-  )
+  constructor(address _registryAddress)
     public
   {
     require(_registryAddress != address(0));
@@ -48,12 +43,16 @@ contract RemoteContractUserStub {
     );
   }
 
-  function remoteAdd(uint256 _num1, uint256 _num2)
+  function remoteAdd(
+    uint256 _num1,
+    uint256 _num2
+  )
     public
     view
     returns (uint256)
   {
     RemoteContractStubInterface genericRemoteContract = getRemoteContractStub();
+
     return genericRemoteContract.add(_num1, _num2);
   }
 
@@ -63,6 +62,7 @@ contract RemoteContractUserStub {
     returns (uint256)
   {
     RemoteContractStubInterface genericRemoteContract = getRemoteContractStub();
+
     return genericRemoteContract.testNumber();
   }
 
@@ -72,6 +72,7 @@ contract RemoteContractUserStub {
   {
     RemoteContractStubInterface genericRemoteContract = getRemoteContractStub();
     require(genericRemoteContract.setTestNumber(_newNumber));
+
     return true;
   }
 }

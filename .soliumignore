@@ -1,2 +1,3 @@
 node_modules
-contracts/OraclizeAPI.sol
+contracts/external
+frozen/

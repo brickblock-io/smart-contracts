@@ -2,8 +2,6 @@
 pragma solidity 0.4.24;
 
 import "../BrickblockToken.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
 contract BrickblockFountainStub is Ownable {
@@ -35,16 +33,21 @@ contract BrickblockFountainStub is Ownable {
   }
 
   // basic implementation of balance return
-  function balanceOf(address _user)
+  function balanceOf(
+    address _user
+  )
     public
     view
-    returns (uint256 balance)
+    returns(uint256 balance)
   {
     return balances[_user].tokens;
   }
 
   // placeholder function there is much more currently under development
-  function updateAccount(address _locker, uint256 _value)
+  function updateAccount(
+    address _locker,
+    uint256 _value
+  )
     private
     returns (uint256)
   {
@@ -97,5 +100,4 @@ contract BrickblockFountainStub is Ownable {
   }
 
   // much more functionality is already built and undergoing development and refinement!
-
 }

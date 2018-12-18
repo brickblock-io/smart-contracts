@@ -5,9 +5,7 @@ contract RemoteContractStub {
   uint256 public testNumber;
   address public testAddress;
 
-  constructor(
-    uint256 _testNumber
-  )
+  constructor(uint256 _testNumber)
     public
   {
     testNumber = _testNumber;
@@ -24,13 +22,12 @@ contract RemoteContractStub {
     return _num1 + _num2;
   }
 
-  function setTestNumber(
-    uint256 _number
-  )
+  function setTestNumber(uint256 _number)
     public
     returns (bool)
   {
     testNumber = _number;
+
     return true;
   }
 }

@@ -2,7 +2,7 @@ pragma solidity 0.4.24;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./PoaProxyCommon.sol";
-import "./tools/SafeMathPower.sol";
+import "./external/SafeMathPower.sol";
 
 
 /**

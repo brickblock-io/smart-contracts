@@ -1,6 +1,6 @@
 pragma solidity 0.4.24;
 
-import "./OraclizeAPI.sol";
+import "./external/OraclizeAPI.sol";
 import "./interfaces/IRegistry.sol";
 import "./interfaces/IExchangeRates.sol";
 
