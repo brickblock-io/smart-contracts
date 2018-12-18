@@ -111,13 +111,13 @@ contract PoaCrowdsale is PoaCommon {
 
   /**
    * @notice Update fiat currency
-   * @dev Only allowed in `Stages.Preview` by Broker
+   * @dev Only allowed in `Stages.Preview` by Issuer
    * @param _newFiatCurrency32 The new fiat currency
    *        in symbol notation (e.g. EUR, GBP, USD, etc.)
    */
   function updateFiatCurrency(bytes32 _newFiatCurrency32)
     external
-    onlyBroker
+    onlyIssuer
     atStage(Stages.Preview)
   {
     setFiatCurrency(_newFiatCurrency32);
@@ -125,13 +125,13 @@ contract PoaCrowdsale is PoaCommon {
 
   /**
    * @notice Update funding goal in cents
-   * @dev Only allowed in `Stages.Preview` stage by Broker
+   * @dev Only allowed in `Stages.Preview` stage by Issuer
    * @param _newFundingGoalInCents The new funding goal in
    *        cents
    */
   function updateFundingGoalInCents(uint256 _newFundingGoalInCents)
     external
-    onlyBroker
+    onlyIssuer
     atStage(Stages.Preview)
   {
     setFundingGoalInCents(_newFundingGoalInCents);
@@ -139,13 +139,13 @@ contract PoaCrowdsale is PoaCommon {
 
   /**
    * @notice Update start time for funding period
-   * @dev Only allowed in `Stages.Preview` stage by Broker
+   * @dev Only allowed in `Stages.Preview` stage by Issuer
    * @param _newStartTimeForFundingPeriod The new start
    *        time for funding period as UNIX timestamp in seconds
    */
   function updateStartTimeForFundingPeriod(uint256 _newStartTimeForFundingPeriod)
     external
-    onlyBroker
+    onlyIssuer
     atStage(Stages.Preview)
   {
     setStartTimeForFundingPeriod(_newStartTimeForFundingPeriod);
@@ -153,13 +153,13 @@ contract PoaCrowdsale is PoaCommon {
 
   /**
    * @notice Update duration for fiat funding period
-   * @dev Only allowed in `Stages.Preview` stage by Broker
+   * @dev Only allowed in `Stages.Preview` stage by Issuer
    * @param _newDurationForFiatFundingPeriod The new duration
    *        for fiat funding period as seconds
    */
   function updateDurationForFiatFundingPeriod(uint256 _newDurationForFiatFundingPeriod)
     external
-    onlyBroker
+    onlyIssuer
     atStage(Stages.Preview)
   {
     setDurationForFiatFundingPeriod(_newDurationForFiatFundingPeriod);
@@ -167,13 +167,13 @@ contract PoaCrowdsale is PoaCommon {
 
   /**
    * @notice Update duration for ETH funding period
-   * @dev Only allowed in `Stages.Preview` stage by Broker
+   * @dev Only allowed in `Stages.Preview` stage by Issuer
    * @param _newDurationForEthFundingPeriod The new duration
    *        for ETH funding period as seconds
    */
   function updateDurationForEthFundingPeriod(uint256 _newDurationForEthFundingPeriod)
     external
-    onlyBroker
+    onlyIssuer
     atStage(Stages.Preview)
   {
     setDurationForEthFundingPeriod(_newDurationForEthFundingPeriod);
@@ -181,13 +181,13 @@ contract PoaCrowdsale is PoaCommon {
 
   /**
    * @notice Update duration for activation period
-   * @dev Only allowed in `Stages.Preview` stage by Broker
+   * @dev Only allowed in `Stages.Preview` stage by Issuer
    * @param _newDurationForActivationPeriod The new duration
    *        for ETH funding period in seconds
    */
   function updateDurationForActivationPeriod(uint256 _newDurationForActivationPeriod)
     external
-    onlyBroker
+    onlyIssuer
     atStage(Stages.Preview)
   {
     setDurationForActivationPeriod(_newDurationForActivationPeriod);
@@ -556,10 +556,10 @@ contract PoaCrowdsale is PoaCommon {
    @notice Used for paying the activation fee.
    It is public because we want to enable any party to pay the fee.
    We need this flexibility because there are multiple scenarios:
-     • Crypto-savvy brokers could pay the fee in ETH directly into the contract
-     • Non-crypto-savvy brokers could pay the fee in Fiat to the custodian and
+     • Crypto-savvy issuers could pay the fee in ETH directly into the contract
+     • Non-crypto-savvy issuers could pay the fee in Fiat to the custodian and
        the custodian pays the fee in ETH into the contract on their behalf
-     • Non-crypto-savvy broker AND custodian could ask Brickblock to help, pay the fee
+     • Non-crypto-savvy issuer AND custodian could ask Brickblock to help, pay the fee
        in Fiat to us, and we would then pay the fee in ETH into the contract for them
    */
   function payActivationFee()
@@ -599,7 +599,7 @@ contract PoaCrowdsale is PoaCommon {
 
   /**
     @notice Activate token. This has the following effects:
-      • Contract's ETH balance will become claimable by the broker
+      • Contract's ETH balance will become claimable by the issuer
       • Token will become tradable (via ERC20's unpause() function)
   */
   function activate()
@@ -627,9 +627,9 @@ contract PoaCrowdsale is PoaCommon {
 
     /*
      * Make raised ETH funds, which is the balance of this contract,
-     * claimable by the broker via the claim() function.
+     * claimable by the issuer via the claim() function.
      */
-    unclaimedPayoutTotals[broker] = unclaimedPayoutTotals[broker]
+    unclaimedPayoutTotals[issuer] = unclaimedPayoutTotals[issuer]
       .add(address(this).balance);
 
     // Allow trading of tokens
@@ -710,7 +710,7 @@ contract PoaCrowdsale is PoaCommon {
     circumstances, for example:
     - Asset gets damaged due to natural catastrophe
     - Legal issue arises with the asset
-    - Broker gets blacklisted during the funding phase
+    - Issuer gets blacklisted during the funding phase
       due to fraudulent behavior
    */
   function cancelFunding()

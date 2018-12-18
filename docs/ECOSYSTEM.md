@@ -514,7 +514,7 @@ There is a modifier for each `log` function which checks if the sender is a [Poa
 
 ### PoaManager
 
-`PoaManager` is a central contract which is meant to keep track of and manage `broker`s and [PoaToken](#poatoken)s. This is needed because we'll need to keep track of all our [PoaToken](#poatoken)s in an easy way.
+`PoaManager` is a central contract which is meant to keep track of and manage `issuer`s and [PoaToken](#poatoken)s. This is needed because we'll need to keep track of all our [PoaToken](#poatoken)s in an easy way.
 
 `PoaManager`'s job is to:
 
@@ -523,16 +523,16 @@ There is a modifier for each `log` function which checks if the sender is a [Poa
 - remove [PoaTokens](#poatoken)
 - list [PoaToken](#poatoken)
 - delist [PoaToken](#poatoken)
-- add new `broker`s
-- remove `broker`s
-- list `broker`s
-- delist `broker`s
+- add new `issuer`s
+- remove `issuer`s
+- list `issuer`s
+- delist `issuer`s
 - pause [PoaToken](#poatoken)
 - unpause [PoaToken](#poatoken)
 - terminate [PoaToken](#poatoken)
 - setup [PoaToken](#poatoken) master contracts
 - upgrade deployed [PoaToken](#poatoken)
-- display information on `broker`s & [PoaToken](#poatoken)
+- display information on `issuer`s & [PoaToken](#poatoken)
 
 #### Important Note
 
@@ -546,15 +546,15 @@ We use the [delegate proxy factory pattern](https://blog.zeppelin.solutions/prox
 
 From here on, this concept will be expressed as `Proxy`. Even though this actual contract is not found anywhere in the repository, it expresses this concept: a [PoaProxy](#poaproxy) which is mirroring the functionality of a [PoaToken](#poatoken). The master code which [PoaProxys](#poaproxy) use will be referred to as `PoaMaster`.
 
-#### Broker Functions
+#### Issuer Functions
 
-A `broker` is a person with an address who has passed requirements to be able to list new properties on the Brickblock platform. After this screening process is complete, the `broker` is added through `addBroker()`. The broker starts off as `active` and is able to add [PoaProxys](#poaproxy) through `addToken()`.
+A `issuer` is a person with an address who has passed requirements to be able to list new properties on the Brickblock platform. After this screening process is complete, the `issuer` is added through `addIssuer()`. The issuer starts off as `active` and is able to add [PoaProxys](#poaproxy) through `addToken()`.
 
-A broker can be removed or delisted by the `owner`. Information about a `broker`'s status can also be retrieved.
+An issuer can be removed or delisted by the `owner`. Information about a `issuer`'s status can also be retrieved.
 
 #### Token Functions
 
-A new [PoaProxy](#poaproxy) can be deployed through `addToken()` by a `broker` as long as they are `active`. A token requires the following parameters:
+A new [PoaProxy](#poaproxy) can be deployed through `addToken()` by a `issuer` as long as they are `active`. A token requires the following parameters:
 
 ```
 // ER20 name
@@ -587,7 +587,7 @@ uint256 _fundingGoalInCents
 
 As long as these parameters pass validation, a new [PoaProxy](#poaproxy) will be deployed and added to the `tokenAddressList` array.
 
-There are similar functions to `broker` functions for modifying and viewing. These are only able to be run by the `owner` as well. To repeat, this functionality includes things such as: removing, listing, delisting, and viewing, a [PoaProxy](#poaproxy).
+There are similar functions to `issuer` functions for modifying and viewing. These are only able to be run by the `owner` as well. To repeat, this functionality includes things such as: removing, listing, delisting, and viewing, a [PoaProxy](#poaproxy).
 
 There are additional functions which are special for [PoaProxys](#poaproxy).
 
@@ -654,7 +654,7 @@ This is where the magic happens. This is where `delegatecall` is used to take co
 
 This contract is what most of the ecosystem is built around.
 
-`PoaToken` represents an asset in the real world. The primary usage at the moment is real estate. A broker will go through a vetting process before they can participate in the ecosystem. Once when a broker has been listed on `PoaManager` they are able to deploy new `PoaProxy`s.
+`PoaToken` represents an asset in the real world. The primary usage at the moment is real estate. An issuer will go through a vetting process before they can participate in the ecosystem. Once when an issuer has been listed on `PoaManager` they are able to deploy new `PoaProxy`s.
 
 The contract is essentially a crowdsale for a given asset. Once when the funding goal has been reached and the contract has been activated, token balances are shown and can be traded at will. `PoaToken` is an ERC20 PausableToken. When active, payouts (ex. rent from the building) can be paid to the contract where token holders receive ETH proportional to their token holdings.
 
@@ -699,9 +699,9 @@ The Custodian can:
 - `updateProofOfCustody()`
   - for auditing purposes, updating essential information contained in IPFS hash.
 
-##### Broker
+##### Issuer
 
-The broker has no particular role in any of the functions. But once when an asset has been fully funded through the `PoaToken` contract the balance at the time of activation becomes claimable by the broker. It is assumed the `broker` already has the property to turn over and the funds in the contract at the time of activation is compensation for the building. The broker can `claim()` the same way any other token holder would `claim()`
+The issuer has no particular role in any of the functions. But once when an asset has been fully funded through the `PoaToken` contract the balance at the time of activation becomes claimable by the issuer. It is assumed the `issuer` already has the property to turn over and the funds in the contract at the time of activation is compensation for the building. The issuer can `claim()` the same way any other token holder would `claim()`
 
 ##### Token Holders
 
@@ -835,7 +835,7 @@ If required, other contracts will check if an address is whitelisted through thi
 
 #### Future Development
 
-This contract will likely have to be extended with more granular whitelisting features to comply with regulation in different jurisdictions or to allow brokers to only target a selected audience with their token offerings.
+This contract will likely have to be extended with more granular whitelisting features to comply with regulation in different jurisdictions or to allow issuers to only target a selected audience with their token offerings.
 
 ## Upgradeability
 
@@ -863,7 +863,7 @@ The following contracts have state but can be upgraded through various mechanism
   - POA Crowdsale functionality can be upgraded through `proxyChangeCrowdsaleMaster()`, pointing it to a new `PoaCrowdsaleMaster` contract
 - [PoaManager](#poamanager)
   - Deploy new contract
-    - New contract needs a function to migrate token and broker addresses into the new one
+    - New contract needs a function to migrate token and issuer addresses into the new one
     - Alternatively, continue to read from the old contract. This could get messy quickly, though.
   - Update address in registry
 - [Whitelist](#whitelist)

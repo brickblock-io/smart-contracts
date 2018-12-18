@@ -22,7 +22,7 @@ const activeContract = async (
   _name,
   _symbol,
   _owner,
-  _broker,
+  _issuer,
   _custodian,
   _timeoutBlock,
   _totalSupply,
@@ -33,7 +33,7 @@ const activeContract = async (
   const contract = await CustomPoaToken.new(
     _name,
     _symbol,
-    _broker,
+    _issuer,
     _custodian,
     _timeoutBlock,
     _totalSupply,

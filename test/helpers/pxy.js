@@ -3,7 +3,7 @@ const BigNumber = require('bignumber.js')
 
 const { gasPrice } = require('../helpers/general')
 const {
-  broker,
+  issuer,
   custodian,
   defaultActivationDuration,
   defaultFiatCurrency,
@@ -22,7 +22,7 @@ const {
   getDefaultStartTimeForFundingPeriod,
   stages,
   testActivate,
-  testBrokerClaim,
+  testIssuerClaim,
   testBuyRemainingTokens,
   testPayActivationFee,
   testStartPreFunding,
@@ -72,7 +72,7 @@ const parseCommonStorage = (storage, stageInitialized) => ({
   stage: stageInitialized
     ? new BigNumber(storage[2].data.slice(0, 4))
     : new BigNumber(0),
-  actualBroker: storage[3].data,
+  actualIssuer: storage[3].data,
   actualCustodian: storage[4].data,
   proofOfCustody32: [
     trimRightBytes(storage[5].data),
@@ -114,7 +114,7 @@ const initializeContract = async (poa, reg) => {
   await poa.initializeToken(
     defaultName32,
     defaultSymbol32,
-    broker,
+    issuer,
     custodian,
     reg.address,
     defaultTotalSupply
@@ -141,7 +141,7 @@ const checkPostInitializedStorage = async (poa, reg, pmr) => {
   } = parseProxyCommonStorage(storage, false)
   // common storage
   const {
-    actualBroker,
+    actualIssuer,
     actualCustodian,
     actualFiatCurrency32,
     commonTotalSupply,
@@ -246,7 +246,7 @@ const checkPostInitializedStorage = async (poa, reg, pmr) => {
     '0',
     'fundedFiatAmountInCents should be 0'
   )
-  assert.equal(actualBroker, broker, 'actualBroker should match broker')
+  assert.equal(actualIssuer, issuer, 'actualIssuer should match issuer')
 
   assert.equal(allowed, '0x00', 'allowed slot should be empty')
   assert.equal(
@@ -264,7 +264,7 @@ const checkPostInitializedStorage = async (poa, reg, pmr) => {
 
 const enterActiveStage = async (poa, fmr) => {
   // move from `Preview` to `PreFunding` stage
-  await testStartPreFunding(poa, { from: broker, gasPrice })
+  await testStartPreFunding(poa, { from: issuer, gasPrice })
 
   await timeTravelToEthFundingPeriod(poa)
 
@@ -288,8 +288,8 @@ const enterActiveStage = async (poa, fmr) => {
     from: custodian,
   })
 
-  // clean out broker balance for easier debugging
-  await testBrokerClaim(poa)
+  // clean out issuer balance for easier debugging
+  await testIssuerClaim(poa)
 }
 
 /*
@@ -309,7 +309,7 @@ const checkPostActiveStorage = async (poa, reg, pmr) => {
 
   // common storage
   const {
-    actualBroker,
+    actualIssuer,
     actualCustodian,
     actualFiatCurrency32,
     commonTotalSupply,
@@ -420,7 +420,7 @@ const checkPostActiveStorage = async (poa, reg, pmr) => {
     '0',
     'fundedFiatAmountInCents should be 0'
   )
-  assert.equal(actualBroker, broker, 'actualBroker should match broker')
+  assert.equal(actualIssuer, issuer, 'actualIssuer should match issuer')
   // get needed mapping values to check on values
   const investmentPerUserInWei = await getMappingStorage(
     poa.address,
@@ -467,7 +467,7 @@ const checkPostIsUpgradedStorage = async (poa, reg, pmr) => {
   } = parseProxyCommonStorage(storage, true)
   // common storage
   const {
-    actualBroker,
+    actualIssuer,
     actualCustodian,
     actualFiatCurrency32,
     commonTotalSupply,
@@ -584,7 +584,7 @@ const checkPostIsUpgradedStorage = async (poa, reg, pmr) => {
     '0',
     'fundedFiatAmountInCents should be 0'
   )
-  assert.equal(actualBroker, broker, 'actualBroker should match broker')
+  assert.equal(actualIssuer, issuer, 'actualIssuer should match issuer')
 
   // get needed mapping storage for testing
   const investmentPerUserInWei = await getMappingStorage(

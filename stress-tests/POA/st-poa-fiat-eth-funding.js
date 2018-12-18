@@ -7,13 +7,13 @@ const {
   setupPoaProxyAndEcosystem,
   testStartFiatSale,
   testStartEthSale,
-  broker,
+  issuer,
   custodian,
   testUpdateProofOfCustody,
   defaultIpfsHashArray32,
   testPayActivationFee,
   testActivate,
-  testBrokerClaim,
+  testIssuerClaim,
   testClaimAllPayouts,
   testPayout,
   defaultFiatCurrency,
@@ -79,7 +79,7 @@ describe('PoaToken Stress Tests - test fiat & eth funding only', () => {
           .toString()} ${defaultFiatCurrency} remains`
       )
 
-      await testStartFiatSale(poa, { from: broker, gasPrice })
+      await testStartFiatSale(poa, { from: issuer, gasPrice })
       await fundFiatUntilRemainingTarget(
         poa,
         target,
@@ -149,8 +149,8 @@ describe('PoaToken Stress Tests - test fiat & eth funding only', () => {
       })
     })
 
-    it('should let Broker Claim', async () => {
-      await testBrokerClaim(poa)
+    it('should let Issuer Claim', async () => {
+      await testIssuerClaim(poa)
     })
 
     it('should payout many times', async () => {
@@ -158,7 +158,7 @@ describe('PoaToken Stress Tests - test fiat & eth funding only', () => {
         // A random amount between 1 ETH and 3 ETH
         const payout = getRandomBigInt(new BigNumber(1e18), new BigNumber(3e18))
         await testPayout(poa, fmr, {
-          from: broker,
+          from: issuer,
           value: payout,
           gasPrice,
         })

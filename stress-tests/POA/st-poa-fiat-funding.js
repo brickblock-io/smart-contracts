@@ -10,7 +10,7 @@ const {
   determineNeededTimeTravel,
   setupPoaProxyAndEcosystem,
   testStartFiatSale,
-  broker,
+  issuer,
   custodian,
   testBuyTokensWithFiat,
   getRemainingAmountInCentsDuringFiatFunding,
@@ -18,7 +18,7 @@ const {
   defaultIpfsHashArray32,
   testPayActivationFee,
   testActivate,
-  testBrokerClaim,
+  testIssuerClaim,
   testClaimAllPayouts,
   testPayout,
   defaultFiatCurrency,
@@ -58,7 +58,7 @@ describe('PoaToken Stress Tests - test fiat funding only', () => {
       const neededTime = await determineNeededTimeTravel(poa)
 
       await timeTravel(neededTime)
-      await testStartFiatSale(poa, { from: broker, gasPrice })
+      await testStartFiatSale(poa, { from: issuer, gasPrice })
     })
 
     it('should fund with random amounts with many investors', async () => {
@@ -115,7 +115,7 @@ describe('PoaToken Stress Tests - test fiat funding only', () => {
       for (let i = 0; i < 10; i++) {
         const payout = getRandomBigInt(new BigNumber(1e18), new BigNumber(3e18))
         await testPayout(poa, fmr, {
-          from: broker,
+          from: issuer,
           value: getRandomBigInt(new BigNumber(1e18), new BigNumber(3e18)),
           gasPrice,
         })
@@ -123,8 +123,8 @@ describe('PoaToken Stress Tests - test fiat funding only', () => {
       }
     })
 
-    it('should NOT let broker claim, because there are no ETH funders', async () => {
-      await testWillThrow(testBrokerClaim, [poa])
+    it('should NOT let issuer claim, because there are no ETH funders', async () => {
+      await testWillThrow(testIssuerClaim, [poa])
     })
 
     it('should let investors claim', async () => {

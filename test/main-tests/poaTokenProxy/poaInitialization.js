@@ -1,5 +1,5 @@
 const {
-  broker,
+  issuer,
   custodian,
   defaultFiatCurrency,
   defaultFundingGoal,
@@ -31,7 +31,7 @@ const makeProxyInitializationArguments = async (customValues = {}) => [
   customValues.durationForActivationPeriod || defaultActivationDuration,
   customValues.fundingGoal || defaultFundingGoal,
   {
-    from: customValues.from || broker,
+    from: customValues.from || issuer,
   },
 ]
 
@@ -111,7 +111,7 @@ describe('when initializing PoaToken', () => {
         ])
       })
 
-      it('should NOT initialize when NOT sent from listed broker', async () => {
+      it('should NOT initialize when NOT sent from listed issuer', async () => {
         await testWillThrow(testProxyInitialization, [
           reg,
           pmr,

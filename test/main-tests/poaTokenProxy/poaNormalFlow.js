@@ -1,10 +1,10 @@
 const {
-  broker,
+  issuer,
   custodian,
   defaultIpfsHashArray32,
   setupPoaProxyAndEcosystem,
   testActivate,
-  testBrokerClaim,
+  testIssuerClaim,
   testBuyRemainingTokens,
   testBuyTokens,
   testClaimAllPayouts,
@@ -30,7 +30,7 @@ describe("when going through Poa's normal flow", async () => {
     })
 
     it("should move from 'Preview' to 'PreFunding' stage", async () => {
-      await testStartPreFunding(poa, { from: broker, gasPrice })
+      await testStartPreFunding(poa, { from: issuer, gasPrice })
     })
 
     it('should move from PreFunding to EthFunding after startTimeForEthFundingPeriod', async () => {
@@ -61,7 +61,7 @@ describe("when going through Poa's normal flow", async () => {
       })
     })
 
-    it('broker should pay initial fee', async () => {
+    it('issuer should pay initial fee', async () => {
       await testPayActivationFee(poa, fmr)
     })
 
@@ -71,13 +71,13 @@ describe("when going through Poa's normal flow", async () => {
       })
     })
 
-    it('should claim contract funding as broker', async () => {
-      await testBrokerClaim(poa)
+    it('should claim contract funding as issuer', async () => {
+      await testIssuerClaim(poa)
     })
 
-    it('should allow payouts by broker', async () => {
+    it('should allow payouts by issuer', async () => {
       await testPayout(poa, fmr, {
-        from: broker,
+        from: issuer,
         value: 2e18,
         gasPrice,
       })

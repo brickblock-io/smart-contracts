@@ -29,13 +29,13 @@ describe('when creating a new instance of the contract', () => {
   })
 })
 
-describe('when calling broker functions', () => {
+describe('when calling issuer functions', () => {
   contract('PoaManager', accounts => {
     let pmr
     // used for testing happy path (paired with owner address)
-    const addedBroker = accounts[1]
+    const addedIssuer = accounts[1]
     // used to testing listing / delisting and unhappy path (paired with notOwner address)
-    const anotherBroker = accounts[2]
+    const anotherIssuer = accounts[2]
     const notOwner = accounts[9]
 
     before('setup contract state', async () => {
@@ -43,114 +43,114 @@ describe('when calling broker functions', () => {
       pmr = contracts.pmr
     })
 
-    it('should be created with an empty brokerAddressList', async () => {
-      const actual = await pmr.getBrokerAddressList()
+    it('should be created with an empty issuerAddressList', async () => {
+      const actual = await pmr.getIssuerAddressList()
       const expected = []
       assert.deepEqual(actual, expected, 'list should be empty')
     })
 
-    describe('when adding a broker', () => {
-      it('isRegisteredBroker should return false before adding a broker', async () => {
-        const isRegisteredBroker = await pmr.isRegisteredBroker(addedBroker)
+    describe('when adding an issuer', () => {
+      it('isRegisteredIssuer should return false before adding an issuer', async () => {
+        const isRegisteredIssuer = await pmr.isRegisteredIssuer(addedIssuer)
 
         assert.equal(
-          isRegisteredBroker,
+          isRegisteredIssuer,
           false,
-          'isRegisteredBroker should return false'
+          'isRegisteredIssuer should return false'
         )
       })
 
-      it('should emit BrokerAdded', async () => {
+      it('should emit IssuerAdded', async () => {
         checkForEvent(
-          'BrokerAdded',
+          'IssuerAdded',
           {
-            broker: addedBroker,
+            issuer: addedIssuer,
           },
-          await pmr.addBroker(addedBroker)
+          await pmr.addIssuer(addedIssuer)
         )
       })
 
-      it('isRegisteredBroker should return true after adding a broker', async () => {
-        const isRegisteredBroker = await pmr.isRegisteredBroker(addedBroker)
+      it('isRegisteredIssuer should return true after adding an issuer', async () => {
+        const isRegisteredIssuer = await pmr.isRegisteredIssuer(addedIssuer)
 
         assert.equal(
-          isRegisteredBroker,
+          isRegisteredIssuer,
           true,
-          'isRegisteredBroker should return true'
+          'isRegisteredIssuer should return true'
         )
       })
 
-      it('should include new broker in brokerAddressList', async () => {
-        const actual = await pmr.getBrokerAddressList()
-        const expected = [addedBroker]
+      it('should include new issuer in issuerAddressList', async () => {
+        const actual = await pmr.getIssuerAddressList()
+        const expected = [addedIssuer]
         assert.deepEqual(
           actual,
           expected,
-          'brokerAddressList should contain addedBroker'
+          'issuerAddressList should contain addedIssuer'
         )
       })
 
-      it('should set active value to true after adding broker', async () => {
-        const actual = await pmr.getBrokerStatus(addedBroker)
+      it('should set active value to true after adding issuer', async () => {
+        const actual = await pmr.getIssuerStatus(addedIssuer)
         const expected = true
-        assert.equal(actual, expected, 'addedBroker starts listed')
+        assert.equal(actual, expected, 'addedIssuer starts listed')
       })
 
-      it('should error when trying to add a broker from notOwner address', async () => {
-        await testWillThrow(pmr.addBroker, [
-          anotherBroker,
+      it('should error when trying to add an issuer from notOwner address', async () => {
+        await testWillThrow(pmr.addIssuer, [
+          anotherIssuer,
           {
             from: notOwner,
           },
         ])
       })
 
-      it('should allow for more brokers to be added', async () => {
-        await pmr.addBroker(anotherBroker)
+      it('should allow for more issuers to be added', async () => {
+        await pmr.addIssuer(anotherIssuer)
 
-        const actual = await pmr.getBrokerAddressList()
-        const expected = [addedBroker, anotherBroker]
+        const actual = await pmr.getIssuerAddressList()
+        const expected = [addedIssuer, anotherIssuer]
         assert.deepEqual(
           actual,
           expected,
-          'brokerAddressList should contain all added brokers'
+          'issuerAddressList should contain all added issuers'
         )
       })
 
-      it('should error when trying to add a broker that has already been added', async () => {
-        await testWillThrow(pmr.addBroker, [anotherBroker])
+      it('should error when trying to add an issuer that has already been added', async () => {
+        await testWillThrow(pmr.addIssuer, [anotherIssuer])
       })
     })
 
-    describe('when delisting a broker', () => {
-      it('should emit BrokerStatusChanged', async () => {
+    describe('when delisting an issuer', () => {
+      it('should emit IssuerStatusChanged', async () => {
         checkForEvent(
-          'BrokerStatusChanged',
+          'IssuerStatusChanged',
           {
-            broker: addedBroker,
+            issuer: addedIssuer,
             active: false,
           },
-          await pmr.delistBroker(addedBroker)
+          await pmr.delistIssuer(addedIssuer)
         )
       })
 
       it('should set active value to false after delisting', async () => {
-        const actual = await pmr.getBrokerStatus(addedBroker)
+        const actual = await pmr.getIssuerStatus(addedIssuer)
         const expected = false
         assert.equal(
           actual,
           expected,
-          'delisted broker has active value set to false'
+          'delisted issuer has active value set to false'
         )
       })
 
-      it('should error when trying to delist a broker address that is already delisted', async () => {
-        await testWillThrow(pmr.delistBroker, [addedBroker])
+      it('should error when trying to delist an issuer address that is already delisted', async () => {
+        await testWillThrow(pmr.delistIssuer, [addedIssuer])
       })
 
-      it('should error when trying to delist a broker from notOwner address', async () => {
-        await testWillThrow(pmr.delistBroker, [
-          anotherBroker,
+      it('should error when trying to delist an issuer from notOwner address', async () => {
+        await testWillThrow(pmr.delistIssuer, [
+          anotherIssuer,
           {
             from: notOwner,
           },
@@ -158,35 +158,35 @@ describe('when calling broker functions', () => {
       })
     })
 
-    describe('when listing a broker', () => {
-      it('should emit BrokerStatusChanged', async () => {
+    describe('when listing an issuer', () => {
+      it('should emit IssuerStatusChanged', async () => {
         checkForEvent(
-          'BrokerStatusChanged',
+          'IssuerStatusChanged',
           {
-            broker: addedBroker,
+            issuer: addedIssuer,
             active: true,
           },
-          await pmr.listBroker(addedBroker)
+          await pmr.listIssuer(addedIssuer)
         )
       })
 
       it('should set active value to true after listing', async () => {
-        const actual = await pmr.getBrokerStatus(addedBroker)
+        const actual = await pmr.getIssuerStatus(addedIssuer)
         const expected = true
         assert.equal(
           actual,
           expected,
-          'listed broker has active value set to true'
+          'listed issuer has active value set to true'
         )
       })
 
-      it('should error when trying to list a broker address that is already listed', async () => {
-        await testWillThrow(pmr.listBroker, [addedBroker])
+      it('should error when trying to list an issuer address that is already listed', async () => {
+        await testWillThrow(pmr.listIssuer, [addedIssuer])
       })
 
-      it('should error when trying to list a broker from notOwner address', async () => {
-        await testWillThrow(pmr.listBroker, [
-          anotherBroker,
+      it('should error when trying to list an issuer from notOwner address', async () => {
+        await testWillThrow(pmr.listIssuer, [
+          anotherIssuer,
           {
             from: notOwner,
           },
@@ -194,54 +194,54 @@ describe('when calling broker functions', () => {
       })
     })
 
-    describe('when removing a broker', () => {
-      it('should emit BrokerRemoved', async () => {
+    describe('when removing an issuer', () => {
+      it('should emit IssuerRemoved', async () => {
         checkForEvent(
-          'BrokerRemoved',
+          'IssuerRemoved',
           {
-            broker: addedBroker,
+            issuer: addedIssuer,
           },
-          await pmr.removeBroker(addedBroker)
+          await pmr.removeIssuer(addedIssuer)
         )
       })
 
-      it('should remove broker from brokerAddressList', async () => {
-        const actual = await pmr.getBrokerAddressList()
-        const expected = [anotherBroker]
+      it('should remove issuer from issuerAddressList', async () => {
+        const actual = await pmr.getIssuerAddressList()
+        const expected = [anotherIssuer]
         assert.deepEqual(
           actual,
           expected,
-          'brokerAddressList should not contain addedBroker'
+          'issuerAddressList should not contain addedIssuer'
         )
       })
 
-      it('should error when trying to getBrokerStatus of removed broker', async () => {
-        await testWillThrow(pmr.getBrokerStatus, [addedBroker])
+      it('should error when trying to getIssuerStatus of removed issuer', async () => {
+        await testWillThrow(pmr.getIssuerStatus, [addedIssuer])
       })
 
-      it('should error when trying to remove a broker from notOwner address', async () => {
-        await testWillThrow(pmr.removeBroker, [
-          anotherBroker,
+      it('should error when trying to remove an issuer from notOwner address', async () => {
+        await testWillThrow(pmr.removeIssuer, [
+          anotherIssuer,
           {
             from: notOwner,
           },
         ])
       })
 
-      it('should allow for all brokers to be removed', async () => {
-        await pmr.removeBroker(anotherBroker)
+      it('should allow for all issuers to be removed', async () => {
+        await pmr.removeIssuer(anotherIssuer)
 
-        const actual = await pmr.getBrokerAddressList()
+        const actual = await pmr.getIssuerAddressList()
         const expected = []
         assert.deepEqual(
           actual,
           expected,
-          'brokerAddressList should not contain removed brokers'
+          'issuerAddressList should not contain removed issuers'
         )
       })
 
-      it('should error when trying to remove a broker that has already been removed', async () => {
-        await testWillThrow(pmr.removeBroker, [anotherBroker])
+      it('should error when trying to remove an issuer that has already been removed', async () => {
+        await testWillThrow(pmr.removeIssuer, [anotherIssuer])
       })
     })
   })
@@ -255,17 +255,17 @@ describe('when calling token functions', () => {
     let addedToken
     // used to testing listing / delisting and unhappy path (paired with notOwner address)
     let anotherToken
-    const listedBroker = accounts[1]
-    const delistedBroker = accounts[2]
-    const notBroker = accounts[8]
+    const listedIssuer = accounts[1]
+    const delistedIssuer = accounts[2]
+    const notIssuer = accounts[8]
     const notOwner = accounts[9]
 
     before('setup contract state', async () => {
       const contracts = await setupPoaManager()
       pmr = contracts.pmr
-      await pmr.addBroker(listedBroker)
-      await pmr.addBroker(delistedBroker)
-      await pmr.delistBroker(delistedBroker)
+      await pmr.addIssuer(listedIssuer)
+      await pmr.addIssuer(delistedIssuer)
+      await pmr.delistIssuer(delistedIssuer)
     })
 
     it('should be created with an empty tokenAddressList', async () => {
@@ -277,7 +277,7 @@ describe('when calling token functions', () => {
     describe('when adding a token', () => {
       it('should emit TokenAdded', async () => {
         const { txReceipt, tokenAddress } = await addToken(pmr, {
-          from: listedBroker,
+          from: listedIssuer,
         })
 
         // setting this here for use in following tests in this contract block
@@ -320,7 +320,7 @@ describe('when calling token functions', () => {
 
       it('should allow for more tokens to be added', async () => {
         const { tokenAddress } = await addToken(pmr, {
-          from: listedBroker,
+          from: listedIssuer,
         })
 
         // setting this here for use in following tests in this contract block
@@ -335,20 +335,20 @@ describe('when calling token functions', () => {
         )
       })
 
-      it('should error when trying to add a token from a delisted broker address', async () => {
+      it('should error when trying to add a token from a delisted issuer address', async () => {
         await testWillThrow(addToken, [
           pmr,
           {
-            from: delistedBroker,
+            from: delistedIssuer,
           },
         ])
       })
 
-      it('should error when trying to add a token from a non broker address', async () => {
+      it('should error when trying to add a token from a non issuer address', async () => {
         await testWillThrow(addToken, [
           pmr,
           {
-            from: notBroker,
+            from: notIssuer,
           },
         ])
       })
@@ -485,7 +485,7 @@ describe('when calling token convenience functions', () => {
     let fmr
     const owner = accounts[0]
     // must be accounts[1] in order to work with poa helpers
-    const broker = accounts[1]
+    const issuer = accounts[1]
     const notOwner = accounts[2]
     let addedToken
 
@@ -494,9 +494,9 @@ describe('when calling token convenience functions', () => {
       pmr = contracts.pmr
       fmr = contracts.fmr
 
-      await pmr.addBroker(broker)
+      await pmr.addIssuer(issuer)
       const { tokenAddress: addedTokenAddress } = await addToken(pmr, {
-        from: broker,
+        from: issuer,
       })
       await pmr.listToken(addedTokenAddress, {
         from: owner,

@@ -81,7 +81,7 @@ All notable changes to this project will be documented in this file. See [standa
 
 * Minor changes to POA cancel and timeout conditions. Improved tests ([1114224](https://git.brickblock-dev.io/platform/smart-contracts/commits/1114224))
 * Minor changes to POA cancel and timeout conditions. Improved tests ([acd234d](https://git.brickblock-dev.io/platform/smart-contracts/commits/acd234d))
-* Updated CLI tool to work with new time variables. Added Broker address as argument [skip ci] ([acac3ad](https://git.brickblock-dev.io/platform/smart-contracts/commits/acac3ad))
+* Updated CLI tool to work with new time variables. Added Issuer address as argument [skip ci] ([acac3ad](https://git.brickblock-dev.io/platform/smart-contracts/commits/acac3ad))
 
 
 
@@ -542,8 +542,8 @@ All notable changes to this project will be documented in this file. See [standa
 ### Features
 
 * BrickblockAccount uses timestamp as a time lock to successfully call withdrawBbkFunds ([bd96048](https://git.brickblock-dev.io/platform/smart-contracts/commits/bd96048))
-* **POA:** move broker getter/setter to POACommon, add `onlyBroker` modifier, switch `payout()` from `onlyCustodian` to `onlyBroker` ([581a03c](https://git.brickblock-dev.io/platform/smart-contracts/commits/581a03c))
-* **POA:** switch `startFiatSale` from `onlyCustodian` to `onlyBroker` (+ some name consolidation between fiatSale / fiatPreSale / sale / ethSale / Funding / Eth Funding…) ([93a5fcb](https://git.brickblock-dev.io/platform/smart-contracts/commits/93a5fcb))
+* **POA:** move issuer getter/setter to POACommon, add `onlyIssuer` modifier, switch `payout()` from `onlyCustodian` to `onlyIssuer` ([581a03c](https://git.brickblock-dev.io/platform/smart-contracts/commits/581a03c))
+* **POA:** switch `startFiatSale` from `onlyCustodian` to `onlyIssuer` (+ some name consolidation between fiatSale / fiatPreSale / sale / ethSale / Funding / Eth Funding…) ([93a5fcb](https://git.brickblock-dev.io/platform/smart-contracts/commits/93a5fcb))
 
 
 
@@ -609,7 +609,7 @@ All notable changes to this project will be documented in this file. See [standa
 ### Features
 
 * any token state is allowed for token convenience functions on PoaManager ([cabc707](https://git.brickblock-dev.io/platform/smart-contracts/commits/cabc707))
-* EntityState implementation for storing broker and token information in PoaManager ([d7e7491](https://git.brickblock-dev.io/platform/smart-contracts/commits/d7e7491))
+* EntityState implementation for storing issuer and token information in PoaManager ([d7e7491](https://git.brickblock-dev.io/platform/smart-contracts/commits/d7e7491))
 * PoaManager has functions for pausing and terminating PoaTokens ([ea99026](https://git.brickblock-dev.io/platform/smart-contracts/commits/ea99026))
 * version number for POAManager ([212ad6e](https://git.brickblock-dev.io/platform/smart-contracts/commits/212ad6e))
 

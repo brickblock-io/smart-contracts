@@ -1,6 +1,6 @@
 const {
   bbkContributors,
-  broker,
+  issuer,
   custodian,
   defaultBuyAmount,
   defaultIpfsHashArray32,
@@ -10,7 +10,7 @@ const {
   testActivate,
   testActiveBalances,
   testApprove,
-  testBrokerClaim,
+  testIssuerClaim,
   testBuyRemainingTokens,
   testBuyTokens,
   testClaim,
@@ -46,7 +46,7 @@ describe("when in 'Active' stage", () => {
       pmr = contracts.pmr
 
       // move from `Preview` to `PreFunding` stage
-      await testStartPreFunding(poa, { from: broker, gasPrice })
+      await testStartPreFunding(poa, { from: issuer, gasPrice })
 
       await timeTravelToEthFundingPeriod(poa)
 
@@ -90,8 +90,8 @@ describe("when in 'Active' stage", () => {
         from: custodian,
       })
 
-      // clean out broker balance for easier debugging
-      await testBrokerClaim(poa)
+      // clean out issuer balance for easier debugging
+      await testIssuerClaim(poa)
     })
 
     it('should have correct token balances once in Active stage', async () => {
@@ -185,20 +185,20 @@ describe("when in 'Active' stage", () => {
       ])
     })
 
-    it('should payout as broker OR custodian', async () => {
-      await testPayout(poa, fmr, { value: 2e18, from: broker, gasPrice })
+    it('should payout as issuer OR custodian', async () => {
+      await testPayout(poa, fmr, { value: 2e18, from: issuer, gasPrice })
       await testPayout(poa, fmr, { value: 2e18, from: custodian, gasPrice })
     })
 
-    it('should NOT payout as broker if payout is too low', async () => {
+    it('should NOT payout as issuer if payout is too low', async () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { value: 100, from: broker, gasPrice },
+        { value: 100, from: issuer, gasPrice },
       ])
     })
 
-    it('should NOT payout as NOT broker or custodian', async () => {
+    it('should NOT payout as NOT issuer or custodian', async () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,

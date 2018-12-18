@@ -1,6 +1,6 @@
 const {
   bbkContributors,
-  broker,
+  issuer,
   custodian,
   defaultIpfsHashArray32,
   owner,
@@ -40,7 +40,7 @@ describe("when in 'PreFunding' stage", async () => {
       pmr = contracts.pmr
 
       // move from `Pending` to `PreFunding` stage
-      await testStartPreFunding(poa, { from: broker, gasPrice })
+      await testStartPreFunding(poa, { from: issuer, gasPrice })
     })
 
     it('should start paused', async () => {
@@ -87,11 +87,11 @@ describe("when in 'PreFunding' stage", async () => {
       ])
     })
 
-    it('should NOT payout, even if broker', async () => {
+    it('should NOT payout, even if issuer', async () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { from: broker, value: 1e18, gasPrice },
+        { from: issuer, value: 1e18, gasPrice },
       ])
     })
 
@@ -160,7 +160,7 @@ describe("when in 'PreFunding' stage", async () => {
 
     it("should NOT move to 'FiatFunding' stage by ANYONE", async () => {
       await Promise.all(
-        [broker, custodian, owner, whitelistedEthInvestors[0]].map(
+        [issuer, custodian, owner, whitelistedEthInvestors[0]].map(
           async fromAddress => {
             await testWillThrow(testStartFiatSale, [
               poa,
@@ -173,7 +173,7 @@ describe("when in 'PreFunding' stage", async () => {
 
     it("should NOT move to 'EthFunding' stage by ANYONE", async () => {
       await Promise.all(
-        [broker, custodian, owner, whitelistedEthInvestors[0]].map(
+        [issuer, custodian, owner, whitelistedEthInvestors[0]].map(
           async fromAddress => {
             await testWillThrow(testStartEthSale, [
               poa,
@@ -195,7 +195,7 @@ describe("when in 'PreFunding' stage and funding periods are reached", async () 
       poa = contracts.poa
 
       // move from `Pending` to `PreFunding` stage
-      await testStartPreFunding(poa, { from: broker, gasPrice })
+      await testStartPreFunding(poa, { from: issuer, gasPrice })
     })
 
     it("should move to 'FiatFunding' stage by ANYONE when startTimeForFundingPeriod is reached", async () => {

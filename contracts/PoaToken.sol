@@ -97,9 +97,9 @@ contract PoaToken is PoaCommon {
     _;
   }
 
-  modifier eitherBrokerOrCustodian() {
+  modifier eitherIssuerOrCustodian() {
     require(
-      msg.sender == broker ||
+      msg.sender == issuer ||
       msg.sender == custodian
     );
     _;
@@ -124,7 +124,7 @@ contract PoaToken is PoaCommon {
   function initializeToken(
     bytes32 _name32, // bytes32 of name string
     bytes32 _symbol32, // bytes32 of symbol string
-    address _broker,
+    address _issuer,
     address _custodian,
     address _registry,
     uint256 _totalSupply // token total supply
@@ -138,7 +138,7 @@ contract PoaToken is PoaCommon {
     // validate and initialize parameters in sequential storage
     setName(_name32);
     setSymbol(_symbol32);
-    setBrokerAddress(_broker);
+    setIssuerAddress(_issuer);
     setCustodianAddress(_custodian);
     setTotalSupply(_totalSupply);
 
@@ -157,12 +157,12 @@ contract PoaToken is PoaCommon {
 
   /**
    * @notice Update name for POA Token
-   * @dev Only allowed in `Stages.Preview` by Broker
+   * @dev Only allowed in `Stages.Preview` by Issuer
    * @param _newName32 The new name
    */
   function updateName(bytes32 _newName32)
     external
-    onlyBroker
+    onlyIssuer
     atStage(Stages.Preview)
   {
     setName(_newName32);
@@ -170,38 +170,38 @@ contract PoaToken is PoaCommon {
 
   /**
    * @notice Update symbol for POA Token
-   * @dev Only allowed in `Stages.Preview` by Broker
+   * @dev Only allowed in `Stages.Preview` by Issuer
    * @param _newSymbol32 The new symbol
    */
   function updateSymbol(bytes32 _newSymbol32)
     external
-    onlyBroker
+    onlyIssuer
     atStage(Stages.Preview)
   {
     setSymbol(_newSymbol32);
   }
 
   /**
-   * @notice Update Broker address for POA Token
-   * @dev Only allowed in `Stages.Preview` by Broker
-   * @param _newBroker The new Broker address
+   * @notice Update Issuer address for POA Token
+   * @dev Only allowed in `Stages.Preview` by Issuer
+   * @param _newIssuer The new Issuer address
    */
-  function updateBrokerAddress(address _newBroker)
+  function updateIssuerAddress(address _newIssuer)
     external
-    onlyBroker
+    onlyIssuer
     atStage(Stages.Preview)
   {
-    setBrokerAddress(_newBroker);
+    setIssuerAddress(_newIssuer);
   }
 
   /**
    * @notice Update total supply for POA Token
-   * @dev Only allowed in `Stages.Preview` by Broker
+   * @dev Only allowed in `Stages.Preview` by Issuer
    * @param _newTotalSupply The new total supply
    */
   function updateTotalSupply(uint256 _newTotalSupply)
     external
-    onlyBroker
+    onlyIssuer
     atStage(Stages.Preview)
   {
     setTotalSupply(_newTotalSupply);
@@ -242,16 +242,16 @@ contract PoaToken is PoaCommon {
   }
 
   /**
-   * @notice Set Broker address for POA Token
-   * @param _newBroker The new Broker address
+   * @notice Set Issuer address for POA Token
+   * @param _newIssuer The new Issuer address
    */
-  function setBrokerAddress(address _newBroker)
+  function setIssuerAddress(address _newIssuer)
     internal
   {
-    require(_newBroker != address(0));
-    require(_newBroker != broker);
+    require(_newIssuer != address(0));
+    require(_newIssuer != issuer);
 
-    broker = _newBroker;
+    issuer = _newIssuer;
   }
 
   /**
@@ -320,12 +320,12 @@ contract PoaToken is PoaCommon {
    * @notice Move from `Stages.Preview` to `Stages.PreFunding`
    * @dev After calling this function, the token parameters
    *      become immutable
-   * @dev Only allowed in `Stages.Preview` by Broker
+   * @dev Only allowed in `Stages.Preview` by Issuer
    * @dev We need to revalidate the time-related token parameters here
   */
   function startPreFunding()
     external
-    onlyBroker
+    onlyIssuer
     atStage(Stages.Preview)
     returns (bool)
   {
@@ -489,7 +489,7 @@ contract PoaToken is PoaCommon {
   function payout()
     external
     payable
-    eitherBrokerOrCustodian
+    eitherIssuerOrCustodian
     atEitherStage(Stages.Active, Stages.Terminated)
     returns (bool)
   {

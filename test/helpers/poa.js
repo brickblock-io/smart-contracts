@@ -47,7 +47,7 @@ const stages = {
 
 const accounts = web3.eth.accounts
 const owner = accounts[0]
-const broker = accounts[1]
+const issuer = accounts[1]
 const custodian = accounts[2]
 const bbkBonusAddress = accounts[3]
 const bbkContributors = accounts.slice(4, 6)
@@ -276,8 +276,8 @@ const setupPoaProxyAndEcosystem = async () => {
   // add to registry for use by PoaManager and PoaToken proxies
   await reg.updateContractAddress('PoaTokenMaster', poatm.address)
   await reg.updateContractAddress('PoaCrowdsaleMaster', poacm.address)
-  // add broker to allow for adding a new token from PoaManager
-  await pmr.addBroker(broker)
+  // add issuer to allow for adding a new token from PoaManager
+  await pmr.addIssuer(issuer)
 
   // Poa PoaProxy contract
   const poaTx = await pmr.addToken(
@@ -292,7 +292,7 @@ const setupPoaProxyAndEcosystem = async () => {
     defaultActivationDuration,
     defaultFundingGoal,
     {
-      from: broker,
+      from: issuer,
     }
   )
 
@@ -329,8 +329,8 @@ const testProxyInitialization = async (reg, pmr, args) => {
     config,
   ] = args
 
-  // list broker
-  await pmr.addBroker(broker)
+  // list issuer
+  await pmr.addIssuer(issuer)
 
   // create new master poa contracts
   const poatm = await PoaToken.new()
@@ -367,9 +367,9 @@ const testProxyInitialization = async (reg, pmr, args) => {
     'fiatCurrency should match that given in constructor'
   )
   assert.equal(
-    await poa.broker(),
+    await poa.issuer(),
     config.from,
-    'broker should match sender of transaction'
+    'issuer should match sender of transaction'
   )
   assert.equal(
     await poa.custodian(),
@@ -470,7 +470,7 @@ const testInitialization = async (exr, exp, reg, pmr) => {
     defaultName,
     defaultSymbol,
     defaultFiatCurrency,
-    broker,
+    issuer,
     custodian,
     reg.address,
     defaultTotalSupply,
@@ -485,7 +485,7 @@ const testInitialization = async (exr, exp, reg, pmr) => {
   const symbol = await poa.symbol()
   const proofOfCustody = await poa.proofOfCustody()
   const fiatCurrency = await poa.fiatCurrency()
-  const actualBroker = await poa.broker()
+  const actualIssuer = await poa.issuer()
   const actualCustodian = await poa.custodian()
   const decimals = await poa.decimals()
   const feeRateInPermille = await poa.feeRateInPermille()
@@ -515,9 +515,9 @@ const testInitialization = async (exr, exp, reg, pmr) => {
     'fiatCurrency should match that given in constructor'
   )
   assert.equal(
-    actualBroker,
-    broker,
-    'actualBroker should match broker in constructor'
+    actualIssuer,
+    issuer,
+    'actualIssuer should match issuer in constructor'
   )
   assert.equal(
     actualCustodian,
@@ -624,16 +624,16 @@ const testUpdateSymbol = async (poa, newSymbol, config = {}) => {
   assert.equal(newSymbol, postSymbol.toString(), 'symbol32 should be updated')
 }
 
-const testUpdateBrokerAddress = async (poa, newBrokerAddress, config = {}) => {
+const testUpdateIssuerAddress = async (poa, newIssuerAddress, config = {}) => {
   assert(!!config.from, "'from' must be defined in the config object")
 
-  await poa.updateBrokerAddress(newBrokerAddress, config)
-  const postBrokerAddress = await poa.broker()
+  await poa.updateIssuerAddress(newIssuerAddress, config)
+  const postIssuerAddress = await poa.issuer()
 
   assert.equal(
-    newBrokerAddress,
-    postBrokerAddress.toString(),
-    'broker address should be updated'
+    newIssuerAddress,
+    postIssuerAddress.toString(),
+    'issuer address should be updated'
   )
 }
 
@@ -1150,7 +1150,7 @@ const testBuyRemainingTokens = async (poa, config) => {
 const testPayActivationFee = async (
   poa,
   fmr,
-  { value, from = broker } = {}
+  { value, from = issuer } = {}
 ) => {
   const paidFeeAmount = value || (await poa.calculateTotalFee())
   const preIsActivationFeePaid = await poa.isActivationFeePaid.call()
@@ -1193,13 +1193,13 @@ const testActivate = async (poa, fmr, config) => {
   const contractBalance = await getEtherBalance(poa.address)
   const preStage = await poa.stage()
   const prePaused = await poa.paused()
-  const preBrokerPayouts = await poa.currentPayout(broker, true)
+  const preIssuerPayouts = await poa.currentPayout(issuer, true)
 
   await poa.activate(config)
 
   const postStage = await poa.stage()
   const postPaused = await poa.paused()
-  const postBrokerPayouts = await poa.currentPayout(broker, true)
+  const postIssuerPayouts = await poa.currentPayout(issuer, true)
 
   assert.equal(
     preStage.toString(),
@@ -1216,29 +1216,29 @@ const testActivate = async (poa, fmr, config) => {
   assert(!postPaused, 'should not be paused after activation')
 
   assert.equal(
-    postBrokerPayouts.sub(preBrokerPayouts).toString(),
+    postIssuerPayouts.sub(preIssuerPayouts).toString(),
     contractBalance.toString(),
-    'contract balance after fee has been paid should be claimable by broker'
+    'contract balance after fee has been paid should be claimable by issuer'
   )
 }
 
-const testBrokerClaim = async poa => {
+const testIssuerClaim = async poa => {
   const preContractBalance = await getEtherBalance(poa.address)
-  const preBrokerBalance = await getEtherBalance(broker)
+  const preIssuerBalance = await getEtherBalance(issuer)
 
-  const tx = await poa.claim({ from: broker, gasPrice })
+  const tx = await poa.claim({ from: issuer, gasPrice })
 
   const postContractBalance = await getEtherBalance(poa.address)
-  const postBrokerBalance = await getEtherBalance(broker)
+  const postIssuerBalance = await getEtherBalance(issuer)
   const gasUsed = await getGasUsed(tx)
-  const expectedPostBrokerBalance = preBrokerBalance
+  const expectedPostIssuerBalance = preIssuerBalance
     .add(preContractBalance)
     .sub(new BigNumber(gasUsed).mul(gasPrice))
 
   assert.equal(
-    postBrokerBalance.toString(),
-    expectedPostBrokerBalance.toString(),
-    'postBrokerBalance should match expectedPostBrokerBalance'
+    postIssuerBalance.toString(),
+    expectedPostIssuerBalance.toString(),
+    'postIssuerBalance should match expectedPostIssuerBalance'
   )
   assert.equal(
     postContractBalance.toString(),
@@ -1264,7 +1264,7 @@ const testPayout = async (poa, fmr, config) => {
   )
 
   const preContractTotalTokenPayout = await poa.totalPerTokenPayout()
-  const preBrokerEtherBalance = await getEtherBalance(broker)
+  const preIssuerEtherBalance = await getEtherBalance(issuer)
   const preCustodianEtherBalance = await getEtherBalance(custodian)
   const preContractEtherBalance = await getEtherBalance(poa.address)
   const preFeeManagerEtherBalance = await getEtherBalance(fmr.address)
@@ -1291,16 +1291,16 @@ const testPayout = async (poa, fmr, config) => {
     'totalPerTokenPayout should match the expected value'
   )
 
-  if (config.from === broker) {
-    const actualBrokerEtherBalance = await getEtherBalance(broker)
-    const expectedBrokerEtherBalance = preBrokerEtherBalance
+  if (config.from === issuer) {
+    const actualIssuerEtherBalance = await getEtherBalance(issuer)
+    const expectedIssuerEtherBalance = preIssuerEtherBalance
       .sub(gasPrice.mul(gasUsed))
       .sub(payoutValue)
 
     assert.equal(
-      expectedBrokerEtherBalance.toString(),
-      actualBrokerEtherBalance.toString(),
-      "expected broker's ether balance should match actual after payout"
+      expectedIssuerEtherBalance.toString(),
+      actualIssuerEtherBalance.toString(),
+      "expected issuer's ether balance should match actual after payout"
     )
   } else if (config.from === custodian) {
     const actualCustodianEtherBalance = await getEtherBalance(custodian)
@@ -1315,7 +1315,7 @@ const testPayout = async (poa, fmr, config) => {
     )
   } else {
     throw new Error(
-      'Payouts can only be done by the broker or custodian of this POA contract!'
+      'Payouts can only be done by the issuer or custodian of this POA contract!'
     )
   }
 
@@ -1858,7 +1858,7 @@ const testProxyUnchanged = async (poa, first, state) => {
       symbol: await poa.symbol(),
       proofOfCustody: await poa.proofOfCustody(),
       fiatCurrency: await poa.fiatCurrency(),
-      actualBroker: await poa.broker(),
+      actualIssuer: await poa.issuer(),
       actualCustodian: await poa.custodian(),
       decimals: await poa.decimals(),
       feeRateInPermille: await poa.feeRateInPermille(),
@@ -1882,7 +1882,7 @@ const testProxyUnchanged = async (poa, first, state) => {
         symbol: await poa.symbol(),
         proofOfCustody: await poa.proofOfCustody(),
         fiatCurrency: await poa.fiatCurrency(),
-        actualBroker: await poa.broker(),
+        actualIssuer: await poa.issuer(),
         actualCustodian: await poa.custodian(),
         decimals: await poa.decimals(),
         feeRateInPermille: await poa.feeRateInPermille(),
@@ -1957,7 +1957,7 @@ module.exports = {
   bbkBonusAddress,
   bbkContributors,
   bbkTokenDistAmount,
-  broker,
+  issuer,
   custodian,
   defaultActivationDuration,
   defaultBuyAmount,
@@ -1991,7 +1991,7 @@ module.exports = {
   testActivate,
   testActiveBalances,
   testApprove,
-  testBrokerClaim,
+  testIssuerClaim,
   testBuyRemainingTokens,
   testBuyTokens,
   testBuyTokensMulti,
@@ -2028,7 +2028,7 @@ module.exports = {
   testTransfer,
   testTransferFrom,
   testUnpause,
-  testUpdateBrokerAddress,
+  testUpdateIssuerAddress,
   testUpdateDurationForActivationPeriod,
   testUpdateDurationForEthFundingPeriod,
   testUpdateDurationForFiatFundingPeriod,

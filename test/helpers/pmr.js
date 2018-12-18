@@ -3,7 +3,7 @@ const PoaToken = artifacts.require('PoaToken.sol')
 const PoaCrowdsale = artifacts.require('PoaCrowdsale')
 
 const {
-  broker,
+  issuer,
   defaultActivationDuration,
   defaultFiatCurrency,
   defaultFiatCurrency32,
@@ -91,7 +91,7 @@ const addToken = async (pmr, config) => {
 
 const moveTokenToActive = async (poa, fmr) => {
   // move from `Preview` to `PreFunding` stage
-  await testStartPreFunding(poa, { from: broker, gasPrice })
+  await testStartPreFunding(poa, { from: issuer, gasPrice })
 
   await timeTravelToEthFundingPeriod(poa)
 

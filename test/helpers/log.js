@@ -1,7 +1,7 @@
 const BigNumber = require('bignumber.js')
 const { waitForEvent, gasPrice } = require('./general')
 const {
-  broker,
+  issuer,
   custodian,
   defaultIpfsHash,
   defaultIpfsHashArray32,
@@ -30,7 +30,7 @@ const testPreviewToPreFundingEvent = async (poa, reg, pmr, log) => {
   const PoaLoggerStageEvent = log.Stage()
 
   // move from `Pending` to `PreFunding` stage
-  await testStartPreFunding(poa, { from: broker, gasPrice })
+  await testStartPreFunding(poa, { from: issuer, gasPrice })
 
   const { args: triggeredPoaLogger } = await waitForEvent(PoaLoggerStageEvent)
 
@@ -196,7 +196,7 @@ const testActivateEvents = async (poa, reg, pmr, fmr, log) => {
 }
 
 const testPayoutEvents = async (poa, reg, pmr, fmr, log) => {
-  const from = broker
+  const from = issuer
   const value = new BigNumber(1e18)
 
   const PoaLoggerPayoutEvent = log.Payout()
@@ -315,7 +315,7 @@ const testReclaimEvents = async () => {
   await pmr.listToken(poa.address)
 
   // move from `Preview` to `PreFunding` stage
-  await testStartPreFunding(poa, { from: broker, gasPrice })
+  await testStartPreFunding(poa, { from: issuer, gasPrice })
 
   // move from `PreFunding` to `EthFunding` stage
   await timeTravelToEthFundingPeriod(poa)

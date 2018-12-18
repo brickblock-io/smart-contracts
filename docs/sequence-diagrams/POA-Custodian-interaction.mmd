@@ -9,7 +9,7 @@ sequenceDiagram
     Custodian->>+POA: activate(ipfsHash-proof-of-custody-document)
     POA->>POA: validIpfs(ipfsHash-proof-of-custody-document)
     POA->>FMR: payFee(0.5% * funding-goal)
-    POA->>POA: update claim balance for broker address with remaining funding-goal ETH
+    POA->>POA: update claim balance for issuer address with remaining funding-goal ETH
     POA->>-POA: enterStage(Active)
   end
 

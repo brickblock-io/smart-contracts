@@ -11,7 +11,7 @@ const yargs = require('yargs')
   .option('default', {
     alias: 'def',
     describe:
-      'Deploys eco-system with default actions (register, finalizeBbk, setRate, addBroker, addToWhiteList)',
+      'Deploys eco-system with default actions (register, finalizeBbk, setRate, addIssuer, addToWhiteList)',
     default: false,
   })
   .option('register', {
@@ -44,9 +44,9 @@ const yargs = require('yargs')
     describe: 'finalizes crowdsale, distributes bbk if not mainnet',
     default: false,
   })
-  .option('addBroker', {
+  .option('addIssuer', {
     alias: 'ab',
-    describe: 'Adds broker to PoaManager',
+    describe: 'Adds issuer to PoaManager',
     default: false,
   })
   .option('deployPoa', {
@@ -54,9 +54,9 @@ const yargs = require('yargs')
     describe: 'Deploys an example POA token',
     default: false,
   })
-  .option('deployPoa-broker', {
-    alias: 'dp-broker',
-    describe: 'Broker address that deploys POA Token',
+  .option('deployPoa-issuer', {
+    alias: 'dp-issuer',
+    describe: 'Issuer address that deploys POA Token',
     default: false,
   })
   .option('deployPoa-totalSupply', {

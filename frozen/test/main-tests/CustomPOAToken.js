@@ -32,7 +32,7 @@ const {
 describe('when first deploying', () => {
   contract('CustomPOAToken', accounts => {
     const owner = accounts[0]
-    const broker = accounts[1]
+    const issuer = accounts[1]
     const custodian = accounts[2]
     const timeoutBlock = web3.eth.blockNumber + 5000
     let cpoa
@@ -41,7 +41,7 @@ describe('when first deploying', () => {
       cpoa = await CustomPOAToken.new(
         'ProofOfAwesome',
         'POA',
-        broker,
+        issuer,
         custodian,
         timeoutBlock,
         totalSupply,
@@ -52,7 +52,7 @@ describe('when first deploying', () => {
     it('should initalize with the correct values', async () => {
       const name = await cpoa.name()
       const symbol = await cpoa.symbol()
-      const contractBroker = await cpoa.broker()
+      const contractIssuer = await cpoa.issuer()
       const contractCustodian = await cpoa.custodian()
       const actualTimeoutBlock = await cpoa.timeoutBlock()
       const contractTotalSupply = await cpoa.totalSupply()
@@ -70,9 +70,9 @@ describe('when first deploying', () => {
         'the token symbol should match that given in the constructor'
       )
       assert.equal(
-        contractBroker,
-        broker,
-        'the broker should match that given in the constructor'
+        contractIssuer,
+        issuer,
+        'the issuer should match that given in the constructor'
       )
       assert.equal(
         contractCustodian,
@@ -131,7 +131,7 @@ describe('when first deploying', () => {
 describe('when in Funding stage', () => {
   contract('CustomPOAToken', accounts => {
     const owner = accounts[0]
-    const broker = accounts[1]
+    const issuer = accounts[1]
     const custodian = accounts[2]
     const nonInvestor = accounts[3]
     const investors = accounts.slice(4)
@@ -141,7 +141,7 @@ describe('when in Funding stage', () => {
       cpoa = await CustomPOAToken.new(
         'ProofOfAwesome',
         'POA',
-        broker,
+        issuer,
         custodian,
         web3.eth.blockNumber + 5000,
         totalSupply,
@@ -392,7 +392,7 @@ describe('when in Funding stage', () => {
 describe('when in Pending stage', () => {
   contract('CustomPOAToken', accounts => {
     const owner = accounts[0]
-    const broker = accounts[1]
+    const issuer = accounts[1]
     const custodian = accounts[2]
     const nonInvestor = accounts[3]
     const investors = accounts.slice(4)
@@ -404,7 +404,7 @@ describe('when in Pending stage', () => {
       cpoa = await CustomPOAToken.new(
         'ProofOfAwesome',
         'POA',
-        broker,
+        issuer,
         custodian,
         web3.eth.blockNumber + 5000,
         totalSupply,
@@ -774,7 +774,7 @@ describe('when in Pending stage', () => {
 describe('when in Active stage', () => {
   contract('CustomPOAToken', accounts => {
     const owner = accounts[0]
-    const broker = accounts[1]
+    const issuer = accounts[1]
     const custodian = accounts[2]
     const investors = accounts.slice(4)
     const allowanceOwner = investors[0]
@@ -790,7 +790,7 @@ describe('when in Active stage', () => {
       cpoa = await CustomPOAToken.new(
         'ProofOfAwesome',
         'POA',
-        broker,
+        issuer,
         custodian,
         web3.eth.blockNumber + 5000,
         totalSupply,
@@ -1146,10 +1146,10 @@ describe('when in Active stage', () => {
     })
 
     it('should NOT whitelist even if owner', async () => {
-      const whitelisted = await cpoa.whitelisted(broker)
-      assert(!whitelisted, 'the broker should not be whitelisted')
+      const whitelisted = await cpoa.whitelisted(issuer)
+      assert(!whitelisted, 'the issuer should not be whitelisted')
       await testWillThrow(cpoa.whitelistAddress, [
-        broker,
+        issuer,
         {
           from: owner,
         },
@@ -1270,7 +1270,7 @@ describe('when in Active stage', () => {
 describe('while in Terminated stage', async () => {
   contract('CustomPOAToken', accounts => {
     const owner = accounts[0]
-    const broker = accounts[1]
+    const issuer = accounts[1]
     const custodian = accounts[2]
     const investors = accounts.slice(4)
     const allowanceOwner = investors[0]
@@ -1289,7 +1289,7 @@ describe('while in Terminated stage', async () => {
       cpoa = await CustomPOAToken.new(
         'ProofOfAwesome',
         'POA',
-        broker,
+        issuer,
         custodian,
         web3.eth.blockNumber + 5000,
         totalSupply,
@@ -1511,10 +1511,10 @@ describe('while in Terminated stage', async () => {
     })
 
     it('should NOT whitelist even if owner', async () => {
-      const whitelisted = await cpoa.whitelisted(broker)
-      assert(!whitelisted, 'the broker should not be whitelisted')
+      const whitelisted = await cpoa.whitelisted(issuer)
+      assert(!whitelisted, 'the issuer should not be whitelisted')
       await testWillThrow(cpoa.whitelistAddress, [
-        broker,
+        issuer,
         {
           from: owner,
         },
@@ -1631,7 +1631,7 @@ describe('while in Terminated stage', async () => {
 describe('when timing out (going into stage 2 (failed))', () => {
   contract('CustomPOAToken', accounts => {
     const owner = accounts[0]
-    const broker = accounts[1]
+    const issuer = accounts[1]
     const custodian = accounts[2]
     const investors = accounts.slice(4)
     const firstReclaimInvestor = investors[0]
@@ -1644,7 +1644,7 @@ describe('when timing out (going into stage 2 (failed))', () => {
       cpoa = await CustomPOAToken.new(
         'ProofOfAwesome',
         'POA',
-        broker,
+        issuer,
         custodian,
         50,
         totalSupply,
@@ -1811,10 +1811,10 @@ describe('when timing out (going into stage 2 (failed))', () => {
     })
 
     it('should NOT whitelist even if owner', async () => {
-      const whitelisted = await cpoa.whitelisted(broker)
-      assert(!whitelisted, 'the broker should not be whitelisted')
+      const whitelisted = await cpoa.whitelisted(issuer)
+      assert(!whitelisted, 'the issuer should not be whitelisted')
       await testWillThrow(cpoa.whitelistAddress, [
-        broker,
+        issuer,
         {
           from: owner,
         },
@@ -2006,7 +2006,7 @@ describe('when timing out (going into stage 2 (failed))', () => {
 describe('when trying various scenarios using payout, transfer, approve, and transferFrom', () => {
   contract('CustomPOAToken', accounts => {
     const owner = accounts[0]
-    const broker = accounts[1]
+    const issuer = accounts[1]
     const custodian = accounts[2]
     const investors = accounts.slice(4)
     const allowanceOwner = investors[0]
@@ -2023,7 +2023,7 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
       cpoa = await CustomPOAToken.new(
         'ProofOfAwesome',
         'POA',
-        broker,
+        issuer,
         custodian,
         web3.eth.blockNumber + 5000,
         totalSupply,
@@ -2652,7 +2652,7 @@ describe('when trying various scenarios using payout, transfer, approve, and tra
 describe('when timing out and no one has bought any tokens', () => {
   contract('CustomPOAToken', accounts => {
     const owner = accounts[0]
-    const broker = accounts[1]
+    const issuer = accounts[1]
     const custodian = accounts[2]
     let cpoa
 
@@ -2660,7 +2660,7 @@ describe('when timing out and no one has bought any tokens', () => {
       cpoa = await CustomPOAToken.new(
         'ProofOfAwesome',
         'POA',
-        broker,
+        issuer,
         custodian,
         10,
         totalSupply,

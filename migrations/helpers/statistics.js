@@ -9,7 +9,7 @@ const showStatistics = (costs, globals) => {
     addToRegistryGasCost,
     finalizeBbkCrowdsaleGasCost,
     setFiatRateGasCost,
-    addBrokerGasCost,
+    addIssuerGasCost,
     deployPoaTokenGasCost,
     whitelistAddressGasCost,
     changeOwnerGasCost,
@@ -58,12 +58,12 @@ const showStatistics = (costs, globals) => {
     ])
   }
 
-  if (addBrokerGasCost) {
+  if (addIssuerGasCost) {
     tableData.push([
-      'Add Broker',
-      web3.fromWei(addBrokerGasCost, 'gwei').toString(),
-      `Ξ ${web3.fromWei(addBrokerGasCost).toString()}`,
-      calculateUsedGasFromCost(network, addBrokerGasCost).toString(),
+      'Add Issuer',
+      web3.fromWei(addIssuerGasCost, 'gwei').toString(),
+      `Ξ ${web3.fromWei(addIssuerGasCost).toString()}`,
+      calculateUsedGasFromCost(network, addIssuerGasCost).toString(),
     ])
   }
 

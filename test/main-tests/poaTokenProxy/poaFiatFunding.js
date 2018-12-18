@@ -1,6 +1,6 @@
 const {
   bbkContributors,
-  broker,
+  issuer,
   custodian,
   defaultIpfsHashArray32,
   getRemainingAmountInCentsDuringFiatFunding,
@@ -47,12 +47,12 @@ describe("when in 'FiatFunding' stage", () => {
       pmr = contracts.pmr
 
       // move from `Pending` to `PreFunding` stage
-      await testStartPreFunding(poa, { from: broker, gasPrice })
+      await testStartPreFunding(poa, { from: issuer, gasPrice })
 
       await timeTravelToFundingPeriod(poa)
 
       // move from `PreFunding` to `FiatFunding` stage
-      await testStartFiatSale(poa, { from: broker, gasPrice })
+      await testStartFiatSale(poa, { from: issuer, gasPrice })
     })
 
     it('should start paused', async () => {
@@ -92,11 +92,11 @@ describe("when in 'FiatFunding' stage", () => {
       ])
     })
 
-    it('should NOT payout, even if broker', async () => {
+    it('should NOT payout, even if issuer', async () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { from: broker, value: 1e18, gasPrice },
+        { from: issuer, value: 1e18, gasPrice },
       ])
     })
 
@@ -262,12 +262,12 @@ describe('when in FIAT Funding (stage 2) and funding goal is met during the fiat
       poa = contracts.poa
 
       // move from `Pending` to `PreFunding` stage
-      await testStartPreFunding(poa, { from: broker, gasPrice })
+      await testStartPreFunding(poa, { from: issuer, gasPrice })
 
       await timeTravelToFundingPeriod(poa)
 
       // move from `PreFunding` to `FiatFunding` stage
-      await testStartFiatSale(poa, { from: broker, gasPrice })
+      await testStartFiatSale(poa, { from: issuer, gasPrice })
     })
 
     it('Should set correct amount of tokens for investor if invested amount equals funding goal', async () => {

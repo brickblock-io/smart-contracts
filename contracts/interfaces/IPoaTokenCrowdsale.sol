@@ -41,7 +41,7 @@ interface IPoaTokenCrowdsale {
   function initializeToken(
     bytes32 _name32, // bytes32 of name string
     bytes32 _symbol32, // bytes32 of symbol string
-    address _broker,
+    address _issuer,
     address _custodian,
     address _registry,
     uint256 _totalSupply // token total supply
@@ -60,8 +60,8 @@ interface IPoaTokenCrowdsale {
   )
     external;
 
-  function updateBrokerAddress(
-    address _newBroker
+  function updateIssuerAddress(
+    address _newIssuer
   )
     external;
 
@@ -351,10 +351,10 @@ interface IPoaTokenCrowdsale {
     view
     returns (uint256 _fundedFiatAmountInCents);
 
-  function broker()
+  function issuer()
     external
     view
-    returns (address _broker);
+    returns (address _issuer);
 
   function manualCheckForFundingSuccessful()
     external

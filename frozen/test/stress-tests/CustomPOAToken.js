@@ -9,13 +9,13 @@ describe('CustomPoaToken Stress Tests', () => {
   let owner
   let custodian
   let investors
-  let broker
+  let issuer
 
   describe('simulate claims & payouts 10 years (120 rounds)', () => {
     contract('CustomPOA', accounts => {
       owner = accounts[0]
       custodian = accounts[1]
-      broker = accounts[2]
+      issuer = accounts[2]
       investors = accounts.slice(3)
 
       before('setup cpoa', async () => {
@@ -23,7 +23,7 @@ describe('CustomPoaToken Stress Tests', () => {
           'ProofOfAwesome',
           'CPO',
           owner,
-          broker,
+          issuer,
           custodian,
           web3.eth.blockNumber + 200,
           100e18,
@@ -74,7 +74,7 @@ describe('CustomPoaToken Stress Tests', () => {
     contract('CustomPOA', accounts => {
       owner = accounts[0]
       custodian = accounts[1]
-      broker = accounts[2]
+      issuer = accounts[2]
       investors = accounts.slice(3)
 
       before('setup cpoa', async () => {
@@ -82,7 +82,7 @@ describe('CustomPoaToken Stress Tests', () => {
           'ProofOfAwesome',
           'CPO',
           owner,
-          broker,
+          issuer,
           custodian,
           web3.eth.blockNumber + 200,
           100e18,
@@ -128,7 +128,7 @@ describe('CustomPoaToken Stress Tests', () => {
     contract('CustomPOA', accounts => {
       owner = accounts[0]
       custodian = accounts[1]
-      broker = accounts[2]
+      issuer = accounts[2]
       investors = accounts.slice(3)
 
       before('setup cpoa', async () => {
@@ -136,7 +136,7 @@ describe('CustomPoaToken Stress Tests', () => {
           'ProofOfAwesome',
           'CPO',
           owner,
-          broker,
+          issuer,
           custodian,
           web3.eth.blockNumber + 200,
           100e18,
@@ -224,7 +224,7 @@ describe('CustomPoaToken Stress Tests', () => {
     contract('CustomPOA', accounts => {
       owner = accounts[0]
       custodian = accounts[1]
-      broker = accounts[2]
+      issuer = accounts[2]
       investors = accounts.slice(3)
 
       before('setup cpoa', async () => {
@@ -232,7 +232,7 @@ describe('CustomPoaToken Stress Tests', () => {
           'ProofOfAwesome',
           'CPO',
           owner,
-          broker,
+          issuer,
           custodian,
           web3.eth.blockNumber + 200,
           100e18,

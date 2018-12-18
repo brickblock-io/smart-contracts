@@ -26,21 +26,21 @@ const deploymentActions = async (
 
   const {
     owner,
-    broker,
+    issuer,
     custodian,
     whitelistedInvestor,
     contributors,
   } = getAccounts(accounts)
 
   const ownerStartEtherBalance = await getEtherBalance(owner)
-  const brokerStartEtherBalance = await getEtherBalance(broker)
+  const issuerStartEtherBalance = await getEtherBalance(issuer)
   let ownerPreEtherBalance,
     ownerPostEtherBalance,
-    brokerPostEtherBalance,
+    issuerPostEtherBalance,
     addToRegistryGasCost,
     setFiatRateGasCost,
     finalizeBbkCrowdsaleGasCost,
-    addBrokerGasCost,
+    addIssuerGasCost,
     deployPoaTokenGasCost,
     whitelistAddressGasCost,
     changeOwnerGasCost
@@ -53,7 +53,7 @@ const deploymentActions = async (
     register: argv.register,
     setRate: argv.setRate,
     finalizeBbk: argv.finalizeBbk,
-    addBroker: argv.addBroker,
+    addIssuer: argv.addIssuer,
     addToWhiteList: argv.addToWhiteList,
   }
 
@@ -133,29 +133,29 @@ const deploymentActions = async (
     )
   }
 
-  if (actions.addBroker) {
+  if (actions.addIssuer) {
     /*
-     * Add broker to list of active brokers in PoaManager
+     * Add issuer to list of active issuers in PoaManager
      */
     ownerPreEtherBalance = await getEtherBalance(owner)
-    await poaManager.addBroker(
+    await poaManager.addIssuer(
       instances.PoaManager,
-      { broker },
+      { issuer },
       { from: owner }
     )
     ownerPostEtherBalance = await getEtherBalance(owner)
-    addBrokerGasCost = ownerPreEtherBalance.sub(ownerPostEtherBalance)
+    addIssuerGasCost = ownerPreEtherBalance.sub(ownerPostEtherBalance)
   }
 
   if (argv.deployPoa) {
     /*
-     * Deploy new POA token from the previously added broker address
+     * Deploy new POA token from the previously added issuer address
      */
-    const brokerPreEtherBalance = await getEtherBalance(broker)
-    if (brokerPreEtherBalance.lt('3.25e16')) {
+    const issuerPreEtherBalance = await getEtherBalance(issuer)
+    if (issuerPreEtherBalance.lt('3.25e16')) {
       await sendTransaction({
         from: owner,
-        to: broker,
+        to: issuer,
         value: new BigNumber(3.25e16),
       })
     }
@@ -176,10 +176,10 @@ const deploymentActions = async (
         fundingGoalInCents: argv.deployPoaFundingGoalInCents,
         listToken: argv.deployPoaListToken,
       },
-      { from: argv.deployPoaBroker || broker }
+      { from: argv.deployPoaIssuer || issuer }
     )
-    brokerPostEtherBalance = await getEtherBalance(broker)
-    deployPoaTokenGasCost = brokerPreEtherBalance.sub(brokerPostEtherBalance)
+    issuerPostEtherBalance = await getEtherBalance(issuer)
+    deployPoaTokenGasCost = issuerPreEtherBalance.sub(issuerPostEtherBalance)
   }
 
   if (actions.addToWhiteList) {
@@ -229,10 +229,10 @@ const deploymentActions = async (
    * Display gas cost for deploying full ecosystem
    */
   ownerPostEtherBalance = await getEtherBalance(owner)
-  brokerPostEtherBalance = await getEtherBalance(broker)
+  issuerPostEtherBalance = await getEtherBalance(issuer)
   const totalGasCost = ownerStartEtherBalance
     .sub(ownerPostEtherBalance)
-    .add(brokerStartEtherBalance.sub(brokerPostEtherBalance))
+    .add(issuerStartEtherBalance.sub(issuerPostEtherBalance))
 
   statistics.showStatistics(
     {
@@ -240,7 +240,7 @@ const deploymentActions = async (
       addToRegistryGasCost,
       finalizeBbkCrowdsaleGasCost,
       setFiatRateGasCost,
-      addBrokerGasCost,
+      addIssuerGasCost,
       deployPoaTokenGasCost,
       whitelistAddressGasCost,
       changeOwnerGasCost,

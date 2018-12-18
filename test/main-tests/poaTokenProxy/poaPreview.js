@@ -1,6 +1,6 @@
 const {
   bbkContributors,
-  broker,
+  issuer,
   custodian,
   defaultIpfsHashArray32,
   owner,
@@ -20,7 +20,7 @@ const {
   testTransfer,
   testTransferFrom,
   testUnpause,
-  testUpdateBrokerAddress,
+  testUpdateIssuerAddress,
   testUpdateDurationForActivationPeriod,
   testUpdateDurationForEthFundingPeriod,
   testUpdateFiatCurrency,
@@ -91,11 +91,11 @@ describe("when in 'Preview' stage", async () => {
       ])
     })
 
-    it('should NOT payout, even if broker', async () => {
+    it('should NOT payout, even if issuer', async () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { from: broker, value: 1e18, gasPrice },
+        { from: issuer, value: 1e18, gasPrice },
       ])
     })
 
@@ -163,7 +163,7 @@ describe("when in 'Preview' stage", async () => {
     })
 
     // test updating name
-    it('should NOT update name32 by non-broker', async () => {
+    it('should NOT update name32 by non-issuer', async () => {
       await testWillThrow(testUpdateName, [
         poa,
         'NotAllowedTokenName',
@@ -181,11 +181,11 @@ describe("when in 'Preview' stage", async () => {
       ])
     })
 
-    it('should update name32 by broker', async () => {
-      await testUpdateName(poa, 'NewPoaName', { from: broker })
+    it('should update name32 by issuer', async () => {
+      await testUpdateName(poa, 'NewPoaName', { from: issuer })
     })
 
-    it('should NOT update symbol32 by non-broker', async () => {
+    it('should NOT update symbol32 by non-issuer', async () => {
       const newSymbol = 'N-SYM-POA'
       ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
         async fromAddress => {
@@ -198,34 +198,34 @@ describe("when in 'Preview' stage", async () => {
       )
     })
 
-    it('should update symbol32 by broker', async () => {
-      await testUpdateSymbol(poa, 'N-SYM-POA', { from: broker })
+    it('should update symbol32 by issuer', async () => {
+      await testUpdateSymbol(poa, 'N-SYM-POA', { from: issuer })
     })
 
-    it('should NOT update broker address by non-broker', async () => {
-      const newBroker = whitelistedEthInvestors[0]
+    it('should NOT update issuer address by non-issuer', async () => {
+      const newIssuer = whitelistedEthInvestors[0]
       ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
         async fromAddress => {
-          await testWillThrow(testUpdateBrokerAddress, [
+          await testWillThrow(testUpdateIssuerAddress, [
             poa,
-            newBroker,
+            newIssuer,
             { from: fromAddress },
           ])
         }
       )
     })
 
-    it('should update broker address by broker', async () => {
-      await testUpdateBrokerAddress(poa, whitelistedEthInvestors[0], {
-        from: broker,
+    it('should update issuer address by issuer', async () => {
+      await testUpdateIssuerAddress(poa, whitelistedEthInvestors[0], {
+        from: issuer,
       })
-      // change it back again so we can continue to use `broker` as broker address
-      await testUpdateBrokerAddress(poa, broker, {
+      // change it back again so we can continue to use `issuer` as issuer address
+      await testUpdateIssuerAddress(poa, issuer, {
         from: whitelistedEthInvestors[0],
       })
     })
 
-    it('should NOT update total supply by non-broker', async () => {
+    it('should NOT update total supply by non-issuer', async () => {
       const anyHighEnoughTotalSupply = 2e18
       ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
         async fromAddress => {
@@ -238,14 +238,14 @@ describe("when in 'Preview' stage", async () => {
       )
     })
 
-    it('should update total supply by broker', async () => {
+    it('should update total supply by issuer', async () => {
       const anyHighEnoughTotalSupply = 2e18
       await testUpdateTotalSupply(poa, anyHighEnoughTotalSupply, {
-        from: broker,
+        from: issuer,
       })
     })
 
-    it('should NOT update fiat currency by non-broker', async () => {
+    it('should NOT update fiat currency by non-issuer', async () => {
       const anyNewFiatCurrency = 'USD'
       ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
         async fromAddress => {
@@ -258,9 +258,9 @@ describe("when in 'Preview' stage", async () => {
       )
     })
 
-    it('should update fiat currency by broker', async () => {
+    it('should update fiat currency by issuer', async () => {
       const anyNewFiatCurrency = 'USD'
-      await testUpdateFiatCurrency(poa, anyNewFiatCurrency, { from: broker })
+      await testUpdateFiatCurrency(poa, anyNewFiatCurrency, { from: issuer })
     })
 
     it('should NOT update fiat currency with uninitialized rate', async () => {
@@ -276,7 +276,7 @@ describe("when in 'Preview' stage", async () => {
       )
     })
 
-    it('should NOT update funding goal in cents by non-broker', async () => {
+    it('should NOT update funding goal in cents by non-issuer', async () => {
       const newFundingGoalInCents = 2e9
       ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
         async fromAddress => {
@@ -289,14 +289,14 @@ describe("when in 'Preview' stage", async () => {
       )
     })
 
-    it('should update funding goal in cents by broker', async () => {
+    it('should update funding goal in cents by issuer', async () => {
       const newFundingGoalInCents = 2e9
       await testUpdateFundingGoalInCents(poa, newFundingGoalInCents, {
-        from: broker,
+        from: issuer,
       })
     })
 
-    it('should NOT update start time of funding period by non-broker', async () => {
+    it('should NOT update start time of funding period by non-issuer', async () => {
       const timestampHundredYearsInFuture = (
         Math.round(new Date().getTime() / 1000) +
         3600 * 24 * 365 * 100
@@ -312,7 +312,7 @@ describe("when in 'Preview' stage", async () => {
       )
     })
 
-    it('should update start time of funding period by broker', async () => {
+    it('should update start time of funding period by issuer', async () => {
       const timestampHundredYearsInFuture = (
         Math.round(new Date().getTime() / 1000) +
         3600 * 24 * 365 * 100
@@ -321,11 +321,11 @@ describe("when in 'Preview' stage", async () => {
       await testUpdateStartTimeForFundingPeriod(
         poa,
         timestampHundredYearsInFuture,
-        { from: broker }
+        { from: issuer }
       )
     })
 
-    it('should NOT update duration of ETH funding period by non-broker', async () => {
+    it('should NOT update duration of ETH funding period by non-issuer', async () => {
       const durationOfFiveDays = '432000'
       ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
         async fromAddress => {
@@ -338,14 +338,14 @@ describe("when in 'Preview' stage", async () => {
       )
     })
 
-    it('should update duration of ETH funding period by broker', async () => {
+    it('should update duration of ETH funding period by issuer', async () => {
       const durationOfFiveDays = '432000'
       await testUpdateDurationForEthFundingPeriod(poa, durationOfFiveDays, {
-        from: broker,
+        from: issuer,
       })
     })
 
-    it('should NOT update duration of activation period by non-broker', async () => {
+    it('should NOT update duration of activation period by non-issuer', async () => {
       const durationOfFiveWeeks = '3024000'
       ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
         async fromAddress => {
@@ -358,10 +358,10 @@ describe("when in 'Preview' stage", async () => {
       )
     })
 
-    it('should update duration of activation period by broker', async () => {
+    it('should update duration of activation period by issuer', async () => {
       const durationOfFiveWeeks = '3024000'
       await testUpdateDurationForActivationPeriod(poa, durationOfFiveWeeks, {
-        from: broker,
+        from: issuer,
       })
     })
 
@@ -373,7 +373,7 @@ describe("when in 'Preview' stage", async () => {
       await testWillThrow(testStartEthSale, [poa, { from: owner }])
     })
 
-    it('should NOT move to "PreFunding" stage if not broker', async () => {
+    it('should NOT move to "PreFunding" stage if not issuer', async () => {
       // eslint-disable-next-line prettier/prettier
       ;[owner, custodian, whitelistedEthInvestors[0]].forEach(
         async fromAddress => {
@@ -385,8 +385,8 @@ describe("when in 'Preview' stage", async () => {
       )
     })
 
-    it('should move to "PreFunding" stage if broker', async () => {
-      await testStartPreFunding(poa, { from: broker, gasPrice })
+    it('should move to "PreFunding" stage if issuer', async () => {
+      await testStartPreFunding(poa, { from: issuer, gasPrice })
     })
   })
 })

@@ -47,8 +47,8 @@ contract PoaCommon is PoaProxyCommon {
   // Represents current stage
   Stages public stage;
 
-  // Broker in charge of starting sale, paying fee and handling payouts
-  address public broker;
+  // Issuer in charge of starting sale, paying fee and handling payouts
+  address public issuer;
 
   // Custodian in charge of taking care of asset and payouts
   address public custodian;
@@ -67,7 +67,7 @@ contract PoaCommon is PoaProxyCommon {
 
   // Tracks the total amount of ETH raised during the EthFunding stage.
   // NOTE: We can't use `address(this).balance` because after activating the
-  // POA contract, its balance will become `claimable` by the broker and can
+  // POA contract, its balance will become `claimable` by the issuer and can
   // therefore no longer be used to calculate balances.
   uint256 public fundedEthAmountInWei;
 
@@ -136,8 +136,8 @@ contract PoaCommon is PoaProxyCommon {
     _;
   }
 
-  modifier onlyBroker() {
-    require(msg.sender == broker);
+  modifier onlyIssuer() {
+    require(msg.sender == issuer);
     _;
   }
 

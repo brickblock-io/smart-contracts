@@ -26,7 +26,7 @@ const PoaToken = Contract(require(paths.appContracts + '/POAToken.json'))
 PoaToken.setProvider(web3.currentProvider)
 PoaToken.setNetwork('local-dev-testrpc')
 
-const broker = web3.eth.accounts[0]
+const issuer = web3.eth.accounts[0]
 const investor = web3.eth.accounts[9]
 const investor2 = web3.eth.accounts[8]
 
@@ -69,7 +69,7 @@ async function createBB() {
   try {
     const BB = web3.eth.contract(Brickblock.abi)
     const contract = BB.new({
-      from: broker,
+      from: issuer,
       gas: maxGas,
       data: Brickblock.unlinked_binary,
     })
@@ -91,7 +91,7 @@ async function createToken(aToken) {
       aToken.timeout,
       aToken.totalSupply,
       {
-        from: broker,
+        from: issuer,
         gas: maxGas,
       }
     )
@@ -102,7 +102,7 @@ async function createToken(aToken) {
       aToken.timeout,
       aToken.totalSupply,
       {
-        from: broker,
+        from: issuer,
         gas: maxGas,
       }
     )
@@ -158,7 +158,7 @@ async function buyTokens(aToken, amount, investee) {
 async function activatePoA(aToken, signee) {
   console.log(`Activate [${aToken.symbol}]`)
   try {
-    if (!signee) signee = broker
+    if (!signee) signee = issuer
 
     const poa = await PoaToken.at(aToken.addr)
     const signature = constructSignature(
@@ -171,7 +171,7 @@ async function activatePoA(aToken, signee) {
       signature.r,
       signature.s,
       {
-        from: broker,
+        from: issuer,
       }
     )
     const txid = await poa.activate.sendTransaction(
@@ -179,7 +179,7 @@ async function activatePoA(aToken, signee) {
       signature.r,
       signature.s,
       {
-        from: broker,
+        from: issuer,
       }
     )
     const ret = await awaitReceipt(txid)
@@ -192,7 +192,7 @@ async function activatePoA(aToken, signee) {
 }
 
 async function sell(aToken, amount, investee) {
-  console.log(`Sell tokens back to the Broker[${aToken.symbol}]`)
+  console.log(`Sell tokens back to the issuer[${aToken.symbol}]`)
   try {
     const poa = await PoaToken.at(aToken.addr)
     if (!amount) amount = await poa.balanceOf(investee) // buy all of it
@@ -215,11 +215,11 @@ async function liquidated(aToken, amount, investee) {
   try {
     const poa = await PoaToken.at(aToken.addr)
     const estimateGas = await poa.liquidated.estimateGas(investee, {
-      from: broker,
+      from: issuer,
       value: amount,
     })
     const txid = await poa.liquidated.sendTransaction(investee, {
-      from: broker,
+      from: issuer,
       value: amount,
     })
     const ret = await awaitReceipt(txid)
@@ -236,11 +236,11 @@ async function payout(aToken, amount) {
   try {
     const poa = await PoaToken.at(aToken.addr)
     const estimateGas = await poa.payout.estimateGas({
-      from: broker,
+      from: issuer,
       value: amount,
     })
     const txid = await poa.payout.sendTransaction({
-      from: broker,
+      from: issuer,
       value: amount,
     })
     const ret = await awaitReceipt(txid)
@@ -306,7 +306,7 @@ async function collectGasUsage() {
   const aToken = {
     name: 'TestContract',
     symbol: 'TST',
-    custodian: broker,
+    custodian: issuer,
     timeout: day,
     totalSupply: 5 * 10e17,
   }
@@ -314,7 +314,7 @@ async function collectGasUsage() {
   const secondToken = {
     name: 'SecondContract With A Long And Expensive Name',
     symbol: 'SCD',
-    custodian: broker,
+    custodian: issuer,
     timeout: day,
     totalSupply: 2 * 10e17,
   }
@@ -322,7 +322,7 @@ async function collectGasUsage() {
   const failedToken = {
     name: 'FailedToken',
     symbol: 'FLD',
-    custodian: broker,
+    custodian: issuer,
     timeout: 2, // 2 seconds
     totalSupply: 2 * 10e17,
   }
@@ -384,7 +384,7 @@ async function collectGasUsage() {
       gasEstim: failedActivationResponse.estimateGas,
     }
 
-    const activationResponse = await activatePoA(aToken, broker)
+    const activationResponse = await activatePoA(aToken, issuer)
     results.activation = {
       gasUsage: activationResponse.gasUsed,
       gasEstim: activationResponse.estimateGas,
@@ -426,7 +426,7 @@ async function collectGasUsage() {
       gasEstim: liquidatedAllResponse.estimateGas,
     }
 
-    await activatePoA(secondToken, broker)
+    await activatePoA(secondToken, issuer)
     await sell(secondToken, null, investor2)
     const liquidateWholeContractResponse = await liquidated(
       secondToken,

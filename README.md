@@ -13,11 +13,11 @@
 
 ## Installing
 1. Create local `.env`:
-    
+
     ```sh
     cp .env.example .env
     ```
-    
+
     This is necessary to configure the right `$NODE_PATH` for easier pathing, for example.
 
 1. Install dependencies:
@@ -117,12 +117,12 @@ Deploying with truffle will execute the [migrations/2_deploy_contracts.js](https
 #### To deploy in a local truffle session
 1. Run `yarn truffle develop --network dev`
 2. In the truffle console, run `migrate --reset` to deploy fresh contract instances
-3. Play around with the contracts, e.g. add a broker via
+3. Play around with the contracts, e.g. add an issuer via
 
     ```js
     PoaManager.deployed()
         .then(poaManager => {
-            poaManager.addBroker(web3.eth.accounts[3])
+            poaManager.addIssuer(web3.eth.accounts[3])
         })
     ```
 
@@ -131,21 +131,21 @@ Deploying with truffle will execute the [migrations/2_deploy_contracts.js](https
 There are pre-defined actions you can call with migrations
 - --forceDeploy, --fd: Deploys contracts given as parameters. 'all' means deploy everything. Can be used with --uec to deploy only selected contracts and use the rest from the registry.
 - --register, -r: Registers deployed contracts to Contract Registry
-- --setRate, --sr: Updates ExchangeRate Contract to fetch 'EUR' currency from oraclize api (on ganache it uses a constant value instead of a real one) 
+- --setRate, --sr: Updates ExchangeRate Contract to fetch 'EUR' currency from oraclize api (on ganache it uses a constant value instead of a real one)
 - --finalizeBbk, --fb: on BBK contract:
-    - calls `changeFountainContractAddress` 
+    - calls `changeFountainContractAddress`
     - if the network is not mainnet, it distributes BBK token to Accounts[4,6]
     - calls `finalizeTokenSale`
     - calls `unpause`
-- --addBroker, --ab: Adds accounts[1] as broker to PoaManager
-- --deployPoa, --dp: Deploys a sample PoaToken with Broker account
+- --addIssuer, --ab: Adds accounts[1] as issuer to PoaManager
+- --deployPoa, --dp: Deploys a sample PoaToken with Issuer account
 - --addToWhiteList, --aw: Adds accounts[3] to whitelist
-- --default, -a: Executes `register`, `setRate`, `finalizeBbk`, `addBroker`, `addToWhitelist` with the same order.
+- --default, -a: Executes `register`, `setRate`, `finalizeBbk`, `addIssuer`, `addToWhitelist` with the same order.
 - --useExistingContracts, --uec: Uses existing contracts instead of deploy if they exist in "config/deployed-contracts.js"' with the chosen network. If it cannot find a pre-defined address, it deploys a new contract.
 - --changeOwner, --co: Changes owner to `NEW_OWNER` given in `.env` file. Only useful if it deploys to mainnet.
 - --help: Displays posible options
 
-NOTES: 
+NOTES:
 - You have to provide one of `--forceDeploy [arguments]` or `--useExistingContracts` to have the essential functionality.
 - Only essential actions are grouped by `default` action to keep it more flexible
 
@@ -178,7 +178,7 @@ yarn migrate:dev --useExistingContracts  --other params
 
 
 # To deploy POA Token
-# Make sure everything is deployed, registered, BBK finalized, currency set, brokers added and investors whitelisted
+# Make sure everything is deployed, registered, BBK finalized, currency set, issuers added and investors whitelisted
 # To customize your token, use --deployPoa-[sub argument name]. See help for the full list.
 yarn migrate:dev --useExistingContracts -deployPoa
 

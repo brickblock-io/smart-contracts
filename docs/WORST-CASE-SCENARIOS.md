@@ -152,7 +152,7 @@ Solidity is still a young language, and there is no guarantee that there won't b
 | ----------- | -------- |
 | High        | Low      |
 
-Initially, there is one global master whitelist to rule them all. As we scale our business, it's likely that new requirements arise around whitelisting. It could be that each broker will need their own whitelist of their own clients. Or due to new regulation, we might need different whitelists for different jurisdictions. Or there may be special assets that even require a whitelist on a per PoaToken contract level.
+Initially, there is one global master whitelist to rule them all. As we scale our business, it's likely that new requirements arise around whitelisting. It could be that each issuer will need their own whitelist of their own clients. Or due to new regulation, we might need different whitelists for different jurisdictions. Or there may be special assets that even require a whitelist on a per PoaToken contract level.
 
 #### Mitigation Steps
 

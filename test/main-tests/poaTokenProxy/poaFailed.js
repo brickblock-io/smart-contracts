@@ -1,6 +1,6 @@
 const {
   bbkContributors,
-  broker,
+  issuer,
   custodian,
   defaultIpfsHashArray32,
   owner,
@@ -44,7 +44,7 @@ describe("when in 'TimedOut' stage", () => {
       pmr = contracts.pmr
 
       // move from `Preview` to `PreFunding` stage
-      await testStartPreFunding(poa, { from: broker, gasPrice })
+      await testStartPreFunding(poa, { from: issuer, gasPrice })
 
       await timeTravelToEthFundingPeriod(poa)
 
@@ -109,11 +109,11 @@ describe("when in 'TimedOut' stage", () => {
       ])
     })
 
-    it('should NOT payout, even if broker', async () => {
+    it('should NOT payout, even if issuer', async () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { from: broker, value: 1e18, gasPrice },
+        { from: issuer, value: 1e18, gasPrice },
       ])
     })
 
@@ -226,7 +226,7 @@ describe("when in 'PreFunding' stage but funding period is over", async () => {
       poa = contracts.poa
 
       // move from `Pending` to `PreFunding` stage
-      await testStartPreFunding(poa, { from: broker, gasPrice })
+      await testStartPreFunding(poa, { from: issuer, gasPrice })
 
       await timeTravelToFundingPeriodTimeout(poa)
     })
@@ -246,12 +246,12 @@ describe("when in 'FiatFunding' stage but funding period is over", async () => {
       poa = contracts.poa
 
       // move from `Preview` to `PreFunding` stage
-      await testStartPreFunding(poa, { from: broker, gasPrice })
+      await testStartPreFunding(poa, { from: issuer, gasPrice })
 
       await timeTravelToFundingPeriod(poa)
 
       // move from `PreFunding` to `FiatFunding` stage
-      await testStartFiatSale(poa, { from: broker, gasPrice })
+      await testStartFiatSale(poa, { from: issuer, gasPrice })
 
       await timeTravelToFundingPeriodTimeout(poa)
     })

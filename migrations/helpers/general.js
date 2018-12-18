@@ -59,7 +59,7 @@ const isBigNumber = value => {
 const getAccounts = accounts => {
   return {
     owner: accounts[0],
-    broker: accounts[1],
+    issuer: accounts[1],
     custodian: accounts[2],
     whitelistedInvestor: accounts[3],
     contributors: accounts.slice(4, 6),

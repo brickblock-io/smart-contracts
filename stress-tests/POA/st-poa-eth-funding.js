@@ -7,13 +7,13 @@ const {
   determineNeededTimeTravel,
   setupPoaProxyAndEcosystem,
   testStartEthSale,
-  broker,
+  issuer,
   custodian,
   testUpdateProofOfCustody,
   defaultIpfsHashArray32,
   testPayActivationFee,
   testActivate,
-  testBrokerClaim,
+  testIssuerClaim,
   testClaimAllPayouts,
   testPayout,
   getRemainingAmountInWeiDuringEthFunding,
@@ -125,8 +125,8 @@ describe('PoaToken Stress Tests - test eth funding only', () => {
       })
     })
 
-    it('should let broker claim', async () => {
-      await testBrokerClaim(poa)
+    it('should let issuer claim', async () => {
+      await testIssuerClaim(poa)
     })
 
     it('should payout many times', async () => {
@@ -134,7 +134,7 @@ describe('PoaToken Stress Tests - test eth funding only', () => {
         const payout = getRandomBigInt(new BigNumber(1e18), new BigNumber(3e18))
 
         await testPayout(poa, fmr, {
-          from: broker,
+          from: issuer,
           value: payout,
           gasPrice,
         })

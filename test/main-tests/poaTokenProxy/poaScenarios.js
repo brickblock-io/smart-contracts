@@ -1,5 +1,5 @@
 const {
-  broker,
+  issuer,
   custodian,
   defaultIpfsHashArray32,
   getAccountInformation,
@@ -8,7 +8,7 @@ const {
   testActivate,
   testActiveBalances,
   testApprove,
-  testBrokerClaim,
+  testIssuerClaim,
   testBuyRemainingTokens,
   testBuyTokens,
   testBuyTokensMulti,
@@ -59,7 +59,7 @@ describe('De-whitelisted POA holders', () => {
       wht = contracts.wht
 
       // move from `Preview` to `PreFunding` stage
-      await testStartPreFunding(poa, { from: broker, gasPrice })
+      await testStartPreFunding(poa, { from: issuer, gasPrice })
 
       await timeTravelToEthFundingPeriod(poa)
 
@@ -142,7 +142,7 @@ describe('when handling unhappy paths', async () => {
       const tokenBuyAmount = new BigNumber(1e18)
 
       // move from `Preview` to `PreFunding` stage
-      await testStartPreFunding(poa, { from: broker, gasPrice })
+      await testStartPreFunding(poa, { from: issuer, gasPrice })
 
       await timeTravelToEthFundingPeriod(poa)
 
@@ -162,7 +162,7 @@ describe('when handling unhappy paths', async () => {
 
     it('should hit checkTimeout when reclaiming after durationForActivationPeriod', async () => {
       // move from `Preview` to `PreFunding` stage
-      await testStartPreFunding(poa, { from: broker, gasPrice })
+      await testStartPreFunding(poa, { from: issuer, gasPrice })
 
       await timeTravelToEthFundingPeriod(poa)
 
@@ -182,7 +182,7 @@ describe('when handling unhappy paths', async () => {
 
     it('should manualCheckForTimeout by anyone when durationForActivationPeriod has occured', async () => {
       // move from `Preview` to `PreFunding` stage
-      await testStartPreFunding(poa, { from: broker, gasPrice })
+      await testStartPreFunding(poa, { from: issuer, gasPrice })
 
       await timeTravelToEthFundingPeriod(poa)
 
@@ -217,12 +217,12 @@ describe('when trying various scenarios involving payout, transfer, approve, and
       fmr = contracts.fmr
 
       // move from `Pending` to `PreFunding` stage
-      await testStartPreFunding(poa, { from: broker, gasPrice })
+      await testStartPreFunding(poa, { from: issuer, gasPrice })
 
       await timeTravelToFundingPeriod(poa)
 
       // move from `PreFunding` to `FiatFunding` stage
-      await testStartFiatSale(poa, { from: broker, gasPrice })
+      await testStartFiatSale(poa, { from: issuer, gasPrice })
 
       // buy with fiat
       await testBuyTokensWithFiat(poa, whitelistedFiatInvestor, 1000, {
@@ -256,8 +256,8 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         from: custodian,
       })
 
-      // clean out broker balance for easier debugging
-      await testBrokerClaim(poa)
+      // clean out issuer balance for easier debugging
+      await testIssuerClaim(poa)
 
       feeRateInPermille = await poa.feeRateInPermille()
       totalSupply = await poa.totalSupply()
@@ -277,7 +277,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         let fee
 
         await testPayout(poa, fmr, {
-          from: broker,
+          from: issuer,
           value: defaultPayoutAmount,
           gasPrice,
         })
@@ -323,7 +323,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         )
 
         await testPayout(poa, fmr, {
-          from: broker,
+          from: issuer,
           value: defaultPayoutAmount,
           gasPrice,
         })
@@ -378,7 +378,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         let fee
 
         await testPayout(poa, fmr, {
-          from: broker,
+          from: issuer,
           value: defaultPayoutAmount,
           gasPrice,
         })
@@ -430,7 +430,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         )
 
         await testPayout(poa, fmr, {
-          from: broker,
+          from: issuer,
           value: defaultPayoutAmount,
           gasPrice,
         })
@@ -486,7 +486,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         let fee
 
         await testPayout(poa, fmr, {
-          from: broker,
+          from: issuer,
           value: defaultPayoutAmount,
           gasPrice,
         })
@@ -541,7 +541,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         )
 
         await testPayout(poa, fmr, {
-          from: broker,
+          from: issuer,
           value: defaultPayoutAmount,
           gasPrice,
         })
@@ -597,7 +597,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         let fee
 
         await testPayout(poa, fmr, {
-          from: broker,
+          from: issuer,
           value: defaultPayoutAmount,
           gasPrice,
         })
@@ -653,7 +653,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         )
 
         await testPayout(poa, fmr, {
-          from: broker,
+          from: issuer,
           value: defaultPayoutAmount,
           gasPrice,
         })
@@ -707,7 +707,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         })
 
         await testPayout(poa, fmr, {
-          from: broker,
+          from: issuer,
           value: defaultPayoutAmount,
           gasPrice,
         })
@@ -764,7 +764,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         )
 
         await testPayout(poa, fmr, {
-          from: broker,
+          from: issuer,
           value: defaultPayoutAmount,
           gasPrice,
         })
@@ -830,7 +830,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         )
 
         await testPayout(poa, fmr, {
-          from: broker,
+          from: issuer,
           value: defaultPayoutAmount,
           gasPrice,
         })
@@ -893,7 +893,7 @@ describe('when trying various scenarios involving payout, transfer, approve, and
         )
 
         await testPayout(poa, fmr, {
-          from: broker,
+          from: issuer,
           value: defaultPayoutAmount,
           gasPrice,
         })
@@ -958,12 +958,12 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       ratePenalty = new BigNumber(20)
 
       // move from `Pending` to `PreFunding` stage
-      await testStartPreFunding(poa, { from: broker, gasPrice })
+      await testStartPreFunding(poa, { from: issuer, gasPrice })
 
       await timeTravelToFundingPeriod(poa)
 
       // move from `PreFunding` to `FiatFunding` stage
-      await testStartFiatSale(poa, { from: broker, gasPrice })
+      await testStartFiatSale(poa, { from: issuer, gasPrice })
 
       // buy with fiat
       await testBuyTokensWithFiat(poa, whitelistedFiatInvestor, 1000, {

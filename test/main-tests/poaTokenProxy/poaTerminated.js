@@ -1,13 +1,13 @@
 const {
   bbkContributors,
-  broker,
+  issuer,
   custodian,
   defaultIpfsHashArray32,
   owner,
   setupPoaProxyAndEcosystem,
   testActivate,
   testApprove,
-  testBrokerClaim,
+  testIssuerClaim,
   testBuyRemainingTokens,
   testBuyTokens,
   testClaim,
@@ -46,7 +46,7 @@ describe("when in 'Terminated' stage", () => {
       pmr = contracts.pmr
 
       // move from `Preview` to `PreFunding` stage
-      await testStartPreFunding(poa, { from: broker, gasPrice })
+      await testStartPreFunding(poa, { from: issuer, gasPrice })
 
       await timeTravelToEthFundingPeriod(poa)
 
@@ -78,8 +78,8 @@ describe("when in 'Terminated' stage", () => {
         from: custodian,
       })
 
-      // clean out broker balance for easier debugging
-      await testBrokerClaim(poa)
+      // clean out issuer balance for easier debugging
+      await testIssuerClaim(poa)
 
       // move into 'Terminated' stage
       //⚠️  also acts as a test terminating as owner rather than custodian
@@ -190,19 +190,19 @@ describe("when in 'Terminated' stage", () => {
       ])
     })
 
-    it('should payout as broker', async () => {
-      await testPayout(poa, fmr, { value: 2e18, from: broker, gasPrice })
+    it('should payout as issuer', async () => {
+      await testPayout(poa, fmr, { value: 2e18, from: issuer, gasPrice })
     })
 
-    it('should NOT payout as broker if payout is too low', async () => {
+    it('should NOT payout as issuer if payout is too low', async () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,
-        { value: 100, from: broker, gasPrice },
+        { value: 100, from: issuer, gasPrice },
       ])
     })
 
-    it('should NOT payout as NOT broker', async () => {
+    it('should NOT payout as NOT issuer', async () => {
       await testWillThrow(testPayout, [
         poa,
         fmr,

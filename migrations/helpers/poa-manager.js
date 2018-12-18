@@ -9,33 +9,33 @@ const {
 } = require('./constants')
 const { unixTimeWithOffsetInSec } = require('./general.js')
 
-const addBroker = async (
+const addIssuer = async (
   poaManager,
   params = {
-    broker: '',
+    issuer: '',
   },
   txConfig
 ) => {
-  const { broker } = params
+  const { issuer } = params
 
   console.log(
     chalk.cyan(
       '\n--------------------------------------------------------------'
     )
   )
-  console.log(chalk.gray(`Checking if broker "${broker}" exist…\n`))
-  const isRegisteredBroker = await poaManager.isRegisteredBroker(
-    broker,
+  console.log(chalk.gray(`Checking if issuer "${issuer}" exist…\n`))
+  const isRegisteredIssuer = await poaManager.isRegisteredIssuer(
+    issuer,
     txConfig
   )
-  if (isRegisteredBroker) {
-    console.log(chalk.gray(`Broker "${broker}" already exist, skipping…\n`))
+  if (isRegisteredIssuer) {
+    console.log(chalk.gray(`Issuer "${issuer}" already exist, skipping…\n`))
     return
   }
 
-  console.log(chalk.cyan(`🚀  Adding broker "${broker}"…\n`))
-  await poaManager.addBroker(broker, txConfig)
-  console.log(chalk.green(`\n✅  Successfully added broker "${broker}"`))
+  console.log(chalk.cyan(`🚀  Adding issuer "${issuer}"…\n`))
+  await poaManager.addIssuer(issuer, txConfig)
+  console.log(chalk.green(`\n✅  Successfully added issuer "${issuer}"`))
   console.log(
     chalk.green(
       '------------------------------------------------------------------------\n\n'
@@ -128,6 +128,6 @@ const deployPoa = async (
 }
 
 module.exports = {
-  addBroker,
+  addIssuer,
   deployPoa,
 }

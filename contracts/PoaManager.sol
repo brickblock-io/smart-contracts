@@ -21,29 +21,29 @@ contract PoaManager is Ownable {
   }
 
   // Keeping a list for addresses we track for easy access
-  address[] private brokerAddressList;
+  address[] private issuerAddressList;
   address[] private tokenAddressList;
 
   // A mapping for each address we track
   mapping (address => EntityState) private tokenMap;
-  mapping (address => EntityState) private brokerMap;
+  mapping (address => EntityState) private issuerMap;
 
-  event BrokerAdded(address indexed broker);
-  event BrokerRemoved(address indexed broker);
-  event BrokerStatusChanged(address indexed broker, bool active);
+  event IssuerAdded(address indexed issuer);
+  event IssuerRemoved(address indexed issuer);
+  event IssuerStatusChanged(address indexed issuer, bool active);
 
   event TokenAdded(address indexed token);
   event TokenRemoved(address indexed token);
   event TokenStatusChanged(address indexed token, bool active);
 
-  modifier isNewBroker(address _brokerAddress) {
-    require(_brokerAddress != address(0));
-    require(brokerMap[_brokerAddress].index == 0);
+  modifier isNewIssuer(address _issuerAddress) {
+    require(_issuerAddress != address(0));
+    require(issuerMap[_issuerAddress].index == 0);
     _;
   }
 
-  modifier onlyActiveBroker() {
-    EntityState memory entity = brokerMap[msg.sender];
+  modifier onlyActiveIssuer() {
+    EntityState memory entity = issuerMap[msg.sender];
     require(entity.active);
     _;
   }
@@ -100,7 +100,7 @@ contract PoaManager is Ownable {
     // swap the entity to be removed with the last element in the list
     _entityList[index] = _entityList[_entityList.length - 1];
 
-    // because we wanted seperate mappings for token and broker, and we cannot pass a storage mapping
+    // because we wanted seperate mappings for token and issuer, and we cannot pass a storage mapping
     // as a function argument, this abstraction is leaky; we return the address and index so the
     // caller can update the mapping
     address entityToSwapAddress = _entityList[index];
@@ -122,87 +122,87 @@ contract PoaManager is Ownable {
   }
 
   //
-  // Broker functions
+  // Issuer functions
   //
 
-  // Return all tracked broker addresses
-  function getBrokerAddressList()
+  // Return all tracked issuer addresses
+  function getIssuerAddressList()
     public
     view
     returns (address[])
   {
-    return brokerAddressList;
+    return issuerAddressList;
   }
 
-  // Add a broker and set active value to true
-  function addBroker(address _brokerAddress)
+  // Add an issuer and set active value to true
+  function addIssuer(address _issuerAddress)
     public
     onlyOwner
-    isNewBroker(_brokerAddress)
+    isNewIssuer(_issuerAddress)
   {
-    brokerMap[_brokerAddress] = addEntity(
-      _brokerAddress,
-      brokerAddressList,
+    issuerMap[_issuerAddress] = addEntity(
+      _issuerAddress,
+      issuerAddressList,
       true
     );
 
-    emit BrokerAdded(_brokerAddress);
+    emit IssuerAdded(_issuerAddress);
   }
 
-  // Remove a broker
-  function removeBroker(address _brokerAddress)
+  // Remove an issuer
+  function removeIssuer(address _issuerAddress)
     public
     onlyOwner
   {
-    require(doesEntityExist(_brokerAddress, brokerMap[_brokerAddress]));
+    require(doesEntityExist(_issuerAddress, issuerMap[_issuerAddress]));
 
     address addressToUpdate;
     uint256 indexUpdate;
-    (addressToUpdate, indexUpdate) = removeEntity(brokerMap[_brokerAddress], brokerAddressList);
-    brokerMap[addressToUpdate].index = indexUpdate;
-    delete brokerMap[_brokerAddress];
+    (addressToUpdate, indexUpdate) = removeEntity(issuerMap[_issuerAddress], issuerAddressList);
+    issuerMap[addressToUpdate].index = indexUpdate;
+    delete issuerMap[_issuerAddress];
 
-    emit BrokerRemoved(_brokerAddress);
+    emit IssuerRemoved(_issuerAddress);
   }
 
-  // Set previously delisted broker to listed
-  function listBroker(address _brokerAddress)
+  // Set previously delisted issuer to listed
+  function listIssuer(address _issuerAddress)
     public
     onlyOwner
   {
-    require(doesEntityExist(_brokerAddress, brokerMap[_brokerAddress]));
+    require(doesEntityExist(_issuerAddress, issuerMap[_issuerAddress]));
 
-    setEntityActiveValue(brokerMap[_brokerAddress], true);
-    emit BrokerStatusChanged(_brokerAddress, true);
+    setEntityActiveValue(issuerMap[_issuerAddress], true);
+    emit IssuerStatusChanged(_issuerAddress, true);
   }
 
-  // Set previously listed broker to delisted
-  function delistBroker(address _brokerAddress)
+  // Set previously listed issuer to delisted
+  function delistIssuer(address _issuerAddress)
     public
     onlyOwner
   {
-    require(doesEntityExist(_brokerAddress, brokerMap[_brokerAddress]));
+    require(doesEntityExist(_issuerAddress, issuerMap[_issuerAddress]));
 
-    setEntityActiveValue(brokerMap[_brokerAddress], false);
-    emit BrokerStatusChanged(_brokerAddress, false);
+    setEntityActiveValue(issuerMap[_issuerAddress], false);
+    emit IssuerStatusChanged(_issuerAddress, false);
   }
 
-  function getBrokerStatus(address _brokerAddress)
+  function getIssuerStatus(address _issuerAddress)
     public
     view
     returns (bool)
   {
-    require(doesEntityExist(_brokerAddress, brokerMap[_brokerAddress]));
+    require(doesEntityExist(_issuerAddress, issuerMap[_issuerAddress]));
 
-    return brokerMap[_brokerAddress].active;
+    return issuerMap[_issuerAddress].active;
   }
 
-  function isRegisteredBroker(address _brokerAddress)
+  function isRegisteredIssuer(address _issuerAddress)
     external
     view
     returns (bool)
   {
-    return doesEntityExist(_brokerAddress, brokerMap[_brokerAddress]);
+    return doesEntityExist(_issuerAddress, issuerMap[_issuerAddress]);
   }
 
   //
@@ -249,7 +249,7 @@ contract PoaManager is Ownable {
     uint256 _fundingGoalInCents
   )
     public
-    onlyActiveBroker
+    onlyActiveIssuer
     returns (address)
   {
     address _tokenAddress = createPoaTokenProxy();

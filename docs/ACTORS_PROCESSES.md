@@ -17,10 +17,10 @@ Brickblock is responsible for managing Issuers and whitelisting Investors. Furth
 ### Processes
 
 - Manage Issuers
-    * `addBroker(address)` on `PoaManager`: Adds an Issuer's address as listed Issuer.
-    * `removeBroker(address)` on `PoaManager`: Removes and delists an Issuer's address.
-    * `listBroker(address)` on `PoaManager`: Lists an already added but currently delisted Issuer.
-    * `delistBroker(address)` on `PoaManager`: Delists an already added and listed Issuer.
+    * `addIssuer(address)` on `PoaManager`: Adds an Issuer's address as listed Issuer.
+    * `removeIssuer(address)` on `PoaManager`: Removes and delists an Issuer's address.
+    * `listIssuer(address)` on `PoaManager`: Lists an already added but currently delisted Issuer.
+    * `delistIssuer(address)` on `PoaManager`: Delists an already added and listed Issuer.
 - Manage whitelisted Investors
     * `addAddress(address)` on `Whitelist`: Adds an Investor's address as whitelisted Investor.
     * `removeAddress(address)` on `Whitelist`: Removes an Investor's address (de-whitelisting).
@@ -78,7 +78,7 @@ A BBK Holder either participated in our ICO or acquired BBK through an exchange.
 
 ## Issuer
 
-The Issuer, also referred to as Broker, must be listed by Brickblock in order to create POA Tokens. Once a POA Token is deployed, the Issuer can change the POA's parameters in its initial stage `Preview`. Furthermore, the Issuer is responsible for paying out generated dividends to POA token holders. Also, the Issuer can terminate POA Tokens in case of special events.
+The Issuer, previously referred to as Broker, must be listed by Brickblock in order to create POA Tokens. Once a POA Token is deployed, the Issuer can change the POA's parameters in its initial stage `Preview`. Furthermore, the Issuer is responsible for paying out generated dividends to POA token holders. Also, the Issuer can terminate POA Tokens in case of special events.
 
 ### Processes
 

@@ -11,7 +11,7 @@ contract CustomPOAToken is PausableToken {
   uint8 public constant decimals = 18;
 
   address public owner;
-  address public broker;
+  address public issuer;
   address public custodian;
 
   uint256 public creationBlock;
@@ -87,7 +87,7 @@ contract CustomPOAToken is PausableToken {
   (
     string _name,
     string _symbol,
-    address _broker,
+    address _issuer,
     address _custodian,
     uint256 _timeoutBlock,
     uint256 _totalSupply,
@@ -100,7 +100,7 @@ contract CustomPOAToken is PausableToken {
     owner = msg.sender;
     name = _name;
     symbol = _symbol;
-    broker = _broker;
+    issuer = _issuer;
     custodian = _custodian;
     timeoutBlock = _timeoutBlock;
     creationBlock = block.number;
