@@ -1456,10 +1456,10 @@ const testFirstReclaim = async (poa, config, shouldBeFundingSuccessful) => {
   )
 }
 
-const testSetStageToTimedOut = async poa => {
+const testManualCheckForTimeout = async poa => {
   const preStage = await poa.stage()
 
-  await poa.setStageToTimedOut()
+  await poa.manualCheckForTimeout()
 
   const postStage = await poa.stage()
 
@@ -2020,7 +2020,7 @@ module.exports = {
   testResetCurrencyRate,
   testSetCurrencyRate,
   testSetCurrencyRateWithDefaultValues,
-  testSetStageToTimedOut,
+  testManualCheckForTimeout,
   testStartPreFunding,
   testStartEthSale,
   testStartFiatSale,

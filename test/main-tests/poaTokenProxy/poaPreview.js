@@ -12,7 +12,7 @@ const {
   testPaused,
   testPayout,
   testReclaim,
-  testSetStageToTimedOut,
+  testManualCheckForTimeout,
   testStartPreFunding,
   testStartEthSale,
   testStartFiatSale,
@@ -67,8 +67,8 @@ describe("when in 'Preview' stage", async () => {
       ])
     })
 
-    it('should NOT setStageToTimedOut', async () => {
-      await testWillThrow(testSetStageToTimedOut, [poa, { from: owner }])
+    it('should NOT manualCheckForTimeout', async () => {
+      await testWillThrow(testManualCheckForTimeout, [poa, { from: owner }])
     })
 
     it('should NOT activate, even if custodian', async () => {
@@ -158,8 +158,8 @@ describe("when in 'Preview' stage", async () => {
       ])
     })
 
-    it('should NOT checkFundingSuccessful', async () => {
-      await testWillThrow(poa.checkFundingSuccessful, [])
+    it('should NOT manualCheckForFundingSuccessful', async () => {
+      await testWillThrow(poa.manualCheckForFundingSuccessful, [])
     })
 
     // test updating name

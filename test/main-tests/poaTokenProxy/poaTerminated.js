@@ -15,7 +15,7 @@ const {
   testPayActivationFee,
   testPayout,
   testReclaim,
-  testSetStageToTimedOut,
+  testManualCheckForTimeout,
   testStartPreFunding,
   testStartEthSale,
   testTerminate,
@@ -110,8 +110,8 @@ describe("when in 'Terminated' stage", () => {
       ])
     })
 
-    it('should NOT setStageToTimedOut, even if owner', async () => {
-      await testWillThrow(testSetStageToTimedOut, [poa, { from: owner }])
+    it('should NOT manualCheckForTimeout, even if owner', async () => {
+      await testWillThrow(testManualCheckForTimeout, [poa, { from: owner }])
     })
 
     it('should NOT activate, even if custodian', async () => {
@@ -178,8 +178,8 @@ describe("when in 'Terminated' stage", () => {
       ])
     })
 
-    it('should NOT checkFundingSuccessful', async () => {
-      await testWillThrow(poa.checkFundingSuccessful, [])
+    it('should NOT manualCheckForFundingSuccessful', async () => {
+      await testWillThrow(poa.manualCheckForFundingSuccessful, [])
     })
     // start core stage functionality
 

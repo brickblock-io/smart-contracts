@@ -18,7 +18,7 @@ const {
   testPayActivationFee,
   testPayout,
   testResetCurrencyRate,
-  testSetStageToTimedOut,
+  testManualCheckForTimeout,
   testStartPreFunding,
   testStartEthSale,
   testStartFiatSale,
@@ -180,7 +180,7 @@ describe('when handling unhappy paths', async () => {
       await testFirstReclaim(poa, { from: whitelistedEthInvestors[0] }, true)
     })
 
-    it('should setStageToTimedOut by anyone when durationForActivationPeriod has occured', async () => {
+    it('should manualCheckForTimeout by anyone when durationForActivationPeriod has occured', async () => {
       // move from `Preview` to `PreFunding` stage
       await testStartPreFunding(poa, { from: broker, gasPrice })
 
@@ -197,7 +197,7 @@ describe('when handling unhappy paths', async () => {
 
       await timeTravelToActivationPeriodTimeout(poa)
 
-      await testSetStageToTimedOut(poa)
+      await testManualCheckForTimeout(poa)
     })
   })
 })
@@ -1174,7 +1174,7 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
       })
       // The intention is to double the rate. However, we compensate the fiat
       // rate penalty of 2% by increasing the rate slighly more. This way,
-      // the following `poa.checkFundingSuccessful()` will succeed.
+      // the following `poa.manualCheckForFundingSuccessful()` will succeed.
       rate = rate
         .mul(2)
         .mul(333.33) // default fiat rate
@@ -1184,8 +1184,8 @@ describe('when buying tokens with a fluctuating fiatRate', () => {
 
       const interimStage = await poa.stage()
 
-      // use checkFundingSuccessful after rate doubling (fundingGoal should be met)
-      await poa.checkFundingSuccessful()
+      // use manualCheckForFundingSuccessful after rate doubling (fundingGoal should be met)
+      await poa.manualCheckForFundingSuccessful()
 
       const postStage = await poa.stage()
 

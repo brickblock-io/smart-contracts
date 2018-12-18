@@ -266,7 +266,7 @@ interface IPoaTokenCrowdsale {
     external
     returns (bool);
 
-  function setStageToTimedOut()
+  function manualCheckForTimeout()
     external
     returns (bool);
 
@@ -356,7 +356,7 @@ interface IPoaTokenCrowdsale {
     view
     returns (address _broker);
 
-  function checkFundingSuccessful()
+  function manualCheckForFundingSuccessful()
     external
     returns (bool);
 

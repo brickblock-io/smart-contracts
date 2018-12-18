@@ -18,7 +18,7 @@ const {
   testPercent,
   testReclaim,
   testRemoveTokensWithFiat,
-  testSetStageToTimedOut,
+  testManualCheckForTimeout,
   testStartPreFunding,
   testStartEthSale,
   testStartFiatSale,
@@ -68,8 +68,8 @@ describe("when in 'FiatFunding' stage", () => {
       ])
     })
 
-    it('should NOT setStageToTimedOut', async () => {
-      await testWillThrow(testSetStageToTimedOut, [poa, { from: owner }])
+    it('should NOT manualCheckForTimeout', async () => {
+      await testWillThrow(testManualCheckForTimeout, [poa, { from: owner }])
     })
 
     it('should NOT activate, even if custodian', async () => {

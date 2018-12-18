@@ -15,7 +15,7 @@ const {
   testPaused,
   testPayout,
   testReclaim,
-  testSetStageToTimedOut,
+  testManualCheckForTimeout,
   testStartPreFunding,
   testStartEthSale,
   testTerminate,
@@ -71,8 +71,8 @@ describe("when in 'EthFunding' stage", () => {
       await testWillThrow(testStartEthSale, [poa, { from: owner }])
     })
 
-    it('should NOT setStageToTimedOut', async () => {
-      await testWillThrow(testSetStageToTimedOut, [poa, { from: owner }])
+    it('should NOT manualCheckForTimeout', async () => {
+      await testWillThrow(testManualCheckForTimeout, [poa, { from: owner }])
     })
 
     it('should NOT activate, even if custodian', async () => {

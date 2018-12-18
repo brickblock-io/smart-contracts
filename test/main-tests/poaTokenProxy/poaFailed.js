@@ -13,7 +13,7 @@ const {
   testPayout,
   testReclaim,
   testReclaimAll,
-  testSetStageToTimedOut,
+  testManualCheckForTimeout,
   testStartPreFunding,
   testStartFiatSale,
   testStartEthSale,
@@ -178,16 +178,16 @@ describe("when in 'TimedOut' stage", () => {
 
     // start core stage functionality
 
-    it('should setTimedOut', async () => {
-      await testSetStageToTimedOut(poa)
+    it('should manualCheckForTimeout', async () => {
+      await testManualCheckForTimeout(poa)
     })
 
-    it('should NOT checkFundingSuccessful', async () => {
-      await testWillThrow(poa.checkFundingSuccessful, [])
+    it('should NOT manualCheckForFundingSuccessful', async () => {
+      await testWillThrow(poa.manualCheckForFundingSuccessful, [])
     })
 
-    it('should NOT be able to call setStageToTimedOut again, even if owner', async () => {
-      await testWillThrow(testSetStageToTimedOut, [poa, { from: owner }])
+    it('should NOT be able to call manualCheckForTimeout again, even if owner', async () => {
+      await testWillThrow(testManualCheckForTimeout, [poa, { from: owner }])
     })
 
     it('should reclaim', async () => {
@@ -211,8 +211,8 @@ describe("when in 'Preview' stage but funding period is over", async () => {
       await timeTravelToFundingPeriodTimeout(poa)
     })
 
-    it('should setTimedOut', async () => {
-      await testSetStageToTimedOut(poa)
+    it('should manualCheckForTimeout', async () => {
+      await testManualCheckForTimeout(poa)
     })
   })
 })
@@ -231,8 +231,8 @@ describe("when in 'PreFunding' stage but funding period is over", async () => {
       await timeTravelToFundingPeriodTimeout(poa)
     })
 
-    it('should setTimedOut', async () => {
-      await testSetStageToTimedOut(poa)
+    it('should manualCheckForTimeout', async () => {
+      await testManualCheckForTimeout(poa)
     })
   })
 })
@@ -256,8 +256,8 @@ describe("when in 'FiatFunding' stage but funding period is over", async () => {
       await timeTravelToFundingPeriodTimeout(poa)
     })
 
-    it('should setTimedOut', async () => {
-      await testSetStageToTimedOut(poa)
+    it('should testManualCheckForTimeout', async () => {
+      await testManualCheckForTimeout(poa)
     })
   })
 })
