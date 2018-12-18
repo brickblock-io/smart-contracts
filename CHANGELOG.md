@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="5.0.0"></a>
+# [5.0.0](https://git.brickblock-dev.io/platform/smart-contracts/compare/v4.0.1...v5.0.0) (2018-12-18)
+
+
+### Bug Fixes
+
+* buy() improvements ([42f1fa3](https://git.brickblock-dev.io/platform/smart-contracts/commits/42f1fa3))
+* Manual POA stage checks. Updated tests with updated POA interface ([b7c30ba](https://git.brickblock-dev.io/platform/smart-contracts/commits/b7c30ba))
+
+
+### BREAKING CHANGES
+
+* Replaced checkFundingSuccessful with manualCheckForFundingSuccessful. Replaced setStageToTimedOut with manualCheckForTimeout
+
+
+
 <a name="4.0.0"></a>
 # [4.0.0](https://git.brickblock-dev.io/platform/smart-contracts/compare/v3.9.0...v4.0.0) (2018-11-27)
 
