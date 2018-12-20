@@ -208,8 +208,7 @@ contract PoaCommon is PoaProxyCommon {
   {
     stage = _stage;
     getContractAddress("PoaLogger").call(
-      bytes4(keccak256("logStage(uint256)")),
-      uint256(_stage)
+      abi.encodeWithSignature("logStage(uint256)", uint256(_stage))
     );
   }
 
@@ -247,7 +246,7 @@ contract PoaCommon is PoaProxyCommon {
       // we're calling so it's safe to ignore this solium warning.
       // solium-disable-next-line security/no-call-value
       getContractAddress("FeeManager")
-        .call.value(_value)(bytes4(keccak256("payFee()")))
+        .call.value(_value)(abi.encodeWithSignature("payFee()"))
     );
   }
 

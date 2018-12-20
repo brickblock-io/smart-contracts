@@ -88,8 +88,11 @@ contract PoaProxy is PoaProxyCommon {
 
     emit ProxyUpgraded(_oldMaster, _newMaster);
     getContractAddress("PoaLogger").call(
-      bytes4(keccak256("logProxyUpgraded(address,address)")),
-      _oldMaster, _newMaster
+      abi.encodeWithSignature(
+        "logProxyUpgraded(address,address)",
+        _oldMaster,
+        _newMaster
+      )
     );
 
     return true;
@@ -109,8 +112,11 @@ contract PoaProxy is PoaProxyCommon {
 
     emit ProxyUpgraded(_oldMaster, _newMaster);
     getContractAddress("PoaLogger").call(
-      bytes4(keccak256("logProxyUpgraded(address,address)")),
-      _oldMaster, _newMaster
+      abi.encodeWithSignature(
+        "logProxyUpgraded(address,address)",
+        _oldMaster,
+        _newMaster
+      )
     );
 
     return true;
