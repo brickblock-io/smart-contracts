@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="6.0.0"></a>
+# [6.0.0](https://git.brickblock-dev.io/platform/smart-contracts/compare/v5.0.2...v6.0.0) (2019-01-03)
+
+
+### Chores
+
+* Globally renamed broker to issuer ([8efdffb](https://git.brickblock-dev.io/platform/smart-contracts/commits/8efdffb))
+
+
+### BREAKING CHANGES
+
+* functions that include 'broker' are renamed to 'issuer'
+
+
+
 <a name="5.0.2"></a>
 ## [5.0.2](https://git.brickblock-dev.io/platform/smart-contracts/compare/v5.0.0...v5.0.2) (2018-12-18)
 
