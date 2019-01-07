@@ -6,10 +6,12 @@ const setFiatRate = async (
   ExchangeRateProvider,
   params = {
     currencyName: 'EUR',
+    desiredExchangeRate: '500.12',
     queryString:
       'json(https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=EUR).EUR',
     callIntervalInSec: 30,
     callbackGasLimit: 150000,
+    ratePenalty: 20, // in permille => 20/1000 = 2%
     useStub: true,
   },
   txConfig = {
@@ -19,9 +21,11 @@ const setFiatRate = async (
 ) => {
   const {
     currencyName,
+    desiredExchangeRate,
     queryString,
     callIntervalInSec,
     callbackGasLimit,
+    ratePenalty,
     useStub,
   } = params
 
@@ -41,6 +45,7 @@ const setFiatRate = async (
     queryString,
     callIntervalInSec,
     callbackGasLimit,
+    ratePenalty,
     txConfig
   )
 
@@ -63,7 +68,7 @@ const setFiatRate = async (
     await ExchangeRateProvider.simulate__callback(
       pendingQueryId,
       // expected that this API returns a euro dollar value
-      '500.12',
+      desiredExchangeRate,
       txConfig
     )
   }
@@ -78,6 +83,9 @@ const setFiatRate = async (
       '-----------------------------------------------------------------\n\n'
     )
   )
+
+  // returning so caller can know the default values that were used
+  return params
 }
 
 module.exports = {
