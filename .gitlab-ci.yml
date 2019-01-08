@@ -1,7 +1,4 @@
 image: node:10
-variables:
-  GITLAB_BASE_URL: https://git.brickblock.sh
-  E2E_PROJECT_ID: devops%2Fe2e-tooling
 cache:
   key: $CI_BUILD_REF_SLUG
   paths:
@@ -10,6 +7,7 @@ cache:
 stages:
   - setup
   - test
+  - build
   - release
   - deploy
 
@@ -42,6 +40,30 @@ test:
     - cp .env.example .env
     - yarn test
 
+#########
+# BUILD #
+#########
+build_image:
+  stage: build
+  image: docker:latest
+  variables:
+    DOCKER_DRIVER: overlay2
+  services:
+    - docker:dind
+  script:
+    - docker login --username gitlab-ci-token --password $CI_BUILD_TOKEN $CI_REGISTRY
+    # if the branch is master, use the latest tag. When the repository is tagged (git tag), the docker image tag should reflect that.
+    - '[ "$CI_COMMIT_REF_SLUG" == "master" ] && CI_COMMIT_REF_SLUG=latest'
+    - docker build --network host --cache-from $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG e2e-tooling
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  only:
+    - master
+  except:
+    - tags
+  # skip artifacts and cache download for this job
+  dependencies: []
+  cache: {}
+
 ###############
 # NPM RELEASE #
 ###############
@@ -53,10 +75,3 @@ release:
     - master
   script:
     - /bin/sh $(pwd)/scripts/ci-release.sh
-
-trigger-ganache-rebuild:
-  stage: deploy
-  script:
-  - curl --request POST --form "token=$CI_JOB_TOKEN" --form ref=master ${GITLAB_BASE_URL}/api/v4/projects/${E2E_PROJECT_ID}/trigger/pipeline
-  only:
-  - master
