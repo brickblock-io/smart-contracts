@@ -9,4 +9,4 @@ RUN yarn --non-interative
 FROM node:8-alpine
 WORKDIR /app
 COPY --from=build /app /app
-CMD [ "yarn", "start" ]
+CMD [ "yarn", "start:e2e-tooling" ]

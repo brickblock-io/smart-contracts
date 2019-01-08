@@ -15,7 +15,8 @@
   "scripts": {
     "---SECTION:BLOCKCHAIN---": "-------------------- HOW TO START A LOCAL BLOCKCHAIN --------------------",
     "start:geth": "./scripts/geth/start-geth.sh",
-    "start": "node e2e-tooling/bootstrap.js",
+    "start": "yarn build && node e2e-tooling/bootstrap.js",
+    "start:e2e-tooling": "node e2e-tooling/bootstrap.js",
     "---SECTION:BUILD---": "-------------------- HOW TO BUILD THE SMART CONTRACTS --------------------",
     "build:comment": "Compile smart contracts and output into the build/ dir",
     "build": "rimraf build && truffle compile --reset && yarn build:inject-deployed-contracts",
