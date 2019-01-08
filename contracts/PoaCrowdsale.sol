@@ -641,7 +641,7 @@ contract PoaCrowdsale is PoaCommon {
 
   /**
    @notice Used for manually moving into the `TimedOut` in case no one has bought any tokens.
-   If no `buyWithFiat()` or `buyWithEth()` occurrs before the funding deadline, the token would
+   If no `buyWithFiat()` or `buyWithEth()` occurs before the funding deadline, the token would
    be stuck in either the `FiatFunding` or `EthFunding` stage.
    Additionally, it can be used when the custodian hasn't called `activate()` before the
    `activationDeadline` or when no investor has called `reclaim()` after a timeout.
@@ -663,7 +663,7 @@ contract PoaCrowdsale is PoaCommon {
    * @notice In case the funding goal is reached without an explicit buy,
    * most likely due to ETH appreciating in value over fiat, then this public
    * function can be manually called to tip the contract over into the
-   * `FuFundingSuccessful` stage
+   * `FundingSuccessful` stage
    */
   function manualCheckForFundingSuccessful()
     public
