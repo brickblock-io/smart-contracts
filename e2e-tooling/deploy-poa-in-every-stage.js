@@ -13,8 +13,7 @@ const { timeTravel } = require('../helpers/time-travel')
 // Contracts
 const IPoaTokenCrowdsale = require('../build/contracts/IPoaTokenCrowdsale.json')
 
-const oneWeekInSec = 7 * 24 * 60 * 60
-const twoWeeksInSec = 2 * oneWeekInSec
+const oneWeekInSeconds = 7 * 24 * 60 * 60
 const oneHundredThousandEuroInCents = 10000000
 const oneHundredThousandTokensInWei = 100000e18
 
@@ -28,9 +27,9 @@ const defaultPoaConfig = (accounts, exchangeRateInfo) => ({
   startTimeForFundingPeriod: migrationHelpers.general.unixTimeWithOffsetInSec(
     30
   ),
-  durationForFiatFundingPeriod: oneWeekInSec,
-  durationForEthFundingPeriod: oneWeekInSec,
-  durationForActivationPeriod: twoWeeksInSec,
+  durationForFiatFundingPeriod: oneWeekInSeconds,
+  durationForEthFundingPeriod: oneWeekInSeconds,
+  durationForActivationPeriod: oneWeekInSeconds,
   fundingGoalInCents: oneHundredThousandEuroInCents,
 })
 
@@ -56,7 +55,14 @@ const readPoaAddressFromTransactionLogs = logs =>
   logs.find(log => log.event === 'TokenAdded').args.token
 
 const deployPoa = (
-  {
+  basePoaConfig,
+  PoaManager,
+  transactionConfig,
+  web3
+) => async customPoaConfig => {
+  const {
+    name,
+    symbol,
     fiatCurrency,
     custodian,
     totalSupply,
@@ -65,11 +71,8 @@ const deployPoa = (
     durationForEthFundingPeriod,
     durationForActivationPeriod,
     fundingGoalInCents,
-  },
-  PoaManager,
-  transactionConfig,
-  web3
-) => async ({ name, symbol }) => {
+  } = { ...basePoaConfig, ...customPoaConfig }
+
   console.log(chalk.cyan('Deploying PoaToken for stage', name))
 
   // we always deploy through the PoaManager
@@ -126,10 +129,14 @@ const deployPoaTokensInEveryStage = async (
     FiatFunding: deployWithPoaManager({
       name: 'fiat-funding',
       symbol: 'fiat-funding',
+      // ensuring this Contract stays in a valid time after all the time travels, so FiatFunding can be interacted with
+      durationForFiatFundingPeriod: 10 * oneWeekInSeconds,
     }),
     EthFunding: deployWithPoaManager({
       name: 'eth-funding',
       symbol: 'eth-funding',
+      // ensuring this Contract stays in a valid time after all the time travels, so EthFunding can be interacted with
+      durationForEthFundingPeriod: 10 * oneWeekInSeconds,
     }),
     FundingSuccessful: deployWithPoaManager({
       name: 'funding-successful',
@@ -174,7 +181,6 @@ const deployPoaTokensInEveryStage = async (
       'EthFunding',
       'FundingSuccessful',
       'FundingCancelled',
-      'TimedOut',
       'Active',
       'Terminated',
     ].map(key =>
@@ -196,7 +202,6 @@ const deployPoaTokensInEveryStage = async (
       'FiatFunding',
       'FundingSuccessful',
       'FundingCancelled',
-      'TimedOut',
       'Active',
       'Terminated',
     ].map(key =>
@@ -224,7 +229,7 @@ const deployPoaTokensInEveryStage = async (
       )
     })
   )
-  console.log(chalk.cyan('PoaToken stage EthFunding complete'))
+  console.log(chalk.cyan('PoaToken stage FundingSuccessful complete'))
 
   // FundingCancelled: ending stage for a POA; must be called by custodian
   await poaTokens['FundingCancelled'].cancelFunding(
@@ -242,19 +247,13 @@ const deployPoaTokensInEveryStage = async (
         makeTransactionConfig({ from: accounts.custodian })
       )
 
-      console.log('YO MAN, payActivationFee')
-      try {
-        await PoaContract.payActivationFee(
-          makeTransactionConfig({
-            from: accounts.issuer,
-            value: await PoaContract.calculateTotalFee(),
-          })
-        )
-      } catch (error) {
-        console.log('WOAAH', error.reason)
-      }
+      await PoaContract.payActivationFee(
+        makeTransactionConfig({
+          from: accounts.issuer,
+          value: (await PoaContract.calculateTotalFee()).toString(),
+        })
+      )
 
-      console.log('YO MAN, activate')
       await PoaContract.activate(
         makeTransactionConfig({ from: accounts.custodian })
       )
@@ -264,6 +263,7 @@ const deployPoaTokensInEveryStage = async (
 
   // TimedOut: ending stage for a POA; can be called by anyone
   await timeTravelForDuration(poaBaseConfig.durationForEthFundingPeriod, web3)
+  // NOTE: TimedOut can be reached even when no funding period was ever started
   await poaTokens['TimedOut'].manualCheckForTimeout(
     makeTransactionConfig({ from: accounts.anyone })
   )

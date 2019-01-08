@@ -130,10 +130,7 @@ const deploySmartContracts = async ganachePort => {
 
   // Add contract instances to our contract registry
   await migrationHelpers.registry.addContractsToRegistry(
-    {
-      ...contractEcosystem,
-      ExchangeRateProvider: contractEcosystem.ExchangeRateProvider,
-    },
+    contractEcosystem,
     makeTransactionConfig({ from: accounts.owner })
   )
 
@@ -150,7 +147,7 @@ const deploySmartContracts = async ganachePort => {
     contractEcosystem.BrickblockToken,
     {
       fountainAddress: contractEcosystem.BrickblockAccount.address,
-      contributors: [accounts.fiatInvestor],
+      contributors: [accounts.fiatInvestor, accounts.ethInvestor],
       tokenAmountPerContributor: new BigNumber(100e18),
     },
     makeTransactionConfig({ from: accounts.owner })
@@ -172,6 +169,24 @@ const deploySmartContracts = async ganachePort => {
         makeTransactionConfig({ from: accounts.owner })
       )
     )
+  )
+
+  // Lock some BBK tokens, otherwise `payFee` will always fail during POA `payActivationFee`
+  await Promise.all(
+    [accounts.fiatInvestor, accounts.ethInvestor].map(async investorAddress => {
+      const lockAmount = 10e18
+
+      await contractEcosystem.BrickblockToken.approve(
+        contractEcosystem.AccessToken.address,
+        lockAmount,
+        makeTransactionConfig({ from: investorAddress })
+      )
+
+      await contractEcosystem.AccessToken.lockBBK(
+        lockAmount,
+        makeTransactionConfig({ from: investorAddress })
+      )
+    })
   )
 
   // Deploy one POA in each stage it can be in

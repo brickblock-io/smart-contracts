@@ -23,6 +23,6 @@ module.exports = {
 
   // local testnet (dedicated ganache when running `yarn ganache-cli --network 4448` in platform to run end-to-end tests against)
   '4448': {
-    ContractRegistry: '0xd3aa556287afe63102e5797bfddd2a1e8dbb3ea5',
+    ContractRegistry: '0x17e91224c30c5b0b13ba2ef1e84fe880cb902352',
   },
 }
