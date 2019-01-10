@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="6.0.1"></a>
+## [6.0.1](https://git.brickblock-dev.io/platform/smart-contracts/compare/v6.0.0...v6.0.1) (2019-01-10)
+
+
+### Bug Fixes
+
+* ContractRegistry has a different address on e2e-tooling ganache ([32e4e30](https://git.brickblock-dev.io/platform/smart-contracts/commits/32e4e30))
+
+
+
 <a name="6.0.0"></a>
 # [6.0.0](https://git.brickblock-dev.io/platform/smart-contracts/compare/v5.0.2...v6.0.0) (2019-01-03)
 
