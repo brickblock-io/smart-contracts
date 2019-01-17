@@ -187,7 +187,7 @@ contract PoaManager is Ownable {
     emit IssuerStatusChanged(_issuerAddress, false);
   }
 
-  function getIssuerStatus(address _issuerAddress)
+  function isActiveIssuer(address _issuerAddress)
     public
     view
     returns (bool)
@@ -236,7 +236,7 @@ contract PoaManager is Ownable {
     @param _durationForActivationPeriod How long a custodian has to activate token, given in seconds
     @param _fundingGoalInCents Given as fiat cents
    */
-  function addToken(
+  function addNewToken(
     bytes32 _name32,
     bytes32 _symbol32,
     bytes32 _fiatCurrency32,
@@ -283,6 +283,29 @@ contract PoaManager is Ownable {
     return _tokenAddress;
   }
 
+  /**
+    @notice Add existing `PoaProxy` contracts when `PoaManager` has been upgraded
+    @param _tokenAddress the `PoaProxy` address to address
+    @param _isListed if `PoaProxy` should be added as active or inactive
+    @dev `PoaProxy` contracts can only be added when the POA's issuer is already listed.
+         Furthermore, we use `issuer()` as check if `_tokenAddress` represents a `PoaProxy`.
+   */
+  function addExistingToken(address _tokenAddress, bool _isListed)
+    external
+    onlyOwner
+  {
+    require(!doesEntityExist(_tokenAddress, tokenMap[_tokenAddress]));
+    // Issuer address of `_tokenAddress` must be an active Issuer.
+    // If `_tokenAddress` is not an instance of PoaProxy, this will fail as desired.
+    require(isActiveIssuer(IPoaToken(_tokenAddress).issuer()));
+
+    tokenMap[_tokenAddress] = addEntity(
+      _tokenAddress,
+      tokenAddressList,
+      _isListed
+    );
+  }
+
   // Remove a token
   function removeToken(address _tokenAddress)
     public
@@ -321,7 +344,7 @@ contract PoaManager is Ownable {
     emit TokenStatusChanged(_tokenAddress, false);
   }
 
-  function getTokenStatus(address _tokenAddress)
+  function isActiveToken(address _tokenAddress)
     public
     view
     returns (bool)
@@ -329,6 +352,14 @@ contract PoaManager is Ownable {
     require(doesEntityExist(_tokenAddress, tokenMap[_tokenAddress]));
 
     return tokenMap[_tokenAddress].active;
+  }
+
+  function isRegisteredToken(address _tokenAddress)
+    external
+    view
+    returns (bool)
+  {
+    return doesEntityExist(_tokenAddress, tokenMap[_tokenAddress]);
   }
 
   //

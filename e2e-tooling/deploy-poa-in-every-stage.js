@@ -76,7 +76,7 @@ const deployPoa = (
   console.log(chalk.cyan('Deploying PoaToken for stage', name))
 
   // we always deploy through the PoaManager
-  const transactionReceipt = await PoaManager.addToken(
+  const transactionReceipt = await PoaManager.addNewToken(
     name,
     symbol,
     fiatCurrency,

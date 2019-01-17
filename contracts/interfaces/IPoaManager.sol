@@ -1,7 +1,7 @@
 pragma solidity 0.4.24;
 
 interface IPoaManager {
-  function getTokenStatus(
+  function isActiveToken(
     address _tokenAddress
   )
     external

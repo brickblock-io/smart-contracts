@@ -66,8 +66,8 @@ const setupPoaManager = async () => {
   }
 }
 
-const addToken = async (pmr, config) => {
-  const txReceipt = await pmr.addToken(
+const addNewToken = async (pmr, config) => {
+  const txReceipt = await pmr.addNewToken(
     defaultName32,
     defaultSymbol32,
     defaultFiatCurrency32,
@@ -142,7 +142,7 @@ const testTerminateToken = async (pmr, poa, config) => {
 
 module.exports = {
   setupPoaManager,
-  addToken,
+  addNewToken,
   moveTokenToActive,
   testPauseToken,
   testUnpauseToken,

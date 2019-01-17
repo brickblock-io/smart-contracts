@@ -13,6 +13,11 @@ interface IPoaToken {
     external
     returns (bool);
 
+  function issuer()
+    external
+    view
+    returns (address);
+
   function startPreFunding()
     external
     returns (bool);

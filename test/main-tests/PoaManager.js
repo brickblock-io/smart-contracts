@@ -1,7 +1,7 @@
 const IPoaTokenCrowdsale = artifacts.require('IPoaTokenCrowdsale')
 const { checkForEvent, testWillThrow } = require('../helpers/general')
 const {
-  addToken,
+  addNewToken,
   setupPoaManager,
   moveTokenToActive,
   testPauseToken,
@@ -91,7 +91,7 @@ describe('when calling issuer functions', () => {
       })
 
       it('should set active value to true after adding issuer', async () => {
-        const actual = await pmr.getIssuerStatus(addedIssuer)
+        const actual = await pmr.isActiveIssuer(addedIssuer)
         const expected = true
         assert.equal(actual, expected, 'addedIssuer starts listed')
       })
@@ -135,7 +135,7 @@ describe('when calling issuer functions', () => {
       })
 
       it('should set active value to false after delisting', async () => {
-        const actual = await pmr.getIssuerStatus(addedIssuer)
+        const actual = await pmr.isActiveIssuer(addedIssuer)
         const expected = false
         assert.equal(
           actual,
@@ -171,7 +171,7 @@ describe('when calling issuer functions', () => {
       })
 
       it('should set active value to true after listing', async () => {
-        const actual = await pmr.getIssuerStatus(addedIssuer)
+        const actual = await pmr.isActiveIssuer(addedIssuer)
         const expected = true
         assert.equal(
           actual,
@@ -215,8 +215,8 @@ describe('when calling issuer functions', () => {
         )
       })
 
-      it('should error when trying to getIssuerStatus of removed issuer', async () => {
-        await testWillThrow(pmr.getIssuerStatus, [addedIssuer])
+      it('should error when trying to isActiveIssuer of removed issuer', async () => {
+        await testWillThrow(pmr.isActiveIssuer, [addedIssuer])
       })
 
       it('should error when trying to remove an issuer from notOwner address', async () => {
@@ -276,7 +276,7 @@ describe('when calling token functions', () => {
 
     describe('when adding a token', () => {
       it('should emit TokenAdded', async () => {
-        const { txReceipt, tokenAddress } = await addToken(pmr, {
+        const { txReceipt, tokenAddress } = await addNewToken(pmr, {
           from: listedIssuer,
         })
 
@@ -313,13 +313,13 @@ describe('when calling token functions', () => {
       })
 
       it('should set active value to false after adding a token', async () => {
-        const actual = await pmr.getTokenStatus(addedToken)
+        const actual = await pmr.isActiveToken(addedToken)
         const expected = false
         assert.equal(actual, expected, 'added token starts delisted')
       })
 
       it('should allow for more tokens to be added', async () => {
-        const { tokenAddress } = await addToken(pmr, {
+        const { tokenAddress } = await addNewToken(pmr, {
           from: listedIssuer,
         })
 
@@ -336,7 +336,7 @@ describe('when calling token functions', () => {
       })
 
       it('should error when trying to add a token from a delisted issuer address', async () => {
-        await testWillThrow(addToken, [
+        await testWillThrow(addNewToken, [
           pmr,
           {
             from: delistedIssuer,
@@ -345,7 +345,7 @@ describe('when calling token functions', () => {
       })
 
       it('should error when trying to add a token from a non issuer address', async () => {
-        await testWillThrow(addToken, [
+        await testWillThrow(addNewToken, [
           pmr,
           {
             from: notIssuer,
@@ -367,7 +367,7 @@ describe('when calling token functions', () => {
       })
 
       it('should set active value to true after listing', async () => {
-        const actual = await pmr.getTokenStatus(addedToken)
+        const actual = await pmr.isActiveToken(addedToken)
         const expected = true
         assert.equal(
           actual,
@@ -403,7 +403,7 @@ describe('when calling token functions', () => {
       })
 
       it('should set active value to false after delisting', async () => {
-        const actual = await pmr.getTokenStatus(addedToken)
+        const actual = await pmr.isActiveToken(addedToken)
         const expected = false
         assert.equal(
           actual,
@@ -447,8 +447,8 @@ describe('when calling token functions', () => {
         )
       })
 
-      it('should error when trying to getTokenStatus of removed token', async () => {
-        await testWillThrow(pmr.getTokenStatus, [addedToken])
+      it('should error when trying to isActiveToken of removed token', async () => {
+        await testWillThrow(pmr.isActiveToken, [addedToken])
       })
 
       it('should error when trying to remove a token from notOwner address', async () => {
@@ -476,6 +476,100 @@ describe('when calling token functions', () => {
         await testWillThrow(pmr.removeToken, [anotherToken])
       })
     })
+
+    describe('when adding an existing token', () => {
+      it('should fail when non-owner tries to add existing token', async () => {
+        ;[listedIssuer, delistedIssuer, notIssuer, notOwner].forEach(
+          async address => {
+            await testWillThrow(pmr.addExistingToken, [
+              addedToken,
+              true,
+              {
+                from: address,
+              },
+            ])
+          }
+        )
+      })
+
+      it('should fail when issuer is not listed as active', async () => {
+        // temprarily delist Issuer, which deployed `addedToken` for this test
+        await pmr.delistIssuer(listedIssuer)
+
+        // `listedIssuer` created `addedToken`, however, `listedIssuer` is currently delisted
+        await testWillThrow(pmr.addExistingToken, [addedToken, true])
+
+        // list `listedIssuer` again
+        await pmr.listIssuer(listedIssuer)
+      })
+
+      it('should fail when existing token address is not a POA token (does fail or not return on `issuer()`)', async () => {
+        const definitelyNotAContract =
+          '0x123000000000000000000000000000000000000000'
+        const arbitraryContract = pmr.address
+        ;[definitelyNotAContract, arbitraryContract].forEach(
+          async noPoaAddress => {
+            await testWillThrow(pmr.addExistingToken, [noPoaAddress, true])
+          }
+        )
+      })
+
+      it('should succeed when owner adds existing unlisted POA token that should be active', async () => {
+        await pmr.addExistingToken(addedToken, true)
+
+        // validate status of added token
+        const actual = await pmr.isActiveToken(addedToken)
+        const expected = true
+        assert.equal(
+          actual,
+          expected,
+          'listed token has active value set to true'
+        )
+
+        const actualList = await pmr.getTokenAddressList()
+        const expectedList = [addedToken]
+        assert.deepEqual(
+          actualList,
+          expectedList,
+          'tokenAddressList should contain added token'
+        )
+      })
+
+      it('should fail when owner adds existing POA token that is already listed and active', async () => {
+        await testWillThrow(pmr.addExistingToken, [addedToken, true])
+        await testWillThrow(pmr.addExistingToken, [addedToken, false])
+      })
+
+      it("should succeed when owner adds existing unlisted POA token that shouldn't be active", async () => {
+        // remove previously added token for this test
+        await pmr.removeToken(addedToken)
+
+        // re-add `addedToken` but this time as non-active
+        await pmr.addExistingToken(addedToken, false)
+
+        // validate status of added token
+        const actual = await pmr.isActiveToken(addedToken)
+        const expected = false
+        assert.equal(
+          actual,
+          expected,
+          'delisted token has active value set to false'
+        )
+
+        const actualList = await pmr.getTokenAddressList()
+        const expectedList = [addedToken]
+        assert.deepEqual(
+          actualList,
+          expectedList,
+          'tokenAddressList should contain added token'
+        )
+      })
+
+      it('should fail when owner adds existing POA token that is already listed but not active', async () => {
+        await testWillThrow(pmr.addExistingToken, [addedToken, true])
+        await testWillThrow(pmr.addExistingToken, [addedToken, false])
+      })
+    })
   })
 })
 
@@ -495,9 +589,11 @@ describe('when calling token convenience functions', () => {
       fmr = contracts.fmr
 
       await pmr.addIssuer(issuer)
-      const { tokenAddress: addedTokenAddress } = await addToken(pmr, {
+
+      const { tokenAddress: addedTokenAddress } = await addNewToken(pmr, {
         from: issuer,
       })
+
       await pmr.listToken(addedTokenAddress, {
         from: owner,
       })

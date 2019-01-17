@@ -81,7 +81,7 @@ const deployPoa = async (
     chalk.cyan(`🚀  Deploying POA "${name}" with symbol "${symbol}"…\n`)
   )
 
-  const tx = await poaManager.addToken(
+  const tx = await poaManager.addNewToken(
     name,
     symbol,
     fiatCurrency,

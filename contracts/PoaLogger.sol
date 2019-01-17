@@ -24,7 +24,7 @@ contract PoaLogger {
     require(
       IPoaManager(
         registry.getContractAddress("PoaManager")
-      ).getTokenStatus(msg.sender)
+      ).isActiveToken(msg.sender)
     );
     _;
   }

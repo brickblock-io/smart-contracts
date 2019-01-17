@@ -280,7 +280,7 @@ const setupPoaProxyAndEcosystem = async () => {
   await pmr.addIssuer(issuer)
 
   // Poa PoaProxy contract
-  const poaTx = await pmr.addToken(
+  const poaTx = await pmr.addNewToken(
     defaultName32,
     defaultSymbol32,
     defaultFiatCurrency32,
@@ -341,7 +341,7 @@ const testProxyInitialization = async (reg, pmr, args) => {
   await reg.updateContractAddress('PoaCrowdsaleMaster', poacm.address)
 
   // Poa PoaProxy contract tx
-  const poaTx = await pmr.addToken.apply(null, args)
+  const poaTx = await pmr.addNewToken.apply(null, args)
 
   // wrap the proxied PoA in PoaToken ABI to call as if regular PoA
   const poa = await IPoaTokenCrowdsale.at(poaTx.logs[0].args.token)

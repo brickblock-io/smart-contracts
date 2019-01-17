@@ -84,7 +84,7 @@ async function createToken(aToken) {
   try {
     console.log(`Creating PoaTokenContract for ${aToken.symbol}`)
     const bb = await Brickblock.deployed()
-    const estimateGas = await bb.addToken.estimateGas(
+    const estimateGas = await bb.addNewToken.estimateGas(
       aToken.name,
       aToken.symbol,
       aToken.custodian,
@@ -95,7 +95,7 @@ async function createToken(aToken) {
         gas: maxGas,
       }
     )
-    const txid = await bb.addToken.sendTransaction(
+    const txid = await bb.addNewToken.sendTransaction(
       aToken.name,
       aToken.symbol,
       aToken.custodian,

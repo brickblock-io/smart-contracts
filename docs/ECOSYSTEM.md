@@ -520,6 +520,7 @@ There is a modifier for each `log` function which checks if the sender is a [Poa
 
 - deploy new [PoaTokens](#poatoken)
   - Note: Only use `PoaManager` to deploy `PoaToken`s. This is needed to deploy and initialize `PoaToken` in the same transaction. If done manually in two steps/transactions, it is vulnerable to front-running.
+- Re-add already deployed [PoaTokens](#poatoken) when `PoaManager` has been upgraded
 - remove [PoaTokens](#poatoken)
 - list [PoaToken](#poatoken)
 - delist [PoaToken](#poatoken)
@@ -548,13 +549,17 @@ From here on, this concept will be expressed as `Proxy`. Even though this actual
 
 #### Issuer Functions
 
-A `issuer` is a person with an address who has passed requirements to be able to list new properties on the Brickblock platform. After this screening process is complete, the `issuer` is added through `addIssuer()`. The issuer starts off as `active` and is able to add [PoaProxys](#poaproxy) through `addToken()`.
+An `issuer` is a person with an address who has passed requirements to be able to list new properties on the Brickblock platform. After this screening process is complete, the `issuer` is added through `addIssuer()`. The issuer starts off as `active` and is able to add [PoaProxys](#poaproxy) through `addNewToken()`.
 
 An issuer can be removed or delisted by the `owner`. Information about a `issuer`'s status can also be retrieved.
 
+#### Brickblock Functions
+
+In case `PoaManager` must be upgraded, the state of the old `PoaManager` must be migrated to the newly deployed `PoaManager`. Specifically, the new `PoaManager` must be populated with `issuer` addresses in POA Token addresses. Brickblock can add and manage existing `issuer`s with `addIssuer()`, `listIssuer()`, and `delistIssuer()`. Furthermore, Brickblock adds existing POA tokens with the function `addExistingToken(<poa address>, <isListed>)`. By using this function, POA Tokens can be added as active (`isListed=true`) or inactive (`isListed=false`).
+
 #### Token Functions
 
-A new [PoaProxy](#poaproxy) can be deployed through `addToken()` by a `issuer` as long as they are `active`. A token requires the following parameters:
+A new [PoaProxy](#poaproxy) can be deployed through `addNewToken()` by a `issuer` as long as they are `active`. A token requires the following parameters:
 
 ```
 // ER20 name
