@@ -54,7 +54,7 @@ build_image:
     - docker login --username gitlab-ci-token --password $CI_BUILD_TOKEN $CI_REGISTRY
     # if the branch is master, use the latest tag. When the repository is tagged (git tag), the docker image tag should reflect that.
     - '[ "$CI_COMMIT_REF_SLUG" == "master" ] && CI_COMMIT_REF_SLUG=latest'
-    - docker build --network host --cache-from $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG e2e-tooling
+    - docker build --network host --cache-from $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG .
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
   only:
     - master
