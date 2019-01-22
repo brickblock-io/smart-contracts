@@ -4,7 +4,6 @@ WORKDIR /app
 
 # we install the dev dependencies as we dont want other downstream projects (like portal) to have
 # conflicts with express versions due to this packaging in a Docker container
-ENV SECRET_NPM_TOKEN="" 
 RUN yarn --non-interative
 
 FROM node:8-alpine
