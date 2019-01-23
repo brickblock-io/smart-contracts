@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="6.0.5"></a>
+## [6.0.5](https://git.brickblock-dev.io/platform/smart-contracts/compare/v6.0.4...v6.0.5) (2019-01-23)
+
+
+### Bug Fixes
+
+* **Dockerfile:** update Dockerfile for e2e ([bac9003](https://git.brickblock-dev.io/platform/smart-contracts/commits/bac9003))
+
+
+
 <a name="6.0.4"></a>
 ## [6.0.4](https://git.brickblock-dev.io/platform/smart-contracts/compare/v6.0.3...v6.0.4) (2019-01-22)
 
