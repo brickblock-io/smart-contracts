@@ -33,6 +33,21 @@
     pip3 install mythril
     ```
 
+## Frozen Contracts
+The directory `frozen/` contains smart contract files and related tests that are considered frozen. The concept of 'frozen contracts' means that these contracts have been deployed to mainnet using a specific Solidity compiler version. Frozen contracts should not be upgraded or can not be upgraded. By filling out parts in our mainnet ecosystem, e.g. rich state that's hard to migrate to new contracts, more and more contracts won't be upgradable anymore. Only logic related to POA Tokens is designed to be upgradable through the `delegatecall`-pattern we apply. Since Truffle currently supports only one Solidity compiler version for the command `truffle compile`, we must make sure that all `.sol` files remain in `contracts/`. Thus frozen contracts represent a duplicate of contracts with the compiler version with which the contract was deployed to mainnet.
+
+Currently, the following contracts are frozen:
+
+- `BrickblockToken` (version 0.4.18): The ICO is over and this contract holds significant state on mainnet. Cannot be upgraded.
+- `BrickblockAccount` (version 0.4.24): Since the ICO was finalized, this contract holds the company BBKs. Cannot be upgraded.
+- `ContractRegistry` (version 0.4.24): Holds references to other mainnet contracts. Referenced contracts, including frozen `BrickblockAccount` have been initialized with the `ContractRegistry` address. Thus, this contract cannot be upgraded.
+- `CustomPOAToken` (version 0.4.18): Not used anymore.
+- All other contracts can potentially still be upgraded although being deployed on mainnet. However, upgrades included re-registrations of contract addresses in `ContractRegistry`.
+
+Generally, the current mainnet code of a smart contract can be found by first checking `frozen/`. If it's not there, the mainnet code can be found in `contracts/`.
+
+*Note: As the output bytecode changes between Solidity compiler versions, we have no guarantee that our tested contracts in `contracts/` (single compiler version) actually behave the same way as the mainnet ecosystem (different compiler versions). This is a risk that we should address when Truffle supports compiling contracts under different compiler versions.*
+
 ## Testing
 Tests are split in three categories: Main tests, Stress tests and Frozen Contract tests. In development mode we run all tests against truffle's [ganache](http://truffleframework.com/ganache/). Before submitting contracts to auditors or deploying contracts to Mainnet we always run the tests against `geth`, too. [TEST-AGAINST-GETH.md](./TEST-AGAINST-GETH.md) explains how this works. It is a heck of a lot slower _but_ it is closer to the production environment in which our contracts will eventually run so it gives as a higher degree of certainty that everything really works as expected.
 
@@ -60,9 +75,7 @@ yarn test stress-tests/[testFilename.js] --skip-migrations
 ```
 
 #### Frozen Contract Tests
-Contracts that have already been audited and/or deployed to Mainnet, so they're immutable for now. For example, `BrickblockToken` and `CustomPOAToken`.
-
-Run them with:
+Tests of frozen contracts can be run with:
 
 ```sh
 yarn test:frozen
