@@ -11,6 +11,11 @@ module.exports = {
     ContractRegistry: '0x5973376b603268fe4251d13040226078257014f8',
   },
 
+  // ropsten
+  '3': {
+    ContractRegistry: '0xae472faaf28b2979d4d36be8ad8947ed7c827e99',
+  },
+
   // rinkeby
   '4': {
     ContractRegistry: '0xf166a2c755c2ad404b42c9be146acefbb3907aee',

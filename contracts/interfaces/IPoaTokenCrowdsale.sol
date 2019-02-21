@@ -360,6 +360,11 @@ interface IPoaTokenCrowdsale {
     external
     returns (bool);
 
+  function isFundingGoalReached(uint256 _withWeiAmount)
+    external
+    view
+    returns (bool);
+
   //
   // end crowdsale functionality
   //
