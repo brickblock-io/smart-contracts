@@ -606,11 +606,17 @@ contract PoaToken is PoaCommon {
       return 0;
     }
 
-    return isFiatInvestor(_address)
-      ? fundedFiatAmountPerUserInTokens[_address]
-      : fundedEthAmountPerUserInWei[_address]
-      .mul(totalSupply_.sub(fundedFiatAmountInTokens))
-      .div(fundedEthAmountInWei);
+    if (isFiatInvestor(_address)) { 
+      return fundedFiatAmountPerUserInTokens[_address];
+    }
+
+    if (isEthInvestor(_address)) {
+      return fundedEthAmountPerUserInWei[_address]
+        .mul(totalSupply_.sub(fundedFiatAmountInTokens))
+        .div(fundedEthAmountInWei);
+    }
+
+    return 0;
   }
 
   /// @notice ERC20 compliant balanceOf: uses NoobCoin pattern: https://github.com/TovarishFin/NoobCoin

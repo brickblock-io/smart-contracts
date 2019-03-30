@@ -250,6 +250,17 @@ contract PoaCommon is PoaProxyCommon {
     );
   }
 
+  /// @notice Checks if a given address has invested during the EthFunding stage.
+  function isEthInvestor(
+    address _buyer
+  )
+    internal
+    view
+    returns (bool)
+  {
+    return fundedEthAmountPerUserInWei[_buyer] > 0;
+  }
+
   /// @notice Checks if a given address has invested during the FiatFunding stage.
   function isFiatInvestor(
     address _buyer
@@ -258,7 +269,7 @@ contract PoaCommon is PoaProxyCommon {
     view
     returns (bool)
   {
-    return fundedFiatAmountPerUserInTokens[_buyer] != 0;
+    return fundedFiatAmountPerUserInTokens[_buyer] > 0;
   }
 
   /// @notice Checks if a given address is whitelisted
