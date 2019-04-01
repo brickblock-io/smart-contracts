@@ -28,6 +28,11 @@ interface IPoaTokenCrowdsale {
     view
     returns (uint256);
 
+  function startingBalance(address _address)
+    external
+    view
+    returns (uint256);
+
   function spentBalances(address _address)
     external
     view

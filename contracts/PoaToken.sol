@@ -598,7 +598,7 @@ contract PoaToken is PoaCommon {
 
   /// @notice used for calculating starting balance once activated
   function startingBalance(address _address)
-    internal
+    public
     view
     returns (uint256)
   {
