@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="6.1.0"></a>
+# [6.1.0](https://git.brickblock-dev.io/platform/smart-contracts/compare/v6.0.7...v6.1.0) (2019-04-01)
+
+
+### Bug Fixes
+
+* avoid division by zero and added isEthInvestor ([4d88620](https://git.brickblock-dev.io/platform/smart-contracts/commits/4d88620))
+
+
+### Features
+
+* made startingBalance() public ([347cd87](https://git.brickblock-dev.io/platform/smart-contracts/commits/347cd87))
+
+
+
 <a name="6.0.7"></a>
 ## [6.0.7](https://git.brickblock-dev.io/platform/smart-contracts/compare/v6.0.6...v6.0.7) (2019-02-21)
 
